@@ -19,5 +19,6 @@ jobs:
       run: |
         wget https://www.doomworld.com/3ddownloads/ports/shareware_doom_iwad.zip
         unzip shareware_doom_iwad.zip
+        mv DOOM1.WAD doom1.wad
     - name: test
-      run: go test -v ./...
+      run: go test -v .
