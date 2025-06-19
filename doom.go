@@ -37926,6 +37926,9 @@ func R_RenderSegLoop(tls *libc.TLS) {
 		if segtextured != 0 {
 			// calculate texture offset
 			angle = (rw_centerangle + xtoviewangle[rw_x]) >> int32(ANGLETOFINESHIFT)
+			if angle >= (FINEANGLES / 2) { // DSB-23
+				angle = 0
+			}
 			texturecolumn = rw_offset - FixedMul(finetangent[angle], rw_distance)
 			texturecolumn >>= int32(FRACBITS)
 			// calculate lighting
