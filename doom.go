@@ -4274,7 +4274,7 @@ var player_class int32
 
 func GetAdjustedTime(tls *libc.TLS) (r int32) {
 	var time_ms int32
-	time_ms = I_GetTimeMS(tls)
+	time_ms = I_GetTimeMS()
 	if new_sync != 0 {
 		// Use the adjustments from net_client.c only if we are
 		// using the new sync mode.
@@ -18739,14 +18739,14 @@ var firsttime = 1
 
 var basetime = uint32(0)
 
-func I_GetTicks(tls *libc.TLS) (r int32) {
+func I_GetTicks() (r int32) {
 	return int32(float64(time.Since(start_time).Milliseconds()) * dg_speed_ratio)
 	//return int32(DG_GetTicksMs())
 }
 
 func I_GetTime(tls *libc.TLS) (r int32) {
 	var ticks uint32
-	ticks = libc.Uint32FromInt32(I_GetTicks(tls))
+	ticks = libc.Uint32FromInt32(I_GetTicks())
 	if basetime == uint32(0) {
 		basetime = ticks
 	}
@@ -18758,9 +18758,9 @@ func I_GetTime(tls *libc.TLS) (r int32) {
 // Same as I_GetTime, but returns time in milliseconds
 //
 
-func I_GetTimeMS(tls *libc.TLS) (r int32) {
+func I_GetTimeMS() (r int32) {
 	var ticks uint32
-	ticks = libc.Uint32FromInt32(I_GetTicks(tls))
+	ticks = libc.Uint32FromInt32(I_GetTicks())
 	if basetime == uint32(0) {
 		basetime = ticks
 	}
