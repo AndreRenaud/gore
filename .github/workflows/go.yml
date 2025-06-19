@@ -16,7 +16,7 @@ jobs:
       with:
         go-version: 1.24.4
     - name: Install dependencies
-      run: apt-get update && apt-get install -y ffmpeg
+      run: sudo apt-get update && sudo apt-get install -y ffmpeg
     - name: Install doom wad
       run: |
         wget https://www.doomworld.com/3ddownloads/ports/shareware_doom_iwad.zip
