@@ -7,9 +7,17 @@ on:
     branches: [ main ]
 
 jobs:
-  ubuntu:
+  build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.24.4
+    - name: Install doom wad
+      run: |
+        wget https://www.doomworld.com/3ddownloads/ports/shareware_doom_iwad.zip
+        unzip shareware_doom_iwad.zip
     - name: test
       run: go test -v ./...
