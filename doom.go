@@ -22977,7 +22977,7 @@ func EV_VerticalDoor(tls *libc.TLS, line *line_t, thing uintptr) {
 		break
 	}
 	// if the sector has an active thinker, use it
-	sec = (*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[side^int32(1)]*24))).Fsector
+	sec = (*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[side^int32(1)])*24)).Fsector
 	if sec.Fspecialdata != 0 {
 		door = sec.Fspecialdata
 		switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
@@ -23213,10 +23213,10 @@ func P_RecursiveSound(tls *libc.TLS, sec *sector_t, soundblocks int32) {
 		if openrange <= 0 {
 			goto _1
 		} // closed door
-		if (*side_t)(unsafe.Pointer(sides+uintptr(check.Fsidenum[0]*24))).Fsector == sec {
-			other = (*side_t)(unsafe.Pointer(sides + uintptr(check.Fsidenum[1]*24))).Fsector
+		if (*side_t)(unsafe.Pointer(sides+uintptr(check.Fsidenum[0])*24)).Fsector == sec {
+			other = (*side_t)(unsafe.Pointer(sides + uintptr(check.Fsidenum[1])*24)).Fsector
 		} else {
-			other = (*side_t)(unsafe.Pointer(sides + uintptr(check.Fsidenum[0]*24))).Fsector
+			other = (*side_t)(unsafe.Pointer(sides + uintptr(check.Fsidenum[0])*24)).Fsector
 		}
 		if int32(check.Fflags)&ML_SOUNDBLOCK != 0 {
 			if !(soundblocks != 0) {
@@ -27690,12 +27690,12 @@ func P_BlockLinesIterator(tls *libc.TLS, x int32, y int32, func1 uintptr) (r boo
 		if !(int32(*(*int16)(unsafe.Pointer(list))) != -1) {
 			break
 		}
-		ld := &lines[list]
+		ld := &lines[*(*int16)(unsafe.Pointer(list))]
 		if ld.Fvalidcount == validcount {
 			goto _1
 		} // line has already been checked
 		ld.Fvalidcount = validcount
-		if !((*(*func(*libc.TLS, uintptr) boolean)(unsafe.Pointer(&struct{ uintptr }{func1})))(tls, (uintptr)(unsafe.Pointer(ld))) != 0) {
+		if !((*(*func(*libc.TLS, *line_t) boolean)(unsafe.Pointer(&struct{ uintptr }{func1})))(tls, ld) != 0) {
 			return 0
 		}
 		goto _1
@@ -29029,7 +29029,7 @@ func EV_DoPlat(tls *libc.TLS, line *line_t, type1 plattype_e, amount int32) (r i
 		switch type1 {
 		case int32(raiseToNearestAndChange):
 			(*plat_t)(unsafe.Pointer(plat)).Fspeed = 1 << FRACBITS / 2
-			sec.Ffloorpic = (*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0]*24))).Fsector.Ffloorpic
+			sec.Ffloorpic = (*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24)).Fsector.Ffloorpic
 			(*plat_t)(unsafe.Pointer(plat)).Fhigh = P_FindNextHighestFloor(tls, sec, sec.Ffloorheight)
 			(*plat_t)(unsafe.Pointer(plat)).Fwait = 0
 			(*plat_t)(unsafe.Pointer(plat)).Fstatus = int32(up)
@@ -29038,7 +29038,7 @@ func EV_DoPlat(tls *libc.TLS, line *line_t, type1 plattype_e, amount int32) (r i
 			S_StartSound(tls, (uintptr)(unsafe.Pointer(&sec.Fsoundorg)), int32(sfx_stnmov))
 		case int32(raiseAndChange):
 			(*plat_t)(unsafe.Pointer(plat)).Fspeed = 1 << FRACBITS / 2
-			sec.Ffloorpic = (*sector_t)(unsafe.Pointer((*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0]*24)))).Fsector)).Ffloorpic
+			sec.Ffloorpic = (*sector_t)(unsafe.Pointer((*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Fsector)).Ffloorpic
 			(*plat_t)(unsafe.Pointer(plat)).Fhigh = sec.Ffloorheight + amount*(1<<FRACBITS)
 			(*plat_t)(unsafe.Pointer(plat)).Fwait = 0
 			(*plat_t)(unsafe.Pointer(plat)).Fstatus = int32(up)
@@ -31663,12 +31663,12 @@ func P_LoadLineDefs(tls *libc.TLS, lump int32) {
 		ld.Fsidenum[0] = *(*int16)(unsafe.Pointer(mld + 10))
 		ld.Fsidenum[1] = *(*int16)(unsafe.Pointer(mld + 10 + 1*2))
 		if ld.Fsidenum[0] != -1 {
-			ld.Ffrontsector = (*(*side_t)(unsafe.Pointer(sides + uintptr(ld.Fsidenum[0]*24)))).Fsector
+			ld.Ffrontsector = (*(*side_t)(unsafe.Pointer(sides + uintptr(ld.Fsidenum[0])*24))).Fsector
 		} else {
 			ld.Ffrontsector = nil
 		}
 		if ld.Fsidenum[1] != -1 {
-			ld.Fbacksector = (*(*side_t)(unsafe.Pointer(sides + uintptr(ld.Fsidenum[1]*24)))).Fsector
+			ld.Fbacksector = (*(*side_t)(unsafe.Pointer(sides + uintptr(ld.Fsidenum[1])*24))).Fsector
 		} else {
 			ld.Fbacksector = nil
 		}
@@ -31785,8 +31785,6 @@ func P_GroupLines(tls *libc.TLS) {
 		}
 	}
 	// build line tables for each sector
-	//linebuffer := make([]*line_t, totallines)
-	//linebufferPos := 0
 	i = 0
 	for {
 		if !(i < numsectors) {
@@ -31796,7 +31794,6 @@ func P_GroupLines(tls *libc.TLS) {
 		sector := &sectors[i]
 		log.Printf("sector %d has %d lines\n", i, sector.Flinecount)
 		sector.Flines = make([]*line_t, sector.Flinecount)
-		//linebufferPos += int(sector.Flinecount)
 		// Reset linecount to zero so in the next stage we can count
 		// lines into the list.
 		sector.Flinecount = 0
