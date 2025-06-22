@@ -22980,7 +22980,7 @@ func EV_VerticalDoor(tls *libc.TLS, line *line_t, thing uintptr) {
 	sec = (*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[side^int32(1)])*24)).Fsector
 	if sec.Fspecialdata != 0 {
 		door = sec.Fspecialdata
-		switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+		switch int32(line.Fspecial) {
 		case 1: // ONLY FOR "RAISE" DOORS, NOT "OPEN"s
 			fallthrough
 		case 26:
@@ -23018,7 +23018,7 @@ func EV_VerticalDoor(tls *libc.TLS, line *line_t, thing uintptr) {
 		}
 	}
 	// for proper sound
-	switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+	switch int32(line.Fspecial) {
 	case 117: // BLAZING DOOR RAISE
 		fallthrough
 	case 118: // BLAZING DOOR OPEN
@@ -23040,7 +23040,7 @@ func EV_VerticalDoor(tls *libc.TLS, line *line_t, thing uintptr) {
 	(*vldoor_t)(unsafe.Pointer(door)).Fdirection = 1
 	(*vldoor_t)(unsafe.Pointer(door)).Fspeed = 1 << FRACBITS * 2
 	(*vldoor_t)(unsafe.Pointer(door)).Ftopwait = int32(VDOORWAIT)
-	switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+	switch int32(line.Fspecial) {
 	case 1:
 		fallthrough
 	case 26:
@@ -23057,13 +23057,13 @@ func EV_VerticalDoor(tls *libc.TLS, line *line_t, thing uintptr) {
 		fallthrough
 	case 34:
 		(*vldoor_t)(unsafe.Pointer(door)).Ftype1 = int32(vld_open)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 117: // blazing door raise
 		(*vldoor_t)(unsafe.Pointer(door)).Ftype1 = int32(vld_blazeRaise)
 		(*vldoor_t)(unsafe.Pointer(door)).Fspeed = 1 << FRACBITS * 2 * 4
 	case 118: // blazing door open
 		(*vldoor_t)(unsafe.Pointer(door)).Ftype1 = int32(vld_blazeOpen)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 		(*vldoor_t)(unsafe.Pointer(door)).Fspeed = 1 << FRACBITS * 2 * 4
 		break
 	}
@@ -23206,7 +23206,7 @@ func P_RecursiveSound(tls *libc.TLS, sec *sector_t, soundblocks int32) {
 			break
 		}
 		check = sec.Flines[i]
-		if !(int32((*line_t)(unsafe.Pointer(check)).Fflags)&ML_TWOSIDED != 0) {
+		if !(int32(check.Fflags)&ML_TWOSIDED != 0) {
 			goto _1
 		}
 		P_LineOpening(check)
@@ -26992,7 +26992,7 @@ func PTR_ShootTraverse(tls *libc.TLS, in uintptr) (r boolean) {
 		dist = FixedMul(attackrange, (*intercept_t)(unsafe.Pointer(in)).Ffrac)
 		// e6y: emulation of missed back side on two-sided lines.
 		// backsector can be NULL when emulating missing back side.
-		if (*line_t)(unsafe.Pointer(li)).Fbacksector == nil {
+		if li.Fbacksector == nil {
 			slope = FixedDiv(openbottom-shootz, dist)
 			if slope > aimslope {
 				goto hitline
@@ -27411,7 +27411,7 @@ func P_AproxDistance(dx fixed_t, dy fixed_t) (r fixed_t) {
 //	//
 func P_PointOnLineSide(x fixed_t, y fixed_t, line *line_t) (r int32) {
 	var dx, dy, left, right fixed_t
-	if !((*line_t)(unsafe.Pointer(line)).Fdx != 0) {
+	if !(line.Fdx != 0) {
 		if x <= (*vertex_t)(unsafe.Pointer(line.Fv1)).Fx {
 			return libc.BoolInt32(line.Fdy > 0)
 		}
@@ -27444,7 +27444,7 @@ func P_BoxOnLineSide(tmbox uintptr, ld *line_t) (r int32) {
 	var p1, p2 int32
 	p1 = 0
 	p2 = 0
-	switch (*line_t)(unsafe.Pointer(ld)).Fslopetype {
+	switch ld.Fslopetype {
 	case ST_HORIZONTAL:
 		p1 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXTOP)*4)) > (*vertex_t)(unsafe.Pointer(ld.Fv1)).Fy)
 		p2 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXBOTTOM)*4)) > (*vertex_t)(unsafe.Pointer(ld.Fv1)).Fy)
@@ -27455,7 +27455,7 @@ func P_BoxOnLineSide(tmbox uintptr, ld *line_t) (r int32) {
 	case ST_VERTICAL:
 		p1 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXRIGHT)*4)) < (*vertex_t)(unsafe.Pointer(ld.Fv1)).Fx)
 		p2 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXLEFT)*4)) < (*vertex_t)(unsafe.Pointer(ld.Fv1)).Fx)
-		if (*line_t)(unsafe.Pointer(ld)).Fdy < 0 {
+		if ld.Fdy < 0 {
 			p1 ^= 1
 			p2 ^= 1
 		}
@@ -31639,7 +31639,7 @@ func P_LoadLineDefs(tls *libc.TLS, lump int32) {
 			if !(ld.Fdy != 0) {
 				ld.Fslopetype = ST_HORIZONTAL
 			} else {
-				if FixedDiv(ld.Fdy, (*line_t)(unsafe.Pointer(ld)).Fdx) > 0 {
+				if FixedDiv(ld.Fdy, ld.Fdx) > 0 {
 					ld.Fslopetype = ST_POSITIVE
 				} else {
 					ld.Fslopetype = ST_NEGATIVE
@@ -32884,7 +32884,7 @@ func P_CrossSpecialLine(tls *libc.TLS, linenum int32, side int32, thing uintptr)
 			break
 		}
 		ok = 0
-		switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+		switch int32(line.Fspecial) {
 		case 39: // TELEPORT TRIGGER
 			fallthrough
 		case 97: // TELEPORT RETRIGGER
@@ -32906,154 +32906,154 @@ func P_CrossSpecialLine(tls *libc.TLS, linenum int32, side int32, thing uintptr)
 		}
 	}
 	// Note: could use some const's here.
-	switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+	switch int32(line.Fspecial) {
 	// TRIGGERS.
 	// All from here to RETRIGGERS.
 	case 2:
 		// Open Door
 		EV_DoDoor(tls, line, int32(vld_open))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 3:
 		// Close Door
 		EV_DoDoor(tls, line, int32(vld_close))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 4:
 		// Raise Door
 		EV_DoDoor(tls, line, int32(vld_normal))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 5:
 		// Raise Floor
 		EV_DoFloor(tls, line, int32(raiseFloor))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 6:
 		// Fast Ceiling Crush & Raise
 		EV_DoCeiling(tls, line, int32(fastCrushAndRaise))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 8:
 		// Build Stairs
 		EV_BuildStairs(tls, line, int32(build8))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 10:
 		// PlatDownWaitUp
 		EV_DoPlat(tls, line, int32(downWaitUpStay), 0)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 12:
 		// Light Turn On - brightest near
 		EV_LightTurnOn(tls, line, 0)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 13:
 		// Light Turn On 255
 		EV_LightTurnOn(tls, line, 255)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 16:
 		// Close Door 30
 		EV_DoDoor(tls, line, int32(vld_close30ThenOpen))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 17:
 		// Start Light Strobing
 		EV_StartLightStrobing(tls, line)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 19:
 		// Lower Floor
 		EV_DoFloor(tls, line, int32(lowerFloor))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 22:
 		// Raise floor to nearest height and change texture
 		EV_DoPlat(tls, line, int32(raiseToNearestAndChange), 0)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 25:
 		// Ceiling Crush and Raise
 		EV_DoCeiling(tls, line, int32(crushAndRaise))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 30:
 		// Raise floor to shortest texture height
 		//  on either side of lines.
 		EV_DoFloor(tls, line, int32(raiseToTexture))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 35:
 		// Lights Very Dark
 		EV_LightTurnOn(tls, line, 35)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 36:
 		// Lower Floor (TURBO)
 		EV_DoFloor(tls, line, int32(turboLower))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 37:
 		// LowerAndChange
 		EV_DoFloor(tls, line, int32(lowerAndChange))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 38:
 		// Lower Floor To Lowest
 		EV_DoFloor(tls, line, int32(lowerFloorToLowest))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 39:
 		// TELEPORT!
 		EV_Teleport(tls, line, side, thing)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 40:
 		// RaiseCeilingLowerFloor
 		EV_DoCeiling(tls, line, int32(raiseToHighest))
 		EV_DoFloor(tls, line, int32(lowerFloorToLowest))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 44:
 		// Ceiling Crush
 		EV_DoCeiling(tls, line, int32(lowerAndCrush))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 52:
 		// EXIT!
 		G_ExitLevel(tls)
 	case 53:
 		// Perpetual Platform Raise
 		EV_DoPlat(tls, line, int32(perpetualRaise), 0)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 54:
 		// Platform Stop
 		EV_StopPlat(tls, line)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 56:
 		// Raise Floor Crush
 		EV_DoFloor(tls, line, int32(raiseFloorCrush))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 57:
 		// Ceiling Crush Stop
 		EV_CeilingCrushStop(tls, line)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 58:
 		// Raise Floor 24
 		EV_DoFloor(tls, line, int32(raiseFloor24))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 59:
 		// Raise Floor 24 And Change
 		EV_DoFloor(tls, line, int32(raiseFloor24AndChange))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 104:
 		// Turn lights off in sector(tag)
 		EV_TurnTagLightsOff(tls, line)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 108:
 		// Blazing Door Raise (faster than TURBO!)
 		EV_DoDoor(tls, line, int32(vld_blazeRaise))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 109:
 		// Blazing Door Open (faster than TURBO!)
 		EV_DoDoor(tls, line, int32(vld_blazeOpen))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 100:
 		// Build Stairs Turbo 16
 		EV_BuildStairs(tls, line, int32(turbo16))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 110:
 		// Blazing Door Close (faster than TURBO!)
 		EV_DoDoor(tls, line, int32(vld_blazeClose))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 119:
 		// Raise floor to nearest surr. floor
 		EV_DoFloor(tls, line, int32(raiseFloorToNearest))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 121:
 		// Blazing PlatDownWaitUpStay
 		EV_DoPlat(tls, line, int32(blazeDWUS), 0)
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 124:
 		// Secret EXIT
 		G_SecretExitLevel(tls)
@@ -33061,16 +33061,16 @@ func P_CrossSpecialLine(tls *libc.TLS, linenum int32, side int32, thing uintptr)
 		// TELEPORT MonsterONLY
 		if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0) {
 			EV_Teleport(tls, line, side, thing)
-			(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+			line.Fspecial = 0
 		}
 	case 130:
 		// Raise Floor Turbo
 		EV_DoFloor(tls, line, int32(raiseFloorTurbo))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	case 141:
 		// Silent Ceiling Crush & Raise
 		EV_DoCeiling(tls, line, int32(silentCrushAndRaise))
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 		break
 		// RETRIGGERS.  All from here till end.
 		fallthrough
@@ -33199,7 +33199,7 @@ func P_ShootSpecialLine(tls *libc.TLS, thing uintptr, line *line_t) {
 			return
 		}
 	}
-	switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+	switch int32(line.Fspecial) {
 	case 24:
 		// RAISE FLOOR
 		EV_DoFloor(tls, line, int32(raiseFloor))
@@ -33913,7 +33913,7 @@ func P_StartButton(tls *libc.TLS, line *line_t, w bwhere_e, texture int32, time 
 			buttonlist[i].Fwhere = w
 			buttonlist[i].Fbtexture = texture
 			buttonlist[i].Fbtimer = time
-			buttonlist[i].Fsoundorg = (uintptr)(unsafe.Pointer(&(*line_t)(unsafe.Pointer(line)).Ffrontsector.Fsoundorg))
+			buttonlist[i].Fsoundorg = (uintptr)(unsafe.Pointer(&line.Ffrontsector.Fsoundorg))
 			return
 		}
 		goto _2
@@ -33933,14 +33933,14 @@ func P_StartButton(tls *libc.TLS, line *line_t, w bwhere_e, texture int32, time 
 func P_ChangeSwitchTexture(tls *libc.TLS, line *line_t, useAgain int32) {
 	var i, sound, texBot, texMid, texTop int32
 	if !(useAgain != 0) {
-		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
+		line.Fspecial = 0
 	}
 	texTop = int32((*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Ftoptexture)
 	texMid = int32((*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Fmidtexture)
 	texBot = int32((*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Fbottomtexture)
 	sound = int32(sfx_swtchn)
 	// EXIT SWITCH?
-	if int32((*line_t)(unsafe.Pointer(line)).Fspecial) == 11 {
+	if int32(line.Fspecial) == 11 {
 		sound = int32(sfx_swtchx)
 	}
 	i = 0
@@ -34021,7 +34021,7 @@ func P_UseSpecialLine(tls *libc.TLS, thing uintptr, line *line_t, side int32) (r
 		}
 	}
 	// do something
-	switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+	switch int32(line.Fspecial) {
 	// MANUALS
 	case 1: // Vertical Door
 		fallthrough
@@ -37683,7 +37683,7 @@ func R_RenderMaskedSegRange(tls *libc.TLS, ds *drawseg_t, x1 int32, x2 int32) {
 	mfloorclip = ds.Fsprbottomclip
 	mceilingclip = ds.Fsprtopclip
 	// find positioning
-	if int32((*line_t)(unsafe.Pointer((*seg_t)(unsafe.Pointer(curline)).Flinedef)).Fflags)&ML_DONTPEGBOTTOM != 0 {
+	if int32((*seg_t)(unsafe.Pointer(curline)).Flinedef.Fflags)&ML_DONTPEGBOTTOM != 0 {
 		if (*sector_t)(unsafe.Pointer(frontsector)).Ffloorheight > (*sector_t)(unsafe.Pointer(backsector)).Ffloorheight {
 			v1 = (*sector_t)(unsafe.Pointer(frontsector)).Ffloorheight
 		} else {
