@@ -26403,11 +26403,11 @@ func PIT_CheckLine(tls *libc.TLS, ld *line_t) (r boolean) {
 	// NOTE: specials are NOT sorted by order,
 	// so two special lines that are only 8 pixels apart
 	// could be crossed in either order.
-	if !((*line_t)(unsafe.Pointer(ld)).Fbacksector != nil) {
+	if !(ld.Fbacksector != nil) {
 		return 0
 	} // one sided line
 	if !((*mobj_t)(unsafe.Pointer(tmthing)).Fflags&int32(MF_MISSILE) != 0) {
-		if int32((*line_t)(unsafe.Pointer(ld)).Fflags)&ML_BLOCKING != 0 {
+		if int32(ld.Fflags)&ML_BLOCKING != 0 {
 			return 0
 		} // explicitly blocking everything
 		if !((*mobj_t)(unsafe.Pointer(tmthing)).Fplayer != 0) && int32(ld.Fflags)&ML_BLOCKMONSTERS != 0 {
@@ -26428,7 +26428,7 @@ func PIT_CheckLine(tls *libc.TLS, ld *line_t) (r boolean) {
 		tmdropoffz = lowfloor
 	}
 	// if contacted a special line, add it to the list
-	if (*line_t)(unsafe.Pointer(ld)).Fspecial != 0 {
+	if ld.Fspecial != 0 {
 		spechit[numspechit] = ld
 		numspechit++
 		// fraggle: spechits overrun emulation code from prboom-plus
@@ -31809,11 +31809,11 @@ func P_GroupLines(tls *libc.TLS) {
 	for i := int32(0); i < numlines; i++ {
 		li := &lines[i]
 		if li.Ffrontsector != nil {
-			li.Ffrontsector.Flines[0] = li
+			li.Ffrontsector.Flines[li.Ffrontsector.Flinecount] = li
 			li.Ffrontsector.Flinecount++
 		}
 		if li.Fbacksector != nil && li.Ffrontsector != li.Fbacksector {
-			li.Fbacksector.Flines[0] = li
+			li.Fbacksector.Flines[li.Fbacksector.Flinecount] = li
 			li.Fbacksector.Flinecount++
 		}
 	}
