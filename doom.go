@@ -1831,7 +1831,7 @@ type sector_t struct {
 	Fthinglist      uintptr
 	Fspecialdata    uintptr
 	Flinecount      int32
-	Flines          uintptr
+	Flines          []*line_t
 }
 
 type side_t struct {
@@ -2097,7 +2097,7 @@ type intercept_t struct {
 	Ffrac    fixed_t
 	Fisaline boolean
 	Fd       struct {
-		Fthing uintptr
+		Fthing *line_t
 	}
 }
 
@@ -2152,7 +2152,7 @@ const middle = 1
 const bottom = 2
 
 type button_t struct {
-	Fline     uintptr
+	Fline     *line_t
 	Fwhere    bwhere_e
 	Fbtexture int32
 	Fbtimer   int32
@@ -3557,38 +3557,34 @@ func AM_drawGrid(color int32) {
 //	// This is LineDef based, not LineSeg based.
 //	//
 func AM_drawWalls() {
-	var i int32
-	i = 0
-	for {
-		if !(i < numlines) {
-			break
-		}
-		l.Fa.Fx = (*vertex_t)(unsafe.Pointer((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fv1)).Fx
-		l.Fa.Fy = (*vertex_t)(unsafe.Pointer((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fv1)).Fy
-		l.Fb.Fx = (*vertex_t)(unsafe.Pointer((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fv2)).Fx
-		l.Fb.Fy = (*vertex_t)(unsafe.Pointer((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fv2)).Fy
-		if cheating != 0 || int32((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fflags)&ML_MAPPED != 0 {
-			if int32((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fflags)&ML_DONTDRAW != 0 && !(cheating != 0) {
-				goto _1
+	for i := int32(0); i < numlines; i++ {
+		line := &lines[i]
+		l.Fa.Fx = (*vertex_t)(unsafe.Pointer(line.Fv1)).Fx
+		l.Fa.Fy = (*vertex_t)(unsafe.Pointer(line.Fv1)).Fy
+		l.Fb.Fx = (*vertex_t)(unsafe.Pointer(line.Fv2)).Fx
+		l.Fb.Fy = (*vertex_t)(unsafe.Pointer(line.Fv2)).Fy
+		if cheating != 0 || int32(line.Fflags)&ML_MAPPED != 0 {
+			if int32(line.Fflags)&ML_DONTDRAW != 0 && !(cheating != 0) {
+				continue
 			}
-			if !((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fbacksector != nil) {
+			if !(line.Fbacksector != nil) {
 				AM_drawMline(&l, 256-5*16+lightlev)
 			} else {
-				if int32((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fspecial) == 39 {
+				if int32(line.Fspecial) == 39 {
 					// teleporters
 					AM_drawMline(&l, 256-5*16+REDRANGE/2)
 				} else {
-					if int32((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fflags)&ML_SECRET != 0 { // secret door
+					if int32(line.Fflags)&ML_SECRET != 0 { // secret door
 						if cheating != 0 {
 							AM_drawMline(&l, 256-5*16+lightlev)
 						} else {
 							AM_drawMline(&l, 256-5*16+lightlev)
 						}
 					} else {
-						if ((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fbacksector).Ffloorheight != (*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Ffrontsector.Ffloorheight {
+						if (line.Fbacksector).Ffloorheight != line.Ffrontsector.Ffloorheight {
 							AM_drawMline(&l, 4*16+lightlev) // floor level change
 						} else {
-							if (*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fbacksector.Fceilingheight != (*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Ffrontsector.Fceilingheight {
+							if line.Fbacksector.Fceilingheight != line.Ffrontsector.Fceilingheight {
 								AM_drawMline(&l, 256-32+7+lightlev) // ceiling level change
 							} else {
 								if cheating != 0 {
@@ -3601,15 +3597,11 @@ func AM_drawWalls() {
 			}
 		} else {
 			if plr.Fpowers[pw_allmap] != 0 {
-				if !(int32((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fflags)&ML_DONTDRAW != 0) {
+				if !(int32(line.Fflags)&ML_DONTDRAW != 0) {
 					AM_drawMline(&l, 6*16+3)
 				}
 			}
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 }
 
@@ -3695,7 +3687,7 @@ var their_colors = [4]int32{
 func AM_drawThings(colors int32, colorrange int32) {
 	var t uintptr
 	for i := int32(0); i < numsectors; i++ {
-		t = (*(*sector_t)(unsafe.Pointer(sectors + uintptr(i)*128))).Fthinglist
+		t = sectors[i].Fthinglist
 		for t != 0 {
 			AM_drawLineCharacter(thintriangle_guy[:], 16<<FRACBITS, (*mobj_t)(unsafe.Pointer(t)).Fangle, colors+lightlev, (*mobj_t)(unsafe.Pointer(t)).Fx, (*mobj_t)(unsafe.Pointer(t)).Fy)
 			t = (*mobj_t)(unsafe.Pointer(t)).Fsnext
@@ -22536,7 +22528,7 @@ func T_MoveCeiling(tls *libc.TLS, ceiling *ceiling_t) {
 //	// EV_DoCeiling
 //	// Move a ceiling up/down and all around!
 //	//
-func EV_DoCeiling(tls *libc.TLS, line uintptr, type1 ceiling_e) (r int32) {
+func EV_DoCeiling(tls *libc.TLS, line *line_t, type1 ceiling_e) (r int32) {
 	var rtn, secnum, v1 int32
 	secnum = -1
 	rtn = 0
@@ -22558,7 +22550,7 @@ func EV_DoCeiling(tls *libc.TLS, line uintptr, type1 ceiling_e) (r int32) {
 		if !(v1 >= 0) {
 			break
 		}
-		sec := (*sector_t)(unsafe.Pointer(sectors + uintptr(secnum)*128))
+		sec := &sectors[secnum]
 		if sec.Fspecialdata != 0 {
 			continue
 		}
@@ -22649,14 +22641,14 @@ func P_RemoveActiveCeiling(tls *libc.TLS, c *ceiling_t) {
 //	//
 //	// Restart a ceiling that's in-stasis
 //	//
-func P_ActivateInStasisCeiling(tls *libc.TLS, line uintptr) {
+func P_ActivateInStasisCeiling(tls *libc.TLS, line *line_t) {
 	var i int32
 	i = 0
 	for {
 		if !(i < int32(MAXCEILINGS)) {
 			break
 		}
-		if activeceilings[i] != nil && activeceilings[i].Ftag == int32((*line_t)(unsafe.Pointer(line)).Ftag) && activeceilings[i].Fdirection == 0 {
+		if activeceilings[i] != nil && activeceilings[i].Ftag == int32(line.Ftag) && activeceilings[i].Fdirection == 0 {
 			activeceilings[i].Fdirection = activeceilings[i].Folddirection
 			activeceilings[i].Fthinker.Ffunction.Facv = __ccgo_fp(T_MoveCeiling)
 			//*(*actionf_p1)(unsafe.Pointer(activeceilings[i] + 16)) = __ccgo_fp(T_MoveCeiling)
@@ -22674,7 +22666,7 @@ func P_ActivateInStasisCeiling(tls *libc.TLS, line uintptr) {
 //	// EV_CeilingCrushStop
 //	// Stop a ceiling from crushing!
 //	//
-func EV_CeilingCrushStop(tls *libc.TLS, line uintptr) (r int32) {
+func EV_CeilingCrushStop(tls *libc.TLS, line *line_t) (r int32) {
 	var i, rtn int32
 	rtn = 0
 	i = 0
@@ -22682,7 +22674,7 @@ func EV_CeilingCrushStop(tls *libc.TLS, line uintptr) (r int32) {
 		if !(i < int32(MAXCEILINGS)) {
 			break
 		}
-		if activeceilings[i] != nil && activeceilings[i].Ftag == int32((*line_t)(unsafe.Pointer(line)).Ftag) && activeceilings[i].Fdirection != 0 {
+		if activeceilings[i] != nil && activeceilings[i].Ftag == int32(line.Ftag) && activeceilings[i].Fdirection != 0 {
 			activeceilings[i].Folddirection = activeceilings[i].Fdirection
 			activeceilings[i].Fthinker.Ffunction.Facv = 0
 			activeceilings[i].Fdirection = 0 // in-stasis
@@ -22823,13 +22815,13 @@ func T_VerticalDoor(tls *libc.TLS, door *vldoor_t) {
 // Move a locked door up/down
 //
 
-func EV_DoLockedDoor(tls *libc.TLS, line uintptr, type1 vldoor_e, thing uintptr) (r int32) {
+func EV_DoLockedDoor(tls *libc.TLS, line *line_t, type1 vldoor_e, thing uintptr) (r int32) {
 	var p uintptr
 	p = (*mobj_t)(unsafe.Pointer(thing)).Fplayer
 	if !(p != 0) {
 		return 0
 	}
-	switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+	switch int32(line.Fspecial) {
 	case 99: // Blue Lock
 		fallthrough
 	case 133:
@@ -22868,7 +22860,7 @@ func EV_DoLockedDoor(tls *libc.TLS, line uintptr, type1 vldoor_e, thing uintptr)
 	return EV_DoDoor(tls, line, type1)
 }
 
-func EV_DoDoor(tls *libc.TLS, line uintptr, type1 vldoor_e) (r int32) {
+func EV_DoDoor(tls *libc.TLS, line *line_t, type1 vldoor_e) (r int32) {
 	var door uintptr
 	var rtn, secnum, v1 int32
 	secnum = -1
@@ -22879,7 +22871,7 @@ func EV_DoDoor(tls *libc.TLS, line uintptr, type1 vldoor_e) (r int32) {
 		if !(v1 >= 0) {
 			break
 		}
-		sec := (*sector_t)(unsafe.Pointer(sectors + uintptr(secnum)*128))
+		sec := &sectors[secnum]
 		if sec.Fspecialdata != 0 {
 			continue
 		}
@@ -22941,14 +22933,14 @@ func EV_DoDoor(tls *libc.TLS, line uintptr, type1 vldoor_e) (r int32) {
 //	//
 //	// EV_VerticalDoor : open a door manually, no tag value
 //	//
-func EV_VerticalDoor(tls *libc.TLS, line uintptr, thing uintptr) {
+func EV_VerticalDoor(tls *libc.TLS, line *line_t, thing uintptr) {
 	var door, plat, player uintptr
 	var sec *sector_t
 	var side int32
 	side = 0 // only front sides can be used
 	//	Check for locks
 	player = (*mobj_t)(unsafe.Pointer(thing)).Fplayer
-	switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+	switch int32(line.Fspecial) {
 	case 26: // Blue Lock
 		fallthrough
 	case 32:
@@ -22985,7 +22977,7 @@ func EV_VerticalDoor(tls *libc.TLS, line uintptr, thing uintptr) {
 		break
 	}
 	// if the sector has an active thinker, use it
-	sec = (*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(line + 30 + uintptr(side^int32(1))*2)))*24))).Fsector
+	sec = (*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[side^int32(1)]*24))).Fsector
 	if sec.Fspecialdata != 0 {
 		door = sec.Fspecialdata
 		switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
@@ -23198,7 +23190,7 @@ func init() {
 }
 
 func P_RecursiveSound(tls *libc.TLS, sec *sector_t, soundblocks int32) {
-	var check uintptr
+	var check *line_t
 	var other *sector_t
 	var i int32
 	// wake up all monsters in this sector
@@ -23213,7 +23205,7 @@ func P_RecursiveSound(tls *libc.TLS, sec *sector_t, soundblocks int32) {
 		if !(i < sec.Flinecount) {
 			break
 		}
-		check = *(*uintptr)(unsafe.Pointer(sec.Flines + uintptr(i)*8))
+		check = sec.Flines[i]
 		if !(int32((*line_t)(unsafe.Pointer(check)).Fflags)&ML_TWOSIDED != 0) {
 			goto _1
 		}
@@ -23221,12 +23213,12 @@ func P_RecursiveSound(tls *libc.TLS, sec *sector_t, soundblocks int32) {
 		if openrange <= 0 {
 			goto _1
 		} // closed door
-		if (*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(check + 30)))*24))).Fsector == sec {
-			other = (*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(check + 30 + 1*2)))*24))).Fsector
+		if (*side_t)(unsafe.Pointer(sides+uintptr(check.Fsidenum[0]*24))).Fsector == sec {
+			other = (*side_t)(unsafe.Pointer(sides + uintptr(check.Fsidenum[1]*24))).Fsector
 		} else {
-			other = (*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(check + 30)))*24))).Fsector
+			other = (*side_t)(unsafe.Pointer(sides + uintptr(check.Fsidenum[0]*24))).Fsector
 		}
-		if int32((*line_t)(unsafe.Pointer(check)).Fflags)&ML_SOUNDBLOCK != 0 {
+		if int32(check.Fflags)&ML_SOUNDBLOCK != 0 {
 			if !(soundblocks != 0) {
 				P_RecursiveSound(tls, other, 1)
 			}
@@ -23350,7 +23342,6 @@ func init() {
 
 func P_Move(tls *libc.TLS, actor uintptr) (r boolean) {
 	var good, try_ok boolean
-	var ld uintptr
 	var tryx, tryy fixed_t
 	var v1 int32
 	if (*mobj_t)(unsafe.Pointer(actor)).Fmovedir == DI_NODIR {
@@ -23385,7 +23376,7 @@ func P_Move(tls *libc.TLS, actor uintptr) (r boolean) {
 			if !(v1 != 0) {
 				break
 			}
-			ld = spechit[numspechit]
+			ld := spechit[numspechit]
 			// if the special is not a door
 			// that can be opened,
 			// return false
@@ -23598,7 +23589,6 @@ func P_LookForPlayers(tls *libc.TLS, actor uintptr, allaround boolean) (r boolea
 //	// Uses special tag 666.
 //	//
 func A_KeenDie(tls *libc.TLS, mo uintptr) {
-	bp := alloc(96)
 	var mo2, th uintptr
 	A_Fall(tls, mo)
 	// scan the remaining thinkers
@@ -23621,8 +23611,8 @@ func A_KeenDie(tls *libc.TLS, mo uintptr) {
 		;
 		th = (*thinker_t)(unsafe.Pointer(th)).Fnext
 	}
-	(*(*line_t)(unsafe.Pointer(bp))).Ftag = 666
-	EV_DoDoor(tls, bp, int32(vld_open))
+	line := &line_t{Ftag: 666}
+	EV_DoDoor(tls, line, int32(vld_open))
 }
 
 //
@@ -24473,7 +24463,6 @@ func CheckBossEnd(tls *libc.TLS, motype mobjtype_t) (r boolean) {
 //	// if on first boss level
 //	//
 func A_BossDeath(tls *libc.TLS, mo uintptr) {
-	bp := alloc(96)
 	var i int32
 	var mo2, th uintptr
 	if gamemode == int32(commercial) {
@@ -24529,31 +24518,26 @@ func A_BossDeath(tls *libc.TLS, mo uintptr) {
 	if gamemode == int32(commercial) {
 		if gamemap == 7 {
 			if (*mobj_t)(unsafe.Pointer(mo)).Ftype1 == int32(MT_FATSO) {
-				(*(*line_t)(unsafe.Pointer(bp))).Ftag = 666
-				EV_DoFloor(tls, bp, int32(lowerFloorToLowest))
+				EV_DoFloor(tls, &line_t{Ftag: 666}, int32(lowerFloorToLowest))
 				return
 			}
 			if (*mobj_t)(unsafe.Pointer(mo)).Ftype1 == int32(MT_BABY) {
-				(*(*line_t)(unsafe.Pointer(bp))).Ftag = 667
-				EV_DoFloor(tls, bp, int32(raiseToTexture))
+				EV_DoFloor(tls, &line_t{Ftag: 667}, int32(raiseToTexture))
 				return
 			}
 		}
 	} else {
 		switch gameepisode {
 		case 1:
-			(*(*line_t)(unsafe.Pointer(bp))).Ftag = 666
-			EV_DoFloor(tls, bp, int32(lowerFloorToLowest))
+			EV_DoFloor(tls, &line_t{Ftag: 666}, int32(lowerFloorToLowest))
 			return
 		case 4:
 			switch gamemap {
 			case 6:
-				(*(*line_t)(unsafe.Pointer(bp))).Ftag = 666
-				EV_DoDoor(tls, bp, int32(vld_blazeOpen))
+				EV_DoDoor(tls, &line_t{Ftag: 666}, int32(vld_blazeOpen))
 				return
 			case 8:
-				(*(*line_t)(unsafe.Pointer(bp))).Ftag = 666
-				EV_DoFloor(tls, bp, int32(lowerFloorToLowest))
+				EV_DoFloor(tls, &line_t{Ftag: 666}, int32(lowerFloorToLowest))
 				return
 				break
 			}
@@ -24976,7 +24960,7 @@ func T_MoveFloor(tls *libc.TLS, floor *floormove_t) {
 //	//
 //	// HANDLE FLOOR TYPES
 //	//
-func EV_DoFloor(tls *libc.TLS, line uintptr, floortype floor_e) (r int32) {
+func EV_DoFloor(tls *libc.TLS, line *line_t, floortype floor_e) (r int32) {
 	var floor uintptr
 	var side *side_t
 	var sec *sector_t
@@ -24989,7 +24973,7 @@ func EV_DoFloor(tls *libc.TLS, line uintptr, floortype floor_e) (r int32) {
 		if !(v1 >= 0) {
 			break
 		}
-		sec = (*sector_t)(unsafe.Pointer(sectors + uintptr(secnum)*128))
+		sec = &sectors[secnum]
 		// ALREADY MOVING?  IF SO, KEEP GOING...
 		if sec.Fspecialdata != 0 {
 			continue
@@ -25058,8 +25042,8 @@ func EV_DoFloor(tls *libc.TLS, line uintptr, floortype floor_e) (r int32) {
 			(*floormove_t)(unsafe.Pointer(floor)).Fsector = sec
 			(*floormove_t)(unsafe.Pointer(floor)).Fspeed = 1 << FRACBITS
 			(*floormove_t)(unsafe.Pointer(floor)).Ffloordestheight = (*sector_t)(unsafe.Pointer((*floormove_t)(unsafe.Pointer(floor)).Fsector)).Ffloorheight + 24*(1<<FRACBITS)
-			sec.Ffloorpic = (*line_t)(unsafe.Pointer(line)).Ffrontsector.Ffloorpic
-			sec.Fspecial = (*line_t)(unsafe.Pointer(line)).Ffrontsector.Fspecial
+			sec.Ffloorpic = line.Ffrontsector.Ffloorpic
+			sec.Fspecial = line.Ffrontsector.Fspecial
 		case int32(raiseToTexture):
 			minsize = int32(INT_MAX9)
 			(*floormove_t)(unsafe.Pointer(floor)).Fdirection = 1
@@ -25136,7 +25120,7 @@ func EV_DoFloor(tls *libc.TLS, line uintptr, floortype floor_e) (r int32) {
 //	//
 //	// BUILD A STAIRCASE!
 //	//
-func EV_BuildStairs(tls *libc.TLS, line uintptr, type1 stair_e) (r int32) {
+func EV_BuildStairs(tls *libc.TLS, line *line_t, type1 stair_e) (r int32) {
 	var floor uintptr
 	var sec, tsec *sector_t
 	var height, i, newsecnum, ok, rtn, secnum, texture, v1 int32
@@ -25151,7 +25135,7 @@ func EV_BuildStairs(tls *libc.TLS, line uintptr, type1 stair_e) (r int32) {
 		if !(v1 >= 0) {
 			break
 		}
-		sec = (*sector_t)(unsafe.Pointer(sectors + uintptr(secnum)*128))
+		sec = &sectors[secnum]
 		// ALREADY MOVING?  IF SO, KEEP GOING...
 		if sec.Fspecialdata != 0 {
 			continue
@@ -25187,15 +25171,15 @@ func EV_BuildStairs(tls *libc.TLS, line uintptr, type1 stair_e) (r int32) {
 				if !(i < sec.Flinecount) {
 					break
 				}
-				if !(int32((*line_s)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(sec.Flines + uintptr(i)*8)))).Fflags)&ML_TWOSIDED != 0) {
+				if !(int32(sec.Flines[i].Fflags)&ML_TWOSIDED != 0) {
 					goto _2
 				}
-				tsec = (*line_s)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(sec.Flines + uintptr(i)*8)))).Ffrontsector
+				tsec = sec.Flines[i].Ffrontsector
 				newsecnum = sectorIndex(tsec)
 				if secnum != newsecnum {
 					goto _2
 				}
-				tsec = (*line_s)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(sec.Flines + uintptr(i)*8)))).Fbacksector
+				tsec = sec.Flines[i].Fbacksector
 				newsecnum = sectorIndex(tsec)
 				if int32((*sector_t)(unsafe.Pointer(tsec)).Ffloorpic) != texture {
 					goto _2
@@ -26147,7 +26131,7 @@ func P_SpawnStrobeFlash(tls *libc.TLS, sector *sector_t, fastOrSlow int32, inSyn
 //	//
 //	// Start strobing lights (usually from a trigger)
 //	//
-func EV_StartLightStrobing(tls *libc.TLS, line uintptr) {
+func EV_StartLightStrobing(tls *libc.TLS, line *line_t) {
 	var sec *sector_t
 	var secnum, v1 int32
 	secnum = -1
@@ -26157,7 +26141,7 @@ func EV_StartLightStrobing(tls *libc.TLS, line uintptr) {
 		if !(v1 >= 0) {
 			break
 		}
-		sec = (*sector_t)(unsafe.Pointer(sectors + uintptr(secnum)*128))
+		sec = &sectors[secnum]
 		if sec.Fspecialdata != 0 {
 			continue
 		}
@@ -26170,24 +26154,24 @@ func EV_StartLightStrobing(tls *libc.TLS, line uintptr) {
 //	//
 //	// TURN LINE'S TAG LIGHTS OFF
 //	//
-func EV_TurnTagLightsOff(tls *libc.TLS, line uintptr) {
+func EV_TurnTagLightsOff(tls *libc.TLS, line *line_t) {
 	var i, j, min int32
-	var templine uintptr
-	var sector, tsec *sector_t
-	sector = (*sector_t)(unsafe.Pointer(sectors))
+	var templine *line_t
+	var tsec *sector_t
 	j = 0
 	for {
 		if !(j < numsectors) {
 			break
 		}
-		if int32(sector.Ftag) == int32((*line_t)(unsafe.Pointer(line)).Ftag) {
+		sector := &sectors[j]
+		if int32(sector.Ftag) == int32(line.Ftag) {
 			min = int32(sector.Flightlevel)
 			i = 0
 			for {
 				if !(i < sector.Flinecount) {
 					break
 				}
-				templine = *(*uintptr)(unsafe.Pointer(sector.Flines + uintptr(i)*8))
+				templine = sector.Flines[i]
 				tsec = getNextSector(tls, templine, sector)
 				if !(tsec != nil) {
 					goto _2
@@ -26206,7 +26190,7 @@ func EV_TurnTagLightsOff(tls *libc.TLS, line uintptr) {
 	_1:
 		;
 		j++
-		sector = (*sector_t)(unsafe.Pointer(uintptr(unsafe.Pointer(sector)) + 128))
+		sector = (*sector_t)(unsafe.Pointer(uintptr(unsafe.Pointer(sector)) + 144))
 	}
 }
 
@@ -26215,17 +26199,17 @@ func EV_TurnTagLightsOff(tls *libc.TLS, line uintptr) {
 //	//
 //	// TURN LINE'S TAG LIGHTS ON
 //	//
-func EV_LightTurnOn(tls *libc.TLS, line uintptr, bright int32) {
+func EV_LightTurnOn(tls *libc.TLS, line *line_t, bright int32) {
 	var i, j int32
-	var sector, temp *sector_t
-	var templine uintptr
-	sector = (*sector_t)(unsafe.Pointer(sectors))
+	var temp *sector_t
+	var templine *line_t
 	i = 0
 	for {
 		if !(i < numsectors) {
 			break
 		}
-		if int32(sector.Ftag) == int32((*line_t)(unsafe.Pointer(line)).Ftag) {
+		sector := &sectors[i]
+		if int32(sector.Ftag) == int32(line.Ftag) {
 			// bright = 0 means to search
 			// for highest light level
 			// surrounding sector
@@ -26235,7 +26219,7 @@ func EV_LightTurnOn(tls *libc.TLS, line uintptr, bright int32) {
 					if !(j < sector.Flinecount) {
 						break
 					}
-					templine = *(*uintptr)(unsafe.Pointer(sector.Flines + uintptr(j)*8))
+					templine = sector.Flines[j]
 					temp = getNextSector(tls, templine, sector)
 					if !(temp != nil) {
 						goto _2
@@ -26255,7 +26239,6 @@ func EV_LightTurnOn(tls *libc.TLS, line uintptr, bright int32) {
 	_1:
 		;
 		i++
-		sector = (*sector_t)(unsafe.Pointer(uintptr(unsafe.Pointer(sector)) + 128))
 	}
 }
 
@@ -26348,7 +26331,7 @@ func P_TeleportMove(tls *libc.TLS, thing uintptr, x fixed_t, y fixed_t) (r boole
 	tmbbox[int32(BOXRIGHT)] = x + (*mobj_t)(unsafe.Pointer(tmthing)).Fradius
 	tmbbox[int32(BOXLEFT)] = x - (*mobj_t)(unsafe.Pointer(tmthing)).Fradius
 	newsubsec = R_PointInSubsector(x, y)
-	ceilingline = libc.UintptrFromInt32(0)
+	ceilingline = nil
 	// The base floor/ceiling is from the subsector
 	// that contains the point.
 	// Any contacted lines the step closer together
@@ -26404,8 +26387,8 @@ func P_TeleportMove(tls *libc.TLS, thing uintptr, x fixed_t, y fixed_t) (r boole
 //	// PIT_CheckLine
 //	// Adjusts tmfloorz and tmceilingz as lines are contacted
 //	//
-func PIT_CheckLine(tls *libc.TLS, ld uintptr) (r boolean) {
-	if tmbbox[int32(BOXRIGHT)] <= *(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXLEFT)*4)) || tmbbox[int32(BOXLEFT)] >= *(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXRIGHT)*4)) || tmbbox[int32(BOXTOP)] <= *(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXBOTTOM)*4)) || tmbbox[int32(BOXBOTTOM)] >= *(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXTOP)*4)) {
+func PIT_CheckLine(tls *libc.TLS, ld *line_t) (r boolean) {
+	if tmbbox[int32(BOXRIGHT)] <= ld.Fbbox[BOXLEFT] || tmbbox[int32(BOXLEFT)] >= ld.Fbbox[BOXRIGHT] || tmbbox[int32(BOXTOP)] <= ld.Fbbox[BOXBOTTOM] || tmbbox[int32(BOXBOTTOM)] >= ld.Fbbox[BOXTOP] {
 		return 1
 	}
 	if P_BoxOnLineSide(uintptr(unsafe.Pointer(&tmbbox)), ld) != -1 {
@@ -26427,7 +26410,7 @@ func PIT_CheckLine(tls *libc.TLS, ld uintptr) (r boolean) {
 		if int32((*line_t)(unsafe.Pointer(ld)).Fflags)&ML_BLOCKING != 0 {
 			return 0
 		} // explicitly blocking everything
-		if !((*mobj_t)(unsafe.Pointer(tmthing)).Fplayer != 0) && int32((*line_t)(unsafe.Pointer(ld)).Fflags)&ML_BLOCKMONSTERS != 0 {
+		if !((*mobj_t)(unsafe.Pointer(tmthing)).Fplayer != 0) && int32(ld.Fflags)&ML_BLOCKMONSTERS != 0 {
 			return 0
 		} // block monsters only
 	}
@@ -26578,7 +26561,7 @@ func P_CheckPosition(tls *libc.TLS, thing uintptr, x fixed_t, y fixed_t) (r bool
 	tmbbox[int32(BOXRIGHT)] = x + (*mobj_t)(unsafe.Pointer(tmthing)).Fradius
 	tmbbox[int32(BOXLEFT)] = x - (*mobj_t)(unsafe.Pointer(tmthing)).Fradius
 	newsubsec = R_PointInSubsector(x, y)
-	ceilingline = libc.UintptrFromInt32(0)
+	ceilingline = nil
 	// The base floor / ceiling is from the subsector
 	// that contains the point.
 	// Any contacted lines the step closer together
@@ -26663,7 +26646,6 @@ func P_CheckPosition(tls *libc.TLS, thing uintptr, x fixed_t, y fixed_t) (r bool
 //	// crossing special lines unless MF_TELEPORT is set.
 //	//
 func P_TryMove(tls *libc.TLS, thing uintptr, x fixed_t, y fixed_t) (r boolean) {
-	var ld uintptr
 	var oldside, side, v1 int32
 	var oldx, oldy fixed_t
 	mthing := (*mobj_t)(unsafe.Pointer(thing))
@@ -26705,12 +26687,12 @@ func P_TryMove(tls *libc.TLS, thing uintptr, x fixed_t, y fixed_t) (r boolean) {
 				break
 			}
 			// see if the line was crossed
-			ld = spechit[numspechit]
+			ld := spechit[numspechit]
 			side = P_PointOnLineSide(mthing.Fx, mthing.Fy, ld)
 			oldside = P_PointOnLineSide(oldx, oldy, ld)
 			if side != oldside {
-				if (*line_t)(unsafe.Pointer(ld)).Fspecial != 0 {
-					P_CrossSpecialLine(tls, int32((int64(ld)-int64(lines))/88), oldside, thing)
+				if ld.Fspecial != 0 {
+					P_CrossSpecialLine(tls, lineIndex(ld), oldside, thing)
 				}
 			}
 		}
@@ -26759,20 +26741,20 @@ func P_ThingHeightClip(tls *libc.TLS, thing uintptr) (r boolean) {
 //	// Adjusts the xmove / ymove
 //	// so that the next move will slide along the wall.
 //	//
-func P_HitSlideLine(tls *libc.TLS, ld uintptr) {
+func P_HitSlideLine(tls *libc.TLS, ld *line_t) {
 	var deltaangle, lineangle, moveangle angle_t
 	var movelen, newlen fixed_t
 	var side int32
-	if (*line_t)(unsafe.Pointer(ld)).Fslopetype == ST_HORIZONTAL {
+	if ld.Fslopetype == ST_HORIZONTAL {
 		tmymove = 0
 		return
 	}
-	if (*line_t)(unsafe.Pointer(ld)).Fslopetype == ST_VERTICAL {
+	if ld.Fslopetype == ST_VERTICAL {
 		tmxmove = 0
 		return
 	}
 	side = P_PointOnLineSide((*mobj_t)(unsafe.Pointer(slidemo)).Fx, (*mobj_t)(unsafe.Pointer(slidemo)).Fy, ld)
-	lineangle = R_PointToAngle2(0, 0, (*line_t)(unsafe.Pointer(ld)).Fdx, (*line_t)(unsafe.Pointer(ld)).Fdy)
+	lineangle = R_PointToAngle2(0, 0, ld.Fdx, ld.Fdy)
 	if side == 1 {
 		lineangle += uint32(ANG1805)
 	}
@@ -26796,12 +26778,12 @@ func P_HitSlideLine(tls *libc.TLS, ld uintptr) {
 //	// PTR_SlideTraverse
 //	//
 func PTR_SlideTraverse(tls *libc.TLS, in *intercept_t) (r boolean) {
-	var li uintptr
+	var li *line_t
 	if !(in.Fisaline != 0) {
 		I_Error(tls, __ccgo_ts(24696), 0)
 	}
 	li = in.Fd.Fthing
-	if !(int32((*line_t)(unsafe.Pointer(li)).Fflags)&ML_TWOSIDED != 0) {
+	if !(int32(li.Fflags)&ML_TWOSIDED != 0) {
 		if P_PointOnLineSide((*mobj_t)(unsafe.Pointer(slidemo)).Fx, (*mobj_t)(unsafe.Pointer(slidemo)).Fy, li) != 0 {
 			// don't hit the back side
 			return 1
@@ -26926,10 +26908,11 @@ _2:
 //	//
 func PTR_AimTraverse(tls *libc.TLS, in uintptr) (r boolean) {
 	var dist, slope, thingbottomslope, thingtopslope fixed_t
-	var li, th uintptr
+	var th uintptr
+	var li *line_t
 	if (*intercept_t)(unsafe.Pointer(in)).Fisaline != 0 {
-		li = *(*uintptr)(unsafe.Pointer(in + 8))
-		if !(int32((*line_t)(unsafe.Pointer(li)).Fflags)&ML_TWOSIDED != 0) {
+		li = (*intercept_t)(unsafe.Pointer(in)).Fd.Fthing
+		if !(int32(li.Fflags)&ML_TWOSIDED != 0) {
 			return 0
 		} // stop
 		// Crosses a two sided line.
@@ -26940,13 +26923,13 @@ func PTR_AimTraverse(tls *libc.TLS, in uintptr) (r boolean) {
 			return 0
 		} // stop
 		dist = FixedMul(attackrange, (*intercept_t)(unsafe.Pointer(in)).Ffrac)
-		if (*line_t)(unsafe.Pointer(li)).Fbacksector == nil || (*line_t)(unsafe.Pointer(li)).Ffrontsector.Ffloorheight != (*sector_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Fbacksector)).Ffloorheight {
+		if li.Fbacksector == nil || li.Ffrontsector.Ffloorheight != (*sector_t)(unsafe.Pointer(li.Fbacksector)).Ffloorheight {
 			slope = FixedDiv(openbottom-shootz, dist)
 			if slope > bottomslope {
 				bottomslope = slope
 			}
 		}
-		if (*line_t)(unsafe.Pointer(li)).Fbacksector == nil || (*line_t)(unsafe.Pointer(li)).Ffrontsector.Fceilingheight != (*sector_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Fbacksector)).Fceilingheight {
+		if li.Fbacksector == nil || li.Ffrontsector.Fceilingheight != (*sector_t)(unsafe.Pointer(li.Fbacksector)).Fceilingheight {
 			slope = FixedDiv(opentop-shootz, dist)
 			if slope < topslope {
 				topslope = slope
@@ -26994,13 +26977,14 @@ func PTR_AimTraverse(tls *libc.TLS, in uintptr) (r boolean) {
 //	//
 func PTR_ShootTraverse(tls *libc.TLS, in uintptr) (r boolean) {
 	var dist, frac, slope, thingbottomslope, thingtopslope, x, y, z fixed_t
-	var li, th uintptr
+	var th uintptr
+	var li *line_t
 	if (*intercept_t)(unsafe.Pointer(in)).Fisaline != 0 {
-		li = *(*uintptr)(unsafe.Pointer(in + 8))
-		if (*line_t)(unsafe.Pointer(li)).Fspecial != 0 {
+		li = (*intercept_t)(unsafe.Pointer(in)).Fd.Fthing
+		if li.Fspecial != 0 {
 			P_ShootSpecialLine(tls, shootthing, li)
 		}
-		if !(int32((*line_t)(unsafe.Pointer(li)).Fflags)&ML_TWOSIDED != 0) {
+		if !(int32(li.Fflags)&ML_TWOSIDED != 0) {
 			goto hitline
 		}
 		// crosses a two sided line
@@ -27018,13 +27002,13 @@ func PTR_ShootTraverse(tls *libc.TLS, in uintptr) (r boolean) {
 				goto hitline
 			}
 		} else {
-			if (*sector_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Ffrontsector)).Ffloorheight != (*sector_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Fbacksector)).Ffloorheight {
+			if (*sector_t)(unsafe.Pointer(li.Ffrontsector)).Ffloorheight != (*sector_t)(unsafe.Pointer(li.Fbacksector)).Ffloorheight {
 				slope = FixedDiv(openbottom-shootz, dist)
 				if slope > aimslope {
 					goto hitline
 				}
 			}
-			if (*sector_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Ffrontsector)).Fceilingheight != (*sector_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Fbacksector)).Fceilingheight {
+			if (*sector_t)(unsafe.Pointer(li.Ffrontsector)).Fceilingheight != (*sector_t)(unsafe.Pointer(li.Fbacksector)).Fceilingheight {
 				slope = FixedDiv(opentop-shootz, dist)
 				if slope < aimslope {
 					goto hitline
@@ -27042,13 +27026,13 @@ func PTR_ShootTraverse(tls *libc.TLS, in uintptr) (r boolean) {
 		x = trace.Fx + FixedMul(trace.Fdx, frac)
 		y = trace.Fy + FixedMul(trace.Fdy, frac)
 		z = shootz + FixedMul(aimslope, FixedMul(frac, attackrange))
-		if int32((*sector_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Ffrontsector)).Fceilingpic) == skyflatnum {
+		if int32((*sector_t)(unsafe.Pointer(li.Ffrontsector)).Fceilingpic) == skyflatnum {
 			// don't shoot the sky!
-			if z > (*sector_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Ffrontsector)).Fceilingheight {
+			if z > (*sector_t)(unsafe.Pointer(li.Ffrontsector)).Fceilingheight {
 				return 0
 			}
 			// it's a sky hack wall
-			if (*line_t)(unsafe.Pointer(li)).Fbacksector != nil && int32((*line_t)(unsafe.Pointer(li)).Fbacksector.Fceilingpic) == skyflatnum {
+			if li.Fbacksector != nil && int32(li.Fbacksector.Fceilingpic) == skyflatnum {
 				return 0
 			}
 		}
@@ -27142,8 +27126,9 @@ func P_LineAttack(tls *libc.TLS, t1 uintptr, angle angle_t, distance fixed_t, sl
 
 func PTR_UseTraverse(tls *libc.TLS, in uintptr) (r boolean) {
 	var side int32
-	if !((*line_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(in + 8)))).Fspecial != 0) {
-		P_LineOpening(*(*uintptr)(unsafe.Pointer(in + 8)))
+	line := (*intercept_t)(unsafe.Pointer(in)).Fd.Fthing
+	if !(line.Fspecial != 0) {
+		P_LineOpening(line)
 		if openrange <= 0 {
 			S_StartSound(tls, usething, int32(sfx_noway))
 			// can't use through a wall
@@ -27153,11 +27138,11 @@ func PTR_UseTraverse(tls *libc.TLS, in uintptr) (r boolean) {
 		return 1
 	}
 	side = 0
-	if P_PointOnLineSide((*mobj_t)(unsafe.Pointer(usething)).Fx, (*mobj_t)(unsafe.Pointer(usething)).Fy, *(*uintptr)(unsafe.Pointer(in + 8))) == 1 {
+	if P_PointOnLineSide((*mobj_t)(unsafe.Pointer(usething)).Fx, (*mobj_t)(unsafe.Pointer(usething)).Fy, line) == 1 {
 		side = 1
 	}
 	//	return false;		// don't use back side
-	P_UseSpecialLine(tls, usething, *(*uintptr)(unsafe.Pointer(in + 8)), side)
+	P_UseSpecialLine(tls, usething, line, side)
 	// can't use for than one special line in a row
 	return 0
 }
@@ -27340,7 +27325,7 @@ func P_ChangeSector(tls *libc.TLS, sector *sector_t, crunch boolean) (r boolean)
 // of the spechit array.  This is by Andrey Budko (e6y) and comes from his
 // PrBoom plus port.  A big thanks to Andrey for this.
 
-func SpechitOverrun(tls *libc.TLS, ld uintptr) {
+func SpechitOverrun(tls *libc.TLS, ld *line_t) {
 	var addr uint32
 	var p int32
 	if baseaddr == uint32(0) {
@@ -27361,7 +27346,7 @@ func SpechitOverrun(tls *libc.TLS, ld uintptr) {
 		}
 	}
 	// Calculate address used in doom2.exe
-	addr = libc.Uint32FromInt64(libc.Int64FromUint32(baseaddr) + (int64(ld)-int64(lines))/88*int64(0x3E))
+	addr = baseaddr + uint32(lineIndex(ld))*0x3E
 	switch numspechit {
 	case 9:
 		fallthrough
@@ -27424,24 +27409,24 @@ func P_AproxDistance(dx fixed_t, dy fixed_t) (r fixed_t) {
 //	// P_PointOnLineSide
 //	// Returns 0 or 1
 //	//
-func P_PointOnLineSide(x fixed_t, y fixed_t, line uintptr) (r int32) {
+func P_PointOnLineSide(x fixed_t, y fixed_t, line *line_t) (r int32) {
 	var dx, dy, left, right fixed_t
 	if !((*line_t)(unsafe.Pointer(line)).Fdx != 0) {
-		if x <= (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(line)).Fv1)).Fx {
-			return libc.BoolInt32((*line_t)(unsafe.Pointer(line)).Fdy > 0)
+		if x <= (*vertex_t)(unsafe.Pointer(line.Fv1)).Fx {
+			return libc.BoolInt32(line.Fdy > 0)
 		}
-		return libc.BoolInt32((*line_t)(unsafe.Pointer(line)).Fdy < 0)
+		return libc.BoolInt32(line.Fdy < 0)
 	}
-	if !((*line_t)(unsafe.Pointer(line)).Fdy != 0) {
-		if y <= (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(line)).Fv1)).Fy {
-			return libc.BoolInt32((*line_t)(unsafe.Pointer(line)).Fdx < 0)
+	if !(line.Fdy != 0) {
+		if y <= (*vertex_t)(unsafe.Pointer(line.Fv1)).Fy {
+			return libc.BoolInt32(line.Fdx < 0)
 		}
-		return libc.BoolInt32((*line_t)(unsafe.Pointer(line)).Fdx > 0)
+		return libc.BoolInt32(line.Fdx > 0)
 	}
-	dx = x - (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(line)).Fv1)).Fx
-	dy = y - (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(line)).Fv1)).Fy
-	left = FixedMul((*line_t)(unsafe.Pointer(line)).Fdy>>int32(FRACBITS), dx)
-	right = FixedMul(dy, (*line_t)(unsafe.Pointer(line)).Fdx>>int32(FRACBITS))
+	dx = x - (*vertex_t)(unsafe.Pointer(line.Fv1)).Fx
+	dy = y - (*vertex_t)(unsafe.Pointer(line.Fv1)).Fy
+	left = FixedMul(line.Fdy>>int32(FRACBITS), dx)
+	right = FixedMul(dy, line.Fdx>>int32(FRACBITS))
 	if right < left {
 		return 0
 	} // front side
@@ -27455,21 +27440,21 @@ func P_PointOnLineSide(x fixed_t, y fixed_t, line uintptr) (r int32) {
 //	// Considers the line to be infinite
 //	// Returns side 0 or 1, -1 if box crosses the line.
 //	//
-func P_BoxOnLineSide(tmbox uintptr, ld uintptr) (r int32) {
+func P_BoxOnLineSide(tmbox uintptr, ld *line_t) (r int32) {
 	var p1, p2 int32
 	p1 = 0
 	p2 = 0
 	switch (*line_t)(unsafe.Pointer(ld)).Fslopetype {
 	case ST_HORIZONTAL:
-		p1 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXTOP)*4)) > (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(ld)).Fv1)).Fy)
-		p2 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXBOTTOM)*4)) > (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(ld)).Fv1)).Fy)
-		if (*line_t)(unsafe.Pointer(ld)).Fdx < 0 {
+		p1 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXTOP)*4)) > (*vertex_t)(unsafe.Pointer(ld.Fv1)).Fy)
+		p2 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXBOTTOM)*4)) > (*vertex_t)(unsafe.Pointer(ld.Fv1)).Fy)
+		if ld.Fdx < 0 {
 			p1 ^= 1
 			p2 ^= 1
 		}
 	case ST_VERTICAL:
-		p1 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXRIGHT)*4)) < (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(ld)).Fv1)).Fx)
-		p2 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXLEFT)*4)) < (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(ld)).Fv1)).Fx)
+		p1 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXRIGHT)*4)) < (*vertex_t)(unsafe.Pointer(ld.Fv1)).Fx)
+		p2 = libc.BoolInt32(*(*fixed_t)(unsafe.Pointer(tmbox + uintptr(BOXLEFT)*4)) < (*vertex_t)(unsafe.Pointer(ld.Fv1)).Fx)
 		if (*line_t)(unsafe.Pointer(ld)).Fdy < 0 {
 			p1 ^= 1
 			p2 ^= 1
@@ -27530,11 +27515,11 @@ func P_PointOnDivlineSide(x fixed_t, y fixed_t, line uintptr) (r int32) {
 //	//
 //	// P_MakeDivline
 //	//
-func P_MakeDivline(li uintptr, dl uintptr) {
-	(*divline_t)(unsafe.Pointer(dl)).Fx = (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Fv1)).Fx
-	(*divline_t)(unsafe.Pointer(dl)).Fy = (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Fv1)).Fy
-	(*divline_t)(unsafe.Pointer(dl)).Fdx = (*line_t)(unsafe.Pointer(li)).Fdx
-	(*divline_t)(unsafe.Pointer(dl)).Fdy = (*line_t)(unsafe.Pointer(li)).Fdy
+func P_MakeDivline(li *line_t, dl uintptr) {
+	(*divline_t)(unsafe.Pointer(dl)).Fx = (*vertex_t)(unsafe.Pointer(li.Fv1)).Fx
+	(*divline_t)(unsafe.Pointer(dl)).Fy = (*vertex_t)(unsafe.Pointer(li.Fv1)).Fy
+	(*divline_t)(unsafe.Pointer(dl)).Fdx = li.Fdx
+	(*divline_t)(unsafe.Pointer(dl)).Fdy = li.Fdy
 }
 
 // C documentation
@@ -27558,15 +27543,15 @@ func P_InterceptVector(v2 uintptr, v1 uintptr) (r fixed_t) {
 	return frac
 }
 
-func P_LineOpening(linedef uintptr) {
+func P_LineOpening(linedef *line_t) {
 	var back, front *sector_t
-	if int32(*(*int16)(unsafe.Pointer(linedef + 30 + 1*2))) == -1 {
+	if linedef.Fsidenum[1] == -1 {
 		// single sided line
 		openrange = 0
 		return
 	}
-	front = (*line_t)(unsafe.Pointer(linedef)).Ffrontsector
-	back = (*line_t)(unsafe.Pointer(linedef)).Fbacksector
+	front = linedef.Ffrontsector
+	back = linedef.Fbacksector
 	if front.Fceilingheight < back.Fceilingheight {
 		opentop = front.Fceilingheight
 	} else {
@@ -27693,7 +27678,7 @@ func P_SetThingPosition(thing uintptr) {
 //	// to it.
 //	//
 func P_BlockLinesIterator(tls *libc.TLS, x int32, y int32, func1 uintptr) (r boolean) {
-	var ld, list uintptr
+	var list uintptr
 	var offset int32
 	if x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight {
 		return 1
@@ -27705,12 +27690,12 @@ func P_BlockLinesIterator(tls *libc.TLS, x int32, y int32, func1 uintptr) (r boo
 		if !(int32(*(*int16)(unsafe.Pointer(list))) != -1) {
 			break
 		}
-		ld = lines + uintptr(*(*int16)(unsafe.Pointer(list)))*88
-		if (*line_t)(unsafe.Pointer(ld)).Fvalidcount == validcount {
+		ld := &lines[list]
+		if ld.Fvalidcount == validcount {
 			goto _1
 		} // line has already been checked
-		(*line_t)(unsafe.Pointer(ld)).Fvalidcount = validcount
-		if !((*(*func(*libc.TLS, uintptr) boolean)(unsafe.Pointer(&struct{ uintptr }{func1})))(tls, ld) != 0) {
+		ld.Fvalidcount = validcount
+		if !((*(*func(*libc.TLS, uintptr) boolean)(unsafe.Pointer(&struct{ uintptr }{func1})))(tls, (uintptr)(unsafe.Pointer(ld))) != 0) {
 			return 0
 		}
 		goto _1
@@ -27759,14 +27744,14 @@ func P_BlockThingsIterator(tls *libc.TLS, x int32, y int32, func1 uintptr) (r bo
 //	// are on opposite sides of the trace.
 //	// Returns true if earlyout and a solid line hit.
 //	//
-func PIT_AddLineIntercepts(tls *libc.TLS, ld uintptr) (r boolean) {
+func PIT_AddLineIntercepts(tls *libc.TLS, ld *line_t) (r boolean) {
 	bp := alloc(16)
 	var frac fixed_t
 	var s1, s2 int32
 	// avoid precision problems with two routines
 	if trace.Fdx > 1<<FRACBITS*16 || trace.Fdy > 1<<FRACBITS*16 || trace.Fdx < -(1<<FRACBITS)*16 || trace.Fdy < -(1<<FRACBITS)*16 {
-		s1 = P_PointOnDivlineSide((*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(ld)).Fv1)).Fx, (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(ld)).Fv1)).Fy, uintptr(unsafe.Pointer(&trace)))
-		s2 = P_PointOnDivlineSide((*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(ld)).Fv2)).Fx, (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(ld)).Fv2)).Fy, uintptr(unsafe.Pointer(&trace)))
+		s1 = P_PointOnDivlineSide((*vertex_t)(unsafe.Pointer(ld.Fv1)).Fx, (*vertex_t)(unsafe.Pointer(ld.Fv1)).Fy, uintptr(unsafe.Pointer(&trace)))
+		s2 = P_PointOnDivlineSide((*vertex_t)(unsafe.Pointer(ld.Fv2)).Fx, (*vertex_t)(unsafe.Pointer(ld.Fv2)).Fy, uintptr(unsafe.Pointer(&trace)))
 	} else {
 		s1 = P_PointOnLineSide(trace.Fx, trace.Fy, ld)
 		s2 = P_PointOnLineSide(trace.Fx+trace.Fdx, trace.Fy+trace.Fdy, ld)
@@ -27781,12 +27766,12 @@ func PIT_AddLineIntercepts(tls *libc.TLS, ld uintptr) (r boolean) {
 		return 1
 	} // behind source
 	// try to early out the check
-	if earlyout != 0 && frac < 1<<FRACBITS && !((*line_t)(unsafe.Pointer(ld)).Fbacksector != nil) {
+	if earlyout != 0 && frac < 1<<FRACBITS && !(ld.Fbacksector != nil) {
 		return 0 // stop checking
 	}
 	(*intercept_t)(unsafe.Pointer(intercept_p)).Ffrac = frac
 	(*intercept_t)(unsafe.Pointer(intercept_p)).Fisaline = 1
-	*(*uintptr)(unsafe.Pointer(intercept_p + 8)) = ld
+	(*intercept_t)(unsafe.Pointer(intercept_p)).Fd.Fthing = ld
 	InterceptsOverrun(tls, int32((int64(intercept_p)-int64(uintptr(unsafe.Pointer(&intercepts))))/16), intercept_p)
 	intercept_p += 16
 	return 1 // continue
@@ -28245,7 +28230,7 @@ func P_XYMovement(tls *libc.TLS, mo uintptr) {
 			} else {
 				if (*mobj_t)(unsafe.Pointer(mo)).Fflags&int32(MF_MISSILE) != 0 {
 					// explode a missile
-					if ceilingline != 0 && (*line_t)(unsafe.Pointer(ceilingline)).Fbacksector != nil && int32((*sector_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(ceilingline)).Fbacksector)).Fceilingpic) == skyflatnum {
+					if ceilingline != nil && ceilingline.Fbacksector != nil && int32((*sector_t)(unsafe.Pointer(ceilingline.Fbacksector)).Fceilingpic) == skyflatnum {
 						// Hack to prevent missiles exploding
 						// against the sky.
 						// Does not handle sky floors.
@@ -29008,7 +28993,7 @@ func T_PlatRaise(tls *libc.TLS, plat *plat_t) {
 //	// Do Platforms
 //	//  "amount" is only used for SOME platforms.
 //	//
-func EV_DoPlat(tls *libc.TLS, line uintptr, type1 plattype_e, amount int32) (r int32) {
+func EV_DoPlat(tls *libc.TLS, line *line_t, type1 plattype_e, amount int32) (r int32) {
 	var plat uintptr
 	var sec *sector_t
 	var rtn, secnum, v1 int32
@@ -29017,7 +29002,7 @@ func EV_DoPlat(tls *libc.TLS, line uintptr, type1 plattype_e, amount int32) (r i
 	//	Activate all <type> plats that are in_stasis
 	switch type1 {
 	case int32(perpetualRaise):
-		P_ActivateInStasis(tls, int32((*line_t)(unsafe.Pointer(line)).Ftag))
+		P_ActivateInStasis(tls, int32(line.Ftag))
 	default:
 		break
 	}
@@ -29027,7 +29012,7 @@ func EV_DoPlat(tls *libc.TLS, line uintptr, type1 plattype_e, amount int32) (r i
 		if !(v1 >= 0) {
 			break
 		}
-		sec = (*sector_t)(unsafe.Pointer(sectors + uintptr(secnum)*128))
+		sec = &sectors[secnum]
 		if sec.Fspecialdata != 0 {
 			continue
 		}
@@ -29040,11 +29025,11 @@ func EV_DoPlat(tls *libc.TLS, line uintptr, type1 plattype_e, amount int32) (r i
 		(*plat_t)(unsafe.Pointer(plat)).Fsector.Fspecialdata = plat
 		*(*actionf_p1)(unsafe.Pointer(plat + 16)) = __ccgo_fp(T_PlatRaise)
 		(*plat_t)(unsafe.Pointer(plat)).Fcrush = 0
-		(*plat_t)(unsafe.Pointer(plat)).Ftag = int32((*line_t)(unsafe.Pointer(line)).Ftag)
+		(*plat_t)(unsafe.Pointer(plat)).Ftag = int32(line.Ftag)
 		switch type1 {
 		case int32(raiseToNearestAndChange):
 			(*plat_t)(unsafe.Pointer(plat)).Fspeed = 1 << FRACBITS / 2
-			sec.Ffloorpic = (*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(line + 30)))*24))).Fsector.Ffloorpic
+			sec.Ffloorpic = (*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0]*24))).Fsector.Ffloorpic
 			(*plat_t)(unsafe.Pointer(plat)).Fhigh = P_FindNextHighestFloor(tls, sec, sec.Ffloorheight)
 			(*plat_t)(unsafe.Pointer(plat)).Fwait = 0
 			(*plat_t)(unsafe.Pointer(plat)).Fstatus = int32(up)
@@ -29053,7 +29038,7 @@ func EV_DoPlat(tls *libc.TLS, line uintptr, type1 plattype_e, amount int32) (r i
 			S_StartSound(tls, (uintptr)(unsafe.Pointer(&sec.Fsoundorg)), int32(sfx_stnmov))
 		case int32(raiseAndChange):
 			(*plat_t)(unsafe.Pointer(plat)).Fspeed = 1 << FRACBITS / 2
-			sec.Ffloorpic = (*sector_t)(unsafe.Pointer((*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(line + 30)))*24))).Fsector)).Ffloorpic
+			sec.Ffloorpic = (*sector_t)(unsafe.Pointer((*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0]*24)))).Fsector)).Ffloorpic
 			(*plat_t)(unsafe.Pointer(plat)).Fhigh = sec.Ffloorheight + amount*(1<<FRACBITS)
 			(*plat_t)(unsafe.Pointer(plat)).Fwait = 0
 			(*plat_t)(unsafe.Pointer(plat)).Fstatus = int32(up)
@@ -29116,14 +29101,14 @@ func P_ActivateInStasis(tls *libc.TLS, tag int32) {
 	}
 }
 
-func EV_StopPlat(tls *libc.TLS, line uintptr) {
+func EV_StopPlat(tls *libc.TLS, line *line_t) {
 	var j int32
 	j = 0
 	for {
 		if !(j < int32(MAXPLATS)) {
 			break
 		}
-		if activeplats[j] != nil && activeplats[j].Fstatus != int32(in_stasis) && activeplats[j].Ftag == int32((*line_t)(unsafe.Pointer(line)).Ftag) {
+		if activeplats[j] != nil && activeplats[j].Fstatus != int32(in_stasis) && activeplats[j].Ftag == int32(line.Ftag) {
 			activeplats[j].Foldstatus = (*plat_t)(unsafe.Pointer(activeplats[j])).Fstatus
 			activeplats[j].Fstatus = int32(in_stasis)
 			activeplats[j].Fthinker.Ffunction.Facv = 0
@@ -30539,7 +30524,7 @@ func saveg_read_ceiling_t(tls *libc.TLS, str uintptr) {
 	(*ceiling_t)(unsafe.Pointer(str)).Ftype1 = saveg_read32(tls)
 	// sector_t* sector;
 	sector = saveg_read32(tls)
-	(*ceiling_t)(unsafe.Pointer(str)).Fsector = (*sector_t)(unsafe.Pointer(sectors + uintptr(sector)*128))
+	(*ceiling_t)(unsafe.Pointer(str)).Fsector = &sectors[sector]
 	// fixed_t bottomheight;
 	(*ceiling_t)(unsafe.Pointer(str)).Fbottomheight = saveg_read32(tls)
 	// fixed_t topheight;
@@ -30591,7 +30576,7 @@ func saveg_read_vldoor_t(tls *libc.TLS, str uintptr) {
 	(*vldoor_t)(unsafe.Pointer(str)).Ftype1 = saveg_read32(tls)
 	// sector_t* sector;
 	sector = saveg_read32(tls)
-	(*vldoor_t)(unsafe.Pointer(str)).Fsector = (*sector_t)(unsafe.Pointer(sectors + uintptr(sector)*128))
+	(*vldoor_t)(unsafe.Pointer(str)).Fsector = &sectors[sector]
 	// fixed_t topheight;
 	(*vldoor_t)(unsafe.Pointer(str)).Ftopheight = saveg_read32(tls)
 	// fixed_t speed;
@@ -30637,7 +30622,7 @@ func saveg_read_floormove_t(tls *libc.TLS, str uintptr) {
 	(*floormove_t)(unsafe.Pointer(str)).Fcrush = libc.Uint32FromInt32(saveg_read32(tls))
 	// sector_t* sector;
 	sector = saveg_read32(tls)
-	(*floormove_t)(unsafe.Pointer(str)).Fsector = (*sector_t)(unsafe.Pointer(sectors + uintptr(sector)*128))
+	(*floormove_t)(unsafe.Pointer(str)).Fsector = &sectors[sector]
 	// int direction;
 	(*floormove_t)(unsafe.Pointer(str)).Fdirection = saveg_read32(tls)
 	// int newspecial;
@@ -30681,7 +30666,7 @@ func saveg_read_plat_t(tls *libc.TLS, str uintptr) {
 	saveg_read_thinker_t(tls, str)
 	// sector_t* sector;
 	sector = saveg_read32(tls)
-	(*plat_t)(unsafe.Pointer(str)).Fsector = (*sector_t)(unsafe.Pointer(sectors + uintptr(sector)*128))
+	(*plat_t)(unsafe.Pointer(str)).Fsector = &sectors[sector]
 	// fixed_t speed;
 	(*plat_t)(unsafe.Pointer(str)).Fspeed = saveg_read32(tls)
 	// fixed_t low;
@@ -30741,7 +30726,7 @@ func saveg_read_lightflash_t(tls *libc.TLS, str uintptr) {
 	saveg_read_thinker_t(tls, str)
 	// sector_t* sector;
 	sector = saveg_read32(tls)
-	(*lightflash_t)(unsafe.Pointer(str)).Fsector = (*sector_t)(unsafe.Pointer(sectors + uintptr(sector)*128))
+	(*lightflash_t)(unsafe.Pointer(str)).Fsector = &sectors[sector]
 	// int count;
 	(*lightflash_t)(unsafe.Pointer(str)).Fcount = saveg_read32(tls)
 	// int maxlight;
@@ -30781,7 +30766,7 @@ func saveg_read_strobe_t(tls *libc.TLS, str uintptr) {
 	saveg_read_thinker_t(tls, str)
 	// sector_t* sector;
 	sector = saveg_read32(tls)
-	(*strobe_t)(unsafe.Pointer(str)).Fsector = (*sector_t)(unsafe.Pointer(sectors + uintptr(sector)*128))
+	(*strobe_t)(unsafe.Pointer(str)).Fsector = &sectors[sector]
 	// int count;
 	(*strobe_t)(unsafe.Pointer(str)).Fcount = saveg_read32(tls)
 	// int minlight;
@@ -30821,7 +30806,7 @@ func saveg_read_glow_t(tls *libc.TLS, str uintptr) {
 	saveg_read_thinker_t(tls, str)
 	// sector_t* sector;
 	sector = saveg_read32(tls)
-	(*glow_t)(unsafe.Pointer(str)).Fsector = (*sector_t)(unsafe.Pointer(sectors + uintptr(sector)*128))
+	(*glow_t)(unsafe.Pointer(str)).Fsector = &sectors[sector]
 	// int minlight;
 	(*glow_t)(unsafe.Pointer(str)).Fminlight = saveg_read32(tls)
 	// int maxlight;
@@ -31031,7 +31016,7 @@ func P_ArchiveWorld(tls *libc.TLS) {
 	var si uintptr
 	// do sectors
 	for i := int32(0); i < numsectors; i++ {
-		sec := (*sector_t)(unsafe.Pointer(sectors + uintptr(i)*128))
+		sec := &sectors[i]
 		saveg_write16(tls, int16(sec.Ffloorheight>>int32(FRACBITS)))
 		saveg_write16(tls, int16(sec.Fceilingheight>>int32(FRACBITS)))
 		saveg_write16(tls, sec.Ffloorpic)
@@ -31042,15 +31027,15 @@ func P_ArchiveWorld(tls *libc.TLS) {
 	}
 	// do lines
 	for i := int32(0); i < numlines; i++ {
-		li := lines + uintptr(i)*88
-		saveg_write16(tls, (*line_t)(unsafe.Pointer(li)).Fflags)
-		saveg_write16(tls, (*line_t)(unsafe.Pointer(li)).Fspecial)
-		saveg_write16(tls, (*line_t)(unsafe.Pointer(li)).Ftag)
+		li := &lines[i]
+		saveg_write16(tls, li.Fflags)
+		saveg_write16(tls, li.Fspecial)
+		saveg_write16(tls, li.Ftag)
 		for j := 0; j < 2; j++ {
-			if int32(*(*int16)(unsafe.Pointer(li + 30 + uintptr(j)*2))) == -1 {
+			if li.Fsidenum[j] == -1 {
 				continue
 			}
-			si = sides + uintptr(*(*int16)(unsafe.Pointer(li + 30 + uintptr(j)*2)))*24
+			si = sides + uintptr(li.Fsidenum[j])*24
 			saveg_write16(tls, int16((*side_t)(unsafe.Pointer(si)).Ftextureoffset>>int32(FRACBITS)))
 			saveg_write16(tls, int16((*side_t)(unsafe.Pointer(si)).Frowoffset>>int32(FRACBITS)))
 			saveg_write16(tls, (*side_t)(unsafe.Pointer(si)).Ftoptexture)
@@ -31066,10 +31051,10 @@ func P_ArchiveWorld(tls *libc.TLS) {
 //	// P_UnArchiveWorld
 //	//
 func P_UnArchiveWorld(tls *libc.TLS) {
-	var li, si uintptr
+	var si uintptr
 	// do sectors
 	for i := int32(0); i < numsectors; i++ {
-		sec := (*sector_t)(unsafe.Pointer(sectors + uintptr(i)*128))
+		sec := &sectors[i]
 		sec.Ffloorheight = int32(saveg_read16(tls)) << int32(FRACBITS)
 		sec.Fceilingheight = int32(saveg_read16(tls)) << int32(FRACBITS)
 		sec.Ffloorpic = saveg_read16(tls)
@@ -31082,15 +31067,15 @@ func P_UnArchiveWorld(tls *libc.TLS) {
 	}
 	// do lines
 	for i := int32(0); i < numlines; i++ {
-		li = lines + uintptr(i)*88
-		(*line_t)(unsafe.Pointer(li)).Fflags = saveg_read16(tls)
-		(*line_t)(unsafe.Pointer(li)).Fspecial = saveg_read16(tls)
-		(*line_t)(unsafe.Pointer(li)).Ftag = saveg_read16(tls)
+		li := &lines[i]
+		li.Fflags = saveg_read16(tls)
+		li.Fspecial = saveg_read16(tls)
+		li.Ftag = saveg_read16(tls)
 		for j := 0; j < 2; j++ {
-			if int32(*(*int16)(unsafe.Pointer(li + 30 + uintptr(j)*2))) == -1 {
+			if li.Fsidenum[j] == -1 {
 				continue
 			}
-			si = sides + uintptr(*(*int16)(unsafe.Pointer(li + 30 + uintptr(j)*2)))*24
+			si = sides + uintptr(li.Fsidenum[j])*24
 			(*side_t)(unsafe.Pointer(si)).Ftextureoffset = int32(saveg_read16(tls)) << int32(FRACBITS)
 			(*side_t)(unsafe.Pointer(si)).Frowoffset = int32(saveg_read16(tls)) << int32(FRACBITS)
 			(*side_t)(unsafe.Pointer(si)).Ftoptexture = saveg_read16(tls)
@@ -31397,7 +31382,7 @@ func P_LoadVertexes(tls *libc.TLS, lump int32) {
 //	//
 func GetSectorAtNullAddress(tls *libc.TLS) (r *sector_t) {
 	if !(null_sector_is_initialized != 0) {
-		xmemset(uintptr(unsafe.Pointer(&null_sector)), 0, uint64(128))
+		xmemset(uintptr(unsafe.Pointer(&null_sector)), 0, uint64(144))
 		I_GetMemoryValue(tls, uint32(0), uintptr(unsafe.Pointer(&null_sector)), 4)
 		I_GetMemoryValue(tls, uint32(4), uintptr(unsafe.Pointer(&null_sector))+4, 4)
 		null_sector_is_initialized = 1
@@ -31434,12 +31419,12 @@ func P_LoadSegs(tls *libc.TLS, lump int32) {
 		(*seg_t)(unsafe.Pointer(li)).Fangle = libc.Uint32FromInt32(int32((*mapseg_t)(unsafe.Pointer(ml)).Fangle) << 16)
 		(*seg_t)(unsafe.Pointer(li)).Foffset = int32((*mapseg_t)(unsafe.Pointer(ml)).Foffset) << 16
 		linedef = int32((*mapseg_t)(unsafe.Pointer(ml)).Flinedef)
-		ldef = (*line_t)(unsafe.Pointer(lines + uintptr(linedef)*88))
+		ldef = &lines[linedef]
 		(*seg_t)(unsafe.Pointer(li)).Flinedef = ldef
 		side = int32((*mapseg_t)(unsafe.Pointer(ml)).Fside)
 		(*seg_t)(unsafe.Pointer(li)).Fsidedef = (*side_t)(unsafe.Pointer(sides + uintptr(ldef.Fsidenum[side])*24))
 		(*seg_t)(unsafe.Pointer(li)).Ffrontsector = (*(*side_t)(unsafe.Pointer(sides + uintptr(ldef.Fsidenum[side])*24))).Fsector
-		if int32((*line_t)(unsafe.Pointer(ldef)).Fflags)&ML_TWOSIDED != 0 {
+		if int32(ldef.Fflags)&ML_TWOSIDED != 0 {
 			sidenum = int32(ldef.Fsidenum[side^int32(1)])
 			// If the sidenum is out of range, this may be a "glass hack"
 			// impassible window.  Point at side #0 (this may not be
@@ -31501,32 +31486,30 @@ func P_LoadSubsectors(tls *libc.TLS, lump int32) {
 //	// P_LoadSectors
 //	//
 func P_LoadSectors(tls *libc.TLS, lump int32) {
-	var data, ms, ss uintptr
+	var data, ms uintptr
 	var i int32
 	numsectors = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(tls, libc.Uint32FromInt32(lump))) / uint64(26))
-	sectors = Z_Malloc(tls, libc.Int32FromUint64(libc.Uint64FromInt32(numsectors)*uint64(128)), int32(PU_LEVEL), uintptr(0))
-	xmemset(sectors, 0, libc.Uint64FromInt32(numsectors)*uint64(128))
+	sectors = make([]sector_t, numsectors)
 	data = W_CacheLumpNum(tls, lump, int32(PU_STATIC))
 	ms = data
-	ss = sectors
 	i = 0
 	for {
 		if !(i < numsectors) {
 			break
 		}
-		(*sector_t)(unsafe.Pointer(ss)).Ffloorheight = int32((*mapsector_t)(unsafe.Pointer(ms)).Ffloorheight) << int32(FRACBITS)
-		(*sector_t)(unsafe.Pointer(ss)).Fceilingheight = int32((*mapsector_t)(unsafe.Pointer(ms)).Fceilingheight) << int32(FRACBITS)
-		(*sector_t)(unsafe.Pointer(ss)).Ffloorpic = int16(R_FlatNumForName(tls, ms+4))
-		(*sector_t)(unsafe.Pointer(ss)).Fceilingpic = int16(R_FlatNumForName(tls, ms+12))
-		(*sector_t)(unsafe.Pointer(ss)).Flightlevel = (*mapsector_t)(unsafe.Pointer(ms)).Flightlevel
-		(*sector_t)(unsafe.Pointer(ss)).Fspecial = (*mapsector_t)(unsafe.Pointer(ms)).Fspecial
-		(*sector_t)(unsafe.Pointer(ss)).Ftag = (*mapsector_t)(unsafe.Pointer(ms)).Ftag
-		(*sector_t)(unsafe.Pointer(ss)).Fthinglist = libc.UintptrFromInt32(0)
+		ss := &sectors[i]
+		ss.Ffloorheight = int32((*mapsector_t)(unsafe.Pointer(ms)).Ffloorheight) << int32(FRACBITS)
+		ss.Fceilingheight = int32((*mapsector_t)(unsafe.Pointer(ms)).Fceilingheight) << int32(FRACBITS)
+		ss.Ffloorpic = int16(R_FlatNumForName(tls, ms+4))
+		ss.Fceilingpic = int16(R_FlatNumForName(tls, ms+12))
+		ss.Flightlevel = (*mapsector_t)(unsafe.Pointer(ms)).Flightlevel
+		ss.Fspecial = (*mapsector_t)(unsafe.Pointer(ms)).Fspecial
+		ss.Ftag = (*mapsector_t)(unsafe.Pointer(ms)).Ftag
+		ss.Fthinglist = libc.UintptrFromInt32(0)
 		goto _1
 	_1:
 		;
 		i++
-		ss += 128
 		ms += 26
 	}
 	W_ReleaseLumpNum(tls, lump)
@@ -31631,75 +31614,65 @@ func P_LoadThings(tls *libc.TLS, lump int32) {
 //	// Also counts secret lines for intermissions.
 //	//
 func P_LoadLineDefs(tls *libc.TLS, lump int32) {
-	var data, ld, mld, v1, v2, v21, v3 uintptr
+	var data, mld, v1, v2, v21, v3 uintptr
 	var i int32
 	numlines = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(tls, libc.Uint32FromInt32(lump))) / uint64(14))
-	lines = Z_Malloc(tls, libc.Int32FromUint64(libc.Uint64FromInt32(numlines)*uint64(88)), int32(PU_LEVEL), uintptr(0))
-	xmemset(lines, 0, libc.Uint64FromInt32(numlines)*uint64(88))
+	lines = make([]line_t, numlines)
 	data = W_CacheLumpNum(tls, lump, int32(PU_STATIC))
 	mld = data
-	ld = lines
-	i = 0
-	for {
-		if !(i < numlines) {
-			break
-		}
-		(*line_t)(unsafe.Pointer(ld)).Fflags = (*maplinedef_t)(unsafe.Pointer(mld)).Fflags
-		(*line_t)(unsafe.Pointer(ld)).Fspecial = (*maplinedef_t)(unsafe.Pointer(mld)).Fspecial
-		(*line_t)(unsafe.Pointer(ld)).Ftag = (*maplinedef_t)(unsafe.Pointer(mld)).Ftag
+	for i = 0; i < numlines; i++ {
+		ld := &lines[i]
+		ld.Fflags = (*maplinedef_t)(unsafe.Pointer(mld)).Fflags
+		ld.Fspecial = (*maplinedef_t)(unsafe.Pointer(mld)).Fspecial
+		ld.Ftag = (*maplinedef_t)(unsafe.Pointer(mld)).Ftag
 		v21 = vertexes + uintptr((*maplinedef_t)(unsafe.Pointer(mld)).Fv1)*8
-		(*line_t)(unsafe.Pointer(ld)).Fv1 = v21
+		ld.Fv1 = v21
 		v1 = v21
 		v3 = vertexes + uintptr((*maplinedef_t)(unsafe.Pointer(mld)).Fv2)*8
-		(*line_t)(unsafe.Pointer(ld)).Fv2 = v3
+		ld.Fv2 = v3
 		v2 = v3
-		(*line_t)(unsafe.Pointer(ld)).Fdx = (*vertex_t)(unsafe.Pointer(v2)).Fx - (*vertex_t)(unsafe.Pointer(v1)).Fx
-		(*line_t)(unsafe.Pointer(ld)).Fdy = (*vertex_t)(unsafe.Pointer(v2)).Fy - (*vertex_t)(unsafe.Pointer(v1)).Fy
-		if !((*line_t)(unsafe.Pointer(ld)).Fdx != 0) {
-			(*line_t)(unsafe.Pointer(ld)).Fslopetype = ST_VERTICAL
+		ld.Fdx = (*vertex_t)(unsafe.Pointer(v2)).Fx - (*vertex_t)(unsafe.Pointer(v1)).Fx
+		ld.Fdy = (*vertex_t)(unsafe.Pointer(v2)).Fy - (*vertex_t)(unsafe.Pointer(v1)).Fy
+		if !(ld.Fdx != 0) {
+			ld.Fslopetype = ST_VERTICAL
 		} else {
-			if !((*line_t)(unsafe.Pointer(ld)).Fdy != 0) {
-				(*line_t)(unsafe.Pointer(ld)).Fslopetype = ST_HORIZONTAL
+			if !(ld.Fdy != 0) {
+				ld.Fslopetype = ST_HORIZONTAL
 			} else {
-				if FixedDiv((*line_t)(unsafe.Pointer(ld)).Fdy, (*line_t)(unsafe.Pointer(ld)).Fdx) > 0 {
-					(*line_t)(unsafe.Pointer(ld)).Fslopetype = ST_POSITIVE
+				if FixedDiv(ld.Fdy, (*line_t)(unsafe.Pointer(ld)).Fdx) > 0 {
+					ld.Fslopetype = ST_POSITIVE
 				} else {
-					(*line_t)(unsafe.Pointer(ld)).Fslopetype = ST_NEGATIVE
+					ld.Fslopetype = ST_NEGATIVE
 				}
 			}
 		}
 		if (*vertex_t)(unsafe.Pointer(v1)).Fx < (*vertex_t)(unsafe.Pointer(v2)).Fx {
-			*(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXLEFT)*4)) = (*vertex_t)(unsafe.Pointer(v1)).Fx
-			*(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXRIGHT)*4)) = (*vertex_t)(unsafe.Pointer(v2)).Fx
+			ld.Fbbox[BOXLEFT] = (*vertex_t)(unsafe.Pointer(v1)).Fx
+			ld.Fbbox[BOXRIGHT] = (*vertex_t)(unsafe.Pointer(v2)).Fx
 		} else {
-			*(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXLEFT)*4)) = (*vertex_t)(unsafe.Pointer(v2)).Fx
-			*(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXRIGHT)*4)) = (*vertex_t)(unsafe.Pointer(v1)).Fx
+			ld.Fbbox[BOXLEFT] = (*vertex_t)(unsafe.Pointer(v2)).Fx
+			ld.Fbbox[BOXRIGHT] = (*vertex_t)(unsafe.Pointer(v1)).Fx
 		}
 		if (*vertex_t)(unsafe.Pointer(v1)).Fy < (*vertex_t)(unsafe.Pointer(v2)).Fy {
-			*(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXBOTTOM)*4)) = (*vertex_t)(unsafe.Pointer(v1)).Fy
-			*(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXTOP)*4)) = (*vertex_t)(unsafe.Pointer(v2)).Fy
+			ld.Fbbox[BOXBOTTOM] = (*vertex_t)(unsafe.Pointer(v1)).Fy
+			ld.Fbbox[BOXTOP] = (*vertex_t)(unsafe.Pointer(v2)).Fy
 		} else {
-			*(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXBOTTOM)*4)) = (*vertex_t)(unsafe.Pointer(v2)).Fy
-			*(*fixed_t)(unsafe.Pointer(ld + 36 + uintptr(BOXTOP)*4)) = (*vertex_t)(unsafe.Pointer(v1)).Fy
+			ld.Fbbox[BOXBOTTOM] = (*vertex_t)(unsafe.Pointer(v2)).Fy
+			ld.Fbbox[BOXTOP] = (*vertex_t)(unsafe.Pointer(v1)).Fy
 		}
-		*(*int16)(unsafe.Pointer(ld + 30)) = *(*int16)(unsafe.Pointer(mld + 10))
-		*(*int16)(unsafe.Pointer(ld + 30 + 1*2)) = *(*int16)(unsafe.Pointer(mld + 10 + 1*2))
-		if int32(*(*int16)(unsafe.Pointer(ld + 30))) != -1 {
-			(*line_t)(unsafe.Pointer(ld)).Ffrontsector = (*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(ld + 30)))*24))).Fsector
+		ld.Fsidenum[0] = *(*int16)(unsafe.Pointer(mld + 10))
+		ld.Fsidenum[1] = *(*int16)(unsafe.Pointer(mld + 10 + 1*2))
+		if ld.Fsidenum[0] != -1 {
+			ld.Ffrontsector = (*(*side_t)(unsafe.Pointer(sides + uintptr(ld.Fsidenum[0]*24)))).Fsector
 		} else {
-			(*line_t)(unsafe.Pointer(ld)).Ffrontsector = nil
+			ld.Ffrontsector = nil
 		}
-		if int32(*(*int16)(unsafe.Pointer(ld + 30 + 1*2))) != -1 {
-			(*line_t)(unsafe.Pointer(ld)).Fbacksector = (*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(ld + 30 + 1*2)))*24))).Fsector
+		if ld.Fsidenum[1] != -1 {
+			ld.Fbacksector = (*(*side_t)(unsafe.Pointer(sides + uintptr(ld.Fsidenum[1]*24)))).Fsector
 		} else {
-			(*line_t)(unsafe.Pointer(ld)).Fbacksector = nil
+			ld.Fbacksector = nil
 		}
-		goto _1
-	_1:
-		;
-		i++
 		mld += 14
-		ld += 88
 	}
 	W_ReleaseLumpNum(tls, lump)
 }
@@ -31728,7 +31701,7 @@ func P_LoadSideDefs(tls *libc.TLS, lump int32) {
 		(*side_t)(unsafe.Pointer(sd)).Ftoptexture = int16(R_TextureNumForName(tls, msd+4))
 		(*side_t)(unsafe.Pointer(sd)).Fbottomtexture = int16(R_TextureNumForName(tls, msd+12))
 		(*side_t)(unsafe.Pointer(sd)).Fmidtexture = int16(R_TextureNumForName(tls, msd+20))
-		(*side_t)(unsafe.Pointer(sd)).Fsector = (*sector_t)(unsafe.Pointer(sectors + uintptr((*mapsidedef_t)(unsafe.Pointer(msd)).Fsector)*128))
+		(*side_t)(unsafe.Pointer(sd)).Fsector = &sectors[(*mapsidedef_t)(unsafe.Pointer(msd)).Fsector]
 		goto _1
 	_1:
 		;
@@ -31784,8 +31757,7 @@ func P_LoadBlockMap(tls *libc.TLS, lump int32) {
 func P_GroupLines(tls *libc.TLS) {
 	bp := alloc(16)
 	var block, i, j, v10, v7, v8, v9 int32
-	var li, linebuffer, seg, ss uintptr
-	var sector *sector_t
+	var seg, ss uintptr
 	// look up sector number for each subsector
 	ss = subsectors
 	i = 0
@@ -31802,81 +31774,66 @@ func P_GroupLines(tls *libc.TLS) {
 		ss += 16
 	}
 	// count number of lines in each sector
-	li = lines
 	totallines = 0
-	i = 0
-	for {
-		if !(i < numlines) {
-			break
-		}
+	for i := int32(0); i < numlines; i++ {
+		li := &lines[i]
 		totallines++
-		(*line_t)(unsafe.Pointer(li)).Ffrontsector.Flinecount++
-		if (*line_t)(unsafe.Pointer(li)).Fbacksector != nil && (*line_t)(unsafe.Pointer(li)).Fbacksector != (*line_t)(unsafe.Pointer(li)).Ffrontsector {
-			(*line_t)(unsafe.Pointer(li)).Fbacksector.Flinecount++
+		li.Ffrontsector.Flinecount++
+		if li.Fbacksector != nil && li.Fbacksector != li.Ffrontsector {
+			li.Fbacksector.Flinecount++
 			totallines++
 		}
-		goto _2
-	_2:
-		;
-		i++
-		li += 88
 	}
 	// build line tables for each sector
-	linebuffer = Z_Malloc(tls, libc.Int32FromUint64(libc.Uint64FromInt32(totallines)*uint64(8)), int32(PU_LEVEL), uintptr(0))
+	//linebuffer := make([]*line_t, totallines)
+	//linebufferPos := 0
 	i = 0
 	for {
 		if !(i < numsectors) {
 			break
 		}
 		// Assign the line buffer for this sector
-		(*(*sector_t)(unsafe.Pointer(sectors + uintptr(i)*128))).Flines = linebuffer
-		linebuffer += uintptr((*(*sector_t)(unsafe.Pointer(sectors + uintptr(i)*128))).Flinecount) * 8
+		sector := &sectors[i]
+		log.Printf("sector %d has %d lines\n", i, sector.Flinecount)
+		sector.Flines = make([]*line_t, sector.Flinecount)
+		//linebufferPos += int(sector.Flinecount)
 		// Reset linecount to zero so in the next stage we can count
 		// lines into the list.
-		(*(*sector_t)(unsafe.Pointer(sectors + uintptr(i)*128))).Flinecount = 0
+		sector.Flinecount = 0
 		goto _3
 	_3:
 		;
 		i++
 	}
 	// Assign lines to sectors
-	i = 0
-	for {
-		if !(i < numlines) {
-			break
+	for i := int32(0); i < numlines; i++ {
+		li := &lines[i]
+		if li.Ffrontsector != nil {
+			li.Ffrontsector.Flines[0] = li
+			li.Ffrontsector.Flinecount++
 		}
-		li = lines + uintptr(i)*88
-		if (*line_t)(unsafe.Pointer(li)).Ffrontsector != nil {
-			sector = (*line_t)(unsafe.Pointer(li)).Ffrontsector
-			*(*uintptr)(unsafe.Pointer(sector.Flines + uintptr(sector.Flinecount)*8)) = li
-			sector.Flinecount++
+		if li.Fbacksector != nil && li.Ffrontsector != li.Fbacksector {
+			li.Fbacksector.Flines[0] = li
+			li.Fbacksector.Flinecount++
 		}
-		if (*line_t)(unsafe.Pointer(li)).Fbacksector != nil && (*line_t)(unsafe.Pointer(li)).Ffrontsector != (*line_t)(unsafe.Pointer(li)).Fbacksector {
-			sector = (*line_t)(unsafe.Pointer(li)).Fbacksector
-			*(*uintptr)(unsafe.Pointer(sector.Flines + uintptr(sector.Flinecount)*8)) = li
-			sector.Flinecount++
-		}
-		goto _4
-	_4:
-		;
-		i++
 	}
 	// Generate bounding boxes for sectors
-	sector = (*sector_t)(unsafe.Pointer(sectors))
 	i = 0
 	for {
 		if !(i < numsectors) {
 			break
 		}
+		sector := &sectors[i]
 		M_ClearBox(bp)
 		j = 0
 		for {
 			if !(j < sector.Flinecount) {
 				break
 			}
-			li = *(*uintptr)(unsafe.Pointer(sector.Flines + uintptr(j)*8))
-			M_AddToBox(bp, (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Fv1)).Fx, (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Fv1)).Fy)
-			M_AddToBox(bp, (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Fv2)).Fx, (*vertex_t)(unsafe.Pointer((*line_t)(unsafe.Pointer(li)).Fv2)).Fy)
+			li := sector.Flines[j]
+			log.Printf("sector %d line %p (count %d)", i, li, sector.Flinecount)
+			M_AddToBox(bp, (*vertex_t)(unsafe.Pointer(li.Fv1)).Fx, (*vertex_t)(unsafe.Pointer(li.Fv1)).Fy)
+			M_AddToBox(bp, (*vertex_t)(unsafe.Pointer(li.Fv2)).Fx, (*vertex_t)(unsafe.Pointer(li.Fv2)).Fy)
 			goto _6
 		_6:
 			;
@@ -31922,7 +31879,6 @@ func P_GroupLines(tls *libc.TLS) {
 	_5:
 		;
 		i++
-		sector = (*sector_t)(unsafe.Pointer(uintptr(unsafe.Pointer(sector)) + 128))
 	}
 }
 
@@ -32596,7 +32552,9 @@ func P_InitPicAnims(tls *libc.TLS) {
 //	//  the line number, and the side (0/1) that you want.
 //	//
 func getSide(tls *libc.TLS, currentSector int32, line int32, side int32) *side_t {
-	return (*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer((*(*sector_t)(unsafe.Pointer(sectors + uintptr(currentSector)*128))).Flines + uintptr(line)*8)) + 30 + uintptr(side)*2)))*24))
+	sec := &sectors[currentSector]
+	linePtr := sec.Flines[line]
+	return (*side_t)(unsafe.Pointer(sides + uintptr(linePtr.Fsidenum[side])*24))
 }
 
 // C documentation
@@ -32608,7 +32566,8 @@ func getSide(tls *libc.TLS, currentSector int32, line int32, side int32) *side_t
 //	//  the line number and the side (0/1) that you want.
 //	//
 func getSector(tls *libc.TLS, currentSector int32, line int32, side int32) (r *sector_t) {
-	return (*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer((*(*sector_t)(unsafe.Pointer(sectors + uintptr(currentSector)*128))).Flines + uintptr(line)*8)) + 30 + uintptr(side)*2)))*24))).Fsector
+	sidePtr := getSide(tls, currentSector, line, side)
+	return sidePtr.Fsector
 }
 
 // C documentation
@@ -32619,7 +32578,8 @@ func getSector(tls *libc.TLS, currentSector int32, line int32, side int32) (r *s
 //	//  it will tell you whether the line is two-sided or not.
 //	//
 func twoSided(tls *libc.TLS, sector int32, line int32) (r int32) {
-	return int32((*line_s)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer((*(*sector_t)(unsafe.Pointer(sectors + uintptr(sector)*128))).Flines + uintptr(line)*8)))).Fflags) & ML_TWOSIDED
+	sec := &sectors[sector]
+	return int32(sec.Flines[line].Fflags & ML_TWOSIDED)
 }
 
 // C documentation
@@ -32629,14 +32589,14 @@ func twoSided(tls *libc.TLS, sector int32, line int32) (r int32) {
 //	// Return sector_t * of sector next to current.
 //	// NULL if not two-sided line
 //	//
-func getNextSector(tls *libc.TLS, line uintptr, sec *sector_t) (r *sector_t) {
-	if !(int32((*line_t)(unsafe.Pointer(line)).Fflags)&ML_TWOSIDED != 0) {
+func getNextSector(tls *libc.TLS, line *line_t, sec *sector_t) (r *sector_t) {
+	if !(int32(line.Fflags)&ML_TWOSIDED != 0) {
 		return nil
 	}
-	if (*line_t)(unsafe.Pointer(line)).Ffrontsector == sec {
-		return (*line_t)(unsafe.Pointer(line)).Fbacksector
+	if line.Ffrontsector == sec {
+		return line.Fbacksector
 	}
-	return (*line_t)(unsafe.Pointer(line)).Ffrontsector
+	return line.Ffrontsector
 }
 
 // C documentation
@@ -32646,7 +32606,7 @@ func getNextSector(tls *libc.TLS, line uintptr, sec *sector_t) (r *sector_t) {
 //	// FIND LOWEST FLOOR HEIGHT IN SURROUNDING SECTORS
 //	//
 func P_FindLowestFloorSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
-	var check uintptr
+	var check *line_t
 	var other *sector_t
 	var floor fixed_t
 	var i int32
@@ -32656,7 +32616,7 @@ func P_FindLowestFloorSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
 		if !(i < sec.Flinecount) {
 			break
 		}
-		check = *(*uintptr)(unsafe.Pointer(sec.Flines + uintptr(i)*8))
+		check = sec.Flines[i]
 		other = getNextSector(tls, check, sec)
 		if !(other != nil) {
 			goto _1
@@ -32679,7 +32639,7 @@ func P_FindLowestFloorSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
 //	// FIND HIGHEST FLOOR HEIGHT IN SURROUNDING SECTORS
 //	//
 func P_FindHighestFloorSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
-	var check uintptr
+	var check *line_t
 	var other *sector_t
 	var floor fixed_t
 	var i int32
@@ -32689,7 +32649,7 @@ func P_FindHighestFloorSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
 		if !(i < sec.Flinecount) {
 			break
 		}
-		check = *(*uintptr)(unsafe.Pointer(sec.Flines + uintptr(i)*8))
+		check = sec.Flines[i]
 		other = getNextSector(tls, check, sec)
 		if !(other != nil) {
 			goto _1
@@ -32715,7 +32675,7 @@ func P_FindHighestFloorSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
 // 20 adjoining sectors max!
 
 func P_FindNextHighestFloor(tls *libc.TLS, sec *sector_t, currentheight int32) (r fixed_t) {
-	var check uintptr
+	var check *line_t
 	var other *sector_t
 	var h, i, min, v2 int32
 	var height fixed_t
@@ -32727,7 +32687,7 @@ func P_FindNextHighestFloor(tls *libc.TLS, sec *sector_t, currentheight int32) (
 		if !(i < sec.Flinecount) {
 			break
 		}
-		check = *(*uintptr)(unsafe.Pointer(sec.Flines + uintptr(i)*8))
+		check = sec.Flines[i]
 		other = getNextSector(tls, check, sec)
 		if !(other != nil) {
 			goto _1
@@ -32779,7 +32739,7 @@ func P_FindNextHighestFloor(tls *libc.TLS, sec *sector_t, currentheight int32) (
 //	// FIND LOWEST CEILING IN THE SURROUNDING SECTORS
 //	//
 func P_FindLowestCeilingSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
-	var check uintptr
+	var check *line_t
 	var other *sector_t
 	var height fixed_t
 	var i int32
@@ -32789,7 +32749,7 @@ func P_FindLowestCeilingSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
 		if !(i < sec.Flinecount) {
 			break
 		}
-		check = *(*uintptr)(unsafe.Pointer(sec.Flines + uintptr(i)*8))
+		check = sec.Flines[i]
 		other = getNextSector(tls, check, sec)
 		if !(other != nil) {
 			goto _1
@@ -32811,7 +32771,7 @@ func P_FindLowestCeilingSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
 //	// FIND HIGHEST CEILING IN THE SURROUNDING SECTORS
 //	//
 func P_FindHighestCeilingSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
-	var check uintptr
+	var check *line_t
 	var other *sector_t
 	var height fixed_t
 	var i int32
@@ -32821,7 +32781,7 @@ func P_FindHighestCeilingSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
 		if !(i < sec.Flinecount) {
 			break
 		}
-		check = *(*uintptr)(unsafe.Pointer(sec.Flines + uintptr(i)*8))
+		check = sec.Flines[i]
 		other = getNextSector(tls, check, sec)
 		if !(other != nil) {
 			goto _1
@@ -32842,14 +32802,14 @@ func P_FindHighestCeilingSurrounding(tls *libc.TLS, sec *sector_t) (r fixed_t) {
 //	//
 //	// RETURN NEXT SECTOR # THAT LINE TAG REFERS TO
 //	//
-func P_FindSectorFromLineTag(tls *libc.TLS, line uintptr, start int32) (r int32) {
+func P_FindSectorFromLineTag(tls *libc.TLS, line *line_t, start int32) (r int32) {
 	var i int32
 	i = start + 1
 	for {
 		if !(i < numsectors) {
 			break
 		}
-		if int32((*(*sector_t)(unsafe.Pointer(sectors + uintptr(i)*128))).Ftag) == int32((*line_t)(unsafe.Pointer(line)).Ftag) {
+		if sectors[i].Ftag == line.Ftag {
 			return i
 		}
 		goto _1
@@ -32866,7 +32826,7 @@ func P_FindSectorFromLineTag(tls *libc.TLS, line uintptr, start int32) (r int32)
 //	// Find minimum light from an adjacent sector
 //	//
 func P_FindMinSurroundingLight(tls *libc.TLS, sector *sector_t, max int32) (r int32) {
-	var line uintptr
+	var line *line_t
 	var check *sector_t
 	var i, min int32
 	min = max
@@ -32875,7 +32835,7 @@ func P_FindMinSurroundingLight(tls *libc.TLS, sector *sector_t, max int32) (r in
 		if !(i < sector.Flinecount) {
 			break
 		}
-		line = *(*uintptr)(unsafe.Pointer(sector.Flines + uintptr(i)*8))
+		line = sector.Flines[i]
 		check = getNextSector(tls, line, sector)
 		if !(check != nil) {
 			goto _1
@@ -32905,9 +32865,8 @@ func P_FindMinSurroundingLight(tls *libc.TLS, sector *sector_t, max int32) (r in
 //	//  to cross a line with a non 0 special.
 //	//
 func P_CrossSpecialLine(tls *libc.TLS, linenum int32, side int32, thing uintptr) {
-	var line uintptr
 	var ok int32
-	line = lines + uintptr(linenum)*88
+	line := &lines[linenum]
 	//	Triggers that other things can activate
 	if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0) {
 		// Things that should NOT trigger specials...
@@ -33228,12 +33187,12 @@ func P_CrossSpecialLine(tls *libc.TLS, linenum int32, side int32, thing uintptr)
 //	// P_ShootSpecialLine - IMPACT SPECIALS
 //	// Called when a thing shoots a special line.
 //	//
-func P_ShootSpecialLine(tls *libc.TLS, thing uintptr, line uintptr) {
+func P_ShootSpecialLine(tls *libc.TLS, thing uintptr, line *line_t) {
 	var ok int32
 	//	Impacts that other things can activate.
 	if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0) {
 		ok = 0
-		switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+		switch int32(line.Fspecial) {
 		case 46:
 			// OPEN DOOR IMPACT
 			ok = 1
@@ -33320,7 +33279,6 @@ func P_PlayerInSpecialSector(tls *libc.TLS, player uintptr) {
 }
 
 func P_UpdateSpecials(tls *libc.TLS) {
-	var line uintptr
 	var i, pic int32
 	//	LEVEL TIMER
 	if levelTimer == 1 {
@@ -33356,11 +33314,11 @@ func P_UpdateSpecials(tls *libc.TLS) {
 		if !(i < int32(numlinespecials)) {
 			break
 		}
-		line = linespeciallist[i]
-		switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+		line := linespeciallist[i]
+		switch int32(line.Fspecial) {
 		case 48:
 			// EFFECT FIRSTCOL SCROLL +
-			(*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(line + 30)))*24))).Ftextureoffset += 1 << FRACBITS
+			(*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Ftextureoffset += 1 << FRACBITS
 			break
 		}
 		goto _3
@@ -33379,11 +33337,11 @@ func P_UpdateSpecials(tls *libc.TLS) {
 			if !(buttonlist[i].Fbtimer != 0) {
 				switch buttonlist[i].Fwhere {
 				case int32(top):
-					(*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(buttonlist[i].Fline + 30)))*24))).Ftoptexture = int16(buttonlist[i].Fbtexture)
+					(*(*side_t)(unsafe.Pointer(sides + uintptr(buttonlist[i].Fline.Fsidenum[0])*24))).Ftoptexture = int16(buttonlist[i].Fbtexture)
 				case int32(middle):
-					(*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(buttonlist[i].Fline + 30)))*24))).Fmidtexture = int16(buttonlist[i].Fbtexture)
+					(*(*side_t)(unsafe.Pointer(sides + uintptr(buttonlist[i].Fline.Fsidenum[0])*24))).Fmidtexture = int16(buttonlist[i].Fbtexture)
 				case int32(bottom):
-					(*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(buttonlist[i].Fline + 30)))*24))).Fbottomtexture = int16(buttonlist[i].Fbtexture)
+					(*(*side_t)(unsafe.Pointer(sides + uintptr(buttonlist[i].Fline.Fsidenum[0])*24))).Fbottomtexture = int16(buttonlist[i].Fbtexture)
 					break
 				}
 				S_StartSound(tls, uintptr(unsafe.Pointer(&buttonlist))+uintptr(i)*32+24, int32(sfx_swtchn))
@@ -33404,7 +33362,7 @@ func P_UpdateSpecials(tls *libc.TLS) {
 // as usual :-)
 //
 
-func DonutOverrun(tls *libc.TLS, s3_floorheight uintptr, s3_floorpic uintptr, line uintptr, pillar_sector *sector_t) {
+func DonutOverrun(tls *libc.TLS, s3_floorheight uintptr, s3_floorpic uintptr, line *line_t, pillar_sector *sector_t) {
 	var p int32
 	if first != 0 {
 		// This is the first time we have had an overrun.
@@ -33466,7 +33424,7 @@ var tmp_s3_floorpic int32
 //	//
 //	// Special Stuff that can not be categorized
 //	//
-func EV_DoDonut(tls *libc.TLS, line uintptr) (r int32) {
+func EV_DoDonut(tls *libc.TLS, line *line_t) (r int32) {
 	bp := alloc(16)
 	var floor uintptr
 	var s1, s2, s3 *sector_t
@@ -33479,13 +33437,13 @@ func EV_DoDonut(tls *libc.TLS, line uintptr) (r int32) {
 		if !(v1 >= 0) {
 			break
 		}
-		s1 = (*sector_t)(unsafe.Pointer(sectors + uintptr(secnum)*128))
+		s1 = &sectors[secnum]
 		// ALREADY MOVING?  IF SO, KEEP GOING...
 		if (*sector_t)(unsafe.Pointer(s1)).Fspecialdata != 0 {
 			continue
 		}
 		rtn = 1
-		s2 = getNextSector(tls, *(*uintptr)(unsafe.Pointer((*sector_t)(unsafe.Pointer(s1)).Flines)), s1)
+		s2 = getNextSector(tls, s1.Flines[0], s1)
 		// Vanilla Doom does not check if the linedef is one sided.  The
 		// game does not crash, but reads invalid memory and causes the
 		// sector floor to move "down" to some unknown height.
@@ -33503,7 +33461,7 @@ func EV_DoDonut(tls *libc.TLS, line uintptr) (r int32) {
 			if !(i < (*sector_t)(unsafe.Pointer(s2)).Flinecount) {
 				break
 			}
-			s3 = (*line_s)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer((*sector_t)(unsafe.Pointer(s2)).Flines + uintptr(i)*8)))).Fbacksector
+			s3 = s2.Flines[i].Fbacksector
 			if s3 == s1 {
 				goto _2
 			}
@@ -33558,7 +33516,6 @@ func EV_DoDonut(tls *libc.TLS, line uintptr) (r int32) {
 //	// Parses command line parameters.
 func P_SpawnSpecials(tls *libc.TLS) {
 	var i int32
-	var sector *sector_t
 	// See if -TIMER was specified.
 	if timelimit > 0 && deathmatch != 0 {
 		levelTimer = 1
@@ -33567,12 +33524,12 @@ func P_SpawnSpecials(tls *libc.TLS) {
 		levelTimer = 0
 	}
 	//	Init special SECTORs.
-	sector = (*sector_t)(unsafe.Pointer(sectors))
 	i = 0
 	for {
 		if !(i < numsectors) {
 			break
 		}
+		sector := &sectors[i]
 		if !(sector.Fspecial != 0) {
 			goto _1
 		}
@@ -33616,7 +33573,6 @@ func P_SpawnSpecials(tls *libc.TLS) {
 	_1:
 		;
 		i++
-		sector = (*sector_t)(unsafe.Pointer(uintptr(unsafe.Pointer(sector)) + 128))
 	}
 	//	Init line EFFECTs
 	numlinespecials = 0
@@ -33625,13 +33581,13 @@ func P_SpawnSpecials(tls *libc.TLS) {
 		if !(i < numlines) {
 			break
 		}
-		switch int32((*(*line_t)(unsafe.Pointer(lines + uintptr(i)*88))).Fspecial) {
+		switch int32(lines[i].Fspecial) {
 		case 48:
 			if int32(numlinespecials) >= int32(MAXLINEANIMS) {
 				I_Error(tls, __ccgo_ts(25801), 0)
 			}
 			// EFFECT FIRSTCOL SCROLL+
-			linespeciallist[numlinespecials] = lines + uintptr(i)*88
+			linespeciallist[numlinespecials] = &lines[i]
 			numlinespecials++
 			break
 		}
@@ -33934,7 +33890,7 @@ func P_InitSwitchList(tls *libc.TLS) {
 //	//
 //	// Start a button counting down till it turns off.
 //	//
-func P_StartButton(tls *libc.TLS, line uintptr, w bwhere_e, texture int32, time int32) {
+func P_StartButton(tls *libc.TLS, line *line_t, w bwhere_e, texture int32, time int32) {
 	var i int32
 	// See if button is already pressed
 	i = 0
@@ -33977,14 +33933,14 @@ func P_StartButton(tls *libc.TLS, line uintptr, w bwhere_e, texture int32, time 
 //	// Function that changes wall texture.
 //	// Tell it if switch is ok to use again (1=yes, it's a button).
 //	//
-func P_ChangeSwitchTexture(tls *libc.TLS, line uintptr, useAgain int32) {
+func P_ChangeSwitchTexture(tls *libc.TLS, line *line_t, useAgain int32) {
 	var i, sound, texBot, texMid, texTop int32
 	if !(useAgain != 0) {
 		(*line_t)(unsafe.Pointer(line)).Fspecial = 0
 	}
-	texTop = int32((*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(line + 30)))*24))).Ftoptexture)
-	texMid = int32((*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(line + 30)))*24))).Fmidtexture)
-	texBot = int32((*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(line + 30)))*24))).Fbottomtexture)
+	texTop = int32((*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Ftoptexture)
+	texMid = int32((*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Fmidtexture)
+	texBot = int32((*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Fbottomtexture)
 	sound = int32(sfx_swtchn)
 	// EXIT SWITCH?
 	if int32((*line_t)(unsafe.Pointer(line)).Fspecial) == 11 {
@@ -33997,7 +33953,7 @@ func P_ChangeSwitchTexture(tls *libc.TLS, line uintptr, useAgain int32) {
 		}
 		if switchlist[i] == texTop {
 			S_StartSound(tls, buttonlist[0].Fsoundorg, sound)
-			(*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(line + 30)))*24))).Ftoptexture = int16(switchlist[i^int32(1)])
+			(*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Ftoptexture = int16(switchlist[i^int32(1)])
 			if useAgain != 0 {
 				P_StartButton(tls, line, int32(top), switchlist[i], int32(BUTTONTIME))
 			}
@@ -34005,7 +33961,7 @@ func P_ChangeSwitchTexture(tls *libc.TLS, line uintptr, useAgain int32) {
 		} else {
 			if switchlist[i] == texMid {
 				S_StartSound(tls, buttonlist[0].Fsoundorg, sound)
-				(*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(line + 30)))*24))).Fmidtexture = int16(switchlist[i^int32(1)])
+				(*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Fmidtexture = int16(switchlist[i^int32(1)])
 				if useAgain != 0 {
 					P_StartButton(tls, line, int32(middle), switchlist[i], int32(BUTTONTIME))
 				}
@@ -34013,7 +33969,7 @@ func P_ChangeSwitchTexture(tls *libc.TLS, line uintptr, useAgain int32) {
 			} else {
 				if switchlist[i] == texBot {
 					S_StartSound(tls, buttonlist[0].Fsoundorg, sound)
-					(*(*side_t)(unsafe.Pointer(sides + uintptr(*(*int16)(unsafe.Pointer(line + 30)))*24))).Fbottomtexture = int16(switchlist[i^int32(1)])
+					(*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Fbottomtexture = int16(switchlist[i^int32(1)])
 					if useAgain != 0 {
 						P_StartButton(tls, line, int32(bottom), switchlist[i], int32(BUTTONTIME))
 					}
@@ -34035,11 +33991,11 @@ func P_ChangeSwitchTexture(tls *libc.TLS, line uintptr, useAgain int32) {
 //	// Called when a thing uses a special line.
 //	// Only the front sides of lines are usable.
 //	//
-func P_UseSpecialLine(tls *libc.TLS, thing uintptr, line uintptr, side int32) (r boolean) {
+func P_UseSpecialLine(tls *libc.TLS, thing uintptr, line *line_t, side int32) (r boolean) {
 	// Err...
 	// Use the back sides of VERY SPECIAL lines...
 	if side != 0 {
-		switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+		switch int32(line.Fspecial) {
 		case 124:
 			// Sliding door open&close
 			// UNUSED?
@@ -34051,10 +34007,10 @@ func P_UseSpecialLine(tls *libc.TLS, thing uintptr, line uintptr, side int32) (r
 	// Switches that other things can activate.
 	if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0) {
 		// never open secret doors
-		if int32((*line_t)(unsafe.Pointer(line)).Fflags)&ML_SECRET != 0 {
+		if int32(line.Fflags)&ML_SECRET != 0 {
 			return 0
 		}
-		switch int32((*line_t)(unsafe.Pointer(line)).Fspecial) {
+		switch int32(line.Fspecial) {
 		case 1: // MANUAL DOOR RAISE
 			fallthrough
 		case 32: // MANUAL BLUE
@@ -34402,11 +34358,12 @@ func P_UseSpecialLine(tls *libc.TLS, thing uintptr, line uintptr, side int32) (r
 //	//
 //	// TELEPORTATION
 //	//
-func EV_Teleport(tls *libc.TLS, line uintptr, side int32, thing uintptr) (r int32) {
+func EV_Teleport(tls *libc.TLS, line *line_t, side int32, thing uintptr) (r int32) {
 	var an uint32
 	var fog, m, thinker uintptr
 	var sector *sector_t
-	var i, tag int32
+	var i int32
+	var tag int16
 	var oldx, oldy, oldz, v3, v4 fixed_t
 	// don't teleport missiles
 	if (*mobj_t)(unsafe.Pointer(thing)).Fflags&int32(MF_MISSILE) != 0 {
@@ -34417,13 +34374,13 @@ func EV_Teleport(tls *libc.TLS, line uintptr, side int32, thing uintptr) (r int3
 	if side == 1 {
 		return 0
 	}
-	tag = int32((*line_t)(unsafe.Pointer(line)).Ftag)
+	tag = line.Ftag
 	i = 0
 	for {
 		if !(i < numsectors) {
 			break
 		}
-		if int32((*(*sector_t)(unsafe.Pointer(sectors + uintptr(i)*128))).Ftag) == tag {
+		if sectors[i].Ftag == tag {
 			thinker = thinkercap.Fnext
 			thinker = thinkercap.Fnext
 			for {
@@ -35964,8 +35921,9 @@ func R_PrecacheLevel(tls *libc.TLS) {
 		if !(i < numsectors) {
 			break
 		}
-		*(*int8)(unsafe.Pointer(flatpresent + uintptr((*(*sector_t)(unsafe.Pointer(sectors + uintptr(i)*128))).Ffloorpic))) = 1
-		*(*int8)(unsafe.Pointer(flatpresent + uintptr((*(*sector_t)(unsafe.Pointer(sectors + uintptr(i)*128))).Fceilingpic))) = 1
+		sector := &sectors[i]
+		*(*int8)(unsafe.Pointer(flatpresent + uintptr(sector.Ffloorpic))) = 1
+		*(*int8)(unsafe.Pointer(flatpresent + uintptr(sector.Fceilingpic))) = 1
 		goto _1
 	_1:
 		;
@@ -46459,7 +46417,7 @@ var baseyscale fixed_t
 //	//
 var bestslidefrac fixed_t
 
-var bestslideline uintptr
+var bestslideline *line_t
 
 // C documentation
 //
@@ -46565,7 +46523,7 @@ var ceilingclip [320]int16
 //
 //	// keep track of the line that lowers the ceiling,
 //	// so missiles don't explode against sky hack walls
-var ceilingline uintptr
+var ceilingline *line_t
 
 var ceilingplane *visplane_t
 
@@ -47285,9 +47243,20 @@ var leveltime int32
 
 var linedef *line_t
 
-var lines uintptr
+var lines []line_t
 
-var linespeciallist [64]uintptr
+// TODO: ANDRE/GORE: This is a hack to allow the
+func lineIndex(l *line_t) int32 {
+	for i, line := range lines {
+		if line == *l {
+			return int32(i)
+		}
+	}
+	log.Fatalf("lineIndex: line %p not found in lines", l)
+	return -1 // unreachable
+}
+
+var linespeciallist [64]*line_t
 
 // C documentation
 //
@@ -47815,7 +47784,7 @@ var screensaver_mode boolean
 //	//
 var secretexit boolean
 
-var sectors uintptr
+var sectors []sector_t
 
 // TODO: ANDRE/GORE: Faster way do to pointer division to determine offset?
 func sectorIndex(sector *sector_t) int32 {
@@ -47823,7 +47792,7 @@ func sectorIndex(sector *sector_t) int32 {
 		return -1
 	}
 	for i := int32(0); i < numsectors; i++ {
-		if sector == (*sector_t)(unsafe.Pointer(sectors+uintptr(i)*128)) {
+		if sector == &sectors[i] {
 			return i
 		}
 	}
@@ -47996,7 +47965,7 @@ var spanstart [200]int32
 // keep track of special lines as they are hit,
 // but don't process them until the move is proven valid
 
-var spechit [20]uintptr
+var spechit [20]*line_t
 
 var spritelights uintptr
 
