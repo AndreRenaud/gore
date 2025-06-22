@@ -31792,7 +31792,6 @@ func P_GroupLines(tls *libc.TLS) {
 		}
 		// Assign the line buffer for this sector
 		sector := &sectors[i]
-		log.Printf("sector %d has %d lines\n", i, sector.Flinecount)
 		sector.Flines = make([]*line_t, sector.Flinecount)
 		// Reset linecount to zero so in the next stage we can count
 		// lines into the list.
@@ -31828,7 +31827,6 @@ func P_GroupLines(tls *libc.TLS) {
 				break
 			}
 			li := sector.Flines[j]
-			log.Printf("sector %d line %p (count %d)", i, li, sector.Flinecount)
 			M_AddToBox(bp, (*vertex_t)(unsafe.Pointer(li.Fv1)).Fx, (*vertex_t)(unsafe.Pointer(li.Fv1)).Fy)
 			M_AddToBox(bp, (*vertex_t)(unsafe.Pointer(li.Fv2)).Fx, (*vertex_t)(unsafe.Pointer(li.Fv2)).Fy)
 			goto _6
