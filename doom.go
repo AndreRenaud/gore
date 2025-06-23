@@ -8,7 +8,9 @@ import (
 	"log"
 	"math"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 	"unsafe"
 
@@ -3871,7 +3873,7 @@ func init() {
 const MAX_IWAD_DIRS = 128
 
 type iwad_t struct {
-	Fname        uintptr
+	Fname        string
 	Fmission     GameMission_t
 	Fmode        GameMode_t
 	Fdescription uintptr
@@ -3884,79 +3886,79 @@ type iwad_t struct {
 
 var iwads = [14]iwad_t{
 	0: {
-		Fname:        __ccgo_ts(911),
+		Fname:        __ccgo_ts_str(911),
 		Fmission:     int32(doom2),
 		Fmode:        int32(commercial),
 		Fdescription: __ccgo_ts(921),
 	},
 	1: {
-		Fname:        __ccgo_ts(929),
+		Fname:        __ccgo_ts_str(929),
 		Fmission:     int32(pack_plut),
 		Fmode:        int32(commercial),
 		Fdescription: __ccgo_ts(942),
 	},
 	2: {
-		Fname:        __ccgo_ts(974),
+		Fname:        __ccgo_ts_str(974),
 		Fmission:     int32(pack_tnt),
 		Fmode:        int32(commercial),
 		Fdescription: __ccgo_ts(982),
 	},
 	3: {
-		Fname:        __ccgo_ts(1009),
+		Fname:        __ccgo_ts_str(1009),
 		Fmode:        int32(retail),
 		Fdescription: __ccgo_ts(1018),
 	},
 	4: {
-		Fname:        __ccgo_ts(1023),
+		Fname:        __ccgo_ts_str(1023),
 		Fdescription: __ccgo_ts(1033),
 	},
 	5: {
-		Fname:        __ccgo_ts(1048),
+		Fname:        __ccgo_ts_str(1048),
 		Fmission:     int32(pack_chex),
 		Fdescription: __ccgo_ts(1057),
 	},
 	6: {
-		Fname:        __ccgo_ts(1068),
+		Fname:        __ccgo_ts_str(1068),
 		Fmission:     int32(pack_hacx),
 		Fmode:        int32(commercial),
 		Fdescription: __ccgo_ts(1077),
 	},
 	7: {
-		Fname:        __ccgo_ts(1082),
+		Fname:        __ccgo_ts_str(1082),
 		Fmission:     int32(doom2),
 		Fmode:        int32(commercial),
 		Fdescription: __ccgo_ts(1093),
 	},
 	8: {
-		Fname:        __ccgo_ts(1100),
+		Fname:        __ccgo_ts_str(1100),
 		Fmission:     int32(doom2),
 		Fmode:        int32(commercial),
 		Fdescription: __ccgo_ts(1114),
 	},
 	9: {
-		Fname:        __ccgo_ts(1132),
+		Fname:        __ccgo_ts_str(1132),
 		Fmode:        int32(retail),
 		Fdescription: __ccgo_ts(1146),
 	},
 	10: {
-		Fname:        __ccgo_ts(1164),
+		Fname:        __ccgo_ts_str(1164),
 		Fmission:     int32(heretic),
 		Fmode:        int32(retail),
 		Fdescription: __ccgo_ts(1176),
 	},
 	11: {
-		Fname:        __ccgo_ts(1184),
+		Fname:        __ccgo_ts_str(1184),
 		Fmission:     int32(heretic),
 		Fdescription: __ccgo_ts(1197),
 	},
 	12: {
-		Fname:        __ccgo_ts(1215),
+		Fname:        __ccgo_ts_str(1215),
 		Fmission:     int32(hexen),
 		Fmode:        int32(commercial),
 		Fdescription: __ccgo_ts(1225),
 	},
 	13: {
-		Fname:        __ccgo_ts(1231),
+		Fname:        __ccgo_ts_str(1231),
 		Fmission:     int32(strife),
 		Fmode:        int32(commercial),
 		Fdescription: __ccgo_ts(1243),
@@ -3968,10 +3970,10 @@ var iwads = [14]iwad_t{
 // "128 IWAD search directories should be enough for anybody".
 
 var iwad_dirs_built int32 = 0
-var iwad_dirs [128]uintptr
+var iwad_dirs [MAX_IWAD_DIRS]string
 var num_iwad_dirs int32 = 0
 
-func AddIWADDir(dir uintptr) {
+func AddIWADDir(dir string) {
 	if num_iwad_dirs < int32(MAX_IWAD_DIRS) {
 		iwad_dirs[num_iwad_dirs] = dir
 		num_iwad_dirs++
@@ -3986,45 +3988,43 @@ func AddIWADDir(dir uintptr) {
 // Returns true if the specified path is a path to a file
 // of the specified name.
 
-func DirIsFile(path uintptr, filename uintptr) (r boolean) {
-	var filename_len, path_len uint64
-	path_len = xstrlen(path)
-	filename_len = xstrlen(filename)
-	return libc.BoolUint32(path_len >= filename_len+uint64(1) && int32(*(*int8)(unsafe.Pointer(path + uintptr(path_len-filename_len-uint64(1))))) == int32('/') && !(xstrcasecmp(path+uintptr(path_len-filename_len), filename) != 0))
+func DirIsFile(path string, filename string) (r boolean) {
+	if strings.HasSuffix(path, "/"+filename) {
+		return 1
+	}
+	return 0
 }
 
 // Check if the specified directory contains the specified IWAD
 // file, returning the full path to the IWAD if found, or NULL
 // if not found.
 
-func CheckDirectoryHasIWAD(tls *libc.TLS, dir uintptr, iwadname uintptr) (r uintptr) {
-	bp := alloc(32)
-	var filename uintptr
+func CheckDirectoryHasIWAD(tls *libc.TLS, dir string, iwadname string) string {
+	var filename string
 	// As a special case, the "directory" may refer directly to an
 	// IWAD file if the path comes from DOOMWADDIR or DOOMWADPATH.
 	if DirIsFile(dir, iwadname) != 0 && M_FileExists(tls, dir) != 0 {
-		return xstrdup(dir)
+		return dir
 	}
 	// Construct the full path to the IWAD if it is located in
 	// this directory, and check if it exists.
-	if !(xstrcmp(dir, __ccgo_ts(1250)) != 0) {
-		filename = xstrdup(iwadname)
+	if dir == __ccgo_ts_str(1250) {
+		filename = iwadname
 	} else {
-		filename = M_StringJoin(tls, dir, libc.VaList(bp+8, __ccgo_ts(1252), iwadname, libc.UintptrFromInt32(0)))
+		filename = dir + __ccgo_ts_str(1252) + iwadname
 	}
-	fprintf_ccgo(os.Stdout, 1254, libc.GoString(filename))
+	fprintf_ccgo(os.Stdout, 1254, filename)
 	if M_FileExists(tls, filename) != 0 {
 		return filename
 	}
-	xfree(tls, filename)
-	return libc.UintptrFromInt32(0)
+	return ""
 }
 
 // Search a directory to try to find an IWAD
 // Returns the location of the IWAD if found, otherwise NULL.
 
-func SearchDirectoryForIWAD(tls *libc.TLS, dir uintptr, mask int32, mission uintptr) (r uintptr) {
-	var filename uintptr
+func SearchDirectoryForIWAD(tls *libc.TLS, dir string, mask int32, mission uintptr) string {
+	var filename string
 	var i uint64
 	i = uint64(0)
 	for {
@@ -4035,7 +4035,7 @@ func SearchDirectoryForIWAD(tls *libc.TLS, dir uintptr, mask int32, mission uint
 			goto _1
 		}
 		filename = CheckDirectoryHasIWAD(tls, dir, iwads[i].Fname)
-		if filename != libc.UintptrFromInt32(0) {
+		if filename != "" {
 			*(*GameMission_t)(unsafe.Pointer(mission)) = iwads[i].Fmission
 			return filename
 		}
@@ -4044,20 +4044,16 @@ func SearchDirectoryForIWAD(tls *libc.TLS, dir uintptr, mask int32, mission uint
 		;
 		i++
 	}
-	return libc.UintptrFromInt32(0)
+	return ""
 }
 
 // When given an IWAD with the '-iwad' parameter,
 // attempt to identify it by its name.
 
-func IdentifyIWADByName(tls *libc.TLS, name uintptr, mask int32) (r GameMission_t) {
+func IdentifyIWADByName(tls *libc.TLS, name string, mask int32) (r GameMission_t) {
 	var i uint64
 	var mission GameMission_t
-	var p uintptr
-	p = libc.Xstrrchr(tls, name, int32('/'))
-	if p != libc.UintptrFromInt32(0) {
-		name = p + uintptr(1)
-	}
+	name = filepath.Base(name)
 	mission = int32(none)
 	i = uint64(0)
 	for {
@@ -4070,7 +4066,7 @@ func IdentifyIWADByName(tls *libc.TLS, name uintptr, mask int32) (r GameMission_
 			goto _1
 		}
 		// Check if it ends in this IWAD name.
-		if !(xstrcasecmp(name, iwads[i].Fname) != 0) {
+		if strings.EqualFold(name, iwads[i].Fname) {
 			mission = iwads[i].Fmission
 			break
 		}
@@ -4087,7 +4083,7 @@ func IdentifyIWADByName(tls *libc.TLS, name uintptr, mask int32) (r GameMission_
 //
 
 func BuildIWADDirList() {
-	AddIWADDir(__ccgo_ts(1250))
+	AddIWADDir(__ccgo_ts_str(1250))
 	// Don't run this function again.
 	iwad_dirs_built = 1
 }
@@ -4096,10 +4092,9 @@ func BuildIWADDirList() {
 // Searches WAD search paths for an WAD with a specific filename.
 //
 
-func D_FindWADByName(tls *libc.TLS, name uintptr) (r uintptr) {
-	bp := alloc(32)
+func D_FindWADByName(tls *libc.TLS, name string) string {
 	var i int32
-	var path uintptr
+	var path string
 	// Absolute path?
 	if M_FileExists(tls, name) != 0 {
 		return name
@@ -4115,21 +4110,20 @@ func D_FindWADByName(tls *libc.TLS, name uintptr) (r uintptr) {
 		// the "directory" may actually refer directly to an IWAD
 		// file.
 		if DirIsFile(iwad_dirs[i], name) != 0 && M_FileExists(tls, iwad_dirs[i]) != 0 {
-			return xstrdup(iwad_dirs[i])
+			return iwad_dirs[i]
 		}
 		// Construct a string for the full path
-		path = M_StringJoin(tls, iwad_dirs[i], libc.VaList(bp+8, __ccgo_ts(1252), name, libc.UintptrFromInt32(0)))
+		path = iwad_dirs[i] + __ccgo_ts_str(1252) + name
 		if M_FileExists(tls, path) != 0 {
 			return path
 		}
-		xfree(tls, path)
 		goto _1
 	_1:
 		;
 		i++
 	}
 	// File not found
-	return libc.UintptrFromInt32(0)
+	return ""
 }
 
 //
@@ -4139,15 +4133,13 @@ func D_FindWADByName(tls *libc.TLS, name uintptr) (r uintptr) {
 // if not found.
 //
 
-func D_TryFindWADByName(tls *libc.TLS, filename uintptr) (r uintptr) {
-	var result uintptr
+func D_TryFindWADByName(tls *libc.TLS, filename string) string {
+	var result string
 	result = D_FindWADByName(tls, filename)
-	if result != libc.UintptrFromInt32(0) {
+	if result != "" {
 		return result
-	} else {
-		return filename
 	}
-	return r
+	return filename
 }
 
 //
@@ -4157,32 +4149,34 @@ func D_TryFindWADByName(tls *libc.TLS, filename uintptr) (r uintptr) {
 // should be executed (notably loading PWADs).
 //
 
-func D_FindIWAD(tls *libc.TLS, mask int32, mission uintptr) (r uintptr) {
-	var i, iwadparm int32
-	var iwadfile, result uintptr
+func D_FindIWAD(tls *libc.TLS, mask int32, mission uintptr) string {
+	var i int32
+	var iwadparm []string
+	var iwadfile, result string
 	// Check for the -iwad parameter
 	//!
 	// Specify an IWAD file to use.
 	//
 	// @arg <file>
 	//
-	iwadparm = M_CheckParmWithArgs(__ccgo_ts(1275), 1)
-	if iwadparm != 0 {
+	iwadparm = M_CheckParmWithArgs(__ccgo_ts_str(1275), 1)
+	if iwadparm != nil {
 		// Search through IWAD dirs for an IWAD with the given name.
-		iwadfile = *(*uintptr)(unsafe.Pointer(myargv + uintptr(iwadparm+int32(1))*8))
+		iwadfile = iwadparm[0]
+		log.Printf("IWAD file specified: %s\n", iwadfile)
 		result = D_FindWADByName(tls, iwadfile)
-		if result == libc.UintptrFromInt32(0) {
-			I_Error(tls, __ccgo_ts(1281), libc.GoString(iwadfile))
+		if result == "" {
+			I_Error(tls, __ccgo_ts(1281), iwadfile)
 		}
 		*(*GameMission_t)(unsafe.Pointer(mission)) = IdentifyIWADByName(tls, result, mask)
 	} else {
 		// Search through the list and look for an IWAD
 		fprintf_ccgo(os.Stdout, 1307)
-		result = libc.UintptrFromInt32(0)
+		result = ""
 		BuildIWADDirList()
 		i = 0
 		for {
-			if !(result == libc.UintptrFromInt32(0) && i < num_iwad_dirs) {
+			if !(result == "" && i < num_iwad_dirs) {
 				break
 			}
 			result = SearchDirectoryForIWAD(tls, iwad_dirs[i], mask, mission)
@@ -4199,7 +4193,7 @@ func D_FindIWAD(tls *libc.TLS, mask int32, mission uintptr) (r uintptr) {
 // Get the IWAD name used for savegames.
 //
 
-func D_SaveGameIWADName(gamemission GameMission_t) (r uintptr) {
+func D_SaveGameIWADName(gamemission GameMission_t) string {
 	var i uint64
 	// Determine the IWAD name to use for savegames.
 	// This determines the directory the savegame files get put into.
@@ -4221,7 +4215,7 @@ func D_SaveGameIWADName(gamemission GameMission_t) (r uintptr) {
 		i++
 	}
 	// Default fallback:
-	return __ccgo_ts(1353)
+	return __ccgo_ts_str(1353)
 }
 
 func D_SuggestGameName(mission GameMission_t, mode GameMode_t) (r uintptr) {
@@ -5010,7 +5004,6 @@ var borderdrawcount int32
 //
 
 func D_BindVariables(tls *libc.TLS) {
-	bp := alloc(32)
 	var i int32
 	M_ApplyPlatformDefaults(tls)
 	I_BindVideoVariables()
@@ -5025,23 +5018,23 @@ func D_BindVariables(tls *libc.TLS) {
 	key_multi_msgplayer[int32(1)] = int32('i')
 	key_multi_msgplayer[int32(2)] = int32('b')
 	key_multi_msgplayer[int32(3)] = int32('r')
-	M_BindVariable(tls, __ccgo_ts(1506), uintptr(unsafe.Pointer(&mouseSensitivity)))
-	M_BindVariable(tls, __ccgo_ts(1524), uintptr(unsafe.Pointer(&sfxVolume)))
-	M_BindVariable(tls, __ccgo_ts(1535), uintptr(unsafe.Pointer(&musicVolume)))
-	M_BindVariable(tls, __ccgo_ts(1548), uintptr(unsafe.Pointer(&showMessages)))
-	M_BindVariable(tls, __ccgo_ts(1562), uintptr(unsafe.Pointer(&screenblocks)))
-	M_BindVariable(tls, __ccgo_ts(1575), uintptr(unsafe.Pointer(&detailLevel)))
-	M_BindVariable(tls, __ccgo_ts(1587), uintptr(unsafe.Pointer(&snd_channels)))
-	M_BindVariable(tls, __ccgo_ts(1600), uintptr(unsafe.Pointer(&vanilla_savegame_limit)))
-	M_BindVariable(tls, __ccgo_ts(1623), uintptr(unsafe.Pointer(&vanilla_demo_limit)))
-	M_BindVariable(tls, __ccgo_ts(1642), uintptr(unsafe.Pointer(&show_endoom)))
+	M_BindVariable(tls, __ccgo_ts_str(1506), uintptr(unsafe.Pointer(&mouseSensitivity)))
+	M_BindVariable(tls, __ccgo_ts_str(1524), uintptr(unsafe.Pointer(&sfxVolume)))
+	M_BindVariable(tls, __ccgo_ts_str(1535), uintptr(unsafe.Pointer(&musicVolume)))
+	M_BindVariable(tls, __ccgo_ts_str(1548), uintptr(unsafe.Pointer(&showMessages)))
+	M_BindVariable(tls, __ccgo_ts_str(1562), uintptr(unsafe.Pointer(&screenblocks)))
+	M_BindVariable(tls, __ccgo_ts_str(1575), uintptr(unsafe.Pointer(&detailLevel)))
+	M_BindVariable(tls, __ccgo_ts_str(1587), uintptr(unsafe.Pointer(&snd_channels)))
+	M_BindVariable(tls, __ccgo_ts_str(1600), uintptr(unsafe.Pointer(&vanilla_savegame_limit)))
+	M_BindVariable(tls, __ccgo_ts_str(1623), uintptr(unsafe.Pointer(&vanilla_demo_limit)))
+	M_BindVariable(tls, __ccgo_ts_str(1642), uintptr(unsafe.Pointer(&show_endoom)))
 	// Multiplayer chat macros
 	i = 0
 	for {
 		if !(i < 10) {
 			break
 		}
-		M_snprintf(tls, bp, uint64(12), __ccgo_ts(1654), libc.VaList(bp+24, i))
+		bp := fmt.Sprintf(__ccgo_ts_str(1654), i)
 		M_BindVariable(tls, bp, uintptr(unsafe.Pointer(&chat_macros))+uintptr(i)*8)
 		goto _1
 	_1:
@@ -5302,14 +5295,14 @@ func GetGameName(tls *libc.TLS, gamename uintptr) (r uintptr) {
 	return gamename
 }
 
-func SetMissionForPackName(tls *libc.TLS, pack_name uintptr) {
+func SetMissionForPackName(tls *libc.TLS, pack_name string) {
 	var i int32
 	i = 0
 	for {
 		if !(libc.Uint64FromInt32(i) < libc.Uint64FromInt64(48)/libc.Uint64FromInt64(16)) {
 			break
 		}
-		if !(xstrcasecmp(pack_name, packs[i].Fname) != 0) {
+		if strings.EqualFold(packs[i].Fname, pack_name) {
 			gamemission = packs[i].Fmission
 			return
 		}
@@ -5324,7 +5317,7 @@ func SetMissionForPackName(tls *libc.TLS, pack_name uintptr) {
 		if !(libc.Uint64FromInt32(i) < libc.Uint64FromInt64(48)/libc.Uint64FromInt64(16)) {
 			break
 		}
-		fprintf_ccgo(os.Stdout, 2578, libc.GoString(packs[i].Fname))
+		fprintf_ccgo(os.Stdout, 2578, packs[i].Fname)
 		goto _2
 	_2:
 		;
@@ -5334,19 +5327,19 @@ func SetMissionForPackName(tls *libc.TLS, pack_name uintptr) {
 }
 
 var packs = [3]struct {
-	Fname    uintptr
+	Fname    string
 	Fmission int32
 }{
 	0: {
-		Fname:    __ccgo_ts(2533),
+		Fname:    __ccgo_ts_str(2533),
 		Fmission: int32(doom2),
 	},
 	1: {
-		Fname:    __ccgo_ts(2539),
+		Fname:    __ccgo_ts_str(2539),
 		Fmission: int32(pack_tnt),
 	},
 	2: {
-		Fname:    __ccgo_ts(2543),
+		Fname:    __ccgo_ts_str(2543),
 		Fmission: int32(pack_plut),
 	},
 }
@@ -5357,7 +5350,7 @@ var packs = [3]struct {
 
 func D_IdentifyVersion(tls *libc.TLS) {
 	var i uint32
-	var p, v2, v3 int32
+	var v2, v3 int32
 	// gamemission is set up by the D_FindIWAD function.  But if
 	// we specify '-iwad', we have to identify using
 	// IdentifyIWADByName.  However, if the iwad does not match
@@ -5424,9 +5417,9 @@ func D_IdentifyVersion(tls *libc.TLS) {
 		// detecting it based on the filename. Valid values are: "doom2",
 		// "tnt" and "plutonia".
 		//
-		p = M_CheckParmWithArgs(__ccgo_ts(2664), 1)
-		if p > 0 {
-			SetMissionForPackName(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)))
+		p := M_CheckParmWithArgs(__ccgo_ts_str(2664), 1)
+		if p != nil {
+			SetMissionForPackName(tls, p[0])
 		}
 	}
 }
@@ -5521,9 +5514,9 @@ func D_SetGameDescription(tls *libc.TLS) {
 	}
 }
 
-func D_AddFile(tls *libc.TLS, filename uintptr) (r boolean) {
+func D_AddFile(tls *libc.TLS, filename string) (r boolean) {
 	var handle *os.File
-	fprintf_ccgo(os.Stdout, 2817, libc.GoString(filename))
+	fprintf_ccgo(os.Stdout, 2817, filename)
 	handle = W_AddFile(tls, filename)
 	return libc.BoolUint32(handle != nil)
 }
@@ -5566,52 +5559,52 @@ func PrintDehackedBanners() {
 
 var gameversions = [10]struct {
 	Fdescription uintptr
-	Fcmdline     uintptr
+	Fcmdline     string
 	Fversion     GameVersion_t
 }{
 	0: {
 		Fdescription: __ccgo_ts(3722),
-		Fcmdline:     __ccgo_ts(3733),
+		Fcmdline:     __ccgo_ts_str(3733),
 		Fversion:     exe_doom_1_666,
 	},
 	1: {
 		Fdescription: __ccgo_ts(3739),
-		Fcmdline:     __ccgo_ts(3753),
+		Fcmdline:     __ccgo_ts_str(3753),
 		Fversion:     exe_doom_1_7,
 	},
 	2: {
 		Fdescription: __ccgo_ts(3757),
-		Fcmdline:     __ccgo_ts(3766),
+		Fcmdline:     __ccgo_ts_str(3766),
 		Fversion:     exe_doom_1_8,
 	},
 	3: {
 		Fdescription: __ccgo_ts(3770),
-		Fcmdline:     __ccgo_ts(3779),
+		Fcmdline:     __ccgo_ts_str(3779),
 		Fversion:     exe_doom_1_9,
 	},
 	4: {
 		Fdescription: __ccgo_ts(1077),
-		Fcmdline:     __ccgo_ts(3783),
+		Fcmdline:     __ccgo_ts_str(3783),
 		Fversion:     exe_hacx,
 	},
 	5: {
 		Fdescription: __ccgo_ts(3788),
-		Fcmdline:     __ccgo_ts(3802),
+		Fcmdline:     __ccgo_ts_str(3802),
 		Fversion:     exe_ultimate,
 	},
 	6: {
 		Fdescription: __ccgo_ts(3811),
-		Fcmdline:     __ccgo_ts(3822),
+		Fcmdline:     __ccgo_ts_str(3822),
 		Fversion:     exe_final,
 	},
 	7: {
 		Fdescription: __ccgo_ts(3828),
-		Fcmdline:     __ccgo_ts(3845),
+		Fcmdline:     __ccgo_ts_str(3845),
 		Fversion:     exe_final2,
 	},
 	8: {
 		Fdescription: __ccgo_ts(1057),
-		Fcmdline:     __ccgo_ts(3852),
+		Fcmdline:     __ccgo_ts_str(3852),
 		Fversion:     exe_chex,
 	},
 	9: {},
@@ -5620,7 +5613,7 @@ var gameversions = [10]struct {
 // Initialize the game version
 
 func InitGameVersion(tls *libc.TLS) {
-	var i, p int32
+	var i int32
 	//!
 	// @arg <version>
 	// @category compat
@@ -5628,14 +5621,14 @@ func InitGameVersion(tls *libc.TLS) {
 	// Emulate a specific version of Doom.  Valid values are "1.9",
 	// "ultimate", "final", "final2", "hacx" and "chex".
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts(3857), 1)
-	if p != 0 {
+	p := M_CheckParmWithArgs(__ccgo_ts_str(3857), 1)
+	if p != nil {
 		i = 0
 		for {
 			if !(gameversions[i].Fdescription != libc.UintptrFromInt32(0)) {
 				break
 			}
-			if !(xstrcmp(*(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)), gameversions[i].Fcmdline) != 0) {
+			if strings.EqualFold(p[0], gameversions[i].Fcmdline) {
 				gameversion = gameversions[i].Fversion
 				break
 			}
@@ -5651,13 +5644,13 @@ func InitGameVersion(tls *libc.TLS) {
 				if !(gameversions[i].Fdescription != libc.UintptrFromInt32(0)) {
 					break
 				}
-				fprintf_ccgo(os.Stdout, 3896, libc.GoString(gameversions[i].Fcmdline), libc.GoString(gameversions[i].Fdescription))
+				fprintf_ccgo(os.Stdout, 3896, gameversions[i].Fcmdline, libc.GoString(gameversions[i].Fdescription))
 				goto _2
 			_2:
 				;
 				i++
 			}
-			I_Error(tls, __ccgo_ts(3906), *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)))
+			I_Error(tls, __ccgo_ts(3906), (uintptr)(unsafe.Pointer(&p[0])))
 		}
 	} else {
 		// Determine automatically
@@ -5729,7 +5722,7 @@ func D_Endoom(tls *libc.TLS) {
 	// Don't show ENDOOM if we have it disabled, or we're running
 	// in screensaver or control test mode. Only show it once the
 	// game has actually started.
-	if !(show_endoom != 0) || !(main_loop_started != 0) || screensaver_mode != 0 || M_CheckParm(__ccgo_ts(3980)) > 0 {
+	if !(show_endoom != 0) || !(main_loop_started != 0) || screensaver_mode != 0 || M_CheckParm(__ccgo_ts_str(3980)) > 0 {
 		return
 	}
 	endoom = W_CacheLumpName(tls, __ccgo_ts(3994), int32(PU_STATIC))
@@ -5744,8 +5737,8 @@ func D_Endoom(tls *libc.TLS) {
 //	// D_DoomMain
 //	//
 func D_DoomMain(tls *libc.TLS) {
-	bp := alloc(480)
-	var i, p, scale, v1 int32
+	//bp := alloc(480)
+	var i, scale int32
 	I_AtExit(D_Endoom, 0)
 	// print banner
 	I_PrintBanner(tls, __ccgo_ts(4001))
@@ -5756,26 +5749,26 @@ func D_DoomMain(tls *libc.TLS) {
 	//
 	// Disable monsters.
 	//
-	nomonsters = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts(4064)))
+	nomonsters = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts_str(4064)))
 	//!
 	// @vanilla
 	//
 	// Monsters respawn after being killed.
 	//
-	respawnparm = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts(4076)))
+	respawnparm = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts_str(4076)))
 	//!
 	// @vanilla
 	//
 	// Monsters move faster.
 	//
-	fastparm = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts(4085)))
+	fastparm = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts_str(4085)))
 	//!
 	// @vanilla
 	//
 	// Developer mode.  F1 saves a screenshot in the current working
 	// directory.
 	//
-	devparm = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts(4091)))
+	devparm = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts_str(4091)))
 	I_DisplayFPSDots(devparm)
 	//!
 	// @category net
@@ -5783,7 +5776,7 @@ func D_DoomMain(tls *libc.TLS) {
 	//
 	// Start a deathmatch game.
 	//
-	if M_CheckParm(__ccgo_ts(4100)) != 0 {
+	if M_CheckParm(__ccgo_ts_str(4100)) != 0 {
 		deathmatch = 1
 	}
 	//!
@@ -5793,7 +5786,7 @@ func D_DoomMain(tls *libc.TLS) {
 	// Start a deathmatch 2.0 game.  Weapons do not stay in place and
 	// all items respawn after 30 seconds.
 	//
-	if M_CheckParm(__ccgo_ts(4112)) != 0 {
+	if M_CheckParm(__ccgo_ts_str(4112)) != 0 {
 		deathmatch = 2
 	}
 	if devparm != 0 {
@@ -5801,7 +5794,7 @@ func D_DoomMain(tls *libc.TLS) {
 	}
 	// find which dir to use for config files
 	// Auto-detect the configuration dir.
-	M_SetConfigDir(tls, libc.UintptrFromInt32(0))
+	M_SetConfigDir(tls, "")
 	//!
 	// @arg <x>
 	// @vanilla
@@ -5809,9 +5802,9 @@ func D_DoomMain(tls *libc.TLS) {
 	// Turbo mode.  The player's speed is multiplied by x%.  If unspecified,
 	// x defaults to 200.  Values are rounded up to 10 and down to 400.
 	//
-	v1 = M_CheckParm(__ccgo_ts(4144))
-	p = v1
-	if v1 != 0 {
+	/* GORE: NOT SUPPORTED
+	p := M_CheckParm(__ccgo_ts_str(4144))
+	if p != nil {
 		scale = 200
 		if p < myargc-1 {
 			scale = xatoi(*(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)))
@@ -5828,12 +5821,13 @@ func D_DoomMain(tls *libc.TLS) {
 		sidemove[0] = sidemove[0] * scale / 100
 		sidemove[int32(1)] = sidemove[int32(1)] * scale / 100
 	}
+	*/
 	// init subsystems
 	fprintf_ccgo(os.Stdout, 4170)
 	V_Init()
 	// Load configuration files before initialising other subsystems.
 	fprintf_ccgo(os.Stdout, 4197)
-	M_SetConfigFilenames(tls, __ccgo_ts(4236), __ccgo_ts(4248))
+	M_SetConfigFilenames(tls, __ccgo_ts_str(4236), __ccgo_ts_str(4248))
 	D_BindVariables(tls)
 	M_LoadDefaults(tls)
 	// Save configuration at exit.
@@ -5841,7 +5835,7 @@ func D_DoomMain(tls *libc.TLS) {
 	// Find main IWAD file and load it.
 	iwadfile = D_FindIWAD(tls, 1<<int32(doom)|1<<int32(doom2)|1<<int32(pack_tnt)|1<<int32(pack_plut)|1<<int32(pack_chex)|1<<int32(pack_hacx), uintptr(unsafe.Pointer(&gamemission)))
 	// None found?
-	if iwadfile == libc.UintptrFromInt32(0) {
+	if iwadfile == "" {
 		I_Error(tls, __ccgo_ts(4268), 0)
 	}
 	modifiedgame = 0
@@ -5888,8 +5882,8 @@ func D_DoomMain(tls *libc.TLS) {
 	//
 	// Play back the demo named demo.lmp.
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts(4456), 1)
-	if !(p != 0) {
+	p := M_CheckParmWithArgs(__ccgo_ts_str(4456), 1)
+	if p == nil {
 		//!
 		// @arg <demo>
 		// @category demo
@@ -5898,15 +5892,16 @@ func D_DoomMain(tls *libc.TLS) {
 		// Play back the demo named demo.lmp, determining the framerate
 		// of the screen.
 		//
-		p = M_CheckParmWithArgs(__ccgo_ts(4466), 1)
+		p = M_CheckParmWithArgs(__ccgo_ts_str(4466), 1)
 	}
-	if p != 0 {
+	if p != nil {
 		// With Vanilla you have to specify the file without extension,
 		// but make that optional.
-		if M_StringEndsWith(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)), __ccgo_ts(4476)) != 0 {
-			M_StringCopy(bp, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)), uint64(256))
+		var bp string
+		if M_StringEndsWith(tls, p[0], __ccgo_ts_str(4476)) != 0 {
+			bp = p[0]
 		} else {
-			snprintf_ccgo(bp, 256, 4481, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)))
+			bp = fmt.Sprintf(__ccgo_ts_str(4481), p[0])
 		}
 		if D_AddFile(tls, bp) != 0 {
 			M_StringCopy(bp+256, lumpinfo+uintptr(numlumps-uint32(1))*40, uint64(9))
@@ -7578,7 +7573,7 @@ var joystrafemove int32
 var joyarray [21]boolean
 var joybuttons = uintptr(unsafe.Pointer(&joyarray)) + 1*4 // allow [-1]
 var savegameslot int32
-var savedescription [32]int8
+var savedescription string
 
 func init() {
 	vanilla_savegame_limit = 1
@@ -8153,7 +8148,7 @@ func G_Ticker(tls *libc.TLS) {
 		case ga_worlddone:
 			G_DoWorldDone(tls)
 		case ga_screenshot:
-			V_ScreenShot(tls, __ccgo_ts(13723))
+			V_ScreenShot(tls, __ccgo_ts_str(13723))
 			players[consoleplayer].Fmessage = __ccgo_ts(13735)
 			gameaction = ga_nothing
 		case ga_nothing:
@@ -8224,8 +8219,8 @@ func G_Ticker(tls *libc.TLS) {
 						S_ResumeSound(tls)
 					}
 				case int32(BTS_SAVEGAME):
-					if !(savedescription[0] != 0) {
-						M_StringCopy(uintptr(unsafe.Pointer(&savedescription)), __ccgo_ts(13798), uint64(32))
+					if savedescription == "" {
+						savedescription = __ccgo_ts_str(13798)
 					}
 					savegameslot = libc.Int32FromUint8(players[i].Fcmd.Fbuttons) & int32(BTS_SAVEMASK) >> int32(BTS_SAVESHIFT)
 					gameaction = ga_savegame
@@ -8794,7 +8789,7 @@ func G_DoLoadGame(tls *libc.TLS) {
 	var savedleveltime int32
 	var err error
 	gameaction = ga_nothing
-	log.Printf("G_DoLoadGame: Loading game from %s\n", libc.GoString(uintptr(unsafe.Pointer(&savename))))
+	log.Printf("G_DoLoadGame: Loading game from %s\n", savename)
 	save_stream, err = os.Open(savename)
 	if err != nil {
 		return
@@ -8831,9 +8826,9 @@ func G_DoLoadGame(tls *libc.TLS) {
 //	// Called by the menu task.
 //	// Description is a 24 byte text string
 //	//
-func G_SaveGame(tls *libc.TLS, slot int32, description uintptr) {
+func G_SaveGame(tls *libc.TLS, slot int32, description string) {
 	savegameslot = slot
-	M_StringCopy(uintptr(unsafe.Pointer(&savedescription)), description, uint64(32))
+	savedescription = description
 	sendsave = 1
 }
 
@@ -8852,7 +8847,7 @@ func G_DoSaveGame(tls *libc.TLS) {
 		log.Printf("G_DoSaveGame: Failed to open savegame file %s: %v\n", temp_savegame_file, err)
 		// Failed to save the game, so we're going to have to abort. But
 		// to be nice, save to somewhere else before we call I_Error().
-		recovery_savegame_file = M_TempFile(string(__ccgo_ts_map[13903]))
+		recovery_savegame_file = M_TempFile(__ccgo_ts_str(13903))
 		log.Printf("G_DoSaveGame: Saving recovery savegame to %s\n", recovery_savegame_file)
 		save_stream, err = os.OpenFile(recovery_savegame_file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
@@ -8861,7 +8856,7 @@ func G_DoSaveGame(tls *libc.TLS) {
 		}
 	}
 	savegame_error = 0
-	P_WriteSaveGameHeader(tls, uintptr(unsafe.Pointer(&savedescription)))
+	P_WriteSaveGameHeader(tls, savedescription)
 	P_ArchivePlayers(tls)
 	P_ArchiveWorld(tls)
 	P_ArchiveThinkers(tls)
@@ -8888,7 +8883,7 @@ func G_DoSaveGame(tls *libc.TLS) {
 	os.Remove(savegame_file)
 	os.Rename(temp_savegame_file, savegame_file)
 	gameaction = ga_nothing
-	M_StringCopy(uintptr(unsafe.Pointer(&savedescription[0])), __ccgo_ts(14092), uint64(32))
+	savedescription = __ccgo_ts_str(14902)
 	players[consoleplayer].Fmessage = __ccgo_ts(14093)
 	// draw the pattern into the back screen
 	R_FillBackScreen(tls)
@@ -18058,23 +18053,22 @@ var joystick_physical_buttons = [10]int32{
 }
 
 func I_BindJoystickVariables(tls *libc.TLS) {
-	bp := alloc(48)
 	var i int32
-	M_BindVariable(tls, __ccgo_ts(18302), uintptr(unsafe.Pointer(&usejoystick)))
-	M_BindVariable(tls, __ccgo_ts(18315), uintptr(unsafe.Pointer(&joystick_index)))
-	M_BindVariable(tls, __ccgo_ts(18330), uintptr(unsafe.Pointer(&joystick_x_axis)))
-	M_BindVariable(tls, __ccgo_ts(18346), uintptr(unsafe.Pointer(&joystick_y_axis)))
-	M_BindVariable(tls, __ccgo_ts(18362), uintptr(unsafe.Pointer(&joystick_strafe_axis)))
-	M_BindVariable(tls, __ccgo_ts(18383), uintptr(unsafe.Pointer(&joystick_x_invert)))
-	M_BindVariable(tls, __ccgo_ts(18401), uintptr(unsafe.Pointer(&joystick_y_invert)))
-	M_BindVariable(tls, __ccgo_ts(18419), uintptr(unsafe.Pointer(&joystick_strafe_invert)))
+	M_BindVariable(tls, __ccgo_ts_str(18302), uintptr(unsafe.Pointer(&usejoystick)))
+	M_BindVariable(tls, __ccgo_ts_str(18315), uintptr(unsafe.Pointer(&joystick_index)))
+	M_BindVariable(tls, __ccgo_ts_str(18330), uintptr(unsafe.Pointer(&joystick_x_axis)))
+	M_BindVariable(tls, __ccgo_ts_str(18346), uintptr(unsafe.Pointer(&joystick_y_axis)))
+	M_BindVariable(tls, __ccgo_ts_str(18362), uintptr(unsafe.Pointer(&joystick_strafe_axis)))
+	M_BindVariable(tls, __ccgo_ts_str(18383), uintptr(unsafe.Pointer(&joystick_x_invert)))
+	M_BindVariable(tls, __ccgo_ts_str(18401), uintptr(unsafe.Pointer(&joystick_y_invert)))
+	M_BindVariable(tls, __ccgo_ts_str(18419), uintptr(unsafe.Pointer(&joystick_strafe_invert)))
 	i = 0
 	for {
 		if !(i < int32(NUM_VIRTUAL_BUTTONS)) {
 			break
 		}
-		M_snprintf(tls, bp, uint64(32), __ccgo_ts(18442), libc.VaList(bp+40, i))
-		M_BindVariable(tls, bp, uintptr(unsafe.Pointer(&joystick_physical_buttons))+uintptr(i)*4)
+		val := fmt.Sprintf(__ccgo_ts_str(18442), i)
+		M_BindVariable(tls, val, uintptr(unsafe.Pointer(&joystick_physical_buttons))+uintptr(i)*4)
 		goto _1
 	_1:
 		;
@@ -18364,16 +18358,16 @@ func I_StopSong(tls *libc.TLS) {
 }
 
 func I_BindSoundVariables(tls *libc.TLS) {
-	M_BindVariable(tls, __ccgo_ts(18699), uintptr(unsafe.Pointer(&snd_musicdevice)))
-	M_BindVariable(tls, __ccgo_ts(18715), uintptr(unsafe.Pointer(&snd_sfxdevice)))
-	M_BindVariable(tls, __ccgo_ts(18729), uintptr(unsafe.Pointer(&snd_sbport)))
-	M_BindVariable(tls, __ccgo_ts(18740), uintptr(unsafe.Pointer(&snd_sbirq)))
-	M_BindVariable(tls, __ccgo_ts(18750), uintptr(unsafe.Pointer(&snd_sbdma)))
-	M_BindVariable(tls, __ccgo_ts(18760), uintptr(unsafe.Pointer(&snd_mport)))
-	M_BindVariable(tls, __ccgo_ts(18770), uintptr(unsafe.Pointer(&snd_maxslicetime_ms)))
-	M_BindVariable(tls, __ccgo_ts(18790), uintptr(unsafe.Pointer(&snd_musiccmd)))
-	M_BindVariable(tls, __ccgo_ts(18803), uintptr(unsafe.Pointer(&snd_samplerate)))
-	M_BindVariable(tls, __ccgo_ts(18818), uintptr(unsafe.Pointer(&snd_cachesize)))
+	M_BindVariable(tls, __ccgo_ts_str(18699), uintptr(unsafe.Pointer(&snd_musicdevice)))
+	M_BindVariable(tls, __ccgo_ts_str(18715), uintptr(unsafe.Pointer(&snd_sfxdevice)))
+	M_BindVariable(tls, __ccgo_ts_str(18729), uintptr(unsafe.Pointer(&snd_sbport)))
+	M_BindVariable(tls, __ccgo_ts_str(18740), uintptr(unsafe.Pointer(&snd_sbirq)))
+	M_BindVariable(tls, __ccgo_ts_str(18750), uintptr(unsafe.Pointer(&snd_sbdma)))
+	M_BindVariable(tls, __ccgo_ts_str(18760), uintptr(unsafe.Pointer(&snd_mport)))
+	M_BindVariable(tls, __ccgo_ts_str(18770), uintptr(unsafe.Pointer(&snd_maxslicetime_ms)))
+	M_BindVariable(tls, __ccgo_ts_str(18790), uintptr(unsafe.Pointer(&snd_musiccmd)))
+	M_BindVariable(tls, __ccgo_ts_str(18803), uintptr(unsafe.Pointer(&snd_samplerate)))
+	M_BindVariable(tls, __ccgo_ts_str(18818), uintptr(unsafe.Pointer(&snd_cachesize)))
 	// Before SDL_mixer version 1.2.11, MIDI music caused the game
 	// to crash when it looped.  If this is an old SDL_mixer version,
 	// disable MIDI.
@@ -18754,22 +18748,22 @@ func I_Sleep(ms uint32) {
 // or 0 if not present
 //
 
-func M_CheckParmWithArgs(check uintptr, num_args int32) (r int32) {
+func M_CheckParmWithArgs(check string, num_args int32) []string {
 	var i int32
 	i = 1
 	for {
-		if !(i < myargc-num_args) {
+		if !(i < int32(len(myargs))-num_args) {
 			break
 		}
-		if !(xstrcasecmp(check, *(*uintptr)(unsafe.Pointer(myargv + uintptr(i)*8))) != 0) {
-			return i
+		if strings.EqualFold(myargs[i], check) {
+			return myargs[i+1 : i+1+num_args]
 		}
 		goto _1
 	_1:
 		;
 		i++
 	}
-	return 0
+	return nil
 }
 
 //
@@ -18779,12 +18773,16 @@ func M_CheckParmWithArgs(check uintptr, num_args int32) (r int32) {
 // line arguments, false if not.
 //
 
-func M_ParmExists(check uintptr) (r boolean) {
+func M_ParmExists(check string) (r boolean) {
 	return libc.BoolUint32(M_CheckParm(check) != 0)
 }
 
-func M_CheckParm(check uintptr) (r int32) {
-	return M_CheckParmWithArgs(check, 0)
+func M_CheckParm(check string) (r int32) {
+	if M_CheckParmWithArgs(check, 0) != nil {
+		return 1
+	} else {
+		return 0
+	}
 }
 
 func LoadResponseFile(tls *libc.TLS, argv_index int32) {
@@ -18798,10 +18796,10 @@ func M_FindResponseFile(tls *libc.TLS) {
 	var i int32
 	i = 1
 	for {
-		if !(i < myargc) {
+		if !(i < int32(len(myargs))) {
 			break
 		}
-		if int32(*(*int8)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(myargv + uintptr(i)*8))))) == int32('@') {
+		if myargs[i] == "@" {
 			LoadResponseFile(tls, i)
 		}
 		goto _1
@@ -18905,8 +18903,8 @@ const KEY_UPARROW1 = 173
 
 // Default filenames for configuration files.
 
-var default_main_config uintptr
-var default_extra_config uintptr
+var default_main_config string
+var default_extra_config string
 
 type default_type_t = int32
 
@@ -18925,9 +18923,9 @@ type default_t struct {
 }
 
 type default_collection_t struct {
-	Fdefaults    uintptr
+	Fdefaults    []default_t
 	Fnumdefaults int32
-	Ffilename    uintptr
+	Ffilename    string
 }
 
 //! @begin_config_file default
@@ -19210,7 +19208,7 @@ var doom_defaults_list = [76]default_t{
 }
 
 var doom_defaults = default_collection_t{
-	Fdefaults:    uintptr(unsafe.Pointer(&doom_defaults_list)),
+	Fdefaults:    doom_defaults_list[:],
 	Fnumdefaults: libc.Int32FromUint64(libc.Uint64FromInt64(2432) / libc.Uint64FromInt64(32)),
 }
 
@@ -19648,39 +19646,40 @@ var extra_defaults_list = [119]default_t{
 }
 
 var extra_defaults = default_collection_t{
-	Fdefaults:    uintptr(unsafe.Pointer(&extra_defaults_list)),
+	Fdefaults:    extra_defaults_list[:],
 	Fnumdefaults: libc.Int32FromUint64(libc.Uint64FromInt64(3808) / libc.Uint64FromInt64(32)),
 }
 
 // Search a collection for a variable
 
-func SearchCollection(tls *libc.TLS, collection uintptr, name uintptr) (r uintptr) {
+func SearchCollection(tls *libc.TLS, collection *default_collection_t, name string) *default_t {
 	var i int32
 	i = 0
 	for {
-		if !(i < (*default_collection_t)(unsafe.Pointer(collection)).Fnumdefaults) {
+		if !(i < collection.Fnumdefaults) {
 			break
 		}
-		if !(xstrcmp(name, (*(*default_t)(unsafe.Pointer((*default_collection_t)(unsafe.Pointer(collection)).Fdefaults + uintptr(i)*32))).Fname) != 0) {
-			return (*default_collection_t)(unsafe.Pointer(collection)).Fdefaults + uintptr(i)*32
+		if name == libc.GoString(collection.Fdefaults[i].Fname) {
+			return &collection.Fdefaults[i]
 		}
+
 		goto _1
 	_1:
 		;
 		i++
 	}
-	return libc.UintptrFromInt32(0)
+	return nil
 }
 
-func SaveDefaultCollection(tls *libc.TLS, collection uintptr) {
+func SaveDefaultCollection(tls *libc.TLS, collection *default_collection_t) {
 }
 
-func LoadDefaultCollection(tls *libc.TLS, collection uintptr) {
+func LoadDefaultCollection(tls *libc.TLS, collection *default_collection_t) {
 }
 
 // Set the default filenames to use for configuration files.
 
-func M_SetConfigFilenames(tls *libc.TLS, main_config uintptr, extra_config uintptr) {
+func M_SetConfigFilenames(tls *libc.TLS, main_config string, extra_config string) {
 	default_main_config = main_config
 	default_extra_config = extra_config
 }
@@ -19690,8 +19689,8 @@ func M_SetConfigFilenames(tls *libc.TLS, main_config uintptr, extra_config uintp
 //
 
 func M_SaveDefaults(tls *libc.TLS) {
-	SaveDefaultCollection(tls, uintptr(unsafe.Pointer(&doom_defaults)))
-	SaveDefaultCollection(tls, uintptr(unsafe.Pointer(&extra_defaults)))
+	SaveDefaultCollection(tls, &doom_defaults)
+	SaveDefaultCollection(tls, &extra_defaults)
 }
 
 //
@@ -19699,7 +19698,6 @@ func M_SaveDefaults(tls *libc.TLS) {
 //
 
 func M_LoadDefaults(tls *libc.TLS) {
-	bp := alloc(32)
 	var i int32
 	// check for a custom default file
 	//!
@@ -19711,12 +19709,13 @@ func M_LoadDefaults(tls *libc.TLS) {
 	//
 	i = M_CheckParmWithArgs(__ccgo_ts(21869), 1)
 	if i != 0 {
-		doom_defaults.Ffilename = *(*uintptr)(unsafe.Pointer(myargv + uintptr(i+int32(1))*8))
-		fprintf_ccgo(os.Stdout, 21877, libc.GoString(doom_defaults.Ffilename))
+		panic("GORE: NOT IMPLEMENTED: M_LoadDefaults: M_CheckParmWithArgs")
+		//doom_defaults.Ffilename = *(*uintptr)(unsafe.Pointer(myargv + uintptr(i+int32(1))*8))
+		//fprintf_ccgo(os.Stdout, 21877, libc.GoString(doom_defaults.Ffilename))
 	} else {
-		doom_defaults.Ffilename = M_StringJoin(tls, configdir, libc.VaList(bp+8, default_main_config, libc.UintptrFromInt32(0)))
+		doom_defaults.Ffilename = configdir + default_main_config
 	}
-	fprintf_ccgo(os.Stdout, 21896, libc.GoString(doom_defaults.Ffilename))
+	fprintf_ccgo(os.Stdout, 21896, doom_defaults.Ffilename)
 	//!
 	// @arg <file>
 	//
@@ -19725,26 +19724,27 @@ func M_LoadDefaults(tls *libc.TLS) {
 	//
 	i = M_CheckParmWithArgs(__ccgo_ts(21917), 1)
 	if i != 0 {
-		extra_defaults.Ffilename = *(*uintptr)(unsafe.Pointer(myargv + uintptr(i+int32(1))*8))
-		fprintf_ccgo(os.Stdout, 21930, libc.GoString(extra_defaults.Ffilename))
+		panic("GORE: NOT IMPLEMENTED: M_LoadDefaults: M_CheckParmWithArgs")
+		//extra_defaults.Ffilename = *(*uintptr)(unsafe.Pointer(myargv + uintptr(i+int32(1))*8))
+		//fprintf_ccgo(os.Stdout, 21930, libc.GoString(extra_defaults.Ffilename))
 	} else {
-		extra_defaults.Ffilename = M_StringJoin(tls, configdir, libc.VaList(bp+8, default_extra_config, libc.UintptrFromInt32(0)))
+		extra_defaults.Ffilename = configdir + default_extra_config
 	}
-	LoadDefaultCollection(tls, uintptr(unsafe.Pointer(&doom_defaults)))
-	LoadDefaultCollection(tls, uintptr(unsafe.Pointer(&extra_defaults)))
+	LoadDefaultCollection(tls, &doom_defaults)
+	LoadDefaultCollection(tls, &extra_defaults)
 }
 
 // Get a configuration file variable by its name
 
-func GetDefaultForName(tls *libc.TLS, name uintptr) (r uintptr) {
-	var result uintptr
+func GetDefaultForName(tls *libc.TLS, name string) *default_t {
+	var result *default_t
 	// Try the main list and the extras
-	result = SearchCollection(tls, uintptr(unsafe.Pointer(&doom_defaults)), name)
-	if result == libc.UintptrFromInt32(0) {
-		result = SearchCollection(tls, uintptr(unsafe.Pointer(&extra_defaults)), name)
+	result = SearchCollection(tls, &doom_defaults, name)
+	if result == nil {
+		result = SearchCollection(tls, &extra_defaults, name)
 	}
 	// Not found? Internal error.
-	if result == libc.UintptrFromInt32(0) {
+	if result == nil {
 		I_Error(tls, __ccgo_ts(21968), name)
 	}
 	return result
@@ -19754,22 +19754,17 @@ func GetDefaultForName(tls *libc.TLS, name uintptr) (r uintptr) {
 // Bind a variable to a given configuration file variable, by name.
 //
 
-func M_BindVariable(tls *libc.TLS, name uintptr, location uintptr) {
-	var variable uintptr
-	variable = GetDefaultForName(tls, name)
-	(*default_t)(unsafe.Pointer(variable)).Flocation = location
-	(*default_t)(unsafe.Pointer(variable)).Fbound = 1
+func M_BindVariable(tls *libc.TLS, name string, location uintptr) {
+	variable := GetDefaultForName(tls, name)
+	variable.Flocation = location
+	variable.Fbound = 1
 }
 
 // Get the path to the default configuration dir to use, if NULL
 // is passed to M_SetConfigDir.
 
-func GetDefaultConfigDir(tls *libc.TLS) (r uintptr) {
-	var result uintptr
-	result = xmalloc(tls, uint64(2))
-	*(*int8)(unsafe.Pointer(result)) = int8('.')
-	*(*int8)(unsafe.Pointer(result + 1)) = int8('\000')
-	return result
+func GetDefaultConfigDir(tls *libc.TLS) string {
+	return "."
 }
 
 //
@@ -19779,15 +19774,15 @@ func GetDefaultConfigDir(tls *libc.TLS) (r uintptr) {
 // files are stored - default.cfg, chocolate-doom.cfg, savegames, etc.
 //
 
-func M_SetConfigDir(tls *libc.TLS, dir uintptr) {
+func M_SetConfigDir(tls *libc.TLS, dir string) {
 	// Use the directory that was passed, or find the default.
-	if dir != libc.UintptrFromInt32(0) {
+	if dir != "" {
 		configdir = dir
 	} else {
 		configdir = GetDefaultConfigDir(tls)
 	}
-	if xstrcmp(configdir, __ccgo_ts(14092)) != 0 {
-		fprintf_ccgo(os.Stdout, 22005, libc.GoString(configdir))
+	if configdir != __ccgo_ts_str(14092) {
+		fprintf_ccgo(os.Stdout, 22005, configdir)
 	}
 	// Make the directory if it doesn't already exist:
 	M_MakeDirectory(tls, configdir)
@@ -19798,17 +19793,16 @@ func M_SetConfigDir(tls *libc.TLS, dir uintptr) {
 // Creates the directory as necessary.
 //
 
-func M_GetSaveGameDir(tls *libc.TLS, iwadname uintptr) (r uintptr) {
-	bp := alloc(32)
-	var savegamedir uintptr
+func M_GetSaveGameDir(tls *libc.TLS, iwadname string) string {
+	var savegamedir string
 	// If not "doing" a configuration directory (Windows), don't "do"
 	// a savegame directory, either.
-	if !(xstrcmp(configdir, __ccgo_ts(14092)) != 0) {
-		savegamedir = xstrdup(__ccgo_ts(14092))
+	if configdir == __ccgo_ts_str(14092) {
+		savegamedir = __ccgo_ts_str(14092)
 	} else {
-		savegamedir = M_StringJoin(tls, configdir, libc.VaList(bp+8, __ccgo_ts(1252), __ccgo_ts(22043), libc.UintptrFromInt32(0)))
+		savegamedir = configdir + __ccgo_ts_str(1252) + __ccgo_ts_str(22043)
 		M_MakeDirectory(tls, savegamedir)
-		fprintf_ccgo(os.Stdout, 22054, libc.GoString(savegamedir))
+		fprintf_ccgo(os.Stdout, 22054, savegamedir)
 	}
 	return savegamedir
 }
@@ -19930,106 +19924,105 @@ func init() {
 //
 
 func M_BindBaseControls(tls *libc.TLS) {
-	M_BindVariable(tls, __ccgo_ts(19425), uintptr(unsafe.Pointer(&key_right)))
-	M_BindVariable(tls, __ccgo_ts(19435), uintptr(unsafe.Pointer(&key_left)))
-	M_BindVariable(tls, __ccgo_ts(19444), uintptr(unsafe.Pointer(&key_up)))
-	M_BindVariable(tls, __ccgo_ts(19451), uintptr(unsafe.Pointer(&key_down)))
-	M_BindVariable(tls, __ccgo_ts(19460), uintptr(unsafe.Pointer(&key_strafeleft)))
-	M_BindVariable(tls, __ccgo_ts(19475), uintptr(unsafe.Pointer(&key_straferight)))
-	M_BindVariable(tls, __ccgo_ts(19772), uintptr(unsafe.Pointer(&key_fire)))
-	M_BindVariable(tls, __ccgo_ts(19781), uintptr(unsafe.Pointer(&key_use)))
-	M_BindVariable(tls, __ccgo_ts(19789), uintptr(unsafe.Pointer(&key_strafe)))
-	M_BindVariable(tls, __ccgo_ts(19800), uintptr(unsafe.Pointer(&key_speed)))
-	M_BindVariable(tls, __ccgo_ts(19820), uintptr(unsafe.Pointer(&mousebfire)))
-	M_BindVariable(tls, __ccgo_ts(19832), uintptr(unsafe.Pointer(&mousebstrafe)))
-	M_BindVariable(tls, __ccgo_ts(19846), uintptr(unsafe.Pointer(&mousebforward)))
-	M_BindVariable(tls, __ccgo_ts(19873), uintptr(unsafe.Pointer(&joybfire)))
-	M_BindVariable(tls, __ccgo_ts(19883), uintptr(unsafe.Pointer(&joybstrafe)))
-	M_BindVariable(tls, __ccgo_ts(19895), uintptr(unsafe.Pointer(&joybuse)))
-	M_BindVariable(tls, __ccgo_ts(19904), uintptr(unsafe.Pointer(&joybspeed)))
-	M_BindVariable(tls, __ccgo_ts(20656), uintptr(unsafe.Pointer(&joybmenu)))
+	M_BindVariable(tls, __ccgo_ts_str(19425), uintptr(unsafe.Pointer(&key_right)))
+	M_BindVariable(tls, __ccgo_ts_str(19435), uintptr(unsafe.Pointer(&key_left)))
+	M_BindVariable(tls, __ccgo_ts_str(19444), uintptr(unsafe.Pointer(&key_up)))
+	M_BindVariable(tls, __ccgo_ts_str(19451), uintptr(unsafe.Pointer(&key_down)))
+	M_BindVariable(tls, __ccgo_ts_str(19460), uintptr(unsafe.Pointer(&key_strafeleft)))
+	M_BindVariable(tls, __ccgo_ts_str(19475), uintptr(unsafe.Pointer(&key_straferight)))
+	M_BindVariable(tls, __ccgo_ts_str(19772), uintptr(unsafe.Pointer(&key_fire)))
+	M_BindVariable(tls, __ccgo_ts_str(19781), uintptr(unsafe.Pointer(&key_use)))
+	M_BindVariable(tls, __ccgo_ts_str(19789), uintptr(unsafe.Pointer(&key_strafe)))
+	M_BindVariable(tls, __ccgo_ts_str(19800), uintptr(unsafe.Pointer(&key_speed)))
+	M_BindVariable(tls, __ccgo_ts_str(19820), uintptr(unsafe.Pointer(&mousebfire)))
+	M_BindVariable(tls, __ccgo_ts_str(19832), uintptr(unsafe.Pointer(&mousebstrafe)))
+	M_BindVariable(tls, __ccgo_ts_str(19846), uintptr(unsafe.Pointer(&mousebforward)))
+	M_BindVariable(tls, __ccgo_ts_str(19873), uintptr(unsafe.Pointer(&joybfire)))
+	M_BindVariable(tls, __ccgo_ts_str(19883), uintptr(unsafe.Pointer(&joybstrafe)))
+	M_BindVariable(tls, __ccgo_ts_str(19895), uintptr(unsafe.Pointer(&joybuse)))
+	M_BindVariable(tls, __ccgo_ts_str(19904), uintptr(unsafe.Pointer(&joybspeed)))
+	M_BindVariable(tls, __ccgo_ts_str(20656), uintptr(unsafe.Pointer(&joybmenu)))
 	// Extra controls that are not in the Vanilla versions:
-	M_BindVariable(tls, __ccgo_ts(20623), uintptr(unsafe.Pointer(&joybstrafeleft)))
-	M_BindVariable(tls, __ccgo_ts(20639), uintptr(unsafe.Pointer(&joybstraferight)))
-	M_BindVariable(tls, __ccgo_ts(20707), uintptr(unsafe.Pointer(&mousebstrafeleft)))
-	M_BindVariable(tls, __ccgo_ts(20725), uintptr(unsafe.Pointer(&mousebstraferight)))
-	M_BindVariable(tls, __ccgo_ts(20744), uintptr(unsafe.Pointer(&mousebuse)))
-	M_BindVariable(tls, __ccgo_ts(20755), uintptr(unsafe.Pointer(&mousebbackward)))
-	M_BindVariable(tls, __ccgo_ts(20807), uintptr(unsafe.Pointer(&dclick_use)))
-	M_BindVariable(tls, __ccgo_ts(20818), uintptr(unsafe.Pointer(&key_pause)))
-	M_BindVariable(tls, __ccgo_ts(21647), uintptr(unsafe.Pointer(&key_message_refresh)))
+	M_BindVariable(tls, __ccgo_ts_str(20623), uintptr(unsafe.Pointer(&joybstrafeleft)))
+	M_BindVariable(tls, __ccgo_ts_str(20639), uintptr(unsafe.Pointer(&joybstraferight)))
+	M_BindVariable(tls, __ccgo_ts_str(20707), uintptr(unsafe.Pointer(&mousebstrafeleft)))
+	M_BindVariable(tls, __ccgo_ts_str(20725), uintptr(unsafe.Pointer(&mousebstraferight)))
+	M_BindVariable(tls, __ccgo_ts_str(20744), uintptr(unsafe.Pointer(&mousebuse)))
+	M_BindVariable(tls, __ccgo_ts_str(20755), uintptr(unsafe.Pointer(&mousebbackward)))
+	M_BindVariable(tls, __ccgo_ts_str(20807), uintptr(unsafe.Pointer(&dclick_use)))
+	M_BindVariable(tls, __ccgo_ts_str(20818), uintptr(unsafe.Pointer(&key_pause)))
+	M_BindVariable(tls, __ccgo_ts_str(21647), uintptr(unsafe.Pointer(&key_message_refresh)))
 }
 
 func M_BindWeaponControls(tls *libc.TLS) {
-	M_BindVariable(tls, __ccgo_ts(21373), uintptr(unsafe.Pointer(&key_weapon1)))
-	M_BindVariable(tls, __ccgo_ts(21385), uintptr(unsafe.Pointer(&key_weapon2)))
-	M_BindVariable(tls, __ccgo_ts(21397), uintptr(unsafe.Pointer(&key_weapon3)))
-	M_BindVariable(tls, __ccgo_ts(21409), uintptr(unsafe.Pointer(&key_weapon4)))
-	M_BindVariable(tls, __ccgo_ts(21421), uintptr(unsafe.Pointer(&key_weapon5)))
-	M_BindVariable(tls, __ccgo_ts(21433), uintptr(unsafe.Pointer(&key_weapon6)))
-	M_BindVariable(tls, __ccgo_ts(21445), uintptr(unsafe.Pointer(&key_weapon7)))
-	M_BindVariable(tls, __ccgo_ts(21457), uintptr(unsafe.Pointer(&key_weapon8)))
-	M_BindVariable(tls, __ccgo_ts(21469), uintptr(unsafe.Pointer(&key_prevweapon)))
-	M_BindVariable(tls, __ccgo_ts(21484), uintptr(unsafe.Pointer(&key_nextweapon)))
-	M_BindVariable(tls, __ccgo_ts(20675), uintptr(unsafe.Pointer(&joybprevweapon)))
-	M_BindVariable(tls, __ccgo_ts(20691), uintptr(unsafe.Pointer(&joybnextweapon)))
-	M_BindVariable(tls, __ccgo_ts(20771), uintptr(unsafe.Pointer(&mousebprevweapon)))
-	M_BindVariable(tls, __ccgo_ts(20789), uintptr(unsafe.Pointer(&mousebnextweapon)))
+	M_BindVariable(tls, __ccgo_ts_str(21373), uintptr(unsafe.Pointer(&key_weapon1)))
+	M_BindVariable(tls, __ccgo_ts_str(21385), uintptr(unsafe.Pointer(&key_weapon2)))
+	M_BindVariable(tls, __ccgo_ts_str(21397), uintptr(unsafe.Pointer(&key_weapon3)))
+	M_BindVariable(tls, __ccgo_ts_str(21409), uintptr(unsafe.Pointer(&key_weapon4)))
+	M_BindVariable(tls, __ccgo_ts_str(21421), uintptr(unsafe.Pointer(&key_weapon5)))
+	M_BindVariable(tls, __ccgo_ts_str(21433), uintptr(unsafe.Pointer(&key_weapon6)))
+	M_BindVariable(tls, __ccgo_ts_str(21445), uintptr(unsafe.Pointer(&key_weapon7)))
+	M_BindVariable(tls, __ccgo_ts_str(21457), uintptr(unsafe.Pointer(&key_weapon8)))
+	M_BindVariable(tls, __ccgo_ts_str(21469), uintptr(unsafe.Pointer(&key_prevweapon)))
+	M_BindVariable(tls, __ccgo_ts_str(21484), uintptr(unsafe.Pointer(&key_nextweapon)))
+	M_BindVariable(tls, __ccgo_ts_str(20675), uintptr(unsafe.Pointer(&joybprevweapon)))
+	M_BindVariable(tls, __ccgo_ts_str(20691), uintptr(unsafe.Pointer(&joybnextweapon)))
+	M_BindVariable(tls, __ccgo_ts_str(20771), uintptr(unsafe.Pointer(&mousebprevweapon)))
+	M_BindVariable(tls, __ccgo_ts_str(20789), uintptr(unsafe.Pointer(&mousebnextweapon)))
 }
 
 func M_BindMapControls(tls *libc.TLS) {
-	M_BindVariable(tls, __ccgo_ts(21213), uintptr(unsafe.Pointer(&key_map_north)))
-	M_BindVariable(tls, __ccgo_ts(21227), uintptr(unsafe.Pointer(&key_map_south)))
-	M_BindVariable(tls, __ccgo_ts(21241), uintptr(unsafe.Pointer(&key_map_east)))
-	M_BindVariable(tls, __ccgo_ts(21254), uintptr(unsafe.Pointer(&key_map_west)))
-	M_BindVariable(tls, __ccgo_ts(21267), uintptr(unsafe.Pointer(&key_map_zoomin)))
-	M_BindVariable(tls, __ccgo_ts(21282), uintptr(unsafe.Pointer(&key_map_zoomout)))
-	M_BindVariable(tls, __ccgo_ts(21198), uintptr(unsafe.Pointer(&key_map_toggle)))
-	M_BindVariable(tls, __ccgo_ts(21298), uintptr(unsafe.Pointer(&key_map_maxzoom)))
-	M_BindVariable(tls, __ccgo_ts(21314), uintptr(unsafe.Pointer(&key_map_follow)))
-	M_BindVariable(tls, __ccgo_ts(21329), uintptr(unsafe.Pointer(&key_map_grid)))
-	M_BindVariable(tls, __ccgo_ts(21342), uintptr(unsafe.Pointer(&key_map_mark)))
-	M_BindVariable(tls, __ccgo_ts(21355), uintptr(unsafe.Pointer(&key_map_clearmark)))
+	M_BindVariable(tls, __ccgo_ts_str(21213), uintptr(unsafe.Pointer(&key_map_north)))
+	M_BindVariable(tls, __ccgo_ts_str(21227), uintptr(unsafe.Pointer(&key_map_south)))
+	M_BindVariable(tls, __ccgo_ts_str(21241), uintptr(unsafe.Pointer(&key_map_east)))
+	M_BindVariable(tls, __ccgo_ts_str(21254), uintptr(unsafe.Pointer(&key_map_west)))
+	M_BindVariable(tls, __ccgo_ts_str(21267), uintptr(unsafe.Pointer(&key_map_zoomin)))
+	M_BindVariable(tls, __ccgo_ts_str(21282), uintptr(unsafe.Pointer(&key_map_zoomout)))
+	M_BindVariable(tls, __ccgo_ts_str(21198), uintptr(unsafe.Pointer(&key_map_toggle)))
+	M_BindVariable(tls, __ccgo_ts_str(21298), uintptr(unsafe.Pointer(&key_map_maxzoom)))
+	M_BindVariable(tls, __ccgo_ts_str(21314), uintptr(unsafe.Pointer(&key_map_follow)))
+	M_BindVariable(tls, __ccgo_ts_str(21329), uintptr(unsafe.Pointer(&key_map_grid)))
+	M_BindVariable(tls, __ccgo_ts_str(21342), uintptr(unsafe.Pointer(&key_map_mark)))
+	M_BindVariable(tls, __ccgo_ts_str(21355), uintptr(unsafe.Pointer(&key_map_clearmark)))
 }
 
 func M_BindMenuControls(tls *libc.TLS) {
-	M_BindVariable(tls, __ccgo_ts(20828), uintptr(unsafe.Pointer(&key_menu_activate)))
-	M_BindVariable(tls, __ccgo_ts(20846), uintptr(unsafe.Pointer(&key_menu_up)))
-	M_BindVariable(tls, __ccgo_ts(20858), uintptr(unsafe.Pointer(&key_menu_down)))
-	M_BindVariable(tls, __ccgo_ts(20872), uintptr(unsafe.Pointer(&key_menu_left)))
-	M_BindVariable(tls, __ccgo_ts(20886), uintptr(unsafe.Pointer(&key_menu_right)))
-	M_BindVariable(tls, __ccgo_ts(20901), uintptr(unsafe.Pointer(&key_menu_back)))
-	M_BindVariable(tls, __ccgo_ts(20915), uintptr(unsafe.Pointer(&key_menu_forward)))
-	M_BindVariable(tls, __ccgo_ts(20932), uintptr(unsafe.Pointer(&key_menu_confirm)))
-	M_BindVariable(tls, __ccgo_ts(20949), uintptr(unsafe.Pointer(&key_menu_abort)))
-	M_BindVariable(tls, __ccgo_ts(20964), uintptr(unsafe.Pointer(&key_menu_help)))
-	M_BindVariable(tls, __ccgo_ts(20978), uintptr(unsafe.Pointer(&key_menu_save)))
-	M_BindVariable(tls, __ccgo_ts(20992), uintptr(unsafe.Pointer(&key_menu_load)))
-	M_BindVariable(tls, __ccgo_ts(21006), uintptr(unsafe.Pointer(&key_menu_volume)))
-	M_BindVariable(tls, __ccgo_ts(21022), uintptr(unsafe.Pointer(&key_menu_detail)))
-	M_BindVariable(tls, __ccgo_ts(21038), uintptr(unsafe.Pointer(&key_menu_qsave)))
-	M_BindVariable(tls, __ccgo_ts(21053), uintptr(unsafe.Pointer(&key_menu_endgame)))
-	M_BindVariable(tls, __ccgo_ts(21070), uintptr(unsafe.Pointer(&key_menu_messages)))
-	M_BindVariable(tls, __ccgo_ts(21088), uintptr(unsafe.Pointer(&key_menu_qload)))
-	M_BindVariable(tls, __ccgo_ts(21103), uintptr(unsafe.Pointer(&key_menu_quit)))
-	M_BindVariable(tls, __ccgo_ts(21117), uintptr(unsafe.Pointer(&key_menu_gamma)))
-	M_BindVariable(tls, __ccgo_ts(21140), uintptr(unsafe.Pointer(&key_menu_incscreen)))
-	M_BindVariable(tls, __ccgo_ts(21159), uintptr(unsafe.Pointer(&key_menu_decscreen)))
-	M_BindVariable(tls, __ccgo_ts(21178), uintptr(unsafe.Pointer(&key_menu_screenshot)))
-	M_BindVariable(tls, __ccgo_ts(21667), uintptr(unsafe.Pointer(&key_demo_quit)))
-	M_BindVariable(tls, __ccgo_ts(21132), uintptr(unsafe.Pointer(&key_spy)))
+	M_BindVariable(tls, __ccgo_ts_str(20828), uintptr(unsafe.Pointer(&key_menu_activate)))
+	M_BindVariable(tls, __ccgo_ts_str(20846), uintptr(unsafe.Pointer(&key_menu_up)))
+	M_BindVariable(tls, __ccgo_ts_str(20858), uintptr(unsafe.Pointer(&key_menu_down)))
+	M_BindVariable(tls, __ccgo_ts_str(20872), uintptr(unsafe.Pointer(&key_menu_left)))
+	M_BindVariable(tls, __ccgo_ts_str(20886), uintptr(unsafe.Pointer(&key_menu_right)))
+	M_BindVariable(tls, __ccgo_ts_str(20901), uintptr(unsafe.Pointer(&key_menu_back)))
+	M_BindVariable(tls, __ccgo_ts_str(20915), uintptr(unsafe.Pointer(&key_menu_forward)))
+	M_BindVariable(tls, __ccgo_ts_str(20932), uintptr(unsafe.Pointer(&key_menu_confirm)))
+	M_BindVariable(tls, __ccgo_ts_str(20949), uintptr(unsafe.Pointer(&key_menu_abort)))
+	M_BindVariable(tls, __ccgo_ts_str(20964), uintptr(unsafe.Pointer(&key_menu_help)))
+	M_BindVariable(tls, __ccgo_ts_str(20978), uintptr(unsafe.Pointer(&key_menu_save)))
+	M_BindVariable(tls, __ccgo_ts_str(20992), uintptr(unsafe.Pointer(&key_menu_load)))
+	M_BindVariable(tls, __ccgo_ts_str(21006), uintptr(unsafe.Pointer(&key_menu_volume)))
+	M_BindVariable(tls, __ccgo_ts_str(21022), uintptr(unsafe.Pointer(&key_menu_detail)))
+	M_BindVariable(tls, __ccgo_ts_str(21038), uintptr(unsafe.Pointer(&key_menu_qsave)))
+	M_BindVariable(tls, __ccgo_ts_str(21053), uintptr(unsafe.Pointer(&key_menu_endgame)))
+	M_BindVariable(tls, __ccgo_ts_str(21070), uintptr(unsafe.Pointer(&key_menu_messages)))
+	M_BindVariable(tls, __ccgo_ts_str(21088), uintptr(unsafe.Pointer(&key_menu_qload)))
+	M_BindVariable(tls, __ccgo_ts_str(21103), uintptr(unsafe.Pointer(&key_menu_quit)))
+	M_BindVariable(tls, __ccgo_ts_str(21117), uintptr(unsafe.Pointer(&key_menu_gamma)))
+	M_BindVariable(tls, __ccgo_ts_str(21140), uintptr(unsafe.Pointer(&key_menu_incscreen)))
+	M_BindVariable(tls, __ccgo_ts_str(21159), uintptr(unsafe.Pointer(&key_menu_decscreen)))
+	M_BindVariable(tls, __ccgo_ts_str(21178), uintptr(unsafe.Pointer(&key_menu_screenshot)))
+	M_BindVariable(tls, __ccgo_ts_str(21667), uintptr(unsafe.Pointer(&key_demo_quit)))
+	M_BindVariable(tls, __ccgo_ts_str(21132), uintptr(unsafe.Pointer(&key_spy)))
 }
 
 func M_BindChatControls(tls *libc.TLS, num_players uint32) {
-	bp := alloc(48)
 	var i uint32
-	M_BindVariable(tls, __ccgo_ts(21681), uintptr(unsafe.Pointer(&key_multi_msg)))
+	M_BindVariable(tls, __ccgo_ts_str(21681), uintptr(unsafe.Pointer(&key_multi_msg)))
 	i = uint32(0)
 	for {
 		if !(i < num_players) {
 			break
 		}
-		M_snprintf(tls, bp, uint64(32), __ccgo_ts(22078), libc.VaList(bp+40, i+uint32(1)))
+		bp := fmt.Sprintf(__ccgo_ts_str(22078), i+1)
 		M_BindVariable(tls, bp, uintptr(unsafe.Pointer(&key_multi_msgplayer))+uintptr(i)*4)
 		goto _1
 	_1:
@@ -20609,13 +20602,15 @@ func M_ReadSaveStrings(tls *libc.TLS) {
 		if !(i < int32(load_end)) {
 			break
 		}
+		var name [SAVESTRINGSIZE]byte
 		handle, err := os.Open(P_SaveGameFile(tls, i))
 		if err != nil {
-			M_StringCopy(uintptr(unsafe.Pointer(&savegamestrings[i])), __ccgo_ts(22118), uint64(SAVESTRINGSIZE))
+			savegamestrings[i] = __ccgo_ts_str(22118)
 			LoadMenu[i].Fstatus = 0
 			goto _1
 		}
-		handle.Read(savegamestrings[i][:])
+		handle.Read(name[:])
+		savegamestrings[i] = string(name[:])
 		handle.Close()
 		LoadMenu[i].Fstatus = 1
 		goto _1
@@ -20726,7 +20721,7 @@ func M_DrawSave(tls *libc.TLS) {
 //	// M_Responder calls this when user is finished
 //	//
 func M_DoSave(tls *libc.TLS, slot int32) {
-	G_SaveGame(tls, slot, uintptr(unsafe.Pointer(&savegamestrings))+uintptr(slot)*24)
+	G_SaveGame(tls, slot, savegamestrings[slot])
 	M_ClearMenus()
 	// PICK QUICKSAVE SLOT YET?
 	if quickSaveSlot == -int32(2) {
@@ -21946,14 +21941,14 @@ func M_Init(tls *libc.TLS) {
 // Create a directory
 //
 
-func M_MakeDirectory(tls *libc.TLS, path uintptr) {
-	os.MkdirAll(libc.GoString(path), 0755)
+func M_MakeDirectory(tls *libc.TLS, path string) {
+	os.MkdirAll(path, 0755)
 }
 
 // Check if a file exists
 
-func M_FileExists(tls *libc.TLS, filename uintptr) (r boolean) {
-	_, err := os.Stat(libc.GoString(filename))
+func M_FileExists(tls *libc.TLS, filename string) (r boolean) {
+	_, err := os.Stat(filename)
 	if err == nil {
 		return 1
 	}
@@ -22009,31 +22004,15 @@ func M_StrToInt(tls *libc.TLS, str uintptr, result uintptr) (r boolean) {
 	return libc.BoolUint32(libc.Xsscanf(tls, str, __ccgo_ts(23144), libc.VaList(bp+8, result)) == 1 || libc.Xsscanf(tls, str, __ccgo_ts(23150), libc.VaList(bp+8, result)) == 1 || libc.Xsscanf(tls, str, __ccgo_ts(23156), libc.VaList(bp+8, result)) == 1 || libc.Xsscanf(tls, str, __ccgo_ts(23161), libc.VaList(bp+8, result)) == 1)
 }
 
-func M_ExtractFileBase(tls *libc.TLS, path uintptr, dest uintptr) {
-	var filename, src, v2 uintptr
-	var length, v1 int32
-	src = path + uintptr(xstrlen(path)) - uintptr(1)
-	// back up until a \ or the start
-	for src != path && int32(*(*int8)(unsafe.Pointer(src - libc.UintptrFromInt32(1)))) != int32('/') {
-		src--
-	}
-	filename = src
-	// Copy up to eight characters
-	// Note: Vanilla Doom exits with an error if a filename is specified
-	// with a base of more than eight characters.  To remove the 8.3
-	// filename limit, instead we simply truncate the name.
-	length = 0
-	xmemset(dest, 0, uint64(8))
-	for int32(*(*int8)(unsafe.Pointer(src))) != int32('\000') && int32(*(*int8)(unsafe.Pointer(src))) != int32('.') {
-		if length >= 8 {
-			fprintf_ccgo(os.Stdout, 23165, libc.GoString(filename), libc.GoString(dest))
+func M_ExtractFileBase(tls *libc.TLS, path string, dest []int8) {
+	filename := filepath.Base(path)
+	rootName := strings.TrimSuffix(filename, filepath.Ext(filename))
+	for i := 0; i < len(rootName); i++ {
+		if i >= len(dest) {
+			fprintf_ccgo(os.Stdout, 23165, filename, libc.GoString(uintptr(unsafe.Pointer(&dest[0]))))
 			break
 		}
-		v1 = length
-		length++
-		v2 = src
-		src++
-		*(*int8)(unsafe.Pointer(dest + uintptr(v1))) = int8(xtoupper(int32(*(*int8)(unsafe.Pointer(v2)))))
+		dest[i] = int8(xtoupper(int32(rootName[i])))
 	}
 }
 
@@ -22066,8 +22045,11 @@ func M_StringConcat(tls *libc.TLS, dest uintptr, src uintptr, dest_size uint64) 
 
 // Returns true if 's' ends with the specified suffix.
 
-func M_StringEndsWith(tls *libc.TLS, s uintptr, suffix uintptr) (r boolean) {
-	return libc.BoolUint32(xstrlen(s) >= xstrlen(suffix) && xstrcmp(s+uintptr(xstrlen(s))-uintptr(xstrlen(suffix)), suffix) == 0)
+func M_StringEndsWith(tls *libc.TLS, s string, suffix string) (r boolean) {
+	if strings.HasSuffix(s, suffix) {
+		return 1
+	}
+	return 0
 }
 
 // Return a newly-malloced string with all the strings given as arguments
@@ -29850,31 +29832,15 @@ const SAVEGAME_EOF = 29
 // real file.
 
 func P_TempSaveGameFile(tls *libc.TLS) string {
-	bp := alloc(32)
-	if filename == libc.UintptrFromInt32(0) {
-		filename = M_StringJoin(tls, savegamedir, libc.VaList(bp+8, __ccgo_ts(24924), libc.UintptrFromInt32(0)))
-	}
-	return libc.GoString(filename)
+	return savegamedir + __ccgo_ts_str(24924)
 }
-
-var filename = libc.UintptrFromInt32(0)
 
 // Get the filename of the save game file to use for the specified slot.
 
 func P_SaveGameFile(tls *libc.TLS, slot int32) string {
-	bp := alloc(64)
-	if filename1 == libc.UintptrFromInt32(0) {
-		filename_size = xstrlen(savegamedir) + uint64(32)
-		filename1 = xmalloc(tls, filename_size)
-	}
-	snprintf_ccgo(bp, 32, 24933, slot)
-	M_snprintf(tls, filename1, filename_size, __ccgo_ts(24947), libc.VaList(bp+40, savegamedir, bp))
-	return libc.GoString(filename1)
+	bp := fmt.Sprintf(__ccgo_ts_str(24933), slot)
+	return fmt.Sprintf(__ccgo_ts_str(24947), savegamedir, bp)
 }
-
-var filename1 = libc.UintptrFromInt32(0)
-
-var filename_size uint64
 
 // Endian-safe integer read/write functions
 
@@ -30844,29 +30810,15 @@ func saveg_write_glow_t(tls *libc.TLS, str uintptr) {
 // Write the header for a savegame
 //
 
-func P_WriteSaveGameHeader(tls *libc.TLS, description uintptr) {
-	bp := alloc(32)
+func P_WriteSaveGameHeader(tls *libc.TLS, description string) {
 	var i int32
-	i = 0
-	for {
-		if !(int32(*(*int8)(unsafe.Pointer(description + uintptr(i)))) != int32('\000')) {
-			break
+	bp := alloc(32)
+	for i := int32(0); i < SAVESTRINGSIZE; i++ {
+		if i < int32(len(description)) {
+			saveg_write8(tls, description[i])
+		} else {
+			saveg_write8(tls, uint8(0))
 		}
-		saveg_write8(tls, libc.Uint8FromInt8(*(*int8)(unsafe.Pointer(description + uintptr(i)))))
-		goto _1
-	_1:
-		;
-		i++
-	}
-	for {
-		if !(i < int32(SAVESTRINGSIZE)) {
-			break
-		}
-		saveg_write8(tls, uint8(0))
-		goto _2
-	_2:
-		;
-		i++
 	}
 	xmemset(bp, 0, uint64(16))
 	M_snprintf(tls, bp, uint64(16), __ccgo_ts(25058), libc.VaList(bp+24, G_VanillaVersionCode(tls)))
@@ -42870,18 +42822,18 @@ func WritePCXfile(tls *libc.TLS, filename uintptr, data uintptr, width int32, he
 // V_ScreenShot
 //
 
-func V_ScreenShot(tls *libc.TLS, format uintptr) {
+func V_ScreenShot(tls *libc.TLS, format string) {
 	bp := alloc(48)
-	var ext uintptr
+	var ext string
 	var i int32
 	// find a file name to save it to
-	ext = __ccgo_ts(28304)
+	ext = __ccgo_ts_str(28304)
 	i = 0
 	for {
 		if !(i <= 99) {
 			break
 		}
-		M_snprintf(tls, bp, uint64(16), format, libc.VaList(bp+24, i, ext))
+		bp := fmt.Sprintf(format, i, ext)
 		if !(M_FileExists(tls, bp) != 0) {
 			break // file doesn't exist
 		}
@@ -44885,11 +44837,11 @@ func W_Checksum(tls *libc.TLS, digest uintptr) {
 	SHA1_Final(digest, bp)
 }
 
-func W_OpenFile(path uintptr) *os.File {
-	log.Printf("W_OpenFile: %s", libc.GoString(path))
-	f, err := os.Open(libc.GoString(path))
+func W_OpenFile(path string) *os.File {
+	log.Printf("W_OpenFile: %s", path)
+	f, err := os.Open(path)
 	if err != nil {
-		log.Printf("W_OpenFile: %s: %v", libc.GoString(path), err)
+		log.Printf("W_OpenFile: %s: %v", path, err)
 		return nil
 	}
 	return f
@@ -44915,7 +44867,7 @@ func W_Read(wad *os.File, offset uint32, buffer uintptr, buffer_len uint64) (r u
 // Returns true if at least one file was added.
 
 func W_ParseCommandLine(tls *libc.TLS) (r boolean) {
-	var filename uintptr
+	var filename string
 	var modifiedgame boolean
 	var p, v1 int32
 	modifiedgame = 0
@@ -44936,8 +44888,8 @@ func W_ParseCommandLine(tls *libc.TLS) (r boolean) {
 			if !(v1 != myargc && int32(*(*int8)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(myargv + uintptr(p)*8))))) != int32('-')) {
 				break
 			}
-			filename = D_TryFindWADByName(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p)*8)))
-			fprintf_ccgo(os.Stdout, 2817, libc.GoString(filename))
+			filename = D_TryFindWADByName(tls, libc.GoString(*(*uintptr)(unsafe.Pointer(myargv + uintptr(p)*8))))
+			fprintf_ccgo(os.Stdout, 2817, filename)
 			W_AddFile(tls, filename)
 		}
 	}
@@ -45035,25 +44987,25 @@ func ExtendLumpInfo(tls *libc.TLS, newnumlumps int32) {
 // Other files are single lumps with the base filename
 //  for the lump name.
 
-func W_AddFile(tls *libc.TLS, filename uintptr) *os.File {
+func W_AddFile(tls *libc.TLS, filename string) *os.File {
 	bp := alloc(32)
 	var fileinfo, filerover, lump_p uintptr
 	var wad_file *os.File
 	var i uint32
 	var length, newnumlumps, startlump int32
-	stat, err := os.Stat(libc.GoString(filename))
+	stat, err := os.Stat(filename)
 	if err != nil {
-		log.Printf("W_AddFile: %s: %v", libc.GoString(filename), err)
+		log.Printf("W_AddFile: %s: %v", filename, err)
 		return nil
 	}
 	// open the file and add to directory
 	wad_file = W_OpenFile(filename)
 	if wad_file == nil {
-		fprintf_ccgo(os.Stdout, 28631, libc.GoString(filename))
+		fprintf_ccgo(os.Stdout, 28631, filename)
 		return nil
 	}
 	newnumlumps = libc.Int32FromUint32(numlumps)
-	if xstrcasecmp(filename+uintptr(xstrlen(filename))-uintptr(3), __ccgo_ts(28650)) != 0 {
+	if strings.EqualFold(filename[len(filename)-3:], __ccgo_ts_str(28650)) {
 		// single lump file
 		// fraggle: Swap the filepos and size here.  The WAD directory
 		// parsing code expects a little-endian directory, so will swap
@@ -45064,7 +45016,7 @@ func W_AddFile(tls *libc.TLS, filename uintptr) *os.File {
 		(*filelump_t)(unsafe.Pointer(fileinfo)).Fsize = int32(stat.Size())
 		// Name the lump after the base of the filename (without the
 		// extension).
-		M_ExtractFileBase(tls, filename, fileinfo+8)
+		M_ExtractFileBase(tls, filename, (*filelump_t)(unsafe.Pointer(fileinfo)).Fname[:])
 		newnumlumps++
 	} else {
 		// WAD file
@@ -45997,10 +45949,9 @@ func I_DisplayFPSDots(dots_on boolean) {
 func I_CheckIsScreensaver() {
 }
 
-func doomgeneric_Create(tls *libc.TLS, argc int32, argv uintptr) {
+func doomgeneric_Create(tls *libc.TLS, args []string) {
 	// save arguments
-	myargc = argc
-	myargv = argv
+	myargs = args
 	M_FindResponseFile(tls)
 
 	DG_ScreenBuffer = image.NewRGBA(image.Rect(0, 0, SCREENWIDTH, SCREENHEIGHT))
@@ -46016,30 +45967,13 @@ func Run(fg DoomFrontend, args []string) {
 	start_time = time.Now()
 	tls := libc.NewTLS()
 
-	// Convert command line arguments to C strings.
-	argc := int32(len(args))
-	argv := make([]uintptr, argc+2, argc+2)
-	for i, arg := range args {
-		argp, err := libc.CString(arg)
-		if err != nil {
-			log.Fatalf("Failed to convert argument %d to C string: %v", i, err)
-		}
-
-		argv[i+1] = argp
-	}
-	arg0, err := libc.CString("doom")
-	if err != nil {
-		log.Fatalf("Failed to convert argument 0 to C string: %v", err)
-	}
-	argv[0] = arg0
-	argv[argc+1] = 0
-	doomgeneric_Create(tls, argc+1, (uintptr)(unsafe.Pointer(&argv[0])))
+	doomgeneric_Create(tls, args)
 	for !dg_exiting {
 		doomgeneric_Tick(tls)
 	}
 	// HACK: This avoid the GC from collecting the argv array
 	// before the program exits, which would cause a crash.
-	log.Printf("done with args %d %#v", argc+1, argv)
+	log.Printf("done with args %v", args)
 	dg_frontend = nil
 }
 
@@ -46471,7 +46405,7 @@ var columnofs [1120]int32
 // Location where all configuration data is stored -
 // default.cfg, savegames, etc.
 
-var configdir uintptr
+var configdir string
 
 var consistancy [4][128]uint8
 
@@ -46828,7 +46762,7 @@ var itemrespawntime [128]int32
 
 // location of IWAD and WAD files
 
-var iwadfile uintptr
+var iwadfile string
 
 //
 // Joystick controls
@@ -47265,9 +47199,7 @@ var mousey int32
 
 var musicVolume int32
 
-var myargc int32
-
-var myargv uintptr
+var myargs []string
 
 // C documentation
 //
@@ -47606,9 +47538,9 @@ var savegame_error boolean
 
 // Location where savegames are stored
 
-var savegamedir uintptr
+var savegamedir string
 
-var savegamestrings [10][SAVESTRINGSIZE]byte
+var savegamestrings [10]string
 
 var savename string
 
@@ -48306,14 +48238,7 @@ var yspeed [8]fixed_t
 var zlight [16][128]uintptr
 
 func fprintf_ccgo(output io.Writer, index int, args ...any) {
-	fmtStr, ok := __ccgo_ts_map[index]
-	if !ok {
-		panic(fmt.Sprintf("index %d not found in __ccgo_ts_map", index))
-	}
-	if len(fmtStr) > 0 && fmtStr[len(fmtStr)-1] == 0 {
-		// Remove the null terminator for printing
-		fmtStr = fmtStr[:len(fmtStr)-1]
-	}
+	fmtStr := __ccgo_ts_str(index)
 	fmt.Fprintf(output, string(fmtStr), args...)
 }
 
@@ -48348,6 +48273,18 @@ func __ccgo_ts(index int) uintptr {
 		panic("index not found in __ccgo_ts_map")
 	}
 	return uintptr(unsafe.Pointer(&val[0]))
+}
+
+func __ccgo_ts_str(index int) string {
+	val, ok := __ccgo_ts_map[index]
+	if !ok {
+		panic("index not found in __ccgo_ts_map")
+	}
+	for len(val) > 0 && val[len(val)-1] == 0 {
+		// Remove the null terminator for string representation
+		val = val[:len(val)-1]
+	}
+	return string(val)
 }
 
 var __ccgo_ts_map = map[int][]byte{
