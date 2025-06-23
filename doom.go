@@ -81,6 +81,24 @@ func xstrcmp(s1, s2 uintptr) int32 {
 	}
 }
 
+func xstrncmp(s1, s2 uintptr, n uint64) int32 {
+	var ch1, ch2 byte
+	for ; n != 0; n-- {
+		ch1 = *(*byte)(unsafe.Pointer(s1))
+		s1++
+		ch2 = *(*byte)(unsafe.Pointer(s2))
+		s2++
+		if ch1 != ch2 {
+			return int32(ch1) - int32(ch2)
+		}
+
+		if ch1 == 0 {
+			return 0
+		}
+	}
+	return 0
+}
+
 func xstrncpy(dest, src uintptr, n uint64) (r uintptr) {
 	r = dest
 	for c := *(*int8)(unsafe.Pointer(src)); c != 0 && n > 0; n-- {
@@ -2272,21 +2290,9 @@ const ok = 0
 const crushed = 1
 const pastdest = 2
 
-type wad_file_t struct {
-	Ffile_class uintptr
-	Fmapped     uintptr
-	Flength     uint32
-}
-
-type wad_file_class_t struct {
-	FOpenFile  uintptr
-	FCloseFile uintptr
-	FRead      uintptr
-}
-
 type lumpinfo_t struct {
 	Fname     [8]int8
-	Fwad_file uintptr
+	Fwad_file *os.File
 	Fposition int32
 	Fsize     int32
 	Fcache    uintptr
@@ -5516,10 +5522,10 @@ func D_SetGameDescription(tls *libc.TLS) {
 }
 
 func D_AddFile(tls *libc.TLS, filename uintptr) (r boolean) {
-	var handle uintptr
+	var handle *os.File
 	fprintf_ccgo(os.Stdout, 2817, libc.GoString(filename))
 	handle = W_AddFile(tls, filename)
-	return libc.BoolUint32(handle != libc.UintptrFromInt32(0))
+	return libc.BoolUint32(handle != nil)
 }
 
 // Copyright message banners
@@ -6138,8 +6144,7 @@ func D_DoomMain(tls *libc.TLS) {
 		return
 	}
 	if startloadgame >= 0 {
-		M_StringCopy(bp, P_SaveGameFile(tls, startloadgame), uint64(256))
-		G_LoadGame(tls, bp)
+		G_LoadGame(P_SaveGameFile(tls, startloadgame))
 	}
 	if gameaction != ga_loadgame {
 		if autostart != 0 || netgame != 0 {
@@ -8780,21 +8785,23 @@ func G_DoWorldDone(tls *libc.TLS) {
 	viewactive = 1
 }
 
-func G_LoadGame(tls *libc.TLS, name uintptr) {
-	M_StringCopy(uintptr(unsafe.Pointer(&savename)), name, uint64(256))
+func G_LoadGame(name string) {
+	savename = name
 	gameaction = ga_loadgame
 }
 
 func G_DoLoadGame(tls *libc.TLS) {
 	var savedleveltime int32
+	var err error
 	gameaction = ga_nothing
-	save_stream = libc.Xfopen(tls, uintptr(unsafe.Pointer(&savename)), __ccgo_ts(13884))
-	if save_stream == libc.UintptrFromInt32(0) {
+	log.Printf("G_DoLoadGame: Loading game from %s\n", libc.GoString(uintptr(unsafe.Pointer(&savename))))
+	save_stream, err = os.Open(savename)
+	if err != nil {
 		return
 	}
 	savegame_error = 0
 	if !(P_ReadSaveGameHeader(tls) != 0) {
-		libc.Xfclose(tls, save_stream)
+		save_stream.Close()
 		return
 	}
 	savedleveltime = leveltime
@@ -8809,7 +8816,7 @@ func G_DoLoadGame(tls *libc.TLS) {
 	if !(P_ReadSaveGameEOF(tls) != 0) {
 		I_Error(tls, __ccgo_ts(13887), 0)
 	}
-	libc.Xfclose(tls, save_stream)
+	save_stream.Close()
 	if setsizeneeded != 0 {
 		R_ExecuteSetViewSize(tls)
 	}
@@ -8831,22 +8838,26 @@ func G_SaveGame(tls *libc.TLS, slot int32, description uintptr) {
 }
 
 func G_DoSaveGame(tls *libc.TLS) {
-	var recovery_savegame_file, savegame_file, temp_savegame_file uintptr
-	recovery_savegame_file = libc.UintptrFromInt32(0)
+	var recovery_savegame_file, savegame_file, temp_savegame_file string
 	temp_savegame_file = P_TempSaveGameFile(tls)
 	savegame_file = P_SaveGameFile(tls, savegameslot)
 	// Open the savegame file for writing.  We write to a temporary file
 	// and then rename it at the end if it was successfully written.
 	// This prevents an existing savegame from being overwritten by
 	// a corrupted one, or if a savegame buffer overrun occurs.
-	save_stream = libc.Xfopen(tls, temp_savegame_file, __ccgo_ts(13900))
-	if save_stream == libc.UintptrFromInt32(0) {
+	var err error
+	log.Printf("G_DoSaveGame: Saving game to %s\n", temp_savegame_file)
+	save_stream, err = os.OpenFile(temp_savegame_file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		log.Printf("G_DoSaveGame: Failed to open savegame file %s: %v\n", temp_savegame_file, err)
 		// Failed to save the game, so we're going to have to abort. But
 		// to be nice, save to somewhere else before we call I_Error().
-		recovery_savegame_file = M_TempFile(tls, __ccgo_ts(13903))
-		save_stream = libc.Xfopen(tls, recovery_savegame_file, __ccgo_ts(13900))
-		if save_stream == libc.UintptrFromInt32(0) {
-			I_Error(tls, __ccgo_ts(13916), temp_savegame_file, recovery_savegame_file)
+		recovery_savegame_file = M_TempFile(string(__ccgo_ts_map[13903]))
+		log.Printf("G_DoSaveGame: Saving recovery savegame to %s\n", recovery_savegame_file)
+		save_stream, err = os.OpenFile(recovery_savegame_file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			log.Fatalf("G_DoSaveGame: Failed to open recovery savegame file %s: %v\n", recovery_savegame_file, err)
+			//I_Error(tls, __ccgo_ts(13916), temp_savegame_file, recovery_savegame_file)
 		}
 	}
 	savegame_error = 0
@@ -8858,12 +8869,15 @@ func G_DoSaveGame(tls *libc.TLS) {
 	P_WriteSaveGameEOF(tls)
 	// Enforce the same savegame size limit as in Vanilla Doom,
 	// except if the vanilla_savegame_limit setting is turned off.
-	if vanilla_savegame_limit != 0 && libc.Xftell(tls, save_stream) > int64(SAVEGAMESIZE) {
-		I_Error(tls, __ccgo_ts(13970), 0)
+	if vanilla_savegame_limit != 0 {
+		pos, err := save_stream.Seek(0, io.SeekCurrent)
+		if err != nil || pos > SAVEGAMESIZE {
+			I_Error(tls, __ccgo_ts(13970), 0)
+		}
 	}
 	// Finish up, close the savegame file.
-	libc.Xfclose(tls, save_stream)
-	if recovery_savegame_file != libc.UintptrFromInt32(0) {
+	save_stream.Close()
+	if recovery_savegame_file != "" {
 		// We failed to save to the normal location, but we wrote a
 		// recovery file to the temp directory. Now we can bomb out
 		// with an error.
@@ -8871,10 +8885,10 @@ func G_DoSaveGame(tls *libc.TLS) {
 	}
 	// Now rename the temporary savegame file to the actual savegame
 	// file, overwriting the old savegame if there was one there.
-	libc.Xremove(tls, savegame_file)
-	libc.Xrename(tls, temp_savegame_file, savegame_file)
+	os.Remove(savegame_file)
+	os.Rename(temp_savegame_file, savegame_file)
 	gameaction = ga_nothing
-	M_StringCopy(uintptr(unsafe.Pointer(&savedescription)), __ccgo_ts(14092), uint64(32))
+	M_StringCopy(uintptr(unsafe.Pointer(&savedescription[0])), __ccgo_ts(14092), uint64(32))
 	players[consoleplayer].Fmessage = __ccgo_ts(14093)
 	// draw the pattern into the back screen
 	R_FillBackScreen(tls)
@@ -9453,7 +9467,7 @@ func G_CheckDemoStatus(tls *libc.TLS) {
 		v3 = demo_p
 		demo_p++
 		*(*uint8)(unsafe.Pointer(v3)) = uint8(DEMOMARKER)
-		M_WriteFile(tls, demoname, demobuffer, int32(int64(demo_p)-int64(demobuffer)))
+		M_WriteFile(demoname, demobuffer, int32(int64(demo_p)-int64(demobuffer)))
 		Z_Free(tls, demobuffer)
 		demorecording = 0
 		I_Error(tls, __ccgo_ts(14508), demoname)
@@ -18438,7 +18452,7 @@ func I_ZoneBase(tls *libc.TLS, size uintptr) (r uintptr) {
 		min_ram = int32(MIN_RAM)
 	}
 	zonemem = AutoAllocMemory(tls, size, default_ram, min_ram)
-	fprintf_ccgo(os.Stdout, 18878, zonemem, size)
+	fprintf_ccgo(os.Stdout, 18878, unsafe.Pointer(zonemem), size)
 	return zonemem
 }
 
@@ -18450,13 +18464,13 @@ func I_PrintBanner(tls *libc.TLS, msg uintptr) {
 		if !(i < spaces) {
 			break
 		}
-		libc.Xputchar(tls, int32(' '))
+		os.Stdout.Write([]byte{' '})
 		goto _1
 	_1:
 		;
 		i++
 	}
-	libc.Xputs(tls, msg)
+	os.Stdout.WriteString(libc.GoString(msg) + "\n")
 }
 
 func I_PrintDivider(tls *libc.TLS) {
@@ -18466,13 +18480,13 @@ func I_PrintDivider(tls *libc.TLS) {
 		if !(i < 75) {
 			break
 		}
-		libc.Xputchar(tls, int32('='))
+		os.Stdout.Write([]byte{'='})
 		goto _1
 	_1:
 		;
 		i++
 	}
-	libc.Xputchar(tls, int32('\n'))
+	os.Stdout.Write([]byte{'\n'})
 }
 
 func I_PrintStartupBanner(tls *libc.TLS, gamedescription uintptr) {
@@ -20589,23 +20603,20 @@ func init() {
 //	//  read the strings from the savegame files
 //	//
 func M_ReadSaveStrings(tls *libc.TLS) {
-	bp := alloc(256)
-	var handle uintptr
 	var i int32
 	i = 0
 	for {
 		if !(i < int32(load_end)) {
 			break
 		}
-		M_StringCopy(bp, P_SaveGameFile(tls, i), uint64(256))
-		handle = libc.Xfopen(tls, bp, __ccgo_ts(13884))
-		if handle == libc.UintptrFromInt32(0) {
-			M_StringCopy(uintptr(unsafe.Pointer(&savegamestrings))+uintptr(i)*24, __ccgo_ts(22118), uint64(SAVESTRINGSIZE))
+		handle, err := os.Open(P_SaveGameFile(tls, i))
+		if err != nil {
+			M_StringCopy(uintptr(unsafe.Pointer(&savegamestrings[i])), __ccgo_ts(22118), uint64(SAVESTRINGSIZE))
 			LoadMenu[i].Fstatus = 0
 			goto _1
 		}
-		libc.Xfread(tls, uintptr(unsafe.Pointer(&savegamestrings))+uintptr(i)*24, uint64(1), uint64(SAVESTRINGSIZE), handle)
-		libc.Xfclose(tls, handle)
+		handle.Read(savegamestrings[i][:])
+		handle.Close()
 		LoadMenu[i].Fstatus = 1
 		goto _1
 	_1:
@@ -20665,10 +20676,8 @@ func M_DrawSaveLoadBorder(tls *libc.TLS, x int32, y int32) {
 //	// User wants to load this game
 //	//
 func M_LoadSelect(tls *libc.TLS, choice int32) {
-	bp := alloc(256)
-	M_StringCopy(bp, P_SaveGameFile(tls, choice), uint64(256))
-	G_LoadGame(tls, bp)
-	M_ClearMenus(tls)
+	G_LoadGame(P_SaveGameFile(tls, choice))
+	M_ClearMenus()
 }
 
 // C documentation
@@ -20718,7 +20727,7 @@ func M_DrawSave(tls *libc.TLS) {
 //	//
 func M_DoSave(tls *libc.TLS, slot int32) {
 	G_SaveGame(tls, slot, uintptr(unsafe.Pointer(&savegamestrings))+uintptr(slot)*24)
-	M_ClearMenus(tls)
+	M_ClearMenus()
 	// PICK QUICKSAVE SLOT YET?
 	if quickSaveSlot == -int32(2) {
 		quickSaveSlot = slot
@@ -20965,7 +20974,7 @@ func M_VerifyNightmare(tls *libc.TLS, key int32) {
 		return
 	}
 	G_DeferedInitNew(tls, int32(nightmare), epi+int32(1), 1)
-	M_ClearMenus(tls)
+	M_ClearMenus()
 }
 
 func M_ChooseSkill(tls *libc.TLS, choice int32) {
@@ -20974,7 +20983,7 @@ func M_ChooseSkill(tls *libc.TLS, choice int32) {
 		return
 	}
 	G_DeferedInitNew(tls, choice, epi+int32(1), 1)
-	M_ClearMenus(tls)
+	M_ClearMenus()
 }
 
 func M_Episode(tls *libc.TLS, choice int32) {
@@ -21045,7 +21054,7 @@ func M_EndGameResponse(tls *libc.TLS, key int32) {
 		return
 	}
 	(*menu_t)(unsafe.Pointer(currentMenu)).FlastOn = itemOn
-	M_ClearMenus(tls)
+	M_ClearMenus()
 	D_StartTitle()
 }
 
@@ -21674,7 +21683,7 @@ func M_Responder(tls *libc.TLS, ev *event_t) (r boolean) {
 						if key == key_menu_activate {
 							// Deactivate menu
 							(*menu_t)(unsafe.Pointer(currentMenu)).FlastOn = itemOn
-							M_ClearMenus(tls)
+							M_ClearMenus()
 							S_StartSound(tls, libc.UintptrFromInt32(0), int32(sfx_swtchx))
 							return 1
 						} else {
@@ -21849,7 +21858,7 @@ var y2 int16
 //	//
 //	// M_ClearMenus
 //	//
-func M_ClearMenus(tls *libc.TLS) {
+func M_ClearMenus() {
 	menuactive = uint32(0)
 	// if (!netgame && usergame && paused)
 	//       sendpause = true;
@@ -21938,55 +21947,49 @@ func M_Init(tls *libc.TLS) {
 //
 
 func M_MakeDirectory(tls *libc.TLS, path uintptr) {
-	libc.Xmkdir(tls, path, 0755)
+	os.MkdirAll(libc.GoString(path), 0755)
 }
 
 // Check if a file exists
 
 func M_FileExists(tls *libc.TLS, filename uintptr) (r boolean) {
-	var fstream uintptr
-	fstream = libc.Xfopen(tls, filename, __ccgo_ts(23115))
-	if fstream != libc.UintptrFromInt32(0) {
-		libc.Xfclose(tls, fstream)
+	_, err := os.Stat(libc.GoString(filename))
+	if err == nil {
 		return 1
-	} else {
-		// If we can't open because the file is a directory, the
-		// "file" exists at least!
-		return libc.BoolUint32(*(*int32)(unsafe.Pointer(libc.X__errno_location(tls))) == int32(EISDIR))
 	}
-	return r
+	return 0
 }
 
 //
 // Determine the length of an open file.
 //
 
-func M_FileLength(tls *libc.TLS, handle uintptr) (r int64) {
-	var length, savedpos int64
-	// save the current position in the file
-	savedpos = libc.Xftell(tls, handle)
-	// jump to the end and find the length
-	libc.Xfseek(tls, handle, 0, 2)
-	length = libc.Xftell(tls, handle)
-	// go back to the old location
-	libc.Xfseek(tls, handle, savedpos, 0)
-	return length
+func M_FileLength(handle *os.File) (r uint32) {
+	pos, err := handle.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return 0
+	}
+	length, err := handle.Seek(0, io.SeekEnd)
+	if err != nil {
+		// Ignore it, so we can try and seek back to the old position.
+	}
+	// Go back to the old position.
+	_, err = handle.Seek(pos, io.SeekStart)
+	if err != nil {
+		log.Printf("M_FileLength: error seeking back to old position: %v", err)
+	}
+	return uint32(length)
 }
 
 //
 // M_WriteFile
 //
 
-func M_WriteFile(tls *libc.TLS, name uintptr, source uintptr, length int32) (r boolean) {
-	var count int32
-	var handle uintptr
-	handle = libc.Xfopen(tls, name, __ccgo_ts(13900))
-	if handle == libc.UintptrFromInt32(0) {
-		return 0
-	}
-	count = libc.Int32FromUint64(libc.Xfwrite(tls, source, uint64(1), libc.Uint64FromInt32(length), handle))
-	libc.Xfclose(tls, handle)
-	if count < length {
+func M_WriteFile(name uintptr, source uintptr, length int32) (r boolean) {
+	sourceBytes := unsafe.Slice((*byte)(unsafe.Pointer(source)), length)
+	err := os.WriteFile(libc.GoString(name), sourceBytes, 0644)
+	if err != nil {
+		log.Printf("M_WriteFile: error writing file %s: %v", libc.GoString(name), err)
 		return 0
 	}
 	return 1
@@ -21997,12 +22000,8 @@ func M_WriteFile(tls *libc.TLS, name uintptr, source uintptr, length int32) (r b
 //
 // The returned value must be freed with Z_Free after use.
 
-func M_TempFile(tls *libc.TLS, s uintptr) (r uintptr) {
-	bp := alloc(32)
-	var tempdir uintptr
-	// In Unix, just use /tmp.
-	tempdir = __ccgo_ts(23139)
-	return M_StringJoin(tls, tempdir, libc.VaList(bp+8, __ccgo_ts(1252), s, libc.UintptrFromInt32(0)))
+func M_TempFile(s string) string {
+	return "/tmp/" + s
 }
 
 func M_StrToInt(tls *libc.TLS, str uintptr, result uintptr) (r boolean) {
@@ -29850,19 +29849,19 @@ const SAVEGAME_EOF = 29
 // the file has been successfully saved, it will be renamed to the
 // real file.
 
-func P_TempSaveGameFile(tls *libc.TLS) (r uintptr) {
+func P_TempSaveGameFile(tls *libc.TLS) string {
 	bp := alloc(32)
 	if filename == libc.UintptrFromInt32(0) {
 		filename = M_StringJoin(tls, savegamedir, libc.VaList(bp+8, __ccgo_ts(24924), libc.UintptrFromInt32(0)))
 	}
-	return filename
+	return libc.GoString(filename)
 }
 
 var filename = libc.UintptrFromInt32(0)
 
 // Get the filename of the save game file to use for the specified slot.
 
-func P_SaveGameFile(tls *libc.TLS, slot int32) (r uintptr) {
+func P_SaveGameFile(tls *libc.TLS, slot int32) string {
 	bp := alloc(64)
 	if filename1 == libc.UintptrFromInt32(0) {
 		filename_size = xstrlen(savegamedir) + uint64(32)
@@ -29870,7 +29869,7 @@ func P_SaveGameFile(tls *libc.TLS, slot int32) (r uintptr) {
 	}
 	snprintf_ccgo(bp, 32, 24933, slot)
 	M_snprintf(tls, filename1, filename_size, __ccgo_ts(24947), libc.VaList(bp+40, savegamedir, bp))
-	return filename1
+	return libc.GoString(filename1)
 }
 
 var filename1 = libc.UintptrFromInt32(0)
@@ -29880,20 +29879,19 @@ var filename_size uint64
 // Endian-safe integer read/write functions
 
 func saveg_read8(tls *libc.TLS) (r uint8) {
-	bp := alloc(16)
-	if libc.Xfread(tls, bp, uint64(1), uint64(1), save_stream) < uint64(1) {
+	var bp [1]byte
+	if _, err := save_stream.Read(bp[:]); err != nil {
 		if !(savegame_error != 0) {
 			fprintf_ccgo(os.Stderr, 24952)
 			savegame_error = 1
 		}
 	}
-	return *(*uint8)(unsafe.Pointer(bp))
+	return bp[0]
 }
 
 func saveg_write8(tls *libc.TLS, _value uint8) {
-	bp := alloc(16)
-	*(*uint8)(unsafe.Pointer(bp)) = _value
-	if libc.Xfwrite(tls, bp, uint64(1), uint64(1), save_stream) < uint64(1) {
+	bp := []byte{_value}
+	if _, err := save_stream.Write(bp); err != nil {
 		if !(savegame_error != 0) {
 			fprintf_ccgo(os.Stderr, 25013)
 			savegame_error = 1
@@ -29933,9 +29931,11 @@ func saveg_write32(tls *libc.TLS, value int32) {
 
 func saveg_read_pad(tls *libc.TLS) {
 	var i, padding int32
-	var pos uint64
-	pos = libc.Uint64FromInt64(libc.Xftell(tls, save_stream))
-	padding = libc.Int32FromUint64((uint64(4) - pos&uint64(3)) & uint64(3))
+	pos, err := save_stream.Seek(0, io.SeekCurrent)
+	if err != nil {
+		log.Printf("Error seeking in save stream: %v\n", err)
+	}
+	padding = libc.Int32FromUint64((uint64(4) - uint64(pos)&uint64(3)) & uint64(3))
 	i = 0
 	for {
 		if !(i < padding) {
@@ -29951,9 +29951,11 @@ func saveg_read_pad(tls *libc.TLS) {
 
 func saveg_write_pad(tls *libc.TLS) {
 	var i, padding int32
-	var pos uint64
-	pos = libc.Uint64FromInt64(libc.Xftell(tls, save_stream))
-	padding = libc.Int32FromUint64((uint64(4) - pos&uint64(3)) & uint64(3))
+	pos, err := save_stream.Seek(0, io.SeekCurrent)
+	if err != nil {
+		log.Printf("Error seeking in save stream: %v\n", err)
+	}
+	padding = libc.Int32FromUint64((uint64(4) - uint64(pos)&uint64(3)) & uint64(3))
 	i = 0
 	for {
 		if !(i < padding) {
@@ -42860,7 +42862,7 @@ func WritePCXfile(tls *libc.TLS, filename uintptr, data uintptr, width int32, he
 	}
 	// write output file
 	length = int32(int64(pack) - int64(pcx))
-	M_WriteFile(tls, filename, pcx, length)
+	M_WriteFile(filename, pcx, length)
 	Z_Free(tls, pcx)
 }
 
@@ -44840,31 +44842,17 @@ func WI_Start(tls *libc.TLS, wbstartstruct uintptr) {
 	}
 }
 
-var open_wadfiles = libc.UintptrFromInt32(0)
-var num_open_wadfiles int32 = 0
+var open_wadfiles []uintptr
 
-func GetFileNumber(tls *libc.TLS, handle uintptr) (r int32) {
-	var i, result int32
-	i = 0
-	for {
-		if !(i < num_open_wadfiles) {
-			break
+func GetFileNumber(tls *libc.TLS, handleF *os.File) (r int32) {
+	handle := handleF.Fd()
+	for i := 0; i < len(open_wadfiles); i++ {
+		if open_wadfiles[i] == handle {
+			return int32(i)
 		}
-		if *(*uintptr)(unsafe.Pointer(open_wadfiles + uintptr(i)*8)) == handle {
-			return i
-		}
-		goto _1
-	_1:
-		;
-		i++
 	}
-	// Not found in list.  This is a new file we haven't seen yet.
-	// Allocate another slot for this file.
-	open_wadfiles = libc.Xrealloc(tls, open_wadfiles, uint64(8)*libc.Uint64FromInt32(num_open_wadfiles+1))
-	*(*uintptr)(unsafe.Pointer(open_wadfiles + uintptr(num_open_wadfiles)*8)) = handle
-	result = num_open_wadfiles
-	num_open_wadfiles++
-	return result
+	open_wadfiles = append(open_wadfiles, handle)
+	return int32(len(open_wadfiles) - 1)
 }
 
 func ChecksumAddLump(tls *libc.TLS, sha1_context uintptr, lump uintptr) {
@@ -44880,7 +44868,7 @@ func W_Checksum(tls *libc.TLS, digest uintptr) {
 	bp := alloc(96)
 	var i uint32
 	SHA1_Init(bp)
-	num_open_wadfiles = 0
+	open_wadfiles = nil
 	// Go through each entry in the WAD directory, adding information
 	// about each entry to the SHA1 hash.
 	i = uint32(0)
@@ -44897,47 +44885,25 @@ func W_Checksum(tls *libc.TLS, digest uintptr) {
 	SHA1_Final(digest, bp)
 }
 
-/*
-#ifdef _WIN32
-extern wad_file_class_t win32_wad_file;
-#endif
-*/
-
-var wad_file_classes = [1]uintptr{
-	0: uintptr(unsafe.Pointer(&stdc_wad_file)),
+func W_OpenFile(path uintptr) *os.File {
+	log.Printf("W_OpenFile: %s", libc.GoString(path))
+	f, err := os.Open(libc.GoString(path))
+	if err != nil {
+		log.Printf("W_OpenFile: %s: %v", libc.GoString(path), err)
+		return nil
+	}
+	return f
 }
 
-func W_OpenFile(tls *libc.TLS, path uintptr) (r uintptr) {
-	var i int32
-	var result uintptr
-	//!
-	// Use the OS's virtual memory subsystem to map WAD files
-	// directly into memory.
-	//
-	if !(M_CheckParm(__ccgo_ts(28593)) != 0) {
-		return (*(*func(*libc.TLS, uintptr) uintptr)(unsafe.Pointer(&struct{ uintptr }{stdc_wad_file.FOpenFile})))(tls, path)
+func W_Read(wad *os.File, offset uint32, buffer uintptr, buffer_len uint64) (r uint64) {
+	bufBytes := unsafe.Slice((*byte)(unsafe.Pointer(buffer)), int(buffer_len))
+	//log.Printf("W_Read: %s: offset=%d, len=%d/%d fd=%d", wad.Name(), offset, len(bufBytes), buffer_len, wad.Fd())
+	n, err := wad.ReadAt(bufBytes, int64(offset))
+	if err != nil && n != int(buffer_len) {
+		log.Printf("W_Read: %s: n: %d %v (fd=%d)", wad.Name(), n, err, wad.Fd())
+		return 0
 	}
-	// Try all classes in order until we find one that works
-	result = libc.UintptrFromInt32(0)
-	i = 0
-	for {
-		if !(libc.Uint64FromInt32(i) < libc.Uint64FromInt64(8)/libc.Uint64FromInt64(8)) {
-			break
-		}
-		result = (*(*func(*libc.TLS, uintptr) uintptr)(unsafe.Pointer(&struct{ uintptr }{(*wad_file_class_t)(unsafe.Pointer(wad_file_classes[i])).FOpenFile})))(tls, path)
-		if result != libc.UintptrFromInt32(0) {
-			break
-		}
-		goto _1
-	_1:
-		;
-		i++
-	}
-	return result
-}
-
-func W_Read(tls *libc.TLS, wad uintptr, offset uint32, buffer uintptr, buffer_len uint64) (r uint64) {
-	return (*(*func(*libc.TLS, uintptr, uint32, uintptr, uint64) uint64)(unsafe.Pointer(&struct{ uintptr }{(*wad_file_class_t)(unsafe.Pointer((*wad_file_t)(unsafe.Pointer(wad)).Ffile_class)).FRead})))(tls, wad, offset, buffer, buffer_len)
+	return uint64(n)
 }
 
 //
@@ -45069,16 +45035,22 @@ func ExtendLumpInfo(tls *libc.TLS, newnumlumps int32) {
 // Other files are single lumps with the base filename
 //  for the lump name.
 
-func W_AddFile(tls *libc.TLS, filename uintptr) (r uintptr) {
+func W_AddFile(tls *libc.TLS, filename uintptr) *os.File {
 	bp := alloc(32)
-	var fileinfo, filerover, lump_p, wad_file uintptr
+	var fileinfo, filerover, lump_p uintptr
+	var wad_file *os.File
 	var i uint32
 	var length, newnumlumps, startlump int32
+	stat, err := os.Stat(libc.GoString(filename))
+	if err != nil {
+		log.Printf("W_AddFile: %s: %v", libc.GoString(filename), err)
+		return nil
+	}
 	// open the file and add to directory
-	wad_file = W_OpenFile(tls, filename)
-	if wad_file == libc.UintptrFromInt32(0) {
+	wad_file = W_OpenFile(filename)
+	if wad_file == nil {
 		fprintf_ccgo(os.Stdout, 28631, libc.GoString(filename))
-		return libc.UintptrFromInt32(0)
+		return nil
 	}
 	newnumlumps = libc.Int32FromUint32(numlumps)
 	if xstrcasecmp(filename+uintptr(xstrlen(filename))-uintptr(3), __ccgo_ts(28650)) != 0 {
@@ -45089,17 +45061,17 @@ func W_AddFile(tls *libc.TLS, filename uintptr) (r uintptr) {
 		// here, as it would appear on disk.
 		fileinfo = Z_Malloc(tls, 16, int32(PU_STATIC), uintptr(0))
 		(*filelump_t)(unsafe.Pointer(fileinfo)).Ffilepos = 0
-		(*filelump_t)(unsafe.Pointer(fileinfo)).Fsize = libc.Int32FromUint32((*wad_file_t)(unsafe.Pointer(wad_file)).Flength)
+		(*filelump_t)(unsafe.Pointer(fileinfo)).Fsize = int32(stat.Size())
 		// Name the lump after the base of the filename (without the
 		// extension).
 		M_ExtractFileBase(tls, filename, fileinfo+8)
 		newnumlumps++
 	} else {
 		// WAD file
-		W_Read(tls, wad_file, uint32(0), bp, uint64(12))
-		if libc.Xstrncmp(tls, bp, __ccgo_ts(28654), uint64(4)) != 0 {
+		W_Read(wad_file, uint32(0), bp, uint64(12))
+		if xstrncmp(bp, __ccgo_ts(28654), uint64(4)) != 0 {
 			// Homebrew levels?
-			if libc.Xstrncmp(tls, bp, __ccgo_ts(28659), uint64(4)) != 0 {
+			if xstrncmp(bp, __ccgo_ts(28659), uint64(4)) != 0 {
 				I_Error(tls, __ccgo_ts(28664), filename)
 			}
 			// ???modifiedgame = true;
@@ -45108,7 +45080,7 @@ func W_AddFile(tls *libc.TLS, filename uintptr) (r uintptr) {
 		(*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs = (*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs
 		length = libc.Int32FromUint64(libc.Uint64FromInt32((*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps) * uint64(16))
 		fileinfo = Z_Malloc(tls, length, int32(PU_STATIC), uintptr(0))
-		W_Read(tls, wad_file, libc.Uint32FromInt32((*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs), fileinfo, libc.Uint64FromInt32(length))
+		W_Read(wad_file, libc.Uint32FromInt32((*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs), fileinfo, libc.Uint64FromInt32(length))
 		newnumlumps += (*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps
 	}
 	// Increase size of numlumps array to accomodate the new file.
@@ -45231,7 +45203,7 @@ func W_ReadLump(tls *libc.TLS, lump uint32, dest uintptr) {
 	}
 	l = lumpinfo + uintptr(lump)*40
 	I_BeginRead()
-	c = libc.Int32FromUint64(W_Read(tls, (*lumpinfo_t)(unsafe.Pointer(l)).Fwad_file, libc.Uint32FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fposition), dest, libc.Uint64FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fsize)))
+	c = libc.Int32FromUint64(W_Read((*lumpinfo_t)(unsafe.Pointer(l)).Fwad_file, libc.Uint32FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fposition), dest, libc.Uint64FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fsize)))
 	if c < (*lumpinfo_t)(unsafe.Pointer(l)).Fsize {
 		I_Error(tls, __ccgo_ts(28793), c, (*lumpinfo_t)(unsafe.Pointer(l)).Fsize, lump)
 	}
@@ -45256,24 +45228,15 @@ func W_CacheLumpNum(tls *libc.TLS, lumpnum int32, tag int32) (r uintptr) {
 		I_Error(tls, __ccgo_ts(28835), lumpnum)
 	}
 	lump = lumpinfo + uintptr(lumpnum)*40
-	// Get the pointer to return.  If the lump is in a memory-mapped
-	// file, we can just return a pointer to within the memory-mapped
-	// region.  If the lump is in an ordinary file, we may already
-	// have it cached; otherwise, load it into memory.
-	if (*wad_file_t)(unsafe.Pointer((*lumpinfo_t)(unsafe.Pointer(lump)).Fwad_file)).Fmapped != libc.UintptrFromInt32(0) {
-		// Memory mapped file, return from the mmapped region.
-		result = (*wad_file_t)(unsafe.Pointer((*lumpinfo_t)(unsafe.Pointer(lump)).Fwad_file)).Fmapped + uintptr((*lumpinfo_t)(unsafe.Pointer(lump)).Fposition)
+	if (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache != libc.UintptrFromInt32(0) {
+		// Already cached, so just switch the zone tag.
+		result = (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache
+		Z_ChangeTag2(tls, (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache, tag, __ccgo_ts(28866), 410)
 	} else {
-		if (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache != libc.UintptrFromInt32(0) {
-			// Already cached, so just switch the zone tag.
-			result = (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache
-			Z_ChangeTag2(tls, (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache, tag, __ccgo_ts(28866), 410)
-		} else {
-			// Not yet loaded, so load it now
-			(*lumpinfo_t)(unsafe.Pointer(lump)).Fcache = Z_Malloc(tls, W_LumpLength(tls, libc.Uint32FromInt32(lumpnum)), tag, lump+24)
-			W_ReadLump(tls, libc.Uint32FromInt32(lumpnum), (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache)
-			result = (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache
-		}
+		// Not yet loaded, so load it now
+		(*lumpinfo_t)(unsafe.Pointer(lump)).Fcache = Z_Malloc(tls, W_LumpLength(tls, libc.Uint32FromInt32(lumpnum)), tag, lump+24)
+		W_ReadLump(tls, libc.Uint32FromInt32(lumpnum), (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache)
+		result = (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache
 	}
 	return result
 }
@@ -45303,11 +45266,7 @@ func W_ReleaseLumpNum(tls *libc.TLS, lumpnum int32) {
 		I_Error(tls, __ccgo_ts(28874), lumpnum)
 	}
 	lump = lumpinfo + uintptr(lumpnum)*40
-	if (*wad_file_t)(unsafe.Pointer((*lumpinfo_t)(unsafe.Pointer(lump)).Fwad_file)).Fmapped != libc.UintptrFromInt32(0) {
-		// Memory-mapped file, so nothing needs to be done here.
-	} else {
-		Z_ChangeTag2(tls, (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache, int32(PU_CACHE), __ccgo_ts(28866), 461)
-	}
+	Z_ChangeTag2(tls, (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache, int32(PU_CACHE), __ccgo_ts(28866), 461)
 }
 
 func W_ReleaseLumpName(tls *libc.TLS, name uintptr) {
@@ -45697,60 +45656,7 @@ func Z_ChangeUser(tls *libc.TLS, ptr uintptr, user uintptr) {
 	*(*uintptr)(unsafe.Pointer(user)) = ptr
 }
 
-//
-// This is used to get the local FILE:LINE info from CPP
-// prior to really call the function in question.
-//
-
-type stdc_wad_file_t struct {
-	Fwad     wad_file_t
-	Ffstream uintptr
-}
-
-func W_StdC_OpenFile(tls *libc.TLS, path uintptr) (r uintptr) {
-	var fstream, result uintptr
-	fstream = libc.Xfopen(tls, path, __ccgo_ts(13884))
-	if fstream == libc.UintptrFromInt32(0) {
-		return libc.UintptrFromInt32(0)
-	}
-	// Create a new stdc_wad_file_t to hold the file handle.
-	result = Z_Malloc(tls, 32, int32(PU_STATIC), uintptr(0))
-	(*stdc_wad_file_t)(unsafe.Pointer(result)).Fwad.Ffile_class = uintptr(unsafe.Pointer(&stdc_wad_file))
-	(*stdc_wad_file_t)(unsafe.Pointer(result)).Fwad.Fmapped = libc.UintptrFromInt32(0)
-	(*stdc_wad_file_t)(unsafe.Pointer(result)).Fwad.Flength = libc.Uint32FromInt64(M_FileLength(tls, fstream))
-	(*stdc_wad_file_t)(unsafe.Pointer(result)).Ffstream = fstream
-	return result
-}
-
-func W_StdC_CloseFile(tls *libc.TLS, wad uintptr) {
-	var stdc_wad uintptr
-	stdc_wad = wad
-	libc.Xfclose(tls, (*stdc_wad_file_t)(unsafe.Pointer(stdc_wad)).Ffstream)
-	Z_Free(tls, stdc_wad)
-}
-
-// Read data from the specified position in the file into the
-// provided buffer.  Returns the number of bytes read.
-
-func W_StdC_Read(tls *libc.TLS, wad uintptr, offset uint32, buffer uintptr, buffer_len uint64) (r uint64) {
-	var result uint64
-	var stdc_wad uintptr
-	stdc_wad = wad
-	// Jump to the specified position in the file.
-	libc.Xfseek(tls, (*stdc_wad_file_t)(unsafe.Pointer(stdc_wad)).Ffstream, libc.Int64FromUint32(offset), 0)
-	// Read into the buffer.
-	result = libc.Xfread(tls, buffer, uint64(1), buffer_len, (*stdc_wad_file_t)(unsafe.Pointer(stdc_wad)).Ffstream)
-	return result
-}
-
 func init() {
-	stdc_wad_file = wad_file_class_t{}
-
-	p := unsafe.Pointer(&stdc_wad_file)
-	*(*uintptr)(unsafe.Add(p, 0)) = __ccgo_fp(W_StdC_OpenFile)
-	*(*uintptr)(unsafe.Add(p, 8)) = __ccgo_fp(W_StdC_CloseFile)
-	*(*uintptr)(unsafe.Add(p, 16)) = __ccgo_fp(W_StdC_Read)
-
 	vanilla_keyboard_mapping = 1
 }
 
@@ -47694,7 +47600,7 @@ var saveStringEnter int32
 //	Refresh/render internal state variables (global).
 //
 
-var save_stream uintptr
+var save_stream *os.File
 
 var savegame_error boolean
 
@@ -47702,9 +47608,9 @@ var savegame_error boolean
 
 var savegamedir uintptr
 
-var savegamestrings [10][24]int8
+var savegamestrings [10][SAVESTRINGSIZE]byte
 
-var savename [256]int8
+var savename string
 
 var scaledviewwidth int32
 
@@ -48056,8 +47962,6 @@ func stateIndex(s *state_t) int32 {
 	}
 	return idx
 }
-
-var stdc_wad_file wad_file_class_t
 
 // C documentation
 //
