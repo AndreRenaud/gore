@@ -24663,7 +24663,7 @@ func A_BrainSpit(tls *libc.TLS, mo uintptr) {
 	// spawn brain missile
 	newmobj = P_SpawnMissile(tls, mo, targ, int32(MT_SPAWNSHOT))
 	(*mobj_t)(unsafe.Pointer(newmobj)).Ftarget = targ
-	(*mobj_t)(unsafe.Pointer(newmobj)).Freactiontime = ((*mobj_t)(unsafe.Pointer(targ)).Fy - (*mobj_t)(unsafe.Pointer(mo)).Fy) / (*mobj_t)(unsafe.Pointer(newmobj)).Fmomy / (*state_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(newmobj)).Fstate)).Ftics
+	(*mobj_t)(unsafe.Pointer(newmobj)).Freactiontime = ((*mobj_t)(unsafe.Pointer(targ)).Fy - (*mobj_t)(unsafe.Pointer(mo)).Fy) / (*mobj_t)(unsafe.Pointer(newmobj)).Fmomy / (*mobj_t)(unsafe.Pointer(newmobj)).Fstate.Ftics
 	S_StartSound(tls, libc.UintptrFromInt32(0), int32(sfx_bospit))
 }
 
@@ -28467,7 +28467,7 @@ func P_MobjThinker(tls *libc.TLS, mobj uintptr) {
 		(*mobj_t)(unsafe.Pointer(mobj)).Ftics--
 		// you can cycle through multiple states in a tic
 		if !((*mobj_t)(unsafe.Pointer(mobj)).Ftics != 0) {
-			if !(P_SetMobjState(tls, mobj, (*state_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mobj)).Fstate)).Fnextstate) != 0) {
+			if !(P_SetMobjState(tls, mobj, (*mobj_t)(unsafe.Pointer(mobj)).Fstate.Fnextstate) != 0) {
 				return
 			}
 		} // freed itself
