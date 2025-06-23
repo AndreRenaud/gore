@@ -24563,15 +24563,15 @@ func A_BabyMetal(tls *libc.TLS, mo uintptr) {
 	A_Chase(tls, mo)
 }
 
-func A_OpenShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_OpenShotgun2(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	S_StartSound(tls, player.Fmo, int32(sfx_dbopn))
 }
 
-func A_LoadShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_LoadShotgun2(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	S_StartSound(tls, player.Fmo, int32(sfx_dbload))
 }
 
-func A_CloseShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_CloseShotgun2(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	S_StartSound(tls, player.Fmo, int32(sfx_dbcls))
 	A_ReFire(tls, player, psp)
 }
@@ -29217,31 +29217,31 @@ const ANG905 = 1073741824
 //	// P_SetPsprite
 //	//
 func P_SetPsprite(tls *libc.TLS, player *player_t, position int32, stnum statenum_t) {
-	var psp, state uintptr
-	psp = (uintptr)(unsafe.Pointer(&player.Fpsprites[position]))
-	for cond := true; cond; cond = !((*pspdef_t)(unsafe.Pointer(psp)).Ftics != 0) {
+	var state uintptr
+	psp := &player.Fpsprites[position]
+	for cond := true; cond; cond = !(psp.Ftics != 0) {
 		if !(stnum != 0) {
 			// object removed itself
-			(*pspdef_t)(unsafe.Pointer(psp)).Fstate = libc.UintptrFromInt32(0)
+			psp.Fstate = libc.UintptrFromInt32(0)
 			break
 		}
 		state = uintptr(unsafe.Pointer(&states)) + uintptr(stnum)*40
-		(*pspdef_t)(unsafe.Pointer(psp)).Fstate = state
-		(*pspdef_t)(unsafe.Pointer(psp)).Ftics = (*state_t)(unsafe.Pointer(state)).Ftics // could be 0
+		psp.Fstate = state
+		psp.Ftics = (*state_t)(unsafe.Pointer(state)).Ftics // could be 0
 		if (*state_t)(unsafe.Pointer(state)).Fmisc1 != 0 {
 			// coordinate set
-			(*pspdef_t)(unsafe.Pointer(psp)).Fsx = (*state_t)(unsafe.Pointer(state)).Fmisc1 << int32(FRACBITS)
-			(*pspdef_t)(unsafe.Pointer(psp)).Fsy = (*state_t)(unsafe.Pointer(state)).Fmisc2 << int32(FRACBITS)
+			psp.Fsx = (*state_t)(unsafe.Pointer(state)).Fmisc1 << int32(FRACBITS)
+			psp.Fsy = (*state_t)(unsafe.Pointer(state)).Fmisc2 << int32(FRACBITS)
 		}
 		// Call action routine.
 		// Modified handling.
 		if *(*actionf_p2)(unsafe.Pointer(state + 16)) != 0 {
-			(*(*func(*libc.TLS, *player_t, uintptr))(unsafe.Pointer(&struct{ uintptr }{*(*actionf_p2)(unsafe.Pointer(&(*state_t)(unsafe.Pointer(state)).Faction))})))(tls, player, psp)
-			if !((*pspdef_t)(unsafe.Pointer(psp)).Fstate != 0) {
+			(*(*func(*libc.TLS, *player_t, *pspdef_t))(unsafe.Pointer(&struct{ uintptr }{*(*actionf_p2)(unsafe.Pointer(&(*state_t)(unsafe.Pointer(state)).Faction))})))(tls, player, psp)
+			if !(psp.Fstate != 0) {
 				break
 			}
 		}
-		stnum = (*state_t)(unsafe.Pointer((*pspdef_t)(unsafe.Pointer(psp)).Fstate)).Fnextstate
+		stnum = (*state_t)(unsafe.Pointer(psp.Fstate)).Fnextstate
 	}
 	// an initial state of 0 could cycle through
 }
@@ -29372,14 +29372,14 @@ func P_DropWeapon(tls *libc.TLS, player *player_t) {
 //	// Follows after getting weapon up,
 //	// or after previous attack/fire sequence.
 //	//
-func A_WeaponReady(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_WeaponReady(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	var angle int32
 	var newstate statenum_t
 	// get out of attack state
 	if (*mobj_t)(unsafe.Pointer(player.Fmo)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_PLAY_ATK1)*40 || (*mobj_t)(unsafe.Pointer(player.Fmo)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_PLAY_ATK2)*40 {
 		P_SetMobjState(tls, player.Fmo, int32(S_PLAY))
 	}
-	if player.Freadyweapon == wp_chainsaw && (*pspdef_t)(unsafe.Pointer(psp)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_SAW)*40 {
+	if player.Freadyweapon == wp_chainsaw && psp.Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_SAW)*40 {
 		S_StartSound(tls, player.Fmo, int32(sfx_sawidl))
 	}
 	// check for change
@@ -29404,9 +29404,9 @@ func A_WeaponReady(tls *libc.TLS, player *player_t, psp uintptr) {
 	}
 	// bob the weapon based on movement speed
 	angle = 128 * leveltime & (FINEANGLES - 1)
-	(*pspdef_t)(unsafe.Pointer(psp)).Fsx = 1<<FRACBITS + FixedMul(player.Fbob, finecosine[angle])
+	psp.Fsx = 1<<FRACBITS + FixedMul(player.Fbob, finecosine[angle])
 	angle &= FINEANGLES/2 - 1
-	(*pspdef_t)(unsafe.Pointer(psp)).Fsy = 32*(1<<FRACBITS) + FixedMul(player.Fbob, finesine[angle])
+	psp.Fsy = 32*(1<<FRACBITS) + FixedMul(player.Fbob, finesine[angle])
 }
 
 // C documentation
@@ -29416,7 +29416,7 @@ func A_WeaponReady(tls *libc.TLS, player *player_t, psp uintptr) {
 //	// The player can re-fire the weapon
 //	// without lowering it entirely.
 //	//
-func A_ReFire(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_ReFire(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	// check for fire
 	//  (if a weaponchange is pending, let it go through instead)
 	if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 && player.Fpendingweapon == wp_nochange && player.Fhealth != 0 {
@@ -29428,7 +29428,7 @@ func A_ReFire(tls *libc.TLS, player *player_t, psp uintptr) {
 	}
 }
 
-func A_CheckReload(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_CheckReload(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	P_CheckAmmo(tls, player)
 }
 
@@ -29439,15 +29439,15 @@ func A_CheckReload(tls *libc.TLS, player *player_t, psp uintptr) {
 //	// Lowers current weapon,
 //	//  and changes weapon at bottom.
 //	//
-func A_Lower(tls *libc.TLS, player *player_t, psp uintptr) {
-	*(*fixed_t)(unsafe.Pointer(psp + 16)) += 1 << FRACBITS * 6
+func A_Lower(tls *libc.TLS, player *player_t, psp *pspdef_t) {
+	psp.Fsy += 1 << FRACBITS * 6
 	// Is already down.
-	if (*pspdef_t)(unsafe.Pointer(psp)).Fsy < 128*(1<<FRACBITS) {
+	if psp.Fsy < 128*(1<<FRACBITS) {
 		return
 	}
 	// Player is dead.
 	if player.Fplayerstate == int32(PST_DEAD) {
-		(*pspdef_t)(unsafe.Pointer(psp)).Fsy = 128 * (1 << FRACBITS)
+		psp.Fsy = 128 * (1 << FRACBITS)
 		// don't bring weapon back up
 		return
 	}
@@ -29467,13 +29467,13 @@ func A_Lower(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 //	// A_Raise
 //	//
-func A_Raise(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_Raise(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	var newstate statenum_t
-	*(*fixed_t)(unsafe.Pointer(psp + 16)) -= 1 << FRACBITS * 6
-	if (*pspdef_t)(unsafe.Pointer(psp)).Fsy > 32*(1<<FRACBITS) {
+	psp.Fsy -= 1 << FRACBITS * 6
+	if psp.Fsy > 32*(1<<FRACBITS) {
 		return
 	}
-	(*pspdef_t)(unsafe.Pointer(psp)).Fsy = 32 * (1 << FRACBITS)
+	psp.Fsy = 32 * (1 << FRACBITS)
 	// The weapon has been raised all the way,
 	//  so change to the ready state.
 	newstate = weaponinfo[player.Freadyweapon].Freadystate
@@ -29485,7 +29485,7 @@ func A_Raise(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 //	// A_GunFlash
 //	//
-func A_GunFlash(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_GunFlash(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK2))
 	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[player.Freadyweapon].Fflashstate)
 }
@@ -29499,7 +29499,7 @@ func A_GunFlash(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 //	// A_Punch
 //	//
-func A_Punch(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_Punch(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	var angle angle_t
 	var damage, slope int32
 	damage = (P_Random()%int32(10) + 1) << 1
@@ -29522,7 +29522,7 @@ func A_Punch(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 //	// A_Saw
 //	//
-func A_Saw(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_Saw(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	var angle angle_t
 	var damage, slope int32
 	damage = 2 * (P_Random()%int32(10) + 1)
@@ -29573,7 +29573,7 @@ func DecreaseAmmo(tls *libc.TLS, player *player_t, ammonum int32, amount int32) 
 //	//
 //	// A_FireMissile
 //	//
-func A_FireMissile(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_FireMissile(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 1)
 	P_SpawnPlayerMissile(tls, player.Fmo, int32(MT_ROCKET))
 }
@@ -29583,7 +29583,7 @@ func A_FireMissile(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 //	// A_FireBFG
 //	//
-func A_FireBFG(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_FireBFG(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, int32(DEH_DEFAULT_BFG_CELLS_PER_SHOT))
 	P_SpawnPlayerMissile(tls, player.Fmo, int32(MT_BFG))
 }
@@ -29593,7 +29593,7 @@ func A_FireBFG(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 //	// A_FirePlasma
 //	//
-func A_FirePlasma(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_FirePlasma(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 1)
 	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[player.Freadyweapon].Fflashstate+P_Random()&int32(1))
 	P_SpawnPlayerMissile(tls, player.Fmo, int32(MT_PLASMA))
@@ -29635,7 +29635,7 @@ func P_GunShot(tls *libc.TLS, mo uintptr, accurate boolean) {
 //	//
 //	// A_FirePistol
 //	//
-func A_FirePistol(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_FirePistol(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	S_StartSound(tls, player.Fmo, int32(sfx_pistol))
 	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK2))
 	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 1)
@@ -29649,7 +29649,7 @@ func A_FirePistol(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 //	// A_FireShotgun
 //	//
-func A_FireShotgun(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_FireShotgun(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	var i int32
 	S_StartSound(tls, player.Fmo, int32(sfx_shotgn))
 	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK2))
@@ -29674,7 +29674,7 @@ func A_FireShotgun(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 //	// A_FireShotgun2
 //	//
-func A_FireShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_FireShotgun2(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	var angle angle_t
 	var damage, i int32
 	S_StartSound(tls, player.Fmo, int32(sfx_dshtgn))
@@ -29703,14 +29703,14 @@ func A_FireShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 //	// A_FireCGun
 //	//
-func A_FireCGun(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_FireCGun(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	S_StartSound(tls, player.Fmo, int32(sfx_pistol))
 	if !(player.Fammo[weaponinfo[player.Freadyweapon].Fammo] != 0) {
 		return
 	}
 	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK2))
 	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 1)
-	P_SetPsprite(tls, player, int32(ps_flash), int32((int64(uintptr(weaponinfo[player.Freadyweapon].Fflashstate)*40+(*pspdef_t)(unsafe.Pointer(psp)).Fstate)-int64(uintptr(unsafe.Pointer(&states))+uintptr(S_CHAIN1)*40))/40))
+	P_SetPsprite(tls, player, int32(ps_flash), int32((int64(uintptr(weaponinfo[player.Freadyweapon].Fflashstate)*40+psp.Fstate)-int64(uintptr(unsafe.Pointer(&states))+uintptr(S_CHAIN1)*40))/40))
 	P_BulletSlope(tls, player.Fmo)
 	P_GunShot(tls, player.Fmo, libc.BoolUint32(!(player.Frefire != 0)))
 }
@@ -29720,15 +29720,15 @@ func A_FireCGun(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 //	// ?
 //	//
-func A_Light0(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_Light0(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	player.Fextralight = 0
 }
 
-func A_Light1(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_Light1(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	player.Fextralight = 1
 }
 
-func A_Light2(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_Light2(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	player.Fextralight = 2
 }
 
@@ -29780,7 +29780,7 @@ func A_BFGSpray(tls *libc.TLS, mo uintptr) {
 //	//
 //	// A_BFGsound
 //	//
-func A_BFGsound(tls *libc.TLS, player *player_t, psp uintptr) {
+func A_BFGsound(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	S_StartSound(tls, player.Fmo, int32(sfx_bfg))
 }
 
@@ -29825,14 +29825,14 @@ func P_MovePsprites(tls *libc.TLS, player *player_t) {
 		}
 		psp := &player.Fpsprites[i]
 		// a null state means not active
-		v2 = (*pspdef_t)(unsafe.Pointer(psp)).Fstate
+		v2 = psp.Fstate
 		if v2 != 0 {
 			// drop tic count and possibly change state
 			// a -1 tic count never changes
-			if (*pspdef_t)(unsafe.Pointer(psp)).Ftics != -1 {
-				(*pspdef_t)(unsafe.Pointer(psp)).Ftics--
-				if !((*pspdef_t)(unsafe.Pointer(psp)).Ftics != 0) {
-					P_SetPsprite(tls, player, i, (*state_t)(unsafe.Pointer((*pspdef_t)(unsafe.Pointer(psp)).Fstate)).Fnextstate)
+			if psp.Ftics != -1 {
+				psp.Ftics--
+				if !(psp.Ftics != 0) {
+					P_SetPsprite(tls, player, i, (*state_t)(unsafe.Pointer(psp.Fstate)).Fnextstate)
 				}
 			}
 		}
@@ -30275,17 +30275,17 @@ func saveg_read_pspdef_t(tls *libc.TLS, str *pspdef_t) {
 
 func saveg_write_pspdef_t(tls *libc.TLS, str *pspdef_t) {
 	// state_t* state;
-	if (*pspdef_t)(unsafe.Pointer(str)).Fstate != 0 {
-		saveg_write32(tls, int32((int64((*pspdef_t)(unsafe.Pointer(str)).Fstate)-int64(uintptr(unsafe.Pointer(&states))))/40))
+	if str.Fstate != 0 {
+		saveg_write32(tls, int32((int64(str.Fstate)-int64(uintptr(unsafe.Pointer(&states))))/40))
 	} else {
 		saveg_write32(tls, 0)
 	}
 	// int tics;
-	saveg_write32(tls, (*pspdef_t)(unsafe.Pointer(str)).Ftics)
+	saveg_write32(tls, str.Ftics)
 	// fixed_t sx;
-	saveg_write32(tls, (*pspdef_t)(unsafe.Pointer(str)).Fsx)
+	saveg_write32(tls, str.Fsx)
 	// fixed_t sy;
-	saveg_write32(tls, (*pspdef_t)(unsafe.Pointer(str)).Fsy)
+	saveg_write32(tls, str.Fsy)
 }
 
 //
@@ -38628,18 +38628,18 @@ func R_DrawPSprite(tls *libc.TLS, psp *pspdef_t) {
 	var vis *vissprite_t
 	var tx fixed_t
 	// decide which patch to use
-	if libc.Uint32FromInt32((*state_t)(unsafe.Pointer((*pspdef_t)(unsafe.Pointer(psp)).Fstate)).Fsprite) >= libc.Uint32FromInt32(numsprites) {
-		I_Error(tls, __ccgo_ts(26979), (*state_t)(unsafe.Pointer((*pspdef_t)(unsafe.Pointer(psp)).Fstate)).Fsprite)
+	if libc.Uint32FromInt32((*state_t)(unsafe.Pointer(psp.Fstate)).Fsprite) >= libc.Uint32FromInt32(numsprites) {
+		I_Error(tls, __ccgo_ts(26979), (*state_t)(unsafe.Pointer(psp.Fstate)).Fsprite)
 	}
-	sprdef = sprites + uintptr((*state_t)(unsafe.Pointer((*pspdef_t)(unsafe.Pointer(psp)).Fstate)).Fsprite)*16
-	if (*state_t)(unsafe.Pointer((*pspdef_t)(unsafe.Pointer(psp)).Fstate)).Fframe&int32(FF_FRAMEMASK3) >= (*spritedef_t)(unsafe.Pointer(sprdef)).Fnumframes {
-		I_Error(tls, __ccgo_ts(27022), (*state_t)(unsafe.Pointer((*pspdef_t)(unsafe.Pointer(psp)).Fstate)).Fsprite, (*state_t)(unsafe.Pointer((*pspdef_t)(unsafe.Pointer(psp)).Fstate)).Fframe)
+	sprdef = sprites + uintptr((*state_t)(unsafe.Pointer(psp.Fstate)).Fsprite)*16
+	if (*state_t)(unsafe.Pointer(psp.Fstate)).Fframe&int32(FF_FRAMEMASK3) >= (*spritedef_t)(unsafe.Pointer(sprdef)).Fnumframes {
+		I_Error(tls, __ccgo_ts(27022), (*state_t)(unsafe.Pointer(psp.Fstate)).Fsprite, (*state_t)(unsafe.Pointer(psp.Fstate)).Fframe)
 	}
-	sprframe = (*spritedef_t)(unsafe.Pointer(sprdef)).Fspriteframes + uintptr((*state_t)(unsafe.Pointer((*pspdef_t)(unsafe.Pointer(psp)).Fstate)).Fframe&int32(FF_FRAMEMASK3))*28
+	sprframe = (*spritedef_t)(unsafe.Pointer(sprdef)).Fspriteframes + uintptr((*state_t)(unsafe.Pointer(psp.Fstate)).Fframe&int32(FF_FRAMEMASK3))*28
 	lump = int32(*(*int16)(unsafe.Pointer(sprframe + 4)))
 	flip = uint32(*(*uint8)(unsafe.Pointer(sprframe + 20)))
 	// calculate edges of the shape
-	tx = (*pspdef_t)(unsafe.Pointer(psp)).Fsx - 160*(1<<FRACBITS)
+	tx = psp.Fsx - 160*(1<<FRACBITS)
 	tx -= *(*fixed_t)(unsafe.Pointer(spriteoffset + uintptr(lump)*4))
 	x1 = (centerxfrac + FixedMul(tx, pspritescale)) >> int32(FRACBITS)
 	// off the right side
@@ -38655,7 +38655,7 @@ func R_DrawPSprite(tls *libc.TLS, psp *pspdef_t) {
 	// store information in a vissprite
 	vis = &vissprite_t{}
 	vis.Fmobjflags = 0
-	vis.Ftexturemid = BASEYCENTER<<FRACBITS + 1<<FRACBITS/2 - ((*pspdef_t)(unsafe.Pointer(psp)).Fsy - *(*fixed_t)(unsafe.Pointer(spritetopoffset + uintptr(lump)*4)))
+	vis.Ftexturemid = BASEYCENTER<<FRACBITS + 1<<FRACBITS/2 - (psp.Fsy - *(*fixed_t)(unsafe.Pointer(spritetopoffset + uintptr(lump)*4)))
 	if x1 < 0 {
 		v1 = 0
 	} else {
@@ -38688,7 +38688,7 @@ func R_DrawPSprite(tls *libc.TLS, psp *pspdef_t) {
 			// fixed color
 			vis.Fcolormap = fixedcolormap
 		} else {
-			if (*state_t)(unsafe.Pointer((*pspdef_t)(unsafe.Pointer(psp)).Fstate)).Fframe&int32(FF_FULLBRIGHT1) != 0 {
+			if (*state_t)(unsafe.Pointer(psp.Fstate)).Fframe&int32(FF_FULLBRIGHT1) != 0 {
 				// full bright
 				vis.Fcolormap = colormaps
 			} else {
