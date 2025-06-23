@@ -25805,7 +25805,7 @@ func P_KillMobj(tls *libc.TLS, source uintptr, target uintptr) {
 			(*mobj_t)(unsafe.Pointer(target)).Fplayer.Ffrags[idx]++
 		}
 		*(*int32)(unsafe.Pointer(target + 160)) &= ^int32(MF_SOLID)
-		(*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(target)).Fplayer)).Fplayerstate = int32(PST_DEAD)
+		(*mobj_t)(unsafe.Pointer(target)).Fplayer.Fplayerstate = int32(PST_DEAD)
 		P_DropWeapon(tls, (*mobj_t)(unsafe.Pointer(target)).Fplayer)
 		if (*mobj_t)(unsafe.Pointer(target)).Fplayer == &players[consoleplayer] && automapactive != 0 {
 			// don't die in auto map,
@@ -25884,7 +25884,7 @@ func P_DamageMobj(tls *libc.TLS, target uintptr, inflictor uintptr, source uintp
 	// Some close combat weapons should not
 	// inflict thrust and push the victim out of reach,
 	// thus kick away unless using the chainsaw.
-	if inflictor != 0 && !((*mobj_t)(unsafe.Pointer(target)).Fflags&int32(MF_NOCLIP) != 0) && (!(source != 0) || !((*mobj_t)(unsafe.Pointer(source)).Fplayer != nil) || (*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(source)).Fplayer)).Freadyweapon != wp_chainsaw) {
+	if inflictor != 0 && !((*mobj_t)(unsafe.Pointer(target)).Fflags&int32(MF_NOCLIP) != 0) && (!(source != 0) || !((*mobj_t)(unsafe.Pointer(source)).Fplayer != nil) || (*mobj_t)(unsafe.Pointer(source)).Fplayer.Freadyweapon != wp_chainsaw) {
 		ang = R_PointToAngle2((*mobj_t)(unsafe.Pointer(inflictor)).Fx, (*mobj_t)(unsafe.Pointer(inflictor)).Fy, (*mobj_t)(unsafe.Pointer(target)).Fx, (*mobj_t)(unsafe.Pointer(target)).Fy)
 		thrust = damage * (1 << FRACBITS >> 3) * 100 / ((*mobj_t)(unsafe.Pointer(target)).Finfo).Fmass
 		// make fall forwards sometimes
@@ -28298,7 +28298,7 @@ func P_ZMovement(tls *libc.TLS, mo uintptr) {
 	// check for smooth step up
 	if (*mobj_t)(unsafe.Pointer(mo)).Fplayer != nil && (*mobj_t)(unsafe.Pointer(mo)).Fz < (*mobj_t)(unsafe.Pointer(mo)).Ffloorz {
 		(*mobj_t)(unsafe.Pointer(mo)).Fplayer.Fviewheight -= (*mobj_t)(unsafe.Pointer(mo)).Ffloorz - (*mobj_t)(unsafe.Pointer(mo)).Fz
-		(*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Fplayer)).Fdeltaviewheight = (41*(1<<FRACBITS) - (*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Fplayer)).Fviewheight) >> 3
+		(*mobj_t)(unsafe.Pointer(mo)).Fplayer.Fdeltaviewheight = (41*(1<<FRACBITS) - (*mobj_t)(unsafe.Pointer(mo)).Fplayer.Fviewheight) >> 3
 	}
 	// adjust height
 	*(*fixed_t)(unsafe.Pointer(mo + 32)) += (*mobj_t)(unsafe.Pointer(mo)).Fmomz
@@ -28352,7 +28352,7 @@ func P_ZMovement(tls *libc.TLS, mo uintptr) {
 				// Decrease viewheight for a moment
 				// after hitting the ground (hard),
 				// and utter appropriate sound.
-				(*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Fplayer)).Fdeltaviewheight = (*mobj_t)(unsafe.Pointer(mo)).Fmomz >> 3
+				(*mobj_t)(unsafe.Pointer(mo)).Fplayer.Fdeltaviewheight = (*mobj_t)(unsafe.Pointer(mo)).Fmomz >> 3
 				S_StartSound(tls, mo, int32(sfx_oof))
 			}
 			(*mobj_t)(unsafe.Pointer(mo)).Fmomz = 0
@@ -30128,7 +30128,7 @@ func saveg_read_mobj_t(tls *libc.TLS, str uintptr) {
 	pl = saveg_read32(tls)
 	if pl > 0 {
 		(*mobj_t)(unsafe.Pointer(str)).Fplayer = &players[pl-1]
-		(*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(str)).Fplayer)).Fmo = str
+		(*mobj_t)(unsafe.Pointer(str)).Fplayer.Fmo = str
 	} else {
 		(*mobj_t)(unsafe.Pointer(str)).Fplayer = nil
 	}
@@ -34375,7 +34375,7 @@ func EV_Teleport(tls *libc.TLS, line *line_t, side int32, thing uintptr) (r int3
 					(*mobj_t)(unsafe.Pointer(thing)).Fz = (*mobj_t)(unsafe.Pointer(thing)).Ffloorz
 				}
 				if (*mobj_t)(unsafe.Pointer(thing)).Fplayer != nil {
-					(*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(thing)).Fplayer)).Fviewz = (*mobj_t)(unsafe.Pointer(thing)).Fz + (*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(thing)).Fplayer)).Fviewheight
+					(*mobj_t)(unsafe.Pointer(thing)).Fplayer.Fviewz = (*mobj_t)(unsafe.Pointer(thing)).Fz + (*mobj_t)(unsafe.Pointer(thing)).Fplayer.Fviewheight
 				}
 				// spawn teleport fog at source and destination
 				fog = P_SpawnMobj(tls, oldx, oldy, oldz, int32(MT_TFOG))
