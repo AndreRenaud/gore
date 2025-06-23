@@ -2272,21 +2272,9 @@ const ok = 0
 const crushed = 1
 const pastdest = 2
 
-type wad_file_t struct {
-	Ffile_class uintptr
-	Fmapped     uintptr
-	Flength     uint32
-}
-
-type wad_file_class_t struct {
-	FOpenFile  uintptr
-	FCloseFile uintptr
-	FRead      uintptr
-}
-
 type lumpinfo_t struct {
 	Fname     [8]int8
-	Fwad_file uintptr
+	Fwad_file *os.File
 	Fposition int32
 	Fsize     int32
 	Fcache    uintptr
@@ -5516,10 +5504,10 @@ func D_SetGameDescription(tls *libc.TLS) {
 }
 
 func D_AddFile(tls *libc.TLS, filename uintptr) (r boolean) {
-	var handle uintptr
+	var handle *os.File
 	fprintf_ccgo(os.Stdout, 2817, libc.GoString(filename))
 	handle = W_AddFile(tls, filename)
-	return libc.BoolUint32(handle != libc.UintptrFromInt32(0))
+	return libc.BoolUint32(handle != nil)
 }
 
 // Copyright message banners
@@ -21955,22 +21943,6 @@ func M_FileExists(tls *libc.TLS, filename uintptr) (r boolean) {
 		return libc.BoolUint32(*(*int32)(unsafe.Pointer(libc.X__errno_location(tls))) == int32(EISDIR))
 	}
 	return r
-}
-
-//
-// Determine the length of an open file.
-//
-
-func M_FileLength(tls *libc.TLS, handle uintptr) (r int64) {
-	var length, savedpos int64
-	// save the current position in the file
-	savedpos = libc.Xftell(tls, handle)
-	// jump to the end and find the length
-	libc.Xfseek(tls, handle, 0, 2)
-	length = libc.Xftell(tls, handle)
-	// go back to the old location
-	libc.Xfseek(tls, handle, savedpos, 0)
-	return length
 }
 
 //
@@ -44843,14 +44815,14 @@ func WI_Start(tls *libc.TLS, wbstartstruct uintptr) {
 var open_wadfiles = libc.UintptrFromInt32(0)
 var num_open_wadfiles int32 = 0
 
-func GetFileNumber(tls *libc.TLS, handle uintptr) (r int32) {
+func GetFileNumber(tls *libc.TLS, handle *os.File) (r int32) {
 	var i, result int32
 	i = 0
 	for {
 		if !(i < num_open_wadfiles) {
 			break
 		}
-		if *(*uintptr)(unsafe.Pointer(open_wadfiles + uintptr(i)*8)) == handle {
+		if *(*uintptr)(unsafe.Pointer(open_wadfiles + uintptr(i)*8)) == handle.Fd() {
 			return i
 		}
 		goto _1
@@ -44861,7 +44833,7 @@ func GetFileNumber(tls *libc.TLS, handle uintptr) (r int32) {
 	// Not found in list.  This is a new file we haven't seen yet.
 	// Allocate another slot for this file.
 	open_wadfiles = libc.Xrealloc(tls, open_wadfiles, uint64(8)*libc.Uint64FromInt32(num_open_wadfiles+1))
-	*(*uintptr)(unsafe.Pointer(open_wadfiles + uintptr(num_open_wadfiles)*8)) = handle
+	*(*uintptr)(unsafe.Pointer(open_wadfiles + uintptr(num_open_wadfiles)*8)) = handle.Fd()
 	result = num_open_wadfiles
 	num_open_wadfiles++
 	return result
@@ -44897,47 +44869,23 @@ func W_Checksum(tls *libc.TLS, digest uintptr) {
 	SHA1_Final(digest, bp)
 }
 
-/*
-#ifdef _WIN32
-extern wad_file_class_t win32_wad_file;
-#endif
-*/
-
-var wad_file_classes = [1]uintptr{
-	0: uintptr(unsafe.Pointer(&stdc_wad_file)),
+func W_OpenFile(path uintptr) *os.File {
+	name := libc.GoString(path)
+	f, err := os.Open(name)
+	if err != nil {
+		log.Printf("Error opening file %q: %v", name, err)
+		return nil
+	}
+	return f
 }
 
-func W_OpenFile(tls *libc.TLS, path uintptr) (r uintptr) {
-	var i int32
-	var result uintptr
-	//!
-	// Use the OS's virtual memory subsystem to map WAD files
-	// directly into memory.
-	//
-	if !(M_CheckParm(__ccgo_ts(28593)) != 0) {
-		return (*(*func(*libc.TLS, uintptr) uintptr)(unsafe.Pointer(&struct{ uintptr }{stdc_wad_file.FOpenFile})))(tls, path)
+func W_Read(wad *os.File, offset uint32, buffer uintptr, buffer_len uint64) (r uint64) {
+	buf := unsafe.Slice((*byte)(unsafe.Pointer(buffer)), buffer_len)
+	n, err := wad.ReadAt(buf, int64(offset))
+	if err != nil {
+		log.Printf("Error reading from file: %v", err)
 	}
-	// Try all classes in order until we find one that works
-	result = libc.UintptrFromInt32(0)
-	i = 0
-	for {
-		if !(libc.Uint64FromInt32(i) < libc.Uint64FromInt64(8)/libc.Uint64FromInt64(8)) {
-			break
-		}
-		result = (*(*func(*libc.TLS, uintptr) uintptr)(unsafe.Pointer(&struct{ uintptr }{(*wad_file_class_t)(unsafe.Pointer(wad_file_classes[i])).FOpenFile})))(tls, path)
-		if result != libc.UintptrFromInt32(0) {
-			break
-		}
-		goto _1
-	_1:
-		;
-		i++
-	}
-	return result
-}
-
-func W_Read(tls *libc.TLS, wad uintptr, offset uint32, buffer uintptr, buffer_len uint64) (r uint64) {
-	return (*(*func(*libc.TLS, uintptr, uint32, uintptr, uint64) uint64)(unsafe.Pointer(&struct{ uintptr }{(*wad_file_class_t)(unsafe.Pointer((*wad_file_t)(unsafe.Pointer(wad)).Ffile_class)).FRead})))(tls, wad, offset, buffer, buffer_len)
+	return uint64(n)
 }
 
 //
@@ -45056,9 +45004,10 @@ func ExtendLumpInfo(tls *libc.TLS, newnumlumps int32) {
 	numlumps = libc.Uint32FromInt32(newnumlumps)
 }
 
-//
 // LUMP BASED ROUTINES.
 //
+// Stop go garbage collecting these
+var wad_files = map[uintptr]*os.File{}
 
 //
 // W_AddFile
@@ -45069,16 +45018,22 @@ func ExtendLumpInfo(tls *libc.TLS, newnumlumps int32) {
 // Other files are single lumps with the base filename
 //  for the lump name.
 
-func W_AddFile(tls *libc.TLS, filename uintptr) (r uintptr) {
+func W_AddFile(tls *libc.TLS, filename uintptr) *os.File {
 	bp := alloc(32)
-	var fileinfo, filerover, lump_p, wad_file uintptr
+	var fileinfo, filerover, lump_p uintptr
+	var wad_file *os.File
 	var i uint32
 	var length, newnumlumps, startlump int32
 	// open the file and add to directory
-	wad_file = W_OpenFile(tls, filename)
-	if wad_file == libc.UintptrFromInt32(0) {
+	stat, err := os.Stat(libc.GoString(filename))
+	if err != nil {
+		log.Printf("Error stating file %q: %v", libc.GoString(filename), err)
+		return nil
+	}
+	wad_file = W_OpenFile(filename)
+	if wad_file == nil {
 		fprintf_ccgo(os.Stdout, 28631, libc.GoString(filename))
-		return libc.UintptrFromInt32(0)
+		return nil
 	}
 	newnumlumps = libc.Int32FromUint32(numlumps)
 	if xstrcasecmp(filename+uintptr(xstrlen(filename))-uintptr(3), __ccgo_ts(28650)) != 0 {
@@ -45089,14 +45044,14 @@ func W_AddFile(tls *libc.TLS, filename uintptr) (r uintptr) {
 		// here, as it would appear on disk.
 		fileinfo = Z_Malloc(tls, 16, int32(PU_STATIC), uintptr(0))
 		(*filelump_t)(unsafe.Pointer(fileinfo)).Ffilepos = 0
-		(*filelump_t)(unsafe.Pointer(fileinfo)).Fsize = libc.Int32FromUint32((*wad_file_t)(unsafe.Pointer(wad_file)).Flength)
+		(*filelump_t)(unsafe.Pointer(fileinfo)).Fsize = int32(stat.Size())
 		// Name the lump after the base of the filename (without the
 		// extension).
 		M_ExtractFileBase(tls, filename, fileinfo+8)
 		newnumlumps++
 	} else {
 		// WAD file
-		W_Read(tls, wad_file, uint32(0), bp, uint64(12))
+		W_Read(wad_file, uint32(0), bp, uint64(12))
 		if libc.Xstrncmp(tls, bp, __ccgo_ts(28654), uint64(4)) != 0 {
 			// Homebrew levels?
 			if libc.Xstrncmp(tls, bp, __ccgo_ts(28659), uint64(4)) != 0 {
@@ -45108,7 +45063,7 @@ func W_AddFile(tls *libc.TLS, filename uintptr) (r uintptr) {
 		(*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs = (*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs
 		length = libc.Int32FromUint64(libc.Uint64FromInt32((*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps) * uint64(16))
 		fileinfo = Z_Malloc(tls, length, int32(PU_STATIC), uintptr(0))
-		W_Read(tls, wad_file, libc.Uint32FromInt32((*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs), fileinfo, libc.Uint64FromInt32(length))
+		W_Read(wad_file, libc.Uint32FromInt32((*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs), fileinfo, libc.Uint64FromInt32(length))
 		newnumlumps += (*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps
 	}
 	// Increase size of numlumps array to accomodate the new file.
@@ -45138,6 +45093,7 @@ func W_AddFile(tls *libc.TLS, filename uintptr) (r uintptr) {
 		Z_Free(tls, lumphash)
 		lumphash = libc.UintptrFromInt32(0)
 	}
+	wad_files[wad_file.Fd()] = wad_file
 	return wad_file
 }
 
@@ -45231,7 +45187,7 @@ func W_ReadLump(tls *libc.TLS, lump uint32, dest uintptr) {
 	}
 	l = lumpinfo + uintptr(lump)*40
 	I_BeginRead()
-	c = libc.Int32FromUint64(W_Read(tls, (*lumpinfo_t)(unsafe.Pointer(l)).Fwad_file, libc.Uint32FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fposition), dest, libc.Uint64FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fsize)))
+	c = libc.Int32FromUint64(W_Read((*lumpinfo_t)(unsafe.Pointer(l)).Fwad_file, libc.Uint32FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fposition), dest, libc.Uint64FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fsize)))
 	if c < (*lumpinfo_t)(unsafe.Pointer(l)).Fsize {
 		I_Error(tls, __ccgo_ts(28793), c, (*lumpinfo_t)(unsafe.Pointer(l)).Fsize, lump)
 	}
@@ -45260,20 +45216,15 @@ func W_CacheLumpNum(tls *libc.TLS, lumpnum int32, tag int32) (r uintptr) {
 	// file, we can just return a pointer to within the memory-mapped
 	// region.  If the lump is in an ordinary file, we may already
 	// have it cached; otherwise, load it into memory.
-	if (*wad_file_t)(unsafe.Pointer((*lumpinfo_t)(unsafe.Pointer(lump)).Fwad_file)).Fmapped != libc.UintptrFromInt32(0) {
-		// Memory mapped file, return from the mmapped region.
-		result = (*wad_file_t)(unsafe.Pointer((*lumpinfo_t)(unsafe.Pointer(lump)).Fwad_file)).Fmapped + uintptr((*lumpinfo_t)(unsafe.Pointer(lump)).Fposition)
+	if (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache != libc.UintptrFromInt32(0) {
+		// Already cached, so just switch the zone tag.
+		result = (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache
+		Z_ChangeTag2(tls, (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache, tag, __ccgo_ts(28866), 410)
 	} else {
-		if (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache != libc.UintptrFromInt32(0) {
-			// Already cached, so just switch the zone tag.
-			result = (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache
-			Z_ChangeTag2(tls, (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache, tag, __ccgo_ts(28866), 410)
-		} else {
-			// Not yet loaded, so load it now
-			(*lumpinfo_t)(unsafe.Pointer(lump)).Fcache = Z_Malloc(tls, W_LumpLength(tls, libc.Uint32FromInt32(lumpnum)), tag, lump+24)
-			W_ReadLump(tls, libc.Uint32FromInt32(lumpnum), (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache)
-			result = (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache
-		}
+		// Not yet loaded, so load it now
+		(*lumpinfo_t)(unsafe.Pointer(lump)).Fcache = Z_Malloc(tls, W_LumpLength(tls, libc.Uint32FromInt32(lumpnum)), tag, lump+24)
+		W_ReadLump(tls, libc.Uint32FromInt32(lumpnum), (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache)
+		result = (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache
 	}
 	return result
 }
@@ -45303,11 +45254,7 @@ func W_ReleaseLumpNum(tls *libc.TLS, lumpnum int32) {
 		I_Error(tls, __ccgo_ts(28874), lumpnum)
 	}
 	lump = lumpinfo + uintptr(lumpnum)*40
-	if (*wad_file_t)(unsafe.Pointer((*lumpinfo_t)(unsafe.Pointer(lump)).Fwad_file)).Fmapped != libc.UintptrFromInt32(0) {
-		// Memory-mapped file, so nothing needs to be done here.
-	} else {
-		Z_ChangeTag2(tls, (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache, int32(PU_CACHE), __ccgo_ts(28866), 461)
-	}
+	Z_ChangeTag2(tls, (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache, int32(PU_CACHE), __ccgo_ts(28866), 461)
 }
 
 func W_ReleaseLumpName(tls *libc.TLS, name uintptr) {
@@ -45697,60 +45644,10 @@ func Z_ChangeUser(tls *libc.TLS, ptr uintptr, user uintptr) {
 	*(*uintptr)(unsafe.Pointer(user)) = ptr
 }
 
-//
-// This is used to get the local FILE:LINE info from CPP
-// prior to really call the function in question.
-//
-
-type stdc_wad_file_t struct {
-	Fwad     wad_file_t
-	Ffstream uintptr
-}
-
-func W_StdC_OpenFile(tls *libc.TLS, path uintptr) (r uintptr) {
-	var fstream, result uintptr
-	fstream = libc.Xfopen(tls, path, __ccgo_ts(13884))
-	if fstream == libc.UintptrFromInt32(0) {
-		return libc.UintptrFromInt32(0)
-	}
-	// Create a new stdc_wad_file_t to hold the file handle.
-	result = Z_Malloc(tls, 32, int32(PU_STATIC), uintptr(0))
-	(*stdc_wad_file_t)(unsafe.Pointer(result)).Fwad.Ffile_class = uintptr(unsafe.Pointer(&stdc_wad_file))
-	(*stdc_wad_file_t)(unsafe.Pointer(result)).Fwad.Fmapped = libc.UintptrFromInt32(0)
-	(*stdc_wad_file_t)(unsafe.Pointer(result)).Fwad.Flength = libc.Uint32FromInt64(M_FileLength(tls, fstream))
-	(*stdc_wad_file_t)(unsafe.Pointer(result)).Ffstream = fstream
-	return result
-}
-
-func W_StdC_CloseFile(tls *libc.TLS, wad uintptr) {
-	var stdc_wad uintptr
-	stdc_wad = wad
-	libc.Xfclose(tls, (*stdc_wad_file_t)(unsafe.Pointer(stdc_wad)).Ffstream)
-	Z_Free(tls, stdc_wad)
-}
-
 // Read data from the specified position in the file into the
 // provided buffer.  Returns the number of bytes read.
 
-func W_StdC_Read(tls *libc.TLS, wad uintptr, offset uint32, buffer uintptr, buffer_len uint64) (r uint64) {
-	var result uint64
-	var stdc_wad uintptr
-	stdc_wad = wad
-	// Jump to the specified position in the file.
-	libc.Xfseek(tls, (*stdc_wad_file_t)(unsafe.Pointer(stdc_wad)).Ffstream, libc.Int64FromUint32(offset), 0)
-	// Read into the buffer.
-	result = libc.Xfread(tls, buffer, uint64(1), buffer_len, (*stdc_wad_file_t)(unsafe.Pointer(stdc_wad)).Ffstream)
-	return result
-}
-
 func init() {
-	stdc_wad_file = wad_file_class_t{}
-
-	p := unsafe.Pointer(&stdc_wad_file)
-	*(*uintptr)(unsafe.Add(p, 0)) = __ccgo_fp(W_StdC_OpenFile)
-	*(*uintptr)(unsafe.Add(p, 8)) = __ccgo_fp(W_StdC_CloseFile)
-	*(*uintptr)(unsafe.Add(p, 16)) = __ccgo_fp(W_StdC_Read)
-
 	vanilla_keyboard_mapping = 1
 }
 
@@ -48056,8 +47953,6 @@ func stateIndex(s *state_t) int32 {
 	}
 	return idx
 }
-
-var stdc_wad_file wad_file_class_t
 
 // C documentation
 //
