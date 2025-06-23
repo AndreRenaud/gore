@@ -4919,7 +4919,7 @@ func D_Display(tls *libc.TLS) {
 	I_UpdateNoBlit(tls)
 	// draw the view directly
 	if gamestate == int32(GS_LEVEL) && !(automapactive != 0) && gametic != 0 {
-		R_RenderPlayerView(tls, uintptr(unsafe.Pointer(&players))+uintptr(displayplayer)*328)
+		R_RenderPlayerView(tls, &players[displayplayer])
 	}
 	if gamestate == int32(GS_LEVEL) && gametic != 0 {
 		HU_Drawer(tls)
@@ -29512,8 +29512,8 @@ func A_Punch(tls *libc.TLS, player *player_t, psp uintptr) {
 	P_LineAttack(tls, player.Fmo, angle, 64*(1<<FRACBITS), slope, damage)
 	// turn to face target
 	if linetarget != 0 {
-		S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_punch))
-		(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle = R_PointToAngle2((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fx, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fy, (*mobj_t)(unsafe.Pointer(linetarget)).Fx, (*mobj_t)(unsafe.Pointer(linetarget)).Fy)
+		S_StartSound(tls, player.Fmo, int32(sfx_punch))
+		(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = R_PointToAngle2((*mobj_t)(unsafe.Pointer(player.Fmo)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy, (*mobj_t)(unsafe.Pointer(linetarget)).Fx, (*mobj_t)(unsafe.Pointer(linetarget)).Fy)
 	}
 }
 
@@ -29526,32 +29526,32 @@ func A_Saw(tls *libc.TLS, player *player_t, psp uintptr) {
 	var angle angle_t
 	var damage, slope int32
 	damage = 2 * (P_Random()%int32(10) + 1)
-	angle = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle
+	angle = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle
 	angle += libc.Uint32FromInt32((P_Random() - P_Random()) << 18)
 	// use meleerange + 1 se the puff doesn't skip the flash
-	slope = P_AimLineAttack(tls, (*player_t)(unsafe.Pointer(player)).Fmo, angle, 64*(1<<FRACBITS)+1)
-	P_LineAttack(tls, (*player_t)(unsafe.Pointer(player)).Fmo, angle, 64*(1<<FRACBITS)+1, slope, damage)
+	slope = P_AimLineAttack(tls, player.Fmo, angle, 64*(1<<FRACBITS)+1)
+	P_LineAttack(tls, player.Fmo, angle, 64*(1<<FRACBITS)+1, slope, damage)
 	if !(linetarget != 0) {
-		S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_sawful))
+		S_StartSound(tls, player.Fmo, int32(sfx_sawful))
 		return
 	}
-	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_sawhit))
+	S_StartSound(tls, player.Fmo, int32(sfx_sawhit))
 	// turn to face target
-	angle = R_PointToAngle2((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fx, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fy, (*mobj_t)(unsafe.Pointer(linetarget)).Fx, (*mobj_t)(unsafe.Pointer(linetarget)).Fy)
-	if angle-(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle > uint32(ANG1807) {
-		if libc.Int32FromUint32(angle-(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle) < -ANG905/20 {
-			(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle = angle + libc.Uint32FromInt32(ANG905/21)
+	angle = R_PointToAngle2((*mobj_t)(unsafe.Pointer(player.Fmo)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy, (*mobj_t)(unsafe.Pointer(linetarget)).Fx, (*mobj_t)(unsafe.Pointer(linetarget)).Fy)
+	if angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle > uint32(ANG1807) {
+		if libc.Int32FromUint32(angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle) < -ANG905/20 {
+			(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = angle + libc.Uint32FromInt32(ANG905/21)
 		} else {
-			*(*angle_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 56)) -= libc.Uint32FromInt32(ANG905 / 20)
+			*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) -= libc.Uint32FromInt32(ANG905 / 20)
 		}
 	} else {
-		if angle-(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle > libc.Uint32FromInt32(ANG905/20) {
-			(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle = angle - libc.Uint32FromInt32(ANG905/21)
+		if angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle > libc.Uint32FromInt32(ANG905/20) {
+			(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = angle - libc.Uint32FromInt32(ANG905/21)
 		} else {
-			*(*angle_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 56)) += libc.Uint32FromInt32(ANG905 / 20)
+			*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += libc.Uint32FromInt32(ANG905 / 20)
 		}
 	}
-	*(*int32)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 160)) |= int32(MF_JUSTATTACKED)
+	*(*int32)(unsafe.Pointer(player.Fmo + 160)) |= int32(MF_JUSTATTACKED)
 }
 
 // Doom does not check the bounds of the ammo array.  As a result,
@@ -29574,8 +29574,8 @@ func DecreaseAmmo(tls *libc.TLS, player *player_t, ammonum int32, amount int32) 
 //	// A_FireMissile
 //	//
 func A_FireMissile(tls *libc.TLS, player *player_t, psp uintptr) {
-	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, 1)
-	P_SpawnPlayerMissile(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(MT_ROCKET))
+	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 1)
+	P_SpawnPlayerMissile(tls, player.Fmo, int32(MT_ROCKET))
 }
 
 // C documentation
@@ -29584,8 +29584,8 @@ func A_FireMissile(tls *libc.TLS, player *player_t, psp uintptr) {
 //	// A_FireBFG
 //	//
 func A_FireBFG(tls *libc.TLS, player *player_t, psp uintptr) {
-	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, int32(DEH_DEFAULT_BFG_CELLS_PER_SHOT))
-	P_SpawnPlayerMissile(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(MT_BFG))
+	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, int32(DEH_DEFAULT_BFG_CELLS_PER_SHOT))
+	P_SpawnPlayerMissile(tls, player.Fmo, int32(MT_BFG))
 }
 
 // C documentation
@@ -29594,9 +29594,9 @@ func A_FireBFG(tls *libc.TLS, player *player_t, psp uintptr) {
 //	// A_FirePlasma
 //	//
 func A_FirePlasma(tls *libc.TLS, player *player_t, psp uintptr) {
-	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, 1)
-	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fflashstate+P_Random()&int32(1))
-	P_SpawnPlayerMissile(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(MT_PLASMA))
+	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 1)
+	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[player.Freadyweapon].Fflashstate+P_Random()&int32(1))
+	P_SpawnPlayerMissile(tls, player.Fmo, int32(MT_PLASMA))
 }
 
 func P_BulletSlope(tls *libc.TLS, mo uintptr) {
@@ -29636,12 +29636,12 @@ func P_GunShot(tls *libc.TLS, mo uintptr, accurate boolean) {
 //	// A_FirePistol
 //	//
 func A_FirePistol(tls *libc.TLS, player *player_t, psp uintptr) {
-	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_pistol))
-	P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY_ATK2))
-	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, 1)
-	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fflashstate)
-	P_BulletSlope(tls, (*player_t)(unsafe.Pointer(player)).Fmo)
-	P_GunShot(tls, (*player_t)(unsafe.Pointer(player)).Fmo, libc.BoolUint32(!((*player_t)(unsafe.Pointer(player)).Frefire != 0)))
+	S_StartSound(tls, player.Fmo, int32(sfx_pistol))
+	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK2))
+	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 1)
+	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[player.Freadyweapon].Fflashstate)
+	P_BulletSlope(tls, player.Fmo)
+	P_GunShot(tls, player.Fmo, libc.BoolUint32(!(player.Frefire != 0)))
 }
 
 // C documentation
@@ -29651,17 +29651,17 @@ func A_FirePistol(tls *libc.TLS, player *player_t, psp uintptr) {
 //	//
 func A_FireShotgun(tls *libc.TLS, player *player_t, psp uintptr) {
 	var i int32
-	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_shotgn))
-	P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY_ATK2))
-	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, 1)
-	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fflashstate)
-	P_BulletSlope(tls, (*player_t)(unsafe.Pointer(player)).Fmo)
+	S_StartSound(tls, player.Fmo, int32(sfx_shotgn))
+	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK2))
+	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 1)
+	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[player.Freadyweapon].Fflashstate)
+	P_BulletSlope(tls, player.Fmo)
 	i = 0
 	for {
 		if !(i < 7) {
 			break
 		}
-		P_GunShot(tls, (*player_t)(unsafe.Pointer(player)).Fmo, 0)
+		P_GunShot(tls, player.Fmo, 0)
 		goto _1
 	_1:
 		;
@@ -29677,20 +29677,20 @@ func A_FireShotgun(tls *libc.TLS, player *player_t, psp uintptr) {
 func A_FireShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
 	var angle angle_t
 	var damage, i int32
-	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_dshtgn))
-	P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY_ATK2))
-	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, 2)
-	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fflashstate)
-	P_BulletSlope(tls, (*player_t)(unsafe.Pointer(player)).Fmo)
+	S_StartSound(tls, player.Fmo, int32(sfx_dshtgn))
+	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK2))
+	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 2)
+	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[player.Freadyweapon].Fflashstate)
+	P_BulletSlope(tls, player.Fmo)
 	i = 0
 	for {
 		if !(i < 20) {
 			break
 		}
 		damage = 5 * (P_Random()%int32(3) + 1)
-		angle = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle
+		angle = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle
 		angle += libc.Uint32FromInt32((P_Random() - P_Random()) << 19)
-		P_LineAttack(tls, (*player_t)(unsafe.Pointer(player)).Fmo, angle, 32*64*(1<<FRACBITS), bulletslope+(P_Random()-P_Random())<<int32(5), damage)
+		P_LineAttack(tls, player.Fmo, angle, 32*64*(1<<FRACBITS), bulletslope+(P_Random()-P_Random())<<int32(5), damage)
 		goto _1
 	_1:
 		;
@@ -29704,15 +29704,15 @@ func A_FireShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
 //	// A_FireCGun
 //	//
 func A_FireCGun(tls *libc.TLS, player *player_t, psp uintptr) {
-	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_pistol))
+	S_StartSound(tls, player.Fmo, int32(sfx_pistol))
 	if !(player.Fammo[weaponinfo[player.Freadyweapon].Fammo] != 0) {
 		return
 	}
-	P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY_ATK2))
-	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, 1)
-	P_SetPsprite(tls, player, int32(ps_flash), int32((int64(uintptr(weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fflashstate)*40+(*pspdef_t)(unsafe.Pointer(psp)).Fstate)-int64(uintptr(unsafe.Pointer(&states))+uintptr(S_CHAIN1)*40))/40))
-	P_BulletSlope(tls, (*player_t)(unsafe.Pointer(player)).Fmo)
-	P_GunShot(tls, (*player_t)(unsafe.Pointer(player)).Fmo, libc.BoolUint32(!((*player_t)(unsafe.Pointer(player)).Frefire != 0)))
+	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK2))
+	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 1)
+	P_SetPsprite(tls, player, int32(ps_flash), int32((int64(uintptr(weaponinfo[player.Freadyweapon].Fflashstate)*40+(*pspdef_t)(unsafe.Pointer(psp)).Fstate)-int64(uintptr(unsafe.Pointer(&states))+uintptr(S_CHAIN1)*40))/40))
+	P_BulletSlope(tls, player.Fmo)
+	P_GunShot(tls, player.Fmo, libc.BoolUint32(!(player.Frefire != 0)))
 }
 
 // C documentation
@@ -29721,15 +29721,15 @@ func A_FireCGun(tls *libc.TLS, player *player_t, psp uintptr) {
 //	// ?
 //	//
 func A_Light0(tls *libc.TLS, player *player_t, psp uintptr) {
-	(*player_t)(unsafe.Pointer(player)).Fextralight = 0
+	player.Fextralight = 0
 }
 
 func A_Light1(tls *libc.TLS, player *player_t, psp uintptr) {
-	(*player_t)(unsafe.Pointer(player)).Fextralight = 1
+	player.Fextralight = 1
 }
 
 func A_Light2(tls *libc.TLS, player *player_t, psp uintptr) {
-	(*player_t)(unsafe.Pointer(player)).Fextralight = 2
+	player.Fextralight = 2
 }
 
 // C documentation
@@ -29780,8 +29780,8 @@ func A_BFGSpray(tls *libc.TLS, mo uintptr) {
 //	//
 //	// A_BFGsound
 //	//
-func A_BFGsound(tls *libc.TLS, player uintptr, psp uintptr) {
-	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_bfg))
+func A_BFGsound(tls *libc.TLS, player *player_t, psp uintptr) {
+	S_StartSound(tls, player.Fmo, int32(sfx_bfg))
 }
 
 // C documentation
@@ -30237,7 +30237,7 @@ func saveg_read_ticcmd_t(tls *libc.TLS, str *ticcmd_t) {
 	str.Fbuttons = saveg_read8(tls)
 }
 
-func saveg_write_ticcmd_t(tls *libc.TLS, str uintptr) {
+func saveg_write_ticcmd_t(tls *libc.TLS, str *ticcmd_t) {
 	// signed char forwardmove;
 	saveg_write8(tls, libc.Uint8FromInt8((*ticcmd_t)(unsafe.Pointer(str)).Fforwardmove))
 	// signed char sidemove;
@@ -30273,7 +30273,7 @@ func saveg_read_pspdef_t(tls *libc.TLS, str *pspdef_t) {
 	str.Fsy = saveg_read32(tls)
 }
 
-func saveg_write_pspdef_t(tls *libc.TLS, str uintptr) {
+func saveg_write_pspdef_t(tls *libc.TLS, str *pspdef_t) {
 	// state_t* state;
 	if (*pspdef_t)(unsafe.Pointer(str)).Fstate != 0 {
 		saveg_write32(tls, int32((int64((*pspdef_t)(unsafe.Pointer(str)).Fstate)-int64(uintptr(unsafe.Pointer(&states))))/40))
@@ -30378,35 +30378,35 @@ func saveg_read_player_t(tls *libc.TLS, str *player_t) {
 	str.Fdidsecret = libc.Uint32FromInt32(saveg_read32(tls))
 }
 
-func saveg_write_player_t(tls *libc.TLS, str uintptr) {
+func saveg_write_player_t(tls *libc.TLS, str *player_t) {
 	var i int32
 	// mobj_t* mo;
-	saveg_writep(tls, (*player_t)(unsafe.Pointer(str)).Fmo)
+	saveg_writep(tls, str.Fmo)
 	// playerstate_t playerstate;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fplayerstate)
+	saveg_write32(tls, str.Fplayerstate)
 	// ticcmd_t cmd;
-	saveg_write_ticcmd_t(tls, str+12)
+	saveg_write_ticcmd_t(tls, &str.Fcmd)
 	// fixed_t viewz;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fviewz)
+	saveg_write32(tls, str.Fviewz)
 	// fixed_t viewheight;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fviewheight)
+	saveg_write32(tls, str.Fviewheight)
 	// fixed_t deltaviewheight;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fdeltaviewheight)
+	saveg_write32(tls, str.Fdeltaviewheight)
 	// fixed_t bob;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fbob)
+	saveg_write32(tls, str.Fbob)
 	// int health;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fhealth)
+	saveg_write32(tls, str.Fhealth)
 	// int armorpoints;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Farmorpoints)
+	saveg_write32(tls, str.Farmorpoints)
 	// int armortype;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Farmortype)
+	saveg_write32(tls, str.Farmortype)
 	// int powers[NUMPOWERS];
 	i = 0
 	for {
 		if !(i < int32(NUMPOWERS)) {
 			break
 		}
-		saveg_write32(tls, *(*int32)(unsafe.Pointer(str + 56 + uintptr(i)*4)))
+		saveg_write32(tls, str.Fpowers[i])
 		goto _1
 	_1:
 		;
@@ -30418,37 +30418,37 @@ func saveg_write_player_t(tls *libc.TLS, str uintptr) {
 		if !(i < int32(NUMCARDS)) {
 			break
 		}
-		saveg_write32(tls, libc.Int32FromUint32(*(*boolean)(unsafe.Pointer(str + 80 + uintptr(i)*4))))
+		saveg_write32(tls, int32(str.Fcards[i]))
 		goto _2
 	_2:
 		;
 		i++
 	}
 	// boolean backpack;
-	saveg_write32(tls, libc.Int32FromUint32((*player_t)(unsafe.Pointer(str)).Fbackpack))
+	saveg_write32(tls, libc.Int32FromUint32(str.Fbackpack))
 	// int frags[MAXPLAYERS];
 	i = 0
 	for {
 		if !(i < int32(MAXPLAYERS)) {
 			break
 		}
-		saveg_write32(tls, *(*int32)(unsafe.Pointer(str + 108 + uintptr(i)*4)))
+		saveg_write32(tls, str.Ffrags[i])
 		goto _3
 	_3:
 		;
 		i++
 	}
 	// weapontype_t readyweapon;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Freadyweapon)
+	saveg_write32(tls, str.Freadyweapon)
 	// weapontype_t pendingweapon;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fpendingweapon)
+	saveg_write32(tls, str.Fpendingweapon)
 	// boolean weaponowned[NUMWEAPONS];
 	i = 0
 	for {
 		if !(i < int32(NUMWEAPONS)) {
 			break
 		}
-		saveg_write32(tls, libc.Int32FromUint32(*(*boolean)(unsafe.Pointer(str + 132 + uintptr(i)*4))))
+		saveg_write32(tls, int32(str.Fweaponowned[i]))
 		goto _4
 	_4:
 		;
@@ -30460,7 +30460,7 @@ func saveg_write_player_t(tls *libc.TLS, str uintptr) {
 		if !(i < int32(NUMAMMO)) {
 			break
 		}
-		saveg_write32(tls, *(*int32)(unsafe.Pointer(str + 168 + uintptr(i)*4)))
+		saveg_write32(tls, str.Fammo[i])
 		goto _5
 	_5:
 		;
@@ -30472,54 +30472,54 @@ func saveg_write_player_t(tls *libc.TLS, str uintptr) {
 		if !(i < int32(NUMAMMO)) {
 			break
 		}
-		saveg_write32(tls, *(*int32)(unsafe.Pointer(str + 184 + uintptr(i)*4)))
+		saveg_write32(tls, str.Fmaxammo[i])
 		goto _6
 	_6:
 		;
 		i++
 	}
 	// int attackdown;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fattackdown)
+	saveg_write32(tls, str.Fattackdown)
 	// int usedown;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fusedown)
+	saveg_write32(tls, str.Fusedown)
 	// int cheats;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fcheats)
+	saveg_write32(tls, str.Fcheats)
 	// int refire;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Frefire)
+	saveg_write32(tls, str.Frefire)
 	// int killcount;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fkillcount)
+	saveg_write32(tls, str.Fkillcount)
 	// int itemcount;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fitemcount)
+	saveg_write32(tls, str.Fitemcount)
 	// int secretcount;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fsecretcount)
+	saveg_write32(tls, str.Fsecretcount)
 	// char* message;
-	saveg_writep(tls, (*player_t)(unsafe.Pointer(str)).Fmessage)
+	saveg_writep(tls, str.Fmessage)
 	// int damagecount;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fdamagecount)
+	saveg_write32(tls, str.Fdamagecount)
 	// int bonuscount;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fbonuscount)
+	saveg_write32(tls, str.Fbonuscount)
 	// mobj_t* attacker;
-	saveg_writep(tls, (*player_t)(unsafe.Pointer(str)).Fattacker)
+	saveg_writep(tls, str.Fattacker)
 	// int extralight;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fextralight)
+	saveg_write32(tls, str.Fextralight)
 	// int fixedcolormap;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Ffixedcolormap)
+	saveg_write32(tls, str.Ffixedcolormap)
 	// int colormap;
-	saveg_write32(tls, (*player_t)(unsafe.Pointer(str)).Fcolormap)
+	saveg_write32(tls, str.Fcolormap)
 	// pspdef_t psprites[NUMPSPRITES];
 	i = 0
 	for {
 		if !(i < int32(NUMPSPRITES)) {
 			break
 		}
-		saveg_write_pspdef_t(tls, str+272+uintptr(i)*24)
+		saveg_write_pspdef_t(tls, &str.Fpsprites[i])
 		goto _7
 	_7:
 		;
 		i++
 	}
 	// boolean didsecret;
-	saveg_write32(tls, libc.Int32FromUint32((*player_t)(unsafe.Pointer(str)).Fdidsecret))
+	saveg_write32(tls, libc.Int32FromUint32(str.Fdidsecret))
 }
 
 //
@@ -30990,7 +30990,7 @@ func P_ArchivePlayers(tls *libc.TLS) {
 			goto _1
 		}
 		saveg_write_pad(tls)
-		saveg_write_player_t(tls, uintptr(unsafe.Pointer(&players))+uintptr(i)*328)
+		saveg_write_player_t(tls, &players[i])
 		goto _1
 	_1:
 		;
@@ -33188,9 +33188,9 @@ func P_ShootSpecialLine(tls *libc.TLS, thing uintptr, line *line_t) {
 //	//
 func P_PlayerInSpecialSector(tls *libc.TLS, player *player_t) {
 	var sector *sector_t
-	sector = ((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fsubsector).Fsector
+	sector = ((*mobj_t)(unsafe.Pointer(player.Fmo)).Fsubsector).Fsector
 	// Falling, not all the way down yet?
-	if (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fz != sector.Ffloorheight {
+	if (*mobj_t)(unsafe.Pointer(player.Fmo)).Fz != sector.Ffloorheight {
 		return
 	}
 	// Has hitten ground.
@@ -33199,14 +33199,14 @@ func P_PlayerInSpecialSector(tls *libc.TLS, player *player_t) {
 		// HELLSLIME DAMAGE
 		if !(player.Fpowers[pw_ironfeet] != 0) {
 			if !(leveltime&0x1f != 0) {
-				P_DamageMobj(tls, (*player_t)(unsafe.Pointer(player)).Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 10)
+				P_DamageMobj(tls, player.Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 10)
 			}
 		}
 	case 7:
 		// NUKAGE DAMAGE
 		if !(player.Fpowers[pw_ironfeet] != 0) {
 			if !(leveltime&0x1f != 0) {
-				P_DamageMobj(tls, (*player_t)(unsafe.Pointer(player)).Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 5)
+				P_DamageMobj(tls, player.Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 5)
 			}
 		}
 	case 16:
@@ -33216,20 +33216,20 @@ func P_PlayerInSpecialSector(tls *libc.TLS, player *player_t) {
 		// STROBE HURT
 		if !(player.Fpowers[pw_ironfeet] != 0) || P_Random() < 5 {
 			if !(leveltime&0x1f != 0) {
-				P_DamageMobj(tls, (*player_t)(unsafe.Pointer(player)).Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 20)
+				P_DamageMobj(tls, player.Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 20)
 			}
 		}
 	case 9:
 		// SECRET SECTOR
-		(*player_t)(unsafe.Pointer(player)).Fsecretcount++
+		player.Fsecretcount++
 		sector.Fspecial = 0
 	case 11:
 		// EXIT SUPER DAMAGE! (for E1M8 finale)
 		player.Fcheats &= ^int32(CF_GODMODE)
 		if !(leveltime&0x1f != 0) {
-			P_DamageMobj(tls, (*player_t)(unsafe.Pointer(player)).Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 20)
+			P_DamageMobj(tls, player.Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 20)
 		}
-		if (*player_t)(unsafe.Pointer(player)).Fhealth <= 10 {
+		if player.Fhealth <= 10 {
 			G_ExitLevel(tls)
 		}
 	default:
@@ -34516,8 +34516,8 @@ const MAXBOB = 1048576
 //	//
 func P_Thrust(tls *libc.TLS, player *player_t, angle angle_t, move fixed_t) {
 	angle >>= uint32(ANGLETOFINESHIFT)
-	*(*fixed_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 112)) += FixedMul(move, finecosine[angle])
-	*(*fixed_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 116)) += FixedMul(move, finesine[angle])
+	*(*fixed_t)(unsafe.Pointer(player.Fmo + 112)) += FixedMul(move, finecosine[angle])
+	*(*fixed_t)(unsafe.Pointer(player.Fmo + 116)) += FixedMul(move, finesine[angle])
 }
 
 // C documentation
@@ -34535,44 +34535,44 @@ func P_CalcHeight(tls *libc.TLS, player *player_t) {
 	// OPTIMIZE: tablify angle
 	// Note: a LUT allows for effects
 	//  like a ramp with low health.
-	(*player_t)(unsafe.Pointer(player)).Fbob = FixedMul((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fmomx, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fmomx) + FixedMul((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fmomy, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fmomy)
+	player.Fbob = FixedMul((*mobj_t)(unsafe.Pointer(player.Fmo)).Fmomx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fmomx) + FixedMul((*mobj_t)(unsafe.Pointer(player.Fmo)).Fmomy, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fmomy)
 	player.Fbob >>= 2
-	if (*player_t)(unsafe.Pointer(player)).Fbob > int32(MAXBOB) {
-		(*player_t)(unsafe.Pointer(player)).Fbob = int32(MAXBOB)
+	if player.Fbob > int32(MAXBOB) {
+		player.Fbob = int32(MAXBOB)
 	}
-	if (*player_t)(unsafe.Pointer(player)).Fcheats&int32(CF_NOMOMENTUM) != 0 || !(onground != 0) {
-		(*player_t)(unsafe.Pointer(player)).Fviewz = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fz + 41*(1<<FRACBITS)
-		if (*player_t)(unsafe.Pointer(player)).Fviewz > (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fceilingz-4*(1<<FRACBITS) {
-			(*player_t)(unsafe.Pointer(player)).Fviewz = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fceilingz - 4*(1<<FRACBITS)
+	if player.Fcheats&int32(CF_NOMOMENTUM) != 0 || !(onground != 0) {
+		player.Fviewz = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fz + 41*(1<<FRACBITS)
+		if player.Fviewz > (*mobj_t)(unsafe.Pointer(player.Fmo)).Fceilingz-4*(1<<FRACBITS) {
+			player.Fviewz = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fceilingz - 4*(1<<FRACBITS)
 		}
-		(*player_t)(unsafe.Pointer(player)).Fviewz = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fz + (*player_t)(unsafe.Pointer(player)).Fviewheight
+		player.Fviewz = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fz + player.Fviewheight
 		return
 	}
 	angle = FINEANGLES / 20 * leveltime & (FINEANGLES - 1)
-	bob = FixedMul((*player_t)(unsafe.Pointer(player)).Fbob/int32(2), finesine[angle])
+	bob = FixedMul(player.Fbob/int32(2), finesine[angle])
 	// move viewheight
-	if (*player_t)(unsafe.Pointer(player)).Fplayerstate == int32(PST_LIVE) {
-		player.Fviewheight += (*player_t)(unsafe.Pointer(player)).Fdeltaviewheight
-		if (*player_t)(unsafe.Pointer(player)).Fviewheight > 41*(1<<FRACBITS) {
-			(*player_t)(unsafe.Pointer(player)).Fviewheight = 41 * (1 << FRACBITS)
-			(*player_t)(unsafe.Pointer(player)).Fdeltaviewheight = 0
+	if player.Fplayerstate == int32(PST_LIVE) {
+		player.Fviewheight += player.Fdeltaviewheight
+		if player.Fviewheight > 41*(1<<FRACBITS) {
+			player.Fviewheight = 41 * (1 << FRACBITS)
+			player.Fdeltaviewheight = 0
 		}
-		if (*player_t)(unsafe.Pointer(player)).Fviewheight < 41*(1<<FRACBITS)/2 {
-			(*player_t)(unsafe.Pointer(player)).Fviewheight = 41 * (1 << FRACBITS) / 2
-			if (*player_t)(unsafe.Pointer(player)).Fdeltaviewheight <= 0 {
-				(*player_t)(unsafe.Pointer(player)).Fdeltaviewheight = 1
+		if player.Fviewheight < 41*(1<<FRACBITS)/2 {
+			player.Fviewheight = 41 * (1 << FRACBITS) / 2
+			if player.Fdeltaviewheight <= 0 {
+				player.Fdeltaviewheight = 1
 			}
 		}
-		if (*player_t)(unsafe.Pointer(player)).Fdeltaviewheight != 0 {
+		if player.Fdeltaviewheight != 0 {
 			player.Fdeltaviewheight += 1 << FRACBITS / 4
-			if !((*player_t)(unsafe.Pointer(player)).Fdeltaviewheight != 0) {
-				(*player_t)(unsafe.Pointer(player)).Fdeltaviewheight = 1
+			if !(player.Fdeltaviewheight != 0) {
+				player.Fdeltaviewheight = 1
 			}
 		}
 	}
-	(*player_t)(unsafe.Pointer(player)).Fviewz = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fz + (*player_t)(unsafe.Pointer(player)).Fviewheight + bob
-	if (*player_t)(unsafe.Pointer(player)).Fviewz > (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fceilingz-4*(1<<FRACBITS) {
-		(*player_t)(unsafe.Pointer(player)).Fviewz = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fceilingz - 4*(1<<FRACBITS)
+	player.Fviewz = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fz + player.Fviewheight + bob
+	if player.Fviewz > (*mobj_t)(unsafe.Pointer(player.Fmo)).Fceilingz-4*(1<<FRACBITS) {
+		player.Fviewz = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fceilingz - 4*(1<<FRACBITS)
 	}
 }
 
@@ -34583,18 +34583,18 @@ func P_CalcHeight(tls *libc.TLS, player *player_t) {
 //	//
 func P_MovePlayer(tls *libc.TLS, player *player_t) {
 	cmd := &player.Fcmd
-	*(*angle_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 56)) += libc.Uint32FromInt32(int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn) << 16)
+	*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += libc.Uint32FromInt32(int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn) << 16)
 	// Do not let the player control movement
 	//  if not onground.
-	onground = libc.BoolUint32((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fz <= (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Ffloorz)
+	onground = libc.BoolUint32((*mobj_t)(unsafe.Pointer(player.Fmo)).Fz <= (*mobj_t)(unsafe.Pointer(player.Fmo)).Ffloorz)
 	if (*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove != 0 && onground != 0 {
-		P_Thrust(tls, player, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle, int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove)*int32(2048))
+		P_Thrust(tls, player, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle, int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove)*int32(2048))
 	}
 	if (*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove != 0 && onground != 0 {
-		P_Thrust(tls, player, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle-uint32(ANG907), int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove)*int32(2048))
+		P_Thrust(tls, player, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle-uint32(ANG907), int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove)*int32(2048))
 	}
-	if ((*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove != 0 || (*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove != 0) && (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_PLAY)*40 {
-		P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY_RUN1))
+	if ((*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove != 0 || (*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove != 0) && (*mobj_t)(unsafe.Pointer(player.Fmo)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_PLAY)*40 {
+		P_SetMobjState(tls, player.Fmo, int32(S_PLAY_RUN1))
 	}
 }
 
@@ -34608,39 +34608,39 @@ func P_DeathThink(tls *libc.TLS, player *player_t) {
 	var angle, delta angle_t
 	P_MovePsprites(tls, player)
 	// fall to the ground
-	if (*player_t)(unsafe.Pointer(player)).Fviewheight > 6*(1<<FRACBITS) {
+	if player.Fviewheight > 6*(1<<FRACBITS) {
 		player.Fviewheight -= 1 << FRACBITS
 	}
-	if (*player_t)(unsafe.Pointer(player)).Fviewheight < 6*(1<<FRACBITS) {
-		(*player_t)(unsafe.Pointer(player)).Fviewheight = 6 * (1 << FRACBITS)
+	if player.Fviewheight < 6*(1<<FRACBITS) {
+		player.Fviewheight = 6 * (1 << FRACBITS)
 	}
-	(*player_t)(unsafe.Pointer(player)).Fdeltaviewheight = 0
-	onground = libc.BoolUint32((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fz <= (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Ffloorz)
+	player.Fdeltaviewheight = 0
+	onground = libc.BoolUint32((*mobj_t)(unsafe.Pointer(player.Fmo)).Fz <= (*mobj_t)(unsafe.Pointer(player.Fmo)).Ffloorz)
 	P_CalcHeight(tls, player)
-	if (*player_t)(unsafe.Pointer(player)).Fattacker != 0 && (*player_t)(unsafe.Pointer(player)).Fattacker != (*player_t)(unsafe.Pointer(player)).Fmo {
-		angle = R_PointToAngle2((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fx, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fy, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fattacker)).Fx, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fattacker)).Fy)
-		delta = angle - (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle
+	if player.Fattacker != 0 && player.Fattacker != player.Fmo {
+		angle = R_PointToAngle2((*mobj_t)(unsafe.Pointer(player.Fmo)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy, (*mobj_t)(unsafe.Pointer(player.Fattacker)).Fx, (*mobj_t)(unsafe.Pointer(player.Fattacker)).Fy)
+		delta = angle - (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle
 		if delta < libc.Uint32FromInt32(ANG907/18) || delta > libc.Uint32FromInt32(-(ANG907/18)) {
 			// Looking at killer,
 			//  so fade damage flash down.
-			(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle = angle
-			if (*player_t)(unsafe.Pointer(player)).Fdamagecount != 0 {
-				(*player_t)(unsafe.Pointer(player)).Fdamagecount--
+			(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = angle
+			if player.Fdamagecount != 0 {
+				player.Fdamagecount--
 			}
 		} else {
 			if delta < uint32(ANG1809) {
-				*(*angle_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 56)) += libc.Uint32FromInt32(ANG907 / 18)
+				*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += libc.Uint32FromInt32(ANG907 / 18)
 			} else {
-				*(*angle_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 56)) -= libc.Uint32FromInt32(ANG907 / 18)
+				*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) -= libc.Uint32FromInt32(ANG907 / 18)
 			}
 		}
 	} else {
-		if (*player_t)(unsafe.Pointer(player)).Fdamagecount != 0 {
-			(*player_t)(unsafe.Pointer(player)).Fdamagecount--
+		if player.Fdamagecount != 0 {
+			player.Fdamagecount--
 		}
 	}
-	if libc.Int32FromUint8((*player_t)(unsafe.Pointer(player)).Fcmd.Fbuttons)&int32(BT_USE) != 0 {
-		(*player_t)(unsafe.Pointer(player)).Fplayerstate = int32(PST_REBORN)
+	if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_USE) != 0 {
+		player.Fplayerstate = int32(PST_REBORN)
 	}
 }
 
@@ -34652,33 +34652,33 @@ func P_DeathThink(tls *libc.TLS, player *player_t) {
 func P_PlayerThink(tls *libc.TLS, player *player_t) {
 	var newweapon weapontype_t
 	// fixme: do this in the cheat code
-	if (*player_t)(unsafe.Pointer(player)).Fcheats&int32(CF_NOCLIP) != 0 {
-		*(*int32)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 160)) |= int32(MF_NOCLIP)
+	if player.Fcheats&int32(CF_NOCLIP) != 0 {
+		*(*int32)(unsafe.Pointer(player.Fmo + 160)) |= int32(MF_NOCLIP)
 	} else {
-		*(*int32)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 160)) &= ^int32(MF_NOCLIP)
+		*(*int32)(unsafe.Pointer(player.Fmo + 160)) &= ^int32(MF_NOCLIP)
 	}
 	// chain saw run forward
 	cmd := &player.Fcmd
-	if (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fflags&int32(MF_JUSTATTACKED) != 0 {
+	if (*mobj_t)(unsafe.Pointer(player.Fmo)).Fflags&int32(MF_JUSTATTACKED) != 0 {
 		(*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn = 0
 		(*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove = int8(0xc800 / 512)
 		(*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove = 0
-		*(*int32)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 160)) &= ^int32(MF_JUSTATTACKED)
+		*(*int32)(unsafe.Pointer(player.Fmo + 160)) &= ^int32(MF_JUSTATTACKED)
 	}
-	if (*player_t)(unsafe.Pointer(player)).Fplayerstate == int32(PST_DEAD) {
+	if player.Fplayerstate == int32(PST_DEAD) {
 		P_DeathThink(tls, player)
 		return
 	}
 	// Move around.
 	// Reactiontime is used to prevent movement
 	//  for a bit after a teleport.
-	if (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Freactiontime != 0 {
-		(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Freactiontime--
+	if (*mobj_t)(unsafe.Pointer(player.Fmo)).Freactiontime != 0 {
+		(*mobj_t)(unsafe.Pointer(player.Fmo)).Freactiontime--
 	} else {
 		P_MovePlayer(tls, player)
 	}
 	P_CalcHeight(tls, player)
-	if (*sector_t)(unsafe.Pointer(((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fsubsector).Fsector)).Fspecial != 0 {
+	if (*sector_t)(unsafe.Pointer(((*mobj_t)(unsafe.Pointer(player.Fmo)).Fsubsector).Fsector)).Fspecial != 0 {
 		P_PlayerInSpecialSector(tls, player)
 	}
 	// Check for weapon change.
@@ -34691,28 +34691,28 @@ func P_PlayerThink(tls *libc.TLS, player *player_t) {
 		//  when the weapon psprite can do it
 		//  (read: not in the middle of an attack).
 		newweapon = libc.Int32FromUint8((*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons) & int32(BT_WEAPONMASK) >> int32(BT_WEAPONSHIFT)
-		if newweapon == wp_fist && player.Fweaponowned[wp_chainsaw] != 0 && !((*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_chainsaw && player.Fpowers[pw_strength] != 0) {
+		if newweapon == wp_fist && player.Fweaponowned[wp_chainsaw] != 0 && !(player.Freadyweapon == wp_chainsaw && player.Fpowers[pw_strength] != 0) {
 			newweapon = wp_chainsaw
 		}
-		if gamemode == int32(commercial) && newweapon == wp_shotgun && player.Fweaponowned[wp_supershotgun] != 0 && (*player_t)(unsafe.Pointer(player)).Freadyweapon != wp_supershotgun {
+		if gamemode == int32(commercial) && newweapon == wp_shotgun && player.Fweaponowned[wp_supershotgun] != 0 && player.Freadyweapon != wp_supershotgun {
 			newweapon = wp_supershotgun
 		}
-		if player.Fweaponowned[newweapon] != 0 && newweapon != (*player_t)(unsafe.Pointer(player)).Freadyweapon {
+		if player.Fweaponowned[newweapon] != 0 && newweapon != player.Freadyweapon {
 			// Do not go to plasma or BFG in shareware,
 			//  even if cheated.
 			if newweapon != wp_plasma && newweapon != wp_bfg || gamemode != int32(shareware) {
-				(*player_t)(unsafe.Pointer(player)).Fpendingweapon = newweapon
+				player.Fpendingweapon = newweapon
 			}
 		}
 	}
 	// check for use
 	if libc.Int32FromUint8((*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons)&int32(BT_USE) != 0 {
-		if !((*player_t)(unsafe.Pointer(player)).Fusedown != 0) {
+		if !(player.Fusedown != 0) {
 			P_UseLines(tls, player)
-			(*player_t)(unsafe.Pointer(player)).Fusedown = 1
+			player.Fusedown = 1
 		}
 	} else {
-		(*player_t)(unsafe.Pointer(player)).Fusedown = 0
+		player.Fusedown = 0
 	}
 	// cycle psprites
 	P_MovePsprites(tls, player)
@@ -34727,7 +34727,7 @@ func P_PlayerThink(tls *libc.TLS, player *player_t) {
 	if player.Fpowers[pw_invisibility] != 0 {
 		player.Fpowers[pw_invisibility]--
 		if !(player.Fpowers[pw_invisibility] != 0) {
-			*(*int32)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 160)) &= ^int32(MF_SHADOW)
+			*(*int32)(unsafe.Pointer(player.Fmo + 160)) &= ^int32(MF_SHADOW)
 		}
 	}
 	if player.Fpowers[pw_infrared] != 0 {
@@ -34736,29 +34736,29 @@ func P_PlayerThink(tls *libc.TLS, player *player_t) {
 	if player.Fpowers[pw_ironfeet] != 0 {
 		player.Fpowers[pw_ironfeet]--
 	}
-	if (*player_t)(unsafe.Pointer(player)).Fdamagecount != 0 {
-		(*player_t)(unsafe.Pointer(player)).Fdamagecount--
+	if player.Fdamagecount != 0 {
+		player.Fdamagecount--
 	}
-	if (*player_t)(unsafe.Pointer(player)).Fbonuscount != 0 {
-		(*player_t)(unsafe.Pointer(player)).Fbonuscount--
+	if player.Fbonuscount != 0 {
+		player.Fbonuscount--
 	}
 	// Handling colormaps.
 	if player.Fpowers[pw_invulnerability] != 0 {
 		if player.Fpowers[pw_invulnerability] > 4*32 || player.Fpowers[pw_invulnerability]&int32(8) != 0 {
-			(*player_t)(unsafe.Pointer(player)).Ffixedcolormap = int32(INVERSECOLORMAP)
+			player.Ffixedcolormap = int32(INVERSECOLORMAP)
 		} else {
-			(*player_t)(unsafe.Pointer(player)).Ffixedcolormap = 0
+			player.Ffixedcolormap = 0
 		}
 	} else {
 		if player.Fpowers[pw_infrared] != 0 {
 			if player.Fpowers[pw_infrared] > 4*32 || player.Fpowers[pw_infrared]&int32(8) != 0 {
 				// almost full bright
-				(*player_t)(unsafe.Pointer(player)).Ffixedcolormap = 1
+				player.Ffixedcolormap = 1
 			} else {
-				(*player_t)(unsafe.Pointer(player)).Ffixedcolormap = 0
+				player.Ffixedcolormap = 0
 			}
 		} else {
-			(*player_t)(unsafe.Pointer(player)).Ffixedcolormap = 0
+			player.Ffixedcolormap = 0
 		}
 	}
 }
@@ -37239,18 +37239,18 @@ func R_PointInSubsector(x fixed_t, y fixed_t) *subsector_t {
 //	//
 //	// R_SetupFrame
 //	//
-func R_SetupFrame(tls *libc.TLS, player uintptr) {
+func R_SetupFrame(tls *libc.TLS, player *player_t) {
 	var i int32
 	viewplayer = player
-	viewx = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fx
-	viewy = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fy
-	viewangle = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle + libc.Uint32FromInt32(viewangleoffset)
-	extralight = (*player_t)(unsafe.Pointer(player)).Fextralight
-	viewz = (*player_t)(unsafe.Pointer(player)).Fviewz
+	viewx = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fx
+	viewy = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy
+	viewangle = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle + libc.Uint32FromInt32(viewangleoffset)
+	extralight = player.Fextralight
+	viewz = player.Fviewz
 	viewsin = finesine[viewangle>>int32(ANGLETOFINESHIFT)]
 	viewcos = finecosine[viewangle>>int32(ANGLETOFINESHIFT)]
-	if (*player_t)(unsafe.Pointer(player)).Ffixedcolormap != 0 {
-		fixedcolormap = colormaps + uintptr(libc.Uint64FromInt32((*player_t)(unsafe.Pointer(player)).Ffixedcolormap*int32(256))*uint64(1))
+	if player.Ffixedcolormap != 0 {
+		fixedcolormap = colormaps + uintptr(libc.Uint64FromInt32(player.Ffixedcolormap*int32(256))*uint64(1))
 		walllights = uintptr(unsafe.Pointer(&scalelightfixed))
 		i = 0
 		for {
@@ -37274,7 +37274,7 @@ func R_SetupFrame(tls *libc.TLS, player uintptr) {
 //	//
 //	// R_RenderView
 //	//
-func R_RenderPlayerView(tls *libc.TLS, player uintptr) {
+func R_RenderPlayerView(tls *libc.TLS, player *player_t) {
 	R_SetupFrame(tls, player)
 	// Clear buffers.
 	R_ClearClipSegs(tls)
@@ -38621,7 +38621,7 @@ func R_AddSprites(tls *libc.TLS, sec *sector_t) {
 //	//
 //	// R_DrawPSprite
 //	//
-func R_DrawPSprite(tls *libc.TLS, psp uintptr) {
+func R_DrawPSprite(tls *libc.TLS, psp *pspdef_t) {
 	var flip boolean
 	var lump, x1, x2, v1, v2 int32
 	var sprdef, sprframe uintptr
@@ -38680,7 +38680,7 @@ func R_DrawPSprite(tls *libc.TLS, psp uintptr) {
 		vis.Fstartfrac += vis.Fxiscale * fixed_t(vis.Fx1-x1)
 	}
 	vis.Fpatch = lump
-	if *(*int32)(unsafe.Pointer(viewplayer + 56 + uintptr(pw_invisibility)*4)) > 4*32 || *(*int32)(unsafe.Pointer(viewplayer + 56 + uintptr(pw_invisibility)*4))&int32(8) != 0 {
+	if viewplayer.Fpowers[pw_invisibility] > 4*32 || viewplayer.Fpowers[pw_invisibility]&int32(8) != 0 {
 		// shadow draw
 		vis.Fcolormap = libc.UintptrFromInt32(0)
 	} else {
@@ -38707,9 +38707,8 @@ func R_DrawPSprite(tls *libc.TLS, psp uintptr) {
 //	//
 func R_DrawPlayerSprites(tls *libc.TLS) {
 	var i, lightnum int32
-	var psp uintptr
 	// get light level
-	lightnum = int32(((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(viewplayer)).Fmo)).Fsubsector).Fsector.Flightlevel)>>int32(LIGHTSEGSHIFT) + extralight
+	lightnum = int32(((*mobj_t)(unsafe.Pointer(viewplayer.Fmo)).Fsubsector).Fsector.Flightlevel)>>int32(LIGHTSEGSHIFT) + extralight
 	if lightnum < 0 {
 		spritelights = uintptr(unsafe.Pointer(&scalelight))
 	} else {
@@ -38724,19 +38723,18 @@ func R_DrawPlayerSprites(tls *libc.TLS) {
 	mceilingclip = uintptr(unsafe.Pointer(&negonearray))
 	// add all active psprites
 	i = 0
-	psp = viewplayer + 272
 	for {
 		if !(i < int32(NUMPSPRITES)) {
 			break
 		}
-		if (*pspdef_t)(unsafe.Pointer(psp)).Fstate != 0 {
+		psp := &viewplayer.Fpsprites[i]
+		if psp.Fstate != 0 {
 			R_DrawPSprite(tls, psp)
 		}
 		goto _1
 	_1:
 		;
 		i++
-		psp += 24
 	}
 }
 
@@ -44536,38 +44534,27 @@ func WI_drawStats(tls *libc.TLS) {
 }
 
 func WI_checkForAccelerate(tls *libc.TLS) {
-	var i int32
-	var player uintptr
 	// check for button presses to skip delays
-	i = 0
-	player = uintptr(unsafe.Pointer(&players))
-	for {
-		if !(i < int32(MAXPLAYERS)) {
-			break
-		}
+	for i := 0; i < MAXPLAYERS; i++ {
 		if playeringame[i] != 0 {
-			if libc.Int32FromUint8((*player_t)(unsafe.Pointer(player)).Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 {
-				if !((*player_t)(unsafe.Pointer(player)).Fattackdown != 0) {
+			player := &players[i]
+			if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 {
+				if !(player.Fattackdown != 0) {
 					acceleratestage = 1
 				}
-				(*player_t)(unsafe.Pointer(player)).Fattackdown = 1
+				player.Fattackdown = 1
 			} else {
-				(*player_t)(unsafe.Pointer(player)).Fattackdown = 0
+				player.Fattackdown = 0
 			}
-			if libc.Int32FromUint8((*player_t)(unsafe.Pointer(player)).Fcmd.Fbuttons)&int32(BT_USE) != 0 {
-				if !((*player_t)(unsafe.Pointer(player)).Fusedown != 0) {
+			if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_USE) != 0 {
+				if !(player.Fusedown != 0) {
 					acceleratestage = 1
 				}
-				(*player_t)(unsafe.Pointer(player)).Fusedown = 1
+				player.Fusedown = 1
 			} else {
-				(*player_t)(unsafe.Pointer(player)).Fusedown = 0
+				player.Fusedown = 0
 			}
 		}
-		goto _1
-	_1:
-		;
-		i++
-		player += 328
 	}
 }
 
@@ -48305,7 +48292,7 @@ var viewcos fixed_t
 
 var viewheight int32
 
-var viewplayer uintptr
+var viewplayer *player_t
 
 var viewsin fixed_t
 
