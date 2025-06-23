@@ -1760,7 +1760,7 @@ type mobj_t struct {
 	Ftarget       uintptr
 	Freactiontime int32
 	Fthreshold    int32
-	Fplayer       uintptr
+	Fplayer       *player_t
 	Flastlook     int32
 	Fspawnpoint   mapthing_t
 	Ftracer       uintptr
@@ -8445,7 +8445,7 @@ func G_DoReborn(tls *libc.TLS, playernum int32) {
 	} else {
 		// respawn at the start
 		// first dissasociate the corpse
-		(*mobj_t)(unsafe.Pointer(players[playernum].Fmo)).Fplayer = libc.UintptrFromInt32(0)
+		(*mobj_t)(unsafe.Pointer(players[playernum].Fmo)).Fplayer = nil
 		// spawn at random spot if in death match
 		if deathmatch != 0 {
 			G_DeathMatchSpawnPlayer(tls, playernum)
@@ -22817,42 +22817,42 @@ func T_VerticalDoor(tls *libc.TLS, door *vldoor_t) {
 //
 
 func EV_DoLockedDoor(tls *libc.TLS, line *line_t, type1 vldoor_e, thing uintptr) (r int32) {
-	var p uintptr
+	var p *player_t
 	p = (*mobj_t)(unsafe.Pointer(thing)).Fplayer
-	if !(p != 0) {
+	if !(p != nil) {
 		return 0
 	}
 	switch int32(line.Fspecial) {
 	case 99: // Blue Lock
 		fallthrough
 	case 133:
-		if !(p != 0) {
+		if !(p != nil) {
 			return 0
 		}
-		if !(*(*boolean)(unsafe.Pointer(p + 80 + uintptr(it_bluecard)*4)) != 0) && !(*(*boolean)(unsafe.Pointer(p + 80 + uintptr(it_blueskull)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(p)).Fmessage = __ccgo_ts(23343)
+		if !(p.Fcards[it_bluecard] != 0) && !(p.Fcards[it_blueskull] != 0) {
+			p.Fmessage = __ccgo_ts(23343)
 			S_StartSound(tls, libc.UintptrFromInt32(0), int32(sfx_oof))
 			return 0
 		}
 	case 134: // Red Lock
 		fallthrough
 	case 135:
-		if !(p != 0) {
+		if !(p != nil) {
 			return 0
 		}
-		if !(*(*boolean)(unsafe.Pointer(p + 80 + uintptr(it_redcard)*4)) != 0) && !(*(*boolean)(unsafe.Pointer(p + 80 + uintptr(it_redskull)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(p)).Fmessage = __ccgo_ts(23387)
+		if !(p.Fcards[it_redcard] != 0) && !(p.Fcards[it_redskull] != 0) {
+			p.Fmessage = __ccgo_ts(23387)
 			S_StartSound(tls, libc.UintptrFromInt32(0), int32(sfx_oof))
 			return 0
 		}
 	case 136: // Yellow Lock
 		fallthrough
 	case 137:
-		if !(p != 0) {
+		if !(p != nil) {
 			return 0
 		}
-		if !(*(*boolean)(unsafe.Pointer(p + 80 + uintptr(it_yellowcard)*4)) != 0) && !(*(*boolean)(unsafe.Pointer(p + 80 + uintptr(it_yellowskull)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(p)).Fmessage = __ccgo_ts(23430)
+		if !(p.Fcards[it_yellowcard] != 0) && !(p.Fcards[it_yellowskull] != 0) {
+			p.Fmessage = __ccgo_ts(23430)
 			S_StartSound(tls, libc.UintptrFromInt32(0), int32(sfx_oof))
 			return 0
 		}
@@ -22935,7 +22935,8 @@ func EV_DoDoor(tls *libc.TLS, line *line_t, type1 vldoor_e) (r int32) {
 //	// EV_VerticalDoor : open a door manually, no tag value
 //	//
 func EV_VerticalDoor(tls *libc.TLS, line *line_t, thing uintptr) {
-	var door, plat, player uintptr
+	var door, plat uintptr
+	var player *player_t
 	var sec *sector_t
 	var side int32
 	side = 0 // only front sides can be used
@@ -22945,33 +22946,33 @@ func EV_VerticalDoor(tls *libc.TLS, line *line_t, thing uintptr) {
 	case 26: // Blue Lock
 		fallthrough
 	case 32:
-		if !(player != 0) {
+		if !(player != nil) {
 			return
 		}
-		if !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_bluecard)*4)) != 0) && !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_blueskull)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23476)
+		if !(player.Fcards[it_bluecard] != 0) && !(player.Fcards[it_blueskull] != 0) {
+			player.Fmessage = __ccgo_ts(23476)
 			S_StartSound(tls, libc.UintptrFromInt32(0), int32(sfx_oof))
 			return
 		}
 	case 27: // Yellow Lock
 		fallthrough
 	case 34:
-		if !(player != 0) {
+		if !(player != nil) {
 			return
 		}
-		if !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_yellowcard)*4)) != 0) && !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_yellowskull)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23514)
+		if !(player.Fcards[it_yellowcard] != 0) && !(player.Fcards[it_yellowskull] != 0) {
+			player.Fmessage = __ccgo_ts(23514)
 			S_StartSound(tls, libc.UintptrFromInt32(0), int32(sfx_oof))
 			return
 		}
 	case 28: // Red Lock
 		fallthrough
 	case 33:
-		if !(player != 0) {
+		if !(player != nil) {
 			return
 		}
-		if !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_redcard)*4)) != 0) && !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_redskull)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23554)
+		if !(player.Fcards[it_redcard] != 0) && !(player.Fcards[it_redskull] != 0) {
+			player.Fmessage = __ccgo_ts(23554)
 			S_StartSound(tls, libc.UintptrFromInt32(0), int32(sfx_oof))
 			return
 		}
@@ -22994,7 +22995,7 @@ func EV_VerticalDoor(tls *libc.TLS, line *line_t, thing uintptr) {
 			if (*vldoor_t)(unsafe.Pointer(door)).Fdirection == -1 {
 				(*vldoor_t)(unsafe.Pointer(door)).Fdirection = 1
 			} else {
-				if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0) {
+				if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != nil) {
 					return
 				} // JDC: bad guys never close doors
 				// When is a door not a door?
@@ -23542,7 +23543,7 @@ func P_LookForPlayers(tls *libc.TLS, actor uintptr, allaround boolean) (r boolea
 	var an angle_t
 	var c, stop, v2 int32
 	var dist fixed_t
-	var player uintptr
+	var player *player_t
 	c = 0
 	stop = ((*mobj_t)(unsafe.Pointer(actor)).Flastlook - 1) & 3
 	for {
@@ -23555,24 +23556,24 @@ func P_LookForPlayers(tls *libc.TLS, actor uintptr, allaround boolean) (r boolea
 			// done looking
 			return 0
 		}
-		player = uintptr(unsafe.Pointer(&players)) + uintptr((*mobj_t)(unsafe.Pointer(actor)).Flastlook)*328
-		if (*player_t)(unsafe.Pointer(player)).Fhealth <= 0 {
+		player = &players[(*mobj_t)(unsafe.Pointer(actor)).Flastlook]
+		if player.Fhealth <= 0 {
 			goto _1
 		} // dead
-		if !(P_CheckSight(tls, actor, (*player_t)(unsafe.Pointer(player)).Fmo) != 0) {
+		if !(P_CheckSight(tls, actor, player.Fmo) != 0) {
 			goto _1
 		} // out of sight
 		if !(allaround != 0) {
-			an = R_PointToAngle2((*mobj_t)(unsafe.Pointer(actor)).Fx, (*mobj_t)(unsafe.Pointer(actor)).Fy, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fx, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fy) - (*mobj_t)(unsafe.Pointer(actor)).Fangle
+			an = R_PointToAngle2((*mobj_t)(unsafe.Pointer(actor)).Fx, (*mobj_t)(unsafe.Pointer(actor)).Fy, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy) - (*mobj_t)(unsafe.Pointer(actor)).Fangle
 			if an > uint32(ANG903) && an < uint32(ANG2703) {
-				dist = P_AproxDistance((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fx-(*mobj_t)(unsafe.Pointer(actor)).Fx, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fy-(*mobj_t)(unsafe.Pointer(actor)).Fy)
+				dist = P_AproxDistance((*mobj_t)(unsafe.Pointer(player.Fmo)).Fx-(*mobj_t)(unsafe.Pointer(actor)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy-(*mobj_t)(unsafe.Pointer(actor)).Fy)
 				// if real close, react anyway
 				if dist > 64*(1<<FRACBITS) {
 					goto _1
 				} // behind back
 			}
 		}
-		(*mobj_t)(unsafe.Pointer(actor)).Ftarget = (*player_t)(unsafe.Pointer(player)).Fmo
+		(*mobj_t)(unsafe.Pointer(actor)).Ftarget = player.Fmo
 		return 1
 		goto _1
 	_1:
@@ -24562,16 +24563,16 @@ func A_BabyMetal(tls *libc.TLS, mo uintptr) {
 	A_Chase(tls, mo)
 }
 
-func A_OpenShotgun2(tls *libc.TLS, player uintptr, psp uintptr) {
-	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_dbopn))
+func A_OpenShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
+	S_StartSound(tls, player.Fmo, int32(sfx_dbopn))
 }
 
-func A_LoadShotgun2(tls *libc.TLS, player uintptr, psp uintptr) {
-	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_dbload))
+func A_LoadShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
+	S_StartSound(tls, player.Fmo, int32(sfx_dbload))
 }
 
-func A_CloseShotgun2(tls *libc.TLS, player uintptr, psp uintptr) {
-	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_dbcls))
+func A_CloseShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
+	S_StartSound(tls, player.Fmo, int32(sfx_dbcls))
 	A_ReFire(tls, player, psp)
 }
 
@@ -25243,7 +25244,7 @@ func init() {
 // Returns false if the ammo can't be picked up at all
 //
 
-func P_GiveAmmo(tls *libc.TLS, player uintptr, ammo ammotype_t, num int32) (r boolean) {
+func P_GiveAmmo(tls *libc.TLS, player *player_t, ammo ammotype_t, num int32) (r boolean) {
 	var oldammo int32
 	if ammo == int32(am_noammo) {
 		return 0
@@ -25251,7 +25252,7 @@ func P_GiveAmmo(tls *libc.TLS, player uintptr, ammo ammotype_t, num int32) (r bo
 	if ammo > int32(NUMAMMO) {
 		I_Error(tls, __ccgo_ts(23713), ammo)
 	}
-	if *(*int32)(unsafe.Pointer(player + 168 + uintptr(ammo)*4)) == *(*int32)(unsafe.Pointer(player + 184 + uintptr(ammo)*4)) {
+	if player.Fammo[ammo] == player.Fmaxammo[ammo] {
 		return 0
 	}
 	if num != 0 {
@@ -25264,10 +25265,10 @@ func P_GiveAmmo(tls *libc.TLS, player uintptr, ammo ammotype_t, num int32) (r bo
 		// you'll need in nightmare
 		num <<= 1
 	}
-	oldammo = *(*int32)(unsafe.Pointer(player + 168 + uintptr(ammo)*4))
-	*(*int32)(unsafe.Pointer(player + 168 + uintptr(ammo)*4)) += num
-	if *(*int32)(unsafe.Pointer(player + 168 + uintptr(ammo)*4)) > *(*int32)(unsafe.Pointer(player + 184 + uintptr(ammo)*4)) {
-		*(*int32)(unsafe.Pointer(player + 168 + uintptr(ammo)*4)) = *(*int32)(unsafe.Pointer(player + 184 + uintptr(ammo)*4))
+	oldammo = player.Fammo[ammo]
+	player.Fammo[ammo] += num
+	if player.Fammo[ammo] > player.Fmaxammo[ammo] {
+		player.Fammo[ammo] = player.Fmaxammo[ammo]
 	}
 	// If non zero ammo,
 	// don't change up weapons,
@@ -25280,29 +25281,29 @@ func P_GiveAmmo(tls *libc.TLS, player uintptr, ammo ammotype_t, num int32) (r bo
 	// Preferences are not user selectable.
 	switch ammo {
 	case int32(am_clip):
-		if (*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_fist {
-			if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_chaingun)*4)) != 0 {
-				(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_chaingun
+		if player.Freadyweapon == wp_fist {
+			if player.Fweaponowned[wp_chainsaw] != 0 {
+				player.Fpendingweapon = wp_chaingun
 			} else {
-				(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_pistol
+				player.Fpendingweapon = wp_pistol
 			}
 		}
 	case int32(am_shell):
-		if (*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_fist || (*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_pistol {
-			if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_shotgun)*4)) != 0 {
-				(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_shotgun
+		if player.Freadyweapon == wp_fist || player.Freadyweapon == wp_pistol {
+			if player.Fweaponowned[wp_shotgun] != 0 {
+				player.Fpendingweapon = wp_shotgun
 			}
 		}
 	case int32(am_cell):
-		if (*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_fist || (*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_pistol {
-			if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_plasma)*4)) != 0 {
-				(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_plasma
+		if player.Freadyweapon == wp_fist || player.Freadyweapon == wp_pistol {
+			if player.Fweaponowned[wp_plasma] != 0 {
+				player.Fpendingweapon = wp_plasma
 			}
 		}
 	case int32(am_misl):
-		if (*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_fist {
-			if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_missile)*4)) != 0 {
-				(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_missile
+		if player.Freadyweapon == wp_fist {
+			if player.Fweaponowned[wp_missile] != 0 {
+				player.Fpendingweapon = wp_missile
 			}
 		}
 		fallthrough
@@ -25318,22 +25319,22 @@ func P_GiveAmmo(tls *libc.TLS, player uintptr, ammo ammotype_t, num int32) (r bo
 //	// P_GiveWeapon
 //	// The weapon name may have a MF_DROPPED flag ored in.
 //	//
-func P_GiveWeapon(tls *libc.TLS, player uintptr, weapon weapontype_t, dropped boolean) (r boolean) {
+func P_GiveWeapon(tls *libc.TLS, player *player_t, weapon weapontype_t, dropped boolean) (r boolean) {
 	var gaveammo, gaveweapon boolean
 	if netgame != 0 && deathmatch != 2 && !(dropped != 0) {
 		// leave placed weapons forever on net games
-		if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(weapon)*4)) != 0 {
+		if player.Fweaponowned[weapon] != 0 {
 			return 0
 		}
-		*(*int32)(unsafe.Pointer(player + 244)) += int32(BONUSADD)
-		*(*boolean)(unsafe.Pointer(player + 132 + uintptr(weapon)*4)) = 1
+		player.Fbonuscount += BONUSADD
+		player.Fweaponowned[weapon] = 1
 		if deathmatch != 0 {
 			P_GiveAmmo(tls, player, weaponinfo[weapon].Fammo, 5)
 		} else {
 			P_GiveAmmo(tls, player, weaponinfo[weapon].Fammo, 2)
 		}
-		(*player_t)(unsafe.Pointer(player)).Fpendingweapon = weapon
-		if player == uintptr(unsafe.Pointer(&players))+uintptr(consoleplayer)*328 {
+		player.Fpendingweapon = weapon
+		if player == &players[consoleplayer] {
 			S_StartSound(tls, libc.UintptrFromInt32(0), int32(sfx_wpnup))
 		}
 		return 0
@@ -25349,12 +25350,12 @@ func P_GiveWeapon(tls *libc.TLS, player uintptr, weapon weapontype_t, dropped bo
 	} else {
 		gaveammo = 0
 	}
-	if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(weapon)*4)) != 0 {
+	if player.Fweaponowned[weapon] != 0 {
 		gaveweapon = 0
 	} else {
 		gaveweapon = 1
-		*(*boolean)(unsafe.Pointer(player + 132 + uintptr(weapon)*4)) = 1
-		(*player_t)(unsafe.Pointer(player)).Fpendingweapon = weapon
+		player.Fweaponowned[weapon] = 1
+		player.Fpendingweapon = weapon
 	}
 	return libc.BoolUint32(gaveweapon != 0 || gaveammo != 0)
 }
@@ -25365,15 +25366,15 @@ func P_GiveWeapon(tls *libc.TLS, player uintptr, weapon weapontype_t, dropped bo
 //	// P_GiveBody
 //	// Returns false if the body isn't needed at all
 //	//
-func P_GiveBody(player uintptr, num int32) (r boolean) {
-	if (*player_t)(unsafe.Pointer(player)).Fhealth >= int32(MAXHEALTH) {
+func P_GiveBody(player *player_t, num int32) (r boolean) {
+	if player.Fhealth >= int32(MAXHEALTH) {
 		return 0
 	}
-	*(*int32)(unsafe.Pointer(player + 44)) += num
-	if (*player_t)(unsafe.Pointer(player)).Fhealth > int32(MAXHEALTH) {
-		(*player_t)(unsafe.Pointer(player)).Fhealth = int32(MAXHEALTH)
+	player.Fhealth += num
+	if player.Fhealth > int32(MAXHEALTH) {
+		player.Fhealth = int32(MAXHEALTH)
 	}
-	(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fhealth = (*player_t)(unsafe.Pointer(player)).Fhealth
+	(*mobj_t)(unsafe.Pointer(player.Fmo)).Fhealth = player.Fhealth
 	return 1
 }
 
@@ -25384,14 +25385,14 @@ func P_GiveBody(player uintptr, num int32) (r boolean) {
 //	// Returns false if the armor is worse
 //	// than the current armor.
 //	//
-func P_GiveArmor(tls *libc.TLS, player uintptr, armortype int32) (r boolean) {
+func P_GiveArmor(tls *libc.TLS, player *player_t, armortype int32) (r boolean) {
 	var hits int32
 	hits = armortype * 100
-	if (*player_t)(unsafe.Pointer(player)).Farmorpoints >= hits {
+	if player.Farmorpoints >= hits {
 		return 0
 	} // don't pick up
-	(*player_t)(unsafe.Pointer(player)).Farmortype = armortype
-	(*player_t)(unsafe.Pointer(player)).Farmorpoints = hits
+	player.Farmortype = armortype
+	player.Farmorpoints = hits
 	return 1
 }
 
@@ -25400,12 +25401,12 @@ func P_GiveArmor(tls *libc.TLS, player uintptr, armortype int32) (r boolean) {
 //	//
 //	// P_GiveCard
 //	//
-func P_GiveCard(tls *libc.TLS, player uintptr, card card_t) {
-	if *(*boolean)(unsafe.Pointer(player + 80 + uintptr(card)*4)) != 0 {
+func P_GiveCard(tls *libc.TLS, player *player_t, card card_t) {
+	if player.Fcards[card] != 0 {
 		return
 	}
-	(*player_t)(unsafe.Pointer(player)).Fbonuscount = int32(BONUSADD)
-	*(*boolean)(unsafe.Pointer(player + 80 + uintptr(card)*4)) = uint32(1)
+	player.Fbonuscount = int32(BONUSADD)
+	player.Fcards[card] = 1
 }
 
 // C documentation
@@ -25413,33 +25414,33 @@ func P_GiveCard(tls *libc.TLS, player uintptr, card card_t) {
 //	//
 //	// P_GivePower
 //	//
-func P_GivePower(player uintptr, power int32) (r boolean) {
+func P_GivePower(player *player_t, power int32) (r boolean) {
 	if power == int32(pw_invulnerability) {
-		*(*int32)(unsafe.Pointer(player + 56 + uintptr(power)*4)) = int32(INVULNTICS)
+		player.Fpowers[power] = INVULNTICS
 		return 1
 	}
 	if power == int32(pw_invisibility) {
-		*(*int32)(unsafe.Pointer(player + 56 + uintptr(power)*4)) = int32(INVISTICS)
-		*(*int32)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 160)) |= int32(MF_SHADOW)
+		player.Fpowers[power] = INVISTICS
+		*(*int32)(unsafe.Pointer(player.Fmo + 160)) |= int32(MF_SHADOW)
 		return 1
 	}
 	if power == int32(pw_infrared) {
-		*(*int32)(unsafe.Pointer(player + 56 + uintptr(power)*4)) = int32(INFRATICS)
+		player.Fpowers[power] = INFRATICS
 		return 1
 	}
 	if power == int32(pw_ironfeet) {
-		*(*int32)(unsafe.Pointer(player + 56 + uintptr(power)*4)) = int32(IRONTICS)
+		player.Fpowers[power] = IRONTICS
 		return 1
 	}
 	if power == int32(pw_strength) {
 		P_GiveBody(player, 100)
-		*(*int32)(unsafe.Pointer(player + 56 + uintptr(power)*4)) = 1
+		player.Fpowers[power] = 1
 		return 1
 	}
-	if *(*int32)(unsafe.Pointer(player + 56 + uintptr(power)*4)) != 0 {
+	if player.Fpowers[power] != 0 {
 		return 0
 	} // already got it
-	*(*int32)(unsafe.Pointer(player + 56 + uintptr(power)*4)) = 1
+	player.Fpowers[power] = 1
 	return 1
 }
 
@@ -25451,7 +25452,7 @@ func P_GivePower(player uintptr, power int32) (r boolean) {
 func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 	var delta fixed_t
 	var i, sound int32
-	var player uintptr
+	var player *player_t
 	delta = (*mobj_t)(unsafe.Pointer(special)).Fz - (*mobj_t)(unsafe.Pointer(toucher)).Fz
 	if delta > (*mobj_t)(unsafe.Pointer(toucher)).Fheight || delta < -8*(1<<FRACBITS) {
 		// out of reach
@@ -25471,59 +25472,59 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 		if !(P_GiveArmor(tls, player, int32(DEH_DEFAULT_GREEN_ARMOR_CLASS)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23737)
+		player.Fmessage = __ccgo_ts(23737)
 	case SPR_ARM2:
 		if !(P_GiveArmor(tls, player, int32(DEH_DEFAULT_BLUE_ARMOR_CLASS)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23758)
+		player.Fmessage = __ccgo_ts(23758)
 		break
 		// bonus items
 		fallthrough
 	case SPR_BON1:
-		(*player_t)(unsafe.Pointer(player)).Fhealth++ // can go over 100%
-		if (*player_t)(unsafe.Pointer(player)).Fhealth > int32(DEH_DEFAULT_MAX_HEALTH) {
-			(*player_t)(unsafe.Pointer(player)).Fhealth = int32(DEH_DEFAULT_MAX_HEALTH)
+		player.Fhealth++ // can go over 100%
+		if player.Fhealth > int32(DEH_DEFAULT_MAX_HEALTH) {
+			player.Fhealth = int32(DEH_DEFAULT_MAX_HEALTH)
 		}
-		(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fhealth = (*player_t)(unsafe.Pointer(player)).Fhealth
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23783)
+		(*mobj_t)(unsafe.Pointer(player.Fmo)).Fhealth = player.Fhealth
+		player.Fmessage = __ccgo_ts(23783)
 	case SPR_BON2:
-		(*player_t)(unsafe.Pointer(player)).Farmorpoints++ // can go over 100%
-		if (*player_t)(unsafe.Pointer(player)).Farmorpoints > int32(DEH_DEFAULT_MAX_ARMOR) {
-			(*player_t)(unsafe.Pointer(player)).Farmorpoints = int32(DEH_DEFAULT_MAX_ARMOR)
+		player.Farmorpoints++ // can go over 100%
+		if player.Farmorpoints > int32(DEH_DEFAULT_MAX_ARMOR) {
+			player.Farmorpoints = int32(DEH_DEFAULT_MAX_ARMOR)
 		}
 		// deh_green_armor_class only applies to the green armor shirt;
 		// for the armor helmets, armortype 1 is always used.
-		if !((*player_t)(unsafe.Pointer(player)).Farmortype != 0) {
-			(*player_t)(unsafe.Pointer(player)).Farmortype = 1
+		if !(player.Farmortype != 0) {
+			player.Farmortype = 1
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23809)
+		player.Fmessage = __ccgo_ts(23809)
 	case SPR_SOUL:
-		*(*int32)(unsafe.Pointer(player + 44)) += int32(DEH_DEFAULT_SOULSPHERE_HEALTH)
-		if (*player_t)(unsafe.Pointer(player)).Fhealth > int32(DEH_DEFAULT_MAX_SOULSPHERE) {
-			(*player_t)(unsafe.Pointer(player)).Fhealth = int32(DEH_DEFAULT_MAX_SOULSPHERE)
+		player.Fhealth += int32(DEH_DEFAULT_SOULSPHERE_HEALTH)
+		if player.Fhealth > int32(DEH_DEFAULT_MAX_SOULSPHERE) {
+			player.Fhealth = int32(DEH_DEFAULT_MAX_SOULSPHERE)
 		}
-		(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fhealth = (*player_t)(unsafe.Pointer(player)).Fhealth
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23835)
+		(*mobj_t)(unsafe.Pointer(player.Fmo)).Fhealth = player.Fhealth
+		player.Fmessage = __ccgo_ts(23835)
 		sound = int32(sfx_getpow)
 	case SPR_MEGA:
 		if gamemode != int32(commercial) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fhealth = int32(DEH_DEFAULT_MEGASPHERE_HEALTH)
-		(*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fhealth = (*player_t)(unsafe.Pointer(player)).Fhealth
+		player.Fhealth = int32(DEH_DEFAULT_MEGASPHERE_HEALTH)
+		(*mobj_t)(unsafe.Pointer(player.Fmo)).Fhealth = player.Fhealth
 		// We always give armor type 2 for the megasphere; dehacked only
 		// affects the MegaArmor.
 		P_GiveArmor(tls, player, 2)
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23848)
+		player.Fmessage = __ccgo_ts(23848)
 		sound = int32(sfx_getpow)
 		break
 		// cards
 		// leave cards for everyone
 		fallthrough
 	case SPR_BKEY:
-		if !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_bluecard)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23860)
+		if !(player.Fcards[it_bluecard] != 0) {
+			player.Fmessage = __ccgo_ts(23860)
 		}
 		P_GiveCard(tls, player, it_bluecard)
 		if !(netgame != 0) {
@@ -25531,8 +25532,8 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 		}
 		return
 	case SPR_YKEY:
-		if !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_yellowcard)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23886)
+		if !(player.Fcards[it_yellowcard] != 0) {
+			player.Fmessage = __ccgo_ts(23886)
 		}
 		P_GiveCard(tls, player, it_yellowcard)
 		if !(netgame != 0) {
@@ -25540,8 +25541,8 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 		}
 		return
 	case SPR_RKEY:
-		if !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_redcard)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23914)
+		if !(player.Fcards[it_redcard] != 0) {
+			player.Fmessage = __ccgo_ts(23914)
 		}
 		P_GiveCard(tls, player, it_redcard)
 		if !(netgame != 0) {
@@ -25549,8 +25550,8 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 		}
 		return
 	case SPR_BSKU:
-		if !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_blueskull)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23939)
+		if !(player.Fcards[it_blueskull] != 0) {
+			player.Fmessage = __ccgo_ts(23939)
 		}
 		P_GiveCard(tls, player, it_blueskull)
 		if !(netgame != 0) {
@@ -25558,8 +25559,8 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 		}
 		return
 	case SPR_YSKU:
-		if !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_yellowskull)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23967)
+		if !(player.Fcards[it_yellowskull] != 0) {
+			player.Fmessage = __ccgo_ts(23967)
 		}
 		P_GiveCard(tls, player, it_yellowskull)
 		if !(netgame != 0) {
@@ -25567,8 +25568,8 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 		}
 		return
 	case SPR_RSKU:
-		if !(*(*boolean)(unsafe.Pointer(player + 80 + uintptr(it_redskull)*4)) != 0) {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(23997)
+		if !(player.Fcards[it_redskull] != 0) {
+			player.Fmessage = __ccgo_ts(23997)
 		}
 		P_GiveCard(tls, player, it_redskull)
 		if !(netgame != 0) {
@@ -25581,15 +25582,15 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 		if !(P_GiveBody(player, 10) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24024)
+		player.Fmessage = __ccgo_ts(24024)
 	case SPR_MEDI:
 		if !(P_GiveBody(player, 25) != 0) {
 			return
 		}
-		if (*player_t)(unsafe.Pointer(player)).Fhealth < 25 {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24046)
+		if player.Fhealth < 25 {
+			player.Fmessage = __ccgo_ts(24046)
 		} else {
-			(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24088)
+			player.Fmessage = __ccgo_ts(24088)
 		}
 		break
 		// power ups
@@ -25598,40 +25599,40 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 		if !(P_GivePower(player, int32(pw_invulnerability)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24109)
+		player.Fmessage = __ccgo_ts(24109)
 		sound = int32(sfx_getpow)
 	case SPR_PSTR:
 		if !(P_GivePower(player, int32(pw_strength)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24126)
-		if (*player_t)(unsafe.Pointer(player)).Freadyweapon != wp_fist {
-			(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_fist
+		player.Fmessage = __ccgo_ts(24126)
+		if player.Freadyweapon != wp_fist {
+			player.Fpendingweapon = wp_fist
 		}
 		sound = int32(sfx_getpow)
 	case SPR_PINS:
 		if !(P_GivePower(player, int32(pw_invisibility)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24135)
+		player.Fmessage = __ccgo_ts(24135)
 		sound = int32(sfx_getpow)
 	case SPR_SUIT:
 		if !(P_GivePower(player, int32(pw_ironfeet)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24156)
+		player.Fmessage = __ccgo_ts(24156)
 		sound = int32(sfx_getpow)
 	case SPR_PMAP:
 		if !(P_GivePower(player, int32(pw_allmap)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24181)
+		player.Fmessage = __ccgo_ts(24181)
 		sound = int32(sfx_getpow)
 	case SPR_PVIS:
 		if !(P_GivePower(player, int32(pw_infrared)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24199)
+		player.Fmessage = __ccgo_ts(24199)
 		sound = int32(sfx_getpow)
 		break
 		// ammo
@@ -25646,56 +25647,56 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 				return
 			}
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24225)
+		player.Fmessage = __ccgo_ts(24225)
 	case SPR_AMMO:
 		if !(P_GiveAmmo(tls, player, int32(am_clip), 5) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24243)
+		player.Fmessage = __ccgo_ts(24243)
 	case SPR_ROCK:
 		if !(P_GiveAmmo(tls, player, int32(am_misl), 1) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24271)
+		player.Fmessage = __ccgo_ts(24271)
 	case SPR_BROK:
 		if !(P_GiveAmmo(tls, player, int32(am_misl), 5) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24291)
+		player.Fmessage = __ccgo_ts(24291)
 	case SPR_CELL:
 		if !(P_GiveAmmo(tls, player, int32(am_cell), 1) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24319)
+		player.Fmessage = __ccgo_ts(24319)
 	case SPR_CELP:
 		if !(P_GiveAmmo(tls, player, int32(am_cell), 5) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24345)
+		player.Fmessage = __ccgo_ts(24345)
 	case SPR_SHEL:
 		if !(P_GiveAmmo(tls, player, int32(am_shell), 1) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24376)
+		player.Fmessage = __ccgo_ts(24376)
 	case SPR_SBOX:
 		if !(P_GiveAmmo(tls, player, int32(am_shell), 5) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24404)
+		player.Fmessage = __ccgo_ts(24404)
 	case SPR_BPAK:
-		if !((*player_t)(unsafe.Pointer(player)).Fbackpack != 0) {
+		if !(player.Fbackpack != 0) {
 			i = 0
 			for {
 				if !(i < int32(NUMAMMO)) {
 					break
 				}
-				*(*int32)(unsafe.Pointer(player + 184 + uintptr(i)*4)) *= 2
+				player.Fmaxammo[i] *= 2
 				goto _1
 			_1:
 				;
 				i++
 			}
-			(*player_t)(unsafe.Pointer(player)).Fbackpack = 1
+			player.Fbackpack = 1
 		}
 		i = 0
 		for {
@@ -25708,7 +25709,7 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 			;
 			i++
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24439)
+		player.Fmessage = __ccgo_ts(24439)
 		break
 		// weapons
 		fallthrough
@@ -25716,53 +25717,53 @@ func P_TouchSpecialThing(tls *libc.TLS, special uintptr, toucher uintptr) {
 		if !(P_GiveWeapon(tls, player, wp_bfg, 0) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24474)
+		player.Fmessage = __ccgo_ts(24474)
 		sound = int32(sfx_wpnup)
 	case SPR_MGUN:
 		if !(P_GiveWeapon(tls, player, wp_chaingun, libc.BoolUint32((*mobj_t)(unsafe.Pointer(special)).Fflags&int32(MF_DROPPED) != 0)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24505)
+		player.Fmessage = __ccgo_ts(24505)
 		sound = int32(sfx_wpnup)
 	case SPR_CSAW:
 		if !(P_GiveWeapon(tls, player, wp_chainsaw, 0) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24527)
+		player.Fmessage = __ccgo_ts(24527)
 		sound = int32(sfx_wpnup)
 	case SPR_LAUN:
 		if !(P_GiveWeapon(tls, player, wp_missile, 0) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24556)
+		player.Fmessage = __ccgo_ts(24556)
 		sound = int32(sfx_wpnup)
 	case SPR_PLAS:
 		if !(P_GiveWeapon(tls, player, wp_plasma, 0) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24585)
+		player.Fmessage = __ccgo_ts(24585)
 		sound = int32(sfx_wpnup)
 	case SPR_SHOT:
 		if !(P_GiveWeapon(tls, player, wp_shotgun, libc.BoolUint32((*mobj_t)(unsafe.Pointer(special)).Fflags&int32(MF_DROPPED) != 0)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24609)
+		player.Fmessage = __ccgo_ts(24609)
 		sound = int32(sfx_wpnup)
 	case SPR_SGN2:
 		if !(P_GiveWeapon(tls, player, wp_supershotgun, libc.BoolUint32((*mobj_t)(unsafe.Pointer(special)).Fflags&int32(MF_DROPPED) != 0)) != 0) {
 			return
 		}
-		(*player_t)(unsafe.Pointer(player)).Fmessage = __ccgo_ts(24630)
+		player.Fmessage = __ccgo_ts(24630)
 		sound = int32(sfx_wpnup)
 	default:
 		I_Error(tls, __ccgo_ts(24657), 0)
 	}
 	if (*mobj_t)(unsafe.Pointer(special)).Fflags&int32(MF_COUNTITEM) != 0 {
-		(*player_t)(unsafe.Pointer(player)).Fitemcount++
+		player.Fitemcount++
 	}
 	P_RemoveMobj(tls, special)
-	*(*int32)(unsafe.Pointer(player + 244)) += int32(BONUSADD)
-	if player == uintptr(unsafe.Pointer(&players))+uintptr(consoleplayer)*328 {
+	player.Fbonuscount += BONUSADD
+	if player == &players[consoleplayer] {
 		S_StartSound(tls, libc.UintptrFromInt32(0), sound)
 	}
 }
@@ -25781,13 +25782,14 @@ func P_KillMobj(tls *libc.TLS, source uintptr, target uintptr) {
 	}
 	*(*int32)(unsafe.Pointer(target + 160)) |= int32(MF_CORPSE) | int32(MF_DROPOFF)
 	*(*fixed_t)(unsafe.Pointer(target + 108)) >>= 2
-	if source != 0 && (*mobj_t)(unsafe.Pointer(source)).Fplayer != 0 {
+	if source != 0 && (*mobj_t)(unsafe.Pointer(source)).Fplayer != nil {
 		// count for intermission
 		if (*mobj_t)(unsafe.Pointer(target)).Fflags&int32(MF_COUNTKILL) != 0 {
-			(*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(source)).Fplayer)).Fkillcount++
+			(*mobj_t)(unsafe.Pointer(source)).Fplayer.Fkillcount++
 		}
-		if (*mobj_t)(unsafe.Pointer(target)).Fplayer != 0 {
-			*(*int32)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(source)).Fplayer + 108 + uintptr((int64((*mobj_t)(unsafe.Pointer(target)).Fplayer)-int64(uintptr(unsafe.Pointer(&players))))/328)*4))++
+		if (*mobj_t)(unsafe.Pointer(target)).Fplayer != nil {
+			idx := playerIndex((*mobj_t)(unsafe.Pointer(target)).Fplayer)
+			(*mobj_t)(unsafe.Pointer(source)).Fplayer.Ffrags[idx]++
 		}
 	} else {
 		if !(netgame != 0) && (*mobj_t)(unsafe.Pointer(target)).Fflags&int32(MF_COUNTKILL) != 0 {
@@ -25796,15 +25798,16 @@ func P_KillMobj(tls *libc.TLS, source uintptr, target uintptr) {
 			players[0].Fkillcount++
 		}
 	}
-	if (*mobj_t)(unsafe.Pointer(target)).Fplayer != 0 {
+	if (*mobj_t)(unsafe.Pointer(target)).Fplayer != nil {
 		// count environment kills against you
 		if !(source != 0) {
-			*(*int32)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(target)).Fplayer + 108 + uintptr((int64((*mobj_t)(unsafe.Pointer(target)).Fplayer)-int64(uintptr(unsafe.Pointer(&players))))/328)*4))++
+			idx := playerIndex((*mobj_t)(unsafe.Pointer(target)).Fplayer)
+			(*mobj_t)(unsafe.Pointer(target)).Fplayer.Ffrags[idx]++
 		}
 		*(*int32)(unsafe.Pointer(target + 160)) &= ^int32(MF_SOLID)
 		(*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(target)).Fplayer)).Fplayerstate = int32(PST_DEAD)
 		P_DropWeapon(tls, (*mobj_t)(unsafe.Pointer(target)).Fplayer)
-		if (*mobj_t)(unsafe.Pointer(target)).Fplayer == uintptr(unsafe.Pointer(&players))+uintptr(consoleplayer)*328 && automapactive != 0 {
+		if (*mobj_t)(unsafe.Pointer(target)).Fplayer == &players[consoleplayer] && automapactive != 0 {
 			// don't die in auto map,
 			// switch view prior to dying
 			AM_Stop(tls)
@@ -25858,7 +25861,7 @@ func P_KillMobj(tls *libc.TLS, source uintptr, target uintptr) {
 //	//
 func P_DamageMobj(tls *libc.TLS, target uintptr, inflictor uintptr, source uintptr, damage int32) {
 	var ang uint32
-	var player uintptr
+	var player *player_t
 	var saved, temp, v3 int32
 	var thrust, v1, v2 fixed_t
 	if !((*mobj_t)(unsafe.Pointer(target)).Fflags&int32(MF_SHOOTABLE) != 0) {
@@ -25875,13 +25878,13 @@ func P_DamageMobj(tls *libc.TLS, target uintptr, inflictor uintptr, source uintp
 		(*mobj_t)(unsafe.Pointer(target)).Fmomx = v1
 	}
 	player = (*mobj_t)(unsafe.Pointer(target)).Fplayer
-	if player != 0 && gameskill == int32(sk_baby) {
+	if player != nil && gameskill == int32(sk_baby) {
 		damage >>= 1
 	} // take half damage in trainer mode
 	// Some close combat weapons should not
 	// inflict thrust and push the victim out of reach,
 	// thus kick away unless using the chainsaw.
-	if inflictor != 0 && !((*mobj_t)(unsafe.Pointer(target)).Fflags&int32(MF_NOCLIP) != 0) && (!(source != 0) || !((*mobj_t)(unsafe.Pointer(source)).Fplayer != 0) || (*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(source)).Fplayer)).Freadyweapon != wp_chainsaw) {
+	if inflictor != 0 && !((*mobj_t)(unsafe.Pointer(target)).Fflags&int32(MF_NOCLIP) != 0) && (!(source != 0) || !((*mobj_t)(unsafe.Pointer(source)).Fplayer != nil) || (*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(source)).Fplayer)).Freadyweapon != wp_chainsaw) {
 		ang = R_PointToAngle2((*mobj_t)(unsafe.Pointer(inflictor)).Fx, (*mobj_t)(unsafe.Pointer(inflictor)).Fy, (*mobj_t)(unsafe.Pointer(target)).Fx, (*mobj_t)(unsafe.Pointer(target)).Fy)
 		thrust = damage * (1 << FRACBITS >> 3) * 100 / ((*mobj_t)(unsafe.Pointer(target)).Finfo).Fmass
 		// make fall forwards sometimes
@@ -25894,38 +25897,38 @@ func P_DamageMobj(tls *libc.TLS, target uintptr, inflictor uintptr, source uintp
 		*(*fixed_t)(unsafe.Pointer(target + 116)) += FixedMul(thrust, finesine[ang])
 	}
 	// player specific
-	if player != 0 {
+	if player != nil {
 		// end of game hell hack
 		if int32((*sector_t)(unsafe.Pointer(((*mobj_t)(unsafe.Pointer(target)).Fsubsector).Fsector)).Fspecial) == 11 && damage >= (*mobj_t)(unsafe.Pointer(target)).Fhealth {
 			damage = (*mobj_t)(unsafe.Pointer(target)).Fhealth - 1
 		}
 		// Below certain threshold,
 		// ignore damage in GOD mode, or with INVUL power.
-		if damage < 1000 && ((*player_t)(unsafe.Pointer(player)).Fcheats&int32(CF_GODMODE) != 0 || *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_invulnerability)*4)) != 0) {
+		if damage < 1000 && (player.Fcheats&int32(CF_GODMODE) != 0 || player.Fpowers[pw_invulnerability] != 0) {
 			return
 		}
-		if (*player_t)(unsafe.Pointer(player)).Farmortype != 0 {
-			if (*player_t)(unsafe.Pointer(player)).Farmortype == 1 {
+		if player.Farmortype != 0 {
+			if player.Farmortype == 1 {
 				saved = damage / 3
 			} else {
 				saved = damage / 2
 			}
-			if (*player_t)(unsafe.Pointer(player)).Farmorpoints <= saved {
+			if player.Farmorpoints <= saved {
 				// armor is used up
-				saved = (*player_t)(unsafe.Pointer(player)).Farmorpoints
-				(*player_t)(unsafe.Pointer(player)).Farmortype = 0
+				saved = player.Farmorpoints
+				player.Farmortype = 0
 			}
-			*(*int32)(unsafe.Pointer(player + 48)) -= saved
+			player.Farmorpoints -= saved
 			damage -= saved
 		}
-		*(*int32)(unsafe.Pointer(player + 44)) -= damage // mirror mobj health here for Dave
-		if (*player_t)(unsafe.Pointer(player)).Fhealth < 0 {
-			(*player_t)(unsafe.Pointer(player)).Fhealth = 0
+		player.Fhealth -= damage // mirror mobj health here for Dave
+		if player.Fhealth < 0 {
+			player.Fhealth = 0
 		}
-		(*player_t)(unsafe.Pointer(player)).Fattacker = source
-		*(*int32)(unsafe.Pointer(player + 240)) += damage // add damage after armor / invuln
-		if (*player_t)(unsafe.Pointer(player)).Fdamagecount > 100 {
-			(*player_t)(unsafe.Pointer(player)).Fdamagecount = 100
+		player.Fattacker = source
+		player.Fdamagecount += damage // add damage before armor / invuln
+		if player.Fdamagecount > 100 {
+			player.Fdamagecount = 100
 		} // teleport stomp does 10k points...
 		if damage < 100 {
 			v3 = damage
@@ -25933,7 +25936,7 @@ func P_DamageMobj(tls *libc.TLS, target uintptr, inflictor uintptr, source uintp
 			v3 = 100
 		}
 		temp = v3
-		if player == uintptr(unsafe.Pointer(&players))+uintptr(consoleplayer)*328 {
+		if player == &players[consoleplayer] {
 			I_Tactile(tls, 40, 10, 40+temp*int32(2))
 		}
 	}
@@ -26306,7 +26309,7 @@ func PIT_StompThing(tls *libc.TLS, thing uintptr) (r boolean) {
 		return 1
 	}
 	// monsters don't stomp things except on boss level
-	if !((*mobj_t)(unsafe.Pointer(tmthing)).Fplayer != 0) && gamemap != 30 {
+	if !((*mobj_t)(unsafe.Pointer(tmthing)).Fplayer != nil) && gamemap != 30 {
 		return 0
 	}
 	P_DamageMobj(tls, thing, tmthing, tmthing, 10000)
@@ -26411,7 +26414,7 @@ func PIT_CheckLine(tls *libc.TLS, ld *line_t) (r boolean) {
 		if int32(ld.Fflags)&ML_BLOCKING != 0 {
 			return 0
 		} // explicitly blocking everything
-		if !((*mobj_t)(unsafe.Pointer(tmthing)).Fplayer != 0) && int32(ld.Fflags)&ML_BLOCKMONSTERS != 0 {
+		if !((*mobj_t)(unsafe.Pointer(tmthing)).Fplayer != nil) && int32(ld.Fflags)&ML_BLOCKMONSTERS != 0 {
 			return 0
 		} // block monsters only
 	}
@@ -27154,13 +27157,13 @@ func PTR_UseTraverse(tls *libc.TLS, in uintptr) (r boolean) {
 //	// P_UseLines
 //	// Looks for special lines in front of the player to activate.
 //	//
-func P_UseLines(tls *libc.TLS, player uintptr) {
+func P_UseLines(tls *libc.TLS, player *player_t) {
 	var angle int32
 	var x1, x2, y1, y2 fixed_t
-	usething = (*player_t)(unsafe.Pointer(player)).Fmo
-	angle = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle >> int32(ANGLETOFINESHIFT))
-	x1 = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fx
-	y1 = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fy
+	usething = player.Fmo
+	angle = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle >> int32(ANGLETOFINESHIFT))
+	x1 = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fx
+	y1 = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy
 	x2 = x1 + 64*(1<<FRACBITS)>>FRACBITS*finecosine[angle]
 	y2 = y1 + 64*(1<<FRACBITS)>>FRACBITS*finesine[angle]
 	P_PathTraverse(tls, x1, y1, x2, y2, int32(PT_ADDLINES), __ccgo_fp(PTR_UseTraverse))
@@ -28179,7 +28182,7 @@ func P_ExplodeMissile(tls *libc.TLS, mo uintptr) {
 //
 
 func P_XYMovement(tls *libc.TLS, mo uintptr) {
-	var player uintptr
+	var player *player_t
 	var ptryx, ptryy, xmove, ymove, v1, v2, v3, v4, v5 fixed_t
 	if !((*mobj_t)(unsafe.Pointer(mo)).Fmomx != 0) && !((*mobj_t)(unsafe.Pointer(mo)).Fmomy != 0) {
 		if (*mobj_t)(unsafe.Pointer(mo)).Fflags&int32(MF_SKULLFLY) != 0 {
@@ -28226,7 +28229,7 @@ func P_XYMovement(tls *libc.TLS, mo uintptr) {
 		}
 		if !(P_TryMove(tls, mo, ptryx, ptryy) != 0) {
 			// blocked move
-			if (*mobj_t)(unsafe.Pointer(mo)).Fplayer != 0 {
+			if (*mobj_t)(unsafe.Pointer(mo)).Fplayer != nil {
 				// try to slide along it
 				P_SlideMove(tls, mo)
 			} else {
@@ -28249,7 +28252,7 @@ func P_XYMovement(tls *libc.TLS, mo uintptr) {
 		}
 	}
 	// slow down
-	if player != 0 && (*player_t)(unsafe.Pointer(player)).Fcheats&int32(CF_NOMOMENTUM) != 0 {
+	if player != nil && player.Fcheats&int32(CF_NOMOMENTUM) != 0 {
 		// debug option for no sliding at all
 		v5 = 0
 		(*mobj_t)(unsafe.Pointer(mo)).Fmomy = v5
@@ -28271,10 +28274,10 @@ func P_XYMovement(tls *libc.TLS, mo uintptr) {
 			}
 		}
 	}
-	if (*mobj_t)(unsafe.Pointer(mo)).Fmomx > -int32(STOPSPEED) && (*mobj_t)(unsafe.Pointer(mo)).Fmomx < int32(STOPSPEED) && (*mobj_t)(unsafe.Pointer(mo)).Fmomy > -int32(STOPSPEED) && (*mobj_t)(unsafe.Pointer(mo)).Fmomy < int32(STOPSPEED) && (!(player != 0) || int32((*player_t)(unsafe.Pointer(player)).Fcmd.Fforwardmove) == 0 && int32((*player_t)(unsafe.Pointer(player)).Fcmd.Fsidemove) == 0) {
+	if (*mobj_t)(unsafe.Pointer(mo)).Fmomx > -int32(STOPSPEED) && (*mobj_t)(unsafe.Pointer(mo)).Fmomx < int32(STOPSPEED) && (*mobj_t)(unsafe.Pointer(mo)).Fmomy > -int32(STOPSPEED) && (*mobj_t)(unsafe.Pointer(mo)).Fmomy < int32(STOPSPEED) && (!(player != nil) || int32(player.Fcmd.Fforwardmove) == 0 && int32(player.Fcmd.Fsidemove) == 0) {
 		// if in a walking frame, stop moving
-		if player != 0 && libc.Uint32FromInt64((int64((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fstate)-int64(uintptr(unsafe.Pointer(&states))))/40-int64(S_PLAY_RUN1)) < uint32(4) {
-			P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY))
+		if player != nil && libc.Uint32FromInt64((int64((*mobj_t)(unsafe.Pointer(player.Fmo)).Fstate)-int64(uintptr(unsafe.Pointer(&states))))/40-int64(S_PLAY_RUN1)) < uint32(4) {
+			P_SetMobjState(tls, player.Fmo, int32(S_PLAY))
 		}
 		(*mobj_t)(unsafe.Pointer(mo)).Fmomx = 0
 		(*mobj_t)(unsafe.Pointer(mo)).Fmomy = 0
@@ -28293,8 +28296,8 @@ func P_ZMovement(tls *libc.TLS, mo uintptr) {
 	var correct_lost_soul_bounce int32
 	var delta, dist fixed_t
 	// check for smooth step up
-	if (*mobj_t)(unsafe.Pointer(mo)).Fplayer != 0 && (*mobj_t)(unsafe.Pointer(mo)).Fz < (*mobj_t)(unsafe.Pointer(mo)).Ffloorz {
-		*(*fixed_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Fplayer + 32)) -= (*mobj_t)(unsafe.Pointer(mo)).Ffloorz - (*mobj_t)(unsafe.Pointer(mo)).Fz
+	if (*mobj_t)(unsafe.Pointer(mo)).Fplayer != nil && (*mobj_t)(unsafe.Pointer(mo)).Fz < (*mobj_t)(unsafe.Pointer(mo)).Ffloorz {
+		(*mobj_t)(unsafe.Pointer(mo)).Fplayer.Fviewheight -= (*mobj_t)(unsafe.Pointer(mo)).Ffloorz - (*mobj_t)(unsafe.Pointer(mo)).Fz
 		(*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Fplayer)).Fdeltaviewheight = (41*(1<<FRACBITS) - (*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Fplayer)).Fviewheight) >> 3
 	}
 	// adjust height
@@ -28344,7 +28347,7 @@ func P_ZMovement(tls *libc.TLS, mo uintptr) {
 			(*mobj_t)(unsafe.Pointer(mo)).Fmomz = -(*mobj_t)(unsafe.Pointer(mo)).Fmomz
 		}
 		if (*mobj_t)(unsafe.Pointer(mo)).Fmomz < 0 {
-			if (*mobj_t)(unsafe.Pointer(mo)).Fplayer != 0 && (*mobj_t)(unsafe.Pointer(mo)).Fmomz < -(1<<FRACBITS)*8 {
+			if (*mobj_t)(unsafe.Pointer(mo)).Fplayer != nil && (*mobj_t)(unsafe.Pointer(mo)).Fmomz < -(1<<FRACBITS)*8 {
 				// Squat down.
 				// Decrease viewheight for a moment
 				// after hitting the ground (hard),
@@ -28624,7 +28627,8 @@ func P_RespawnSpecials(tls *libc.TLS) {
 //	//
 func P_SpawnPlayer(tls *libc.TLS, mthing *mapthing_t) {
 	var i int32
-	var mobj, p uintptr
+	var mobj uintptr
+	var p *player_t
 	var x, y, z fixed_t
 	if int32(mthing.Ftype1) == 0 {
 		return
@@ -28633,8 +28637,8 @@ func P_SpawnPlayer(tls *libc.TLS, mthing *mapthing_t) {
 	if !(playeringame[int32(mthing.Ftype1)-1] != 0) {
 		return
 	}
-	p = uintptr(unsafe.Pointer(&players)) + uintptr(int32(mthing.Ftype1)-1)*328
-	if (*player_t)(unsafe.Pointer(p)).Fplayerstate == int32(PST_REBORN) {
+	p = &players[mthing.Ftype1-1]
+	if p.Fplayerstate == int32(PST_REBORN) {
 		G_PlayerReborn(int32(mthing.Ftype1) - 1)
 	}
 	x = int32(mthing.Fx) << int32(FRACBITS)
@@ -28647,16 +28651,16 @@ func P_SpawnPlayer(tls *libc.TLS, mthing *mapthing_t) {
 	}
 	(*mobj_t)(unsafe.Pointer(mobj)).Fangle = libc.Uint32FromInt32(int32(ANG453) * (int32(mthing.Fangle) / 45))
 	(*mobj_t)(unsafe.Pointer(mobj)).Fplayer = p
-	(*mobj_t)(unsafe.Pointer(mobj)).Fhealth = (*player_t)(unsafe.Pointer(p)).Fhealth
-	(*player_t)(unsafe.Pointer(p)).Fmo = mobj
-	(*player_t)(unsafe.Pointer(p)).Fplayerstate = int32(PST_LIVE)
-	(*player_t)(unsafe.Pointer(p)).Frefire = 0
-	(*player_t)(unsafe.Pointer(p)).Fmessage = libc.UintptrFromInt32(0)
-	(*player_t)(unsafe.Pointer(p)).Fdamagecount = 0
-	(*player_t)(unsafe.Pointer(p)).Fbonuscount = 0
-	(*player_t)(unsafe.Pointer(p)).Fextralight = 0
-	(*player_t)(unsafe.Pointer(p)).Ffixedcolormap = 0
-	(*player_t)(unsafe.Pointer(p)).Fviewheight = 41 * (1 << FRACBITS)
+	(*mobj_t)(unsafe.Pointer(mobj)).Fhealth = p.Fhealth
+	p.Fmo = mobj
+	p.Fplayerstate = int32(PST_LIVE)
+	p.Frefire = 0
+	p.Fmessage = libc.UintptrFromInt32(0)
+	p.Fdamagecount = 0
+	p.Fbonuscount = 0
+	p.Fextralight = 0
+	p.Ffixedcolormap = 0
+	p.Fviewheight = 41 * (1 << FRACBITS)
 	// setup gun psprite
 	P_SetupPsprites(tls, p)
 	// give all cards in death match mode
@@ -28666,7 +28670,7 @@ func P_SpawnPlayer(tls *libc.TLS, mthing *mapthing_t) {
 			if !(i < int32(NUMCARDS)) {
 				break
 			}
-			*(*boolean)(unsafe.Pointer(p + 80 + uintptr(i)*4)) = 1
+			p.Fcards[i] = 1
 			goto _1
 		_1:
 			;
@@ -29212,9 +29216,9 @@ const ANG905 = 1073741824
 //	//
 //	// P_SetPsprite
 //	//
-func P_SetPsprite(tls *libc.TLS, player uintptr, position int32, stnum statenum_t) {
+func P_SetPsprite(tls *libc.TLS, player *player_t, position int32, stnum statenum_t) {
 	var psp, state uintptr
-	psp = player + 272 + uintptr(position)*24
+	psp = (uintptr)(unsafe.Pointer(&player.Fpsprites[position]))
 	for cond := true; cond; cond = !((*pspdef_t)(unsafe.Pointer(psp)).Ftics != 0) {
 		if !(stnum != 0) {
 			// object removed itself
@@ -29232,7 +29236,7 @@ func P_SetPsprite(tls *libc.TLS, player uintptr, position int32, stnum statenum_
 		// Call action routine.
 		// Modified handling.
 		if *(*actionf_p2)(unsafe.Pointer(state + 16)) != 0 {
-			(*(*func(*libc.TLS, uintptr, uintptr))(unsafe.Pointer(&struct{ uintptr }{*(*actionf_p2)(unsafe.Pointer(&(*state_t)(unsafe.Pointer(state)).Faction))})))(tls, player, psp)
+			(*(*func(*libc.TLS, *player_t, uintptr))(unsafe.Pointer(&struct{ uintptr }{*(*actionf_p2)(unsafe.Pointer(&(*state_t)(unsafe.Pointer(state)).Faction))})))(tls, player, psp)
 			if !((*pspdef_t)(unsafe.Pointer(psp)).Fstate != 0) {
 				break
 			}
@@ -29250,17 +29254,17 @@ func P_SetPsprite(tls *libc.TLS, player uintptr, position int32, stnum statenum_
 //	// from the bottom of the screen.
 //	// Uses player
 //	//
-func P_BringUpWeapon(tls *libc.TLS, player uintptr) {
+func P_BringUpWeapon(tls *libc.TLS, player *player_t) {
 	var newstate statenum_t
-	if (*player_t)(unsafe.Pointer(player)).Fpendingweapon == wp_nochange {
-		(*player_t)(unsafe.Pointer(player)).Fpendingweapon = (*player_t)(unsafe.Pointer(player)).Freadyweapon
+	if player.Fpendingweapon == wp_nochange {
+		player.Fpendingweapon = player.Freadyweapon
 	}
-	if (*player_t)(unsafe.Pointer(player)).Fpendingweapon == wp_chainsaw {
-		S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_sawup))
+	if player.Fpendingweapon == wp_chainsaw {
+		S_StartSound(tls, player.Fmo, int32(sfx_sawup))
 	}
-	newstate = weaponinfo[(*player_t)(unsafe.Pointer(player)).Fpendingweapon].Fupstate
-	(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_nochange
-	(*(*pspdef_t)(unsafe.Pointer(player + 272 + uintptr(ps_weapon)*24))).Fsy = 128 * (1 << FRACBITS)
+	newstate = weaponinfo[player.Fpendingweapon].Fupstate
+	player.Fpendingweapon = wp_nochange
+	(*(*pspdef_t)(unsafe.Pointer(&player.Fpsprites[ps_weapon]))).Fsy = 128 * (1 << FRACBITS)
 	P_SetPsprite(tls, player, int32(ps_weapon), newstate)
 }
 
@@ -29271,15 +29275,15 @@ func P_BringUpWeapon(tls *libc.TLS, player uintptr) {
 //	// Returns true if there is enough ammo to shoot.
 //	// If not, selects the next weapon to use.
 //	//
-func P_CheckAmmo(tls *libc.TLS, player uintptr) (r boolean) {
+func P_CheckAmmo(tls *libc.TLS, player *player_t) (r boolean) {
 	var ammo ammotype_t
 	var count int32
-	ammo = weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo
+	ammo = weaponinfo[player.Freadyweapon].Fammo
 	// Minimal amount for one shot varies.
-	if (*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_bfg {
+	if player.Freadyweapon == wp_bfg {
 		count = int32(DEH_DEFAULT_BFG_CELLS_PER_SHOT)
 	} else {
-		if (*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_supershotgun {
+		if player.Freadyweapon == wp_supershotgun {
 			count = 2
 		} else {
 			count = 1
@@ -29287,38 +29291,38 @@ func P_CheckAmmo(tls *libc.TLS, player uintptr) (r boolean) {
 	} // Regular.
 	// Some do not need ammunition anyway.
 	// Return if current ammunition sufficient.
-	if ammo == int32(am_noammo) || *(*int32)(unsafe.Pointer(player + 168 + uintptr(ammo)*4)) >= count {
+	if ammo == int32(am_noammo) || player.Fammo[ammo] >= count {
 		return 1
 	}
 	// Out of ammo, pick a weapon to change to.
 	// Preferences are set here.
-	for cond := true; cond; cond = (*player_t)(unsafe.Pointer(player)).Fpendingweapon == wp_nochange {
-		if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_plasma)*4)) != 0 && *(*int32)(unsafe.Pointer(player + 168 + uintptr(am_cell)*4)) != 0 && gamemode != int32(shareware) {
-			(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_plasma
+	for cond := true; cond; cond = player.Fpendingweapon == wp_nochange {
+		if player.Fweaponowned[wp_plasma] != 0 && player.Fammo[am_cell] != 0 && gamemode != int32(shareware) {
+			player.Fpendingweapon = wp_plasma
 		} else {
-			if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_supershotgun)*4)) != 0 && *(*int32)(unsafe.Pointer(player + 168 + uintptr(am_shell)*4)) > 2 && gamemode == int32(commercial) {
-				(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_supershotgun
+			if player.Fweaponowned[wp_supershotgun] != 0 && player.Fammo[am_shell] > 2 && gamemode == int32(commercial) {
+				player.Fpendingweapon = wp_supershotgun
 			} else {
-				if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_chaingun)*4)) != 0 && *(*int32)(unsafe.Pointer(player + 168 + uintptr(am_clip)*4)) != 0 {
-					(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_chaingun
+				if player.Fweaponowned[wp_chaingun] != 0 && player.Fammo[am_clip] != 0 {
+					player.Fpendingweapon = wp_chaingun
 				} else {
-					if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_shotgun)*4)) != 0 && *(*int32)(unsafe.Pointer(player + 168 + uintptr(am_shell)*4)) != 0 {
-						(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_shotgun
+					if player.Fweaponowned[wp_shotgun] != 0 && player.Fammo[am_shell] != 0 {
+						player.Fpendingweapon = wp_shotgun
 					} else {
-						if *(*int32)(unsafe.Pointer(player + 168 + uintptr(am_clip)*4)) != 0 {
-							(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_pistol
+						if player.Fweaponowned[am_clip] != 0 {
+							player.Fpendingweapon = wp_pistol
 						} else {
-							if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_chainsaw)*4)) != 0 {
-								(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_chainsaw
+							if player.Fweaponowned[wp_chainsaw] != 0 {
+								player.Fpendingweapon = wp_chainsaw
 							} else {
-								if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_missile)*4)) != 0 && *(*int32)(unsafe.Pointer(player + 168 + uintptr(am_misl)*4)) != 0 {
-									(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_missile
+								if player.Fweaponowned[wp_missile] != 0 && player.Fammo[am_misl] != 0 {
+									player.Fpendingweapon = wp_missile
 								} else {
-									if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_bfg)*4)) != 0 && *(*int32)(unsafe.Pointer(player + 168 + uintptr(am_cell)*4)) > 40 && gamemode != int32(shareware) {
-										(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_bfg
+									if player.Fweaponowned[wp_bfg] != 0 && player.Fammo[am_cell] > 40 && gamemode != int32(shareware) {
+										player.Fpendingweapon = wp_bfg
 									} else {
 										// If everything fails.
-										(*player_t)(unsafe.Pointer(player)).Fpendingweapon = wp_fist
+										player.Fpendingweapon = wp_fist
 									}
 								}
 							}
@@ -29329,7 +29333,7 @@ func P_CheckAmmo(tls *libc.TLS, player uintptr) (r boolean) {
 		}
 	}
 	// Now set appropriate weapon overlay.
-	P_SetPsprite(tls, player, int32(ps_weapon), weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fdownstate)
+	P_SetPsprite(tls, player, int32(ps_weapon), weaponinfo[player.Freadyweapon].Fdownstate)
 	return 0
 }
 
@@ -29338,15 +29342,15 @@ func P_CheckAmmo(tls *libc.TLS, player uintptr) (r boolean) {
 //	//
 //	// P_FireWeapon.
 //	//
-func P_FireWeapon(tls *libc.TLS, player uintptr) {
+func P_FireWeapon(tls *libc.TLS, player *player_t) {
 	var newstate statenum_t
 	if !(P_CheckAmmo(tls, player) != 0) {
 		return
 	}
-	P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY_ATK1))
-	newstate = weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fatkstate
+	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK1))
+	newstate = weaponinfo[player.Freadyweapon].Fatkstate
 	P_SetPsprite(tls, player, int32(ps_weapon), newstate)
-	P_NoiseAlert(tls, (*player_t)(unsafe.Pointer(player)).Fmo, (*player_t)(unsafe.Pointer(player)).Fmo)
+	P_NoiseAlert(tls, player.Fmo, player.Fmo)
 }
 
 // C documentation
@@ -29355,8 +29359,8 @@ func P_FireWeapon(tls *libc.TLS, player uintptr) {
 //	// P_DropWeapon
 //	// Player died, so put the weapon away.
 //	//
-func P_DropWeapon(tls *libc.TLS, player uintptr) {
-	P_SetPsprite(tls, player, int32(ps_weapon), weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fdownstate)
+func P_DropWeapon(tls *libc.TLS, player *player_t) {
+	P_SetPsprite(tls, player, int32(ps_weapon), weaponinfo[player.Freadyweapon].Fdownstate)
 }
 
 // C documentation
@@ -29368,41 +29372,41 @@ func P_DropWeapon(tls *libc.TLS, player uintptr) {
 //	// Follows after getting weapon up,
 //	// or after previous attack/fire sequence.
 //	//
-func A_WeaponReady(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_WeaponReady(tls *libc.TLS, player *player_t, psp uintptr) {
 	var angle int32
 	var newstate statenum_t
 	// get out of attack state
-	if (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_PLAY_ATK1)*40 || (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_PLAY_ATK2)*40 {
-		P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY))
+	if (*mobj_t)(unsafe.Pointer(player.Fmo)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_PLAY_ATK1)*40 || (*mobj_t)(unsafe.Pointer(player.Fmo)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_PLAY_ATK2)*40 {
+		P_SetMobjState(tls, player.Fmo, int32(S_PLAY))
 	}
-	if (*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_chainsaw && (*pspdef_t)(unsafe.Pointer(psp)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_SAW)*40 {
-		S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_sawidl))
+	if player.Freadyweapon == wp_chainsaw && (*pspdef_t)(unsafe.Pointer(psp)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_SAW)*40 {
+		S_StartSound(tls, player.Fmo, int32(sfx_sawidl))
 	}
 	// check for change
 	//  if player is dead, put the weapon away
-	if (*player_t)(unsafe.Pointer(player)).Fpendingweapon != wp_nochange || !((*player_t)(unsafe.Pointer(player)).Fhealth != 0) {
+	if player.Fpendingweapon != wp_nochange || !(player.Fhealth != 0) {
 		// change weapon
 		//  (pending weapon should allready be validated)
-		newstate = weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fdownstate
+		newstate = weaponinfo[player.Freadyweapon].Fdownstate
 		P_SetPsprite(tls, player, int32(ps_weapon), newstate)
 		return
 	}
 	// check for fire
 	//  the missile launcher and bfg do not auto fire
-	if libc.Int32FromUint8((*player_t)(unsafe.Pointer(player)).Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 {
-		if !((*player_t)(unsafe.Pointer(player)).Fattackdown != 0) || (*player_t)(unsafe.Pointer(player)).Freadyweapon != wp_missile && (*player_t)(unsafe.Pointer(player)).Freadyweapon != wp_bfg {
-			(*player_t)(unsafe.Pointer(player)).Fattackdown = 1
+	if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 {
+		if !(player.Fattackdown != 0) || player.Freadyweapon != wp_missile && player.Freadyweapon != wp_bfg {
+			player.Fattackdown = 1
 			P_FireWeapon(tls, player)
 			return
 		}
 	} else {
-		(*player_t)(unsafe.Pointer(player)).Fattackdown = 0
+		player.Fattackdown = 0
 	}
 	// bob the weapon based on movement speed
 	angle = 128 * leveltime & (FINEANGLES - 1)
-	(*pspdef_t)(unsafe.Pointer(psp)).Fsx = 1<<FRACBITS + FixedMul((*player_t)(unsafe.Pointer(player)).Fbob, finecosine[angle])
+	(*pspdef_t)(unsafe.Pointer(psp)).Fsx = 1<<FRACBITS + FixedMul(player.Fbob, finecosine[angle])
 	angle &= FINEANGLES/2 - 1
-	(*pspdef_t)(unsafe.Pointer(psp)).Fsy = 32*(1<<FRACBITS) + FixedMul((*player_t)(unsafe.Pointer(player)).Fbob, finesine[angle])
+	(*pspdef_t)(unsafe.Pointer(psp)).Fsy = 32*(1<<FRACBITS) + FixedMul(player.Fbob, finesine[angle])
 }
 
 // C documentation
@@ -29412,19 +29416,19 @@ func A_WeaponReady(tls *libc.TLS, player uintptr, psp uintptr) {
 //	// The player can re-fire the weapon
 //	// without lowering it entirely.
 //	//
-func A_ReFire(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_ReFire(tls *libc.TLS, player *player_t, psp uintptr) {
 	// check for fire
 	//  (if a weaponchange is pending, let it go through instead)
-	if libc.Int32FromUint8((*player_t)(unsafe.Pointer(player)).Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 && (*player_t)(unsafe.Pointer(player)).Fpendingweapon == wp_nochange && (*player_t)(unsafe.Pointer(player)).Fhealth != 0 {
-		(*player_t)(unsafe.Pointer(player)).Frefire++
+	if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 && player.Fpendingweapon == wp_nochange && player.Fhealth != 0 {
+		player.Frefire++
 		P_FireWeapon(tls, player)
 	} else {
-		(*player_t)(unsafe.Pointer(player)).Frefire = 0
+		player.Frefire = 0
 		P_CheckAmmo(tls, player)
 	}
 }
 
-func A_CheckReload(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_CheckReload(tls *libc.TLS, player *player_t, psp uintptr) {
 	P_CheckAmmo(tls, player)
 }
 
@@ -29435,26 +29439,26 @@ func A_CheckReload(tls *libc.TLS, player uintptr, psp uintptr) {
 //	// Lowers current weapon,
 //	//  and changes weapon at bottom.
 //	//
-func A_Lower(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_Lower(tls *libc.TLS, player *player_t, psp uintptr) {
 	*(*fixed_t)(unsafe.Pointer(psp + 16)) += 1 << FRACBITS * 6
 	// Is already down.
 	if (*pspdef_t)(unsafe.Pointer(psp)).Fsy < 128*(1<<FRACBITS) {
 		return
 	}
 	// Player is dead.
-	if (*player_t)(unsafe.Pointer(player)).Fplayerstate == int32(PST_DEAD) {
+	if player.Fplayerstate == int32(PST_DEAD) {
 		(*pspdef_t)(unsafe.Pointer(psp)).Fsy = 128 * (1 << FRACBITS)
 		// don't bring weapon back up
 		return
 	}
 	// The old weapon has been lowered off the screen,
 	// so change the weapon and start raising it
-	if !((*player_t)(unsafe.Pointer(player)).Fhealth != 0) {
+	if !(player.Fhealth != 0) {
 		// Player is dead, so keep the weapon off screen.
 		P_SetPsprite(tls, player, int32(ps_weapon), int32(S_NULL))
 		return
 	}
-	(*player_t)(unsafe.Pointer(player)).Freadyweapon = (*player_t)(unsafe.Pointer(player)).Fpendingweapon
+	player.Freadyweapon = player.Fpendingweapon
 	P_BringUpWeapon(tls, player)
 }
 
@@ -29463,7 +29467,7 @@ func A_Lower(tls *libc.TLS, player uintptr, psp uintptr) {
 //	//
 //	// A_Raise
 //	//
-func A_Raise(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_Raise(tls *libc.TLS, player *player_t, psp uintptr) {
 	var newstate statenum_t
 	*(*fixed_t)(unsafe.Pointer(psp + 16)) -= 1 << FRACBITS * 6
 	if (*pspdef_t)(unsafe.Pointer(psp)).Fsy > 32*(1<<FRACBITS) {
@@ -29472,7 +29476,7 @@ func A_Raise(tls *libc.TLS, player uintptr, psp uintptr) {
 	(*pspdef_t)(unsafe.Pointer(psp)).Fsy = 32 * (1 << FRACBITS)
 	// The weapon has been raised all the way,
 	//  so change to the ready state.
-	newstate = weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Freadystate
+	newstate = weaponinfo[player.Freadyweapon].Freadystate
 	P_SetPsprite(tls, player, int32(ps_weapon), newstate)
 }
 
@@ -29481,9 +29485,9 @@ func A_Raise(tls *libc.TLS, player uintptr, psp uintptr) {
 //	//
 //	// A_GunFlash
 //	//
-func A_GunFlash(tls *libc.TLS, player uintptr, psp uintptr) {
-	P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY_ATK2))
-	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fflashstate)
+func A_GunFlash(tls *libc.TLS, player *player_t, psp uintptr) {
+	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK2))
+	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[player.Freadyweapon].Fflashstate)
 }
 
 //
@@ -29495,17 +29499,17 @@ func A_GunFlash(tls *libc.TLS, player uintptr, psp uintptr) {
 //	//
 //	// A_Punch
 //	//
-func A_Punch(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_Punch(tls *libc.TLS, player *player_t, psp uintptr) {
 	var angle angle_t
 	var damage, slope int32
 	damage = (P_Random()%int32(10) + 1) << 1
-	if *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_strength)*4)) != 0 {
+	if player.Fpowers[pw_strength] != 0 {
 		damage *= 10
 	}
-	angle = (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fangle
+	angle = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle
 	angle += libc.Uint32FromInt32((P_Random() - P_Random()) << 18)
-	slope = P_AimLineAttack(tls, (*player_t)(unsafe.Pointer(player)).Fmo, angle, 64*(1<<FRACBITS))
-	P_LineAttack(tls, (*player_t)(unsafe.Pointer(player)).Fmo, angle, 64*(1<<FRACBITS), slope, damage)
+	slope = P_AimLineAttack(tls, player.Fmo, angle, 64*(1<<FRACBITS))
+	P_LineAttack(tls, player.Fmo, angle, 64*(1<<FRACBITS), slope, damage)
 	// turn to face target
 	if linetarget != 0 {
 		S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_punch))
@@ -29518,7 +29522,7 @@ func A_Punch(tls *libc.TLS, player uintptr, psp uintptr) {
 //	//
 //	// A_Saw
 //	//
-func A_Saw(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_Saw(tls *libc.TLS, player *player_t, psp uintptr) {
 	var angle angle_t
 	var damage, slope int32
 	damage = 2 * (P_Random()%int32(10) + 1)
@@ -29556,11 +29560,11 @@ func A_Saw(tls *libc.TLS, player uintptr, psp uintptr) {
 // example, it is possible to make a weapon that decreases the max
 // number of ammo for another weapon.  Emulate this.
 
-func DecreaseAmmo(tls *libc.TLS, player uintptr, ammonum int32, amount int32) {
+func DecreaseAmmo(tls *libc.TLS, player *player_t, ammonum int32, amount int32) {
 	if ammonum < int32(NUMAMMO) {
-		*(*int32)(unsafe.Pointer(player + 168 + uintptr(ammonum)*4)) -= amount
+		player.Fammo[ammonum] -= amount
 	} else {
-		*(*int32)(unsafe.Pointer(player + 184 + uintptr(ammonum-int32(NUMAMMO))*4)) -= amount
+		player.Fmaxammo[ammonum-int32(NUMAMMO)] -= amount
 	}
 }
 
@@ -29569,7 +29573,7 @@ func DecreaseAmmo(tls *libc.TLS, player uintptr, ammonum int32, amount int32) {
 //	//
 //	// A_FireMissile
 //	//
-func A_FireMissile(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_FireMissile(tls *libc.TLS, player *player_t, psp uintptr) {
 	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, 1)
 	P_SpawnPlayerMissile(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(MT_ROCKET))
 }
@@ -29579,7 +29583,7 @@ func A_FireMissile(tls *libc.TLS, player uintptr, psp uintptr) {
 //	//
 //	// A_FireBFG
 //	//
-func A_FireBFG(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_FireBFG(tls *libc.TLS, player *player_t, psp uintptr) {
 	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, int32(DEH_DEFAULT_BFG_CELLS_PER_SHOT))
 	P_SpawnPlayerMissile(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(MT_BFG))
 }
@@ -29589,7 +29593,7 @@ func A_FireBFG(tls *libc.TLS, player uintptr, psp uintptr) {
 //	//
 //	// A_FirePlasma
 //	//
-func A_FirePlasma(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_FirePlasma(tls *libc.TLS, player *player_t, psp uintptr) {
 	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, 1)
 	P_SetPsprite(tls, player, int32(ps_flash), weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fflashstate+P_Random()&int32(1))
 	P_SpawnPlayerMissile(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(MT_PLASMA))
@@ -29631,7 +29635,7 @@ func P_GunShot(tls *libc.TLS, mo uintptr, accurate boolean) {
 //	//
 //	// A_FirePistol
 //	//
-func A_FirePistol(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_FirePistol(tls *libc.TLS, player *player_t, psp uintptr) {
 	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_pistol))
 	P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY_ATK2))
 	DecreaseAmmo(tls, player, weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo, 1)
@@ -29645,7 +29649,7 @@ func A_FirePistol(tls *libc.TLS, player uintptr, psp uintptr) {
 //	//
 //	// A_FireShotgun
 //	//
-func A_FireShotgun(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_FireShotgun(tls *libc.TLS, player *player_t, psp uintptr) {
 	var i int32
 	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_shotgn))
 	P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY_ATK2))
@@ -29670,7 +29674,7 @@ func A_FireShotgun(tls *libc.TLS, player uintptr, psp uintptr) {
 //	//
 //	// A_FireShotgun2
 //	//
-func A_FireShotgun2(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_FireShotgun2(tls *libc.TLS, player *player_t, psp uintptr) {
 	var angle angle_t
 	var damage, i int32
 	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_dshtgn))
@@ -29699,9 +29703,9 @@ func A_FireShotgun2(tls *libc.TLS, player uintptr, psp uintptr) {
 //	//
 //	// A_FireCGun
 //	//
-func A_FireCGun(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_FireCGun(tls *libc.TLS, player *player_t, psp uintptr) {
 	S_StartSound(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(sfx_pistol))
-	if !(*(*int32)(unsafe.Pointer(player + 168 + uintptr(weaponinfo[(*player_t)(unsafe.Pointer(player)).Freadyweapon].Fammo)*4)) != 0) {
+	if !(player.Fammo[weaponinfo[player.Freadyweapon].Fammo] != 0) {
 		return
 	}
 	P_SetMobjState(tls, (*player_t)(unsafe.Pointer(player)).Fmo, int32(S_PLAY_ATK2))
@@ -29716,15 +29720,15 @@ func A_FireCGun(tls *libc.TLS, player uintptr, psp uintptr) {
 //	//
 //	// ?
 //	//
-func A_Light0(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_Light0(tls *libc.TLS, player *player_t, psp uintptr) {
 	(*player_t)(unsafe.Pointer(player)).Fextralight = 0
 }
 
-func A_Light1(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_Light1(tls *libc.TLS, player *player_t, psp uintptr) {
 	(*player_t)(unsafe.Pointer(player)).Fextralight = 1
 }
 
-func A_Light2(tls *libc.TLS, player uintptr, psp uintptr) {
+func A_Light2(tls *libc.TLS, player *player_t, psp uintptr) {
 	(*player_t)(unsafe.Pointer(player)).Fextralight = 2
 }
 
@@ -29786,7 +29790,7 @@ func A_BFGsound(tls *libc.TLS, player uintptr, psp uintptr) {
 //	// P_SetupPsprites
 //	// Called at start of level for each player.
 //	//
-func P_SetupPsprites(tls *libc.TLS, player uintptr) {
+func P_SetupPsprites(tls *libc.TLS, player *player_t) {
 	var i int32
 	// remove all psprites
 	i = 0
@@ -29794,14 +29798,14 @@ func P_SetupPsprites(tls *libc.TLS, player uintptr) {
 		if !(i < int32(NUMPSPRITES)) {
 			break
 		}
-		(*(*pspdef_t)(unsafe.Pointer(player + 272 + uintptr(i)*24))).Fstate = libc.UintptrFromInt32(0)
+		(*(*pspdef_t)(unsafe.Pointer(&player.Fpsprites[i]))).Fstate = libc.UintptrFromInt32(0)
 		goto _1
 	_1:
 		;
 		i++
 	}
 	// spawn the gun
-	(*player_t)(unsafe.Pointer(player)).Fpendingweapon = (*player_t)(unsafe.Pointer(player)).Freadyweapon
+	player.Fpendingweapon = player.Freadyweapon
 	P_BringUpWeapon(tls, player)
 }
 
@@ -29811,15 +29815,15 @@ func P_SetupPsprites(tls *libc.TLS, player uintptr) {
 //	// P_MovePsprites
 //	// Called every tic by player thinking routine.
 //	//
-func P_MovePsprites(tls *libc.TLS, player uintptr) {
+func P_MovePsprites(tls *libc.TLS, player *player_t) {
 	var i int32
-	var psp, v2 uintptr
-	psp = player + 272
+	var v2 uintptr
 	i = 0
 	for {
 		if !(i < int32(NUMPSPRITES)) {
 			break
 		}
+		psp := &player.Fpsprites[i]
 		// a null state means not active
 		v2 = (*pspdef_t)(unsafe.Pointer(psp)).Fstate
 		if v2 != 0 {
@@ -29836,10 +29840,9 @@ func P_MovePsprites(tls *libc.TLS, player uintptr) {
 	_1:
 		;
 		i++
-		psp += 24
 	}
-	(*(*pspdef_t)(unsafe.Pointer(player + 272 + uintptr(ps_flash)*24))).Fsx = (*(*pspdef_t)(unsafe.Pointer(player + 272 + uintptr(ps_weapon)*24))).Fsx
-	(*(*pspdef_t)(unsafe.Pointer(player + 272 + uintptr(ps_flash)*24))).Fsy = (*(*pspdef_t)(unsafe.Pointer(player + 272 + uintptr(ps_weapon)*24))).Fsy
+	player.Fpsprites[ps_flash].Fsx = player.Fpsprites[ps_weapon].Fsx
+	player.Fpsprites[ps_flash].Fsy = player.Fpsprites[ps_weapon].Fsy
 }
 
 const SAVEGAME_EOF = 29
@@ -30124,10 +30127,10 @@ func saveg_read_mobj_t(tls *libc.TLS, str uintptr) {
 	// player_t* player;
 	pl = saveg_read32(tls)
 	if pl > 0 {
-		(*mobj_t)(unsafe.Pointer(str)).Fplayer = uintptr(unsafe.Pointer(&players)) + uintptr(pl-1)*328
+		(*mobj_t)(unsafe.Pointer(str)).Fplayer = &players[pl-1]
 		(*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(str)).Fplayer)).Fmo = str
 	} else {
-		(*mobj_t)(unsafe.Pointer(str)).Fplayer = libc.UintptrFromInt32(0)
+		(*mobj_t)(unsafe.Pointer(str)).Fplayer = nil
 	}
 	// int lastlook;
 	(*mobj_t)(unsafe.Pointer(str)).Flastlook = saveg_read32(tls)
@@ -30201,8 +30204,9 @@ func saveg_write_mobj_t(tls *libc.TLS, str uintptr) {
 	// int threshold;
 	saveg_write32(tls, (*mobj_t)(unsafe.Pointer(str)).Fthreshold)
 	// player_t* player;
-	if (*mobj_t)(unsafe.Pointer(str)).Fplayer != 0 {
-		saveg_write32(tls, int32((int64((*mobj_t)(unsafe.Pointer(str)).Fplayer)-int64(uintptr(unsafe.Pointer(&players))))/328+int64(1)))
+	if (*mobj_t)(unsafe.Pointer(str)).Fplayer != nil {
+		idx := int32(playerIndex((*mobj_t)(unsafe.Pointer(str)).Fplayer))
+		saveg_write32(tls, idx+1)
 	} else {
 		saveg_write32(tls, 0)
 	}
@@ -32824,7 +32828,7 @@ func P_CrossSpecialLine(tls *libc.TLS, linenum int32, side int32, thing uintptr)
 	var ok int32
 	line := &lines[linenum]
 	//	Triggers that other things can activate
-	if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0) {
+	if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != nil) {
 		// Things that should NOT trigger specials...
 		switch (*mobj_t)(unsafe.Pointer(thing)).Ftype1 {
 		case int32(MT_ROCKET):
@@ -33018,7 +33022,7 @@ func P_CrossSpecialLine(tls *libc.TLS, linenum int32, side int32, thing uintptr)
 		G_SecretExitLevel(tls)
 	case 125:
 		// TELEPORT MonsterONLY
-		if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0) {
+		if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != nil) {
 			EV_Teleport(tls, line, side, thing)
 			line.Fspecial = 0
 		}
@@ -33124,7 +33128,7 @@ func P_CrossSpecialLine(tls *libc.TLS, linenum int32, side int32, thing uintptr)
 		EV_DoPlat(tls, line, int32(blazeDWUS), 0)
 	case 126:
 		// TELEPORT MonsterONLY.
-		if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0) {
+		if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != nil) {
 			EV_Teleport(tls, line, side, thing)
 		}
 	case 128:
@@ -33146,7 +33150,7 @@ func P_CrossSpecialLine(tls *libc.TLS, linenum int32, side int32, thing uintptr)
 func P_ShootSpecialLine(tls *libc.TLS, thing uintptr, line *line_t) {
 	var ok int32
 	//	Impacts that other things can activate.
-	if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0) {
+	if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != nil) {
 		ok = 0
 		switch int32(line.Fspecial) {
 		case 46:
@@ -33182,7 +33186,7 @@ func P_ShootSpecialLine(tls *libc.TLS, thing uintptr, line *line_t) {
 //	// Called every tic frame
 //	//  that the player origin is in a special sector
 //	//
-func P_PlayerInSpecialSector(tls *libc.TLS, player uintptr) {
+func P_PlayerInSpecialSector(tls *libc.TLS, player *player_t) {
 	var sector *sector_t
 	sector = ((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fsubsector).Fsector
 	// Falling, not all the way down yet?
@@ -33193,14 +33197,14 @@ func P_PlayerInSpecialSector(tls *libc.TLS, player uintptr) {
 	switch int32(sector.Fspecial) {
 	case 5:
 		// HELLSLIME DAMAGE
-		if !(*(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_ironfeet)*4)) != 0) {
+		if !(player.Fpowers[pw_ironfeet] != 0) {
 			if !(leveltime&0x1f != 0) {
 				P_DamageMobj(tls, (*player_t)(unsafe.Pointer(player)).Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 10)
 			}
 		}
 	case 7:
 		// NUKAGE DAMAGE
-		if !(*(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_ironfeet)*4)) != 0) {
+		if !(player.Fpowers[pw_ironfeet] != 0) {
 			if !(leveltime&0x1f != 0) {
 				P_DamageMobj(tls, (*player_t)(unsafe.Pointer(player)).Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 5)
 			}
@@ -33210,7 +33214,7 @@ func P_PlayerInSpecialSector(tls *libc.TLS, player uintptr) {
 		fallthrough
 	case 4:
 		// STROBE HURT
-		if !(*(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_ironfeet)*4)) != 0) || P_Random() < 5 {
+		if !(player.Fpowers[pw_ironfeet] != 0) || P_Random() < 5 {
 			if !(leveltime&0x1f != 0) {
 				P_DamageMobj(tls, (*player_t)(unsafe.Pointer(player)).Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 20)
 			}
@@ -33221,7 +33225,7 @@ func P_PlayerInSpecialSector(tls *libc.TLS, player uintptr) {
 		sector.Fspecial = 0
 	case 11:
 		// EXIT SUPER DAMAGE! (for E1M8 finale)
-		*(*int32)(unsafe.Pointer(player + 208)) &= ^int32(CF_GODMODE)
+		player.Fcheats &= ^int32(CF_GODMODE)
 		if !(leveltime&0x1f != 0) {
 			P_DamageMobj(tls, (*player_t)(unsafe.Pointer(player)).Fmo, libc.UintptrFromInt32(0), libc.UintptrFromInt32(0), 20)
 		}
@@ -33961,7 +33965,7 @@ func P_UseSpecialLine(tls *libc.TLS, thing uintptr, line *line_t, side int32) (r
 		}
 	}
 	// Switches that other things can activate.
-	if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0) {
+	if !((*mobj_t)(unsafe.Pointer(thing)).Fplayer != nil) {
 		// never open secret doors
 		if int32(line.Fflags)&ML_SECRET != 0 {
 			return 0
@@ -34370,7 +34374,7 @@ func EV_Teleport(tls *libc.TLS, line *line_t, side int32, thing uintptr) (r int3
 				if gameversion != exe_final {
 					(*mobj_t)(unsafe.Pointer(thing)).Fz = (*mobj_t)(unsafe.Pointer(thing)).Ffloorz
 				}
-				if (*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0 {
+				if (*mobj_t)(unsafe.Pointer(thing)).Fplayer != nil {
 					(*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(thing)).Fplayer)).Fviewz = (*mobj_t)(unsafe.Pointer(thing)).Fz + (*player_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(thing)).Fplayer)).Fviewheight
 				}
 				// spawn teleport fog at source and destination
@@ -34381,7 +34385,7 @@ func EV_Teleport(tls *libc.TLS, line *line_t, side int32, thing uintptr) (r int3
 				// emit sound, where?
 				S_StartSound(tls, fog, int32(sfx_telept))
 				// don't move for a bit
-				if (*mobj_t)(unsafe.Pointer(thing)).Fplayer != 0 {
+				if (*mobj_t)(unsafe.Pointer(thing)).Fplayer != nil {
 					(*mobj_t)(unsafe.Pointer(thing)).Freactiontime = 18
 				}
 				(*mobj_t)(unsafe.Pointer(thing)).Fangle = (*mobj_t)(unsafe.Pointer(m)).Fangle
@@ -34485,7 +34489,7 @@ func P_Ticker(tls *libc.TLS) {
 			break
 		}
 		if playeringame[i] != 0 {
-			P_PlayerThink(tls, uintptr(unsafe.Pointer(&players))+uintptr(i)*328)
+			P_PlayerThink(tls, &players[i])
 		}
 		goto _1
 	_1:
@@ -34510,7 +34514,7 @@ const MAXBOB = 1048576
 //	// P_Thrust
 //	// Moves the given origin along a given angle.
 //	//
-func P_Thrust(tls *libc.TLS, player uintptr, angle angle_t, move fixed_t) {
+func P_Thrust(tls *libc.TLS, player *player_t, angle angle_t, move fixed_t) {
 	angle >>= uint32(ANGLETOFINESHIFT)
 	*(*fixed_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 112)) += FixedMul(move, finecosine[angle])
 	*(*fixed_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 116)) += FixedMul(move, finesine[angle])
@@ -34522,7 +34526,7 @@ func P_Thrust(tls *libc.TLS, player uintptr, angle angle_t, move fixed_t) {
 //	// P_CalcHeight
 //	// Calculate the walking / running height adjustment
 //	//
-func P_CalcHeight(tls *libc.TLS, player uintptr) {
+func P_CalcHeight(tls *libc.TLS, player *player_t) {
 	var angle int32
 	var bob fixed_t
 	// Regular movement bobbing
@@ -34532,7 +34536,7 @@ func P_CalcHeight(tls *libc.TLS, player uintptr) {
 	// Note: a LUT allows for effects
 	//  like a ramp with low health.
 	(*player_t)(unsafe.Pointer(player)).Fbob = FixedMul((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fmomx, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fmomx) + FixedMul((*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fmomy, (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fmomy)
-	*(*fixed_t)(unsafe.Pointer(player + 40)) >>= 2
+	player.Fbob >>= 2
 	if (*player_t)(unsafe.Pointer(player)).Fbob > int32(MAXBOB) {
 		(*player_t)(unsafe.Pointer(player)).Fbob = int32(MAXBOB)
 	}
@@ -34548,7 +34552,7 @@ func P_CalcHeight(tls *libc.TLS, player uintptr) {
 	bob = FixedMul((*player_t)(unsafe.Pointer(player)).Fbob/int32(2), finesine[angle])
 	// move viewheight
 	if (*player_t)(unsafe.Pointer(player)).Fplayerstate == int32(PST_LIVE) {
-		*(*fixed_t)(unsafe.Pointer(player + 32)) += (*player_t)(unsafe.Pointer(player)).Fdeltaviewheight
+		player.Fviewheight += (*player_t)(unsafe.Pointer(player)).Fdeltaviewheight
 		if (*player_t)(unsafe.Pointer(player)).Fviewheight > 41*(1<<FRACBITS) {
 			(*player_t)(unsafe.Pointer(player)).Fviewheight = 41 * (1 << FRACBITS)
 			(*player_t)(unsafe.Pointer(player)).Fdeltaviewheight = 0
@@ -34560,7 +34564,7 @@ func P_CalcHeight(tls *libc.TLS, player uintptr) {
 			}
 		}
 		if (*player_t)(unsafe.Pointer(player)).Fdeltaviewheight != 0 {
-			*(*fixed_t)(unsafe.Pointer(player + 36)) += 1 << FRACBITS / 4
+			player.Fdeltaviewheight += 1 << FRACBITS / 4
 			if !((*player_t)(unsafe.Pointer(player)).Fdeltaviewheight != 0) {
 				(*player_t)(unsafe.Pointer(player)).Fdeltaviewheight = 1
 			}
@@ -34577,9 +34581,8 @@ func P_CalcHeight(tls *libc.TLS, player uintptr) {
 //	//
 //	// P_MovePlayer
 //	//
-func P_MovePlayer(tls *libc.TLS, player uintptr) {
-	var cmd uintptr
-	cmd = player + 12
+func P_MovePlayer(tls *libc.TLS, player *player_t) {
+	cmd := &player.Fcmd
 	*(*angle_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 56)) += libc.Uint32FromInt32(int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn) << 16)
 	// Do not let the player control movement
 	//  if not onground.
@@ -34601,12 +34604,12 @@ func P_MovePlayer(tls *libc.TLS, player uintptr) {
 // Decrease POV height to floor height.
 //
 
-func P_DeathThink(tls *libc.TLS, player uintptr) {
+func P_DeathThink(tls *libc.TLS, player *player_t) {
 	var angle, delta angle_t
 	P_MovePsprites(tls, player)
 	// fall to the ground
 	if (*player_t)(unsafe.Pointer(player)).Fviewheight > 6*(1<<FRACBITS) {
-		*(*fixed_t)(unsafe.Pointer(player + 32)) -= 1 << FRACBITS
+		player.Fviewheight -= 1 << FRACBITS
 	}
 	if (*player_t)(unsafe.Pointer(player)).Fviewheight < 6*(1<<FRACBITS) {
 		(*player_t)(unsafe.Pointer(player)).Fviewheight = 6 * (1 << FRACBITS)
@@ -34646,10 +34649,8 @@ func P_DeathThink(tls *libc.TLS, player uintptr) {
 //	//
 //	// P_PlayerThink
 //	//
-func P_PlayerThink(tls *libc.TLS, player uintptr) {
-	var cmd, v2 uintptr
+func P_PlayerThink(tls *libc.TLS, player *player_t) {
 	var newweapon weapontype_t
-	var v1 int32
 	// fixme: do this in the cheat code
 	if (*player_t)(unsafe.Pointer(player)).Fcheats&int32(CF_NOCLIP) != 0 {
 		*(*int32)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 160)) |= int32(MF_NOCLIP)
@@ -34657,7 +34658,7 @@ func P_PlayerThink(tls *libc.TLS, player uintptr) {
 		*(*int32)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 160)) &= ^int32(MF_NOCLIP)
 	}
 	// chain saw run forward
-	cmd = player + 12
+	cmd := &player.Fcmd
 	if (*mobj_t)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo)).Fflags&int32(MF_JUSTATTACKED) != 0 {
 		(*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn = 0
 		(*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove = int8(0xc800 / 512)
@@ -34690,13 +34691,13 @@ func P_PlayerThink(tls *libc.TLS, player uintptr) {
 		//  when the weapon psprite can do it
 		//  (read: not in the middle of an attack).
 		newweapon = libc.Int32FromUint8((*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons) & int32(BT_WEAPONMASK) >> int32(BT_WEAPONSHIFT)
-		if newweapon == wp_fist && *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_chainsaw)*4)) != 0 && !((*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_chainsaw && *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_strength)*4)) != 0) {
+		if newweapon == wp_fist && player.Fweaponowned[wp_chainsaw] != 0 && !((*player_t)(unsafe.Pointer(player)).Freadyweapon == wp_chainsaw && player.Fpowers[pw_strength] != 0) {
 			newweapon = wp_chainsaw
 		}
-		if gamemode == int32(commercial) && newweapon == wp_shotgun && *(*boolean)(unsafe.Pointer(player + 132 + uintptr(wp_supershotgun)*4)) != 0 && (*player_t)(unsafe.Pointer(player)).Freadyweapon != wp_supershotgun {
+		if gamemode == int32(commercial) && newweapon == wp_shotgun && player.Fweaponowned[wp_supershotgun] != 0 && (*player_t)(unsafe.Pointer(player)).Freadyweapon != wp_supershotgun {
 			newweapon = wp_supershotgun
 		}
-		if *(*boolean)(unsafe.Pointer(player + 132 + uintptr(newweapon)*4)) != 0 && newweapon != (*player_t)(unsafe.Pointer(player)).Freadyweapon {
+		if player.Fweaponowned[newweapon] != 0 && newweapon != (*player_t)(unsafe.Pointer(player)).Freadyweapon {
 			// Do not go to plasma or BFG in shareware,
 			//  even if cheated.
 			if newweapon != wp_plasma && newweapon != wp_bfg || gamemode != int32(shareware) {
@@ -34717,25 +34718,23 @@ func P_PlayerThink(tls *libc.TLS, player uintptr) {
 	P_MovePsprites(tls, player)
 	// Counters, time dependend power ups.
 	// Strength counts up to diminish fade.
-	if *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_strength)*4)) != 0 {
-		*(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_strength)*4))++
+	if player.Fpowers[pw_strength] != 0 {
+		player.Fpowers[pw_strength]++
 	}
-	if *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_invulnerability)*4)) != 0 {
-		*(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_invulnerability)*4))--
+	if player.Fpowers[pw_invulnerability] != 0 {
+		player.Fpowers[pw_invulnerability]--
 	}
-	if *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_invisibility)*4)) != 0 {
-		v2 = player + 56 + uintptr(pw_invisibility)*4
-		*(*int32)(unsafe.Pointer(v2))--
-		v1 = *(*int32)(unsafe.Pointer(v2))
-		if !(v1 != 0) {
+	if player.Fpowers[pw_invisibility] != 0 {
+		player.Fpowers[pw_invisibility]--
+		if !(player.Fpowers[pw_invisibility] != 0) {
 			*(*int32)(unsafe.Pointer((*player_t)(unsafe.Pointer(player)).Fmo + 160)) &= ^int32(MF_SHADOW)
 		}
 	}
-	if *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_infrared)*4)) != 0 {
-		*(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_infrared)*4))--
+	if player.Fpowers[pw_infrared] != 0 {
+		player.Fpowers[pw_infrared]--
 	}
-	if *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_ironfeet)*4)) != 0 {
-		*(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_ironfeet)*4))--
+	if player.Fpowers[pw_ironfeet] != 0 {
+		player.Fpowers[pw_ironfeet]--
 	}
 	if (*player_t)(unsafe.Pointer(player)).Fdamagecount != 0 {
 		(*player_t)(unsafe.Pointer(player)).Fdamagecount--
@@ -34744,15 +34743,15 @@ func P_PlayerThink(tls *libc.TLS, player uintptr) {
 		(*player_t)(unsafe.Pointer(player)).Fbonuscount--
 	}
 	// Handling colormaps.
-	if *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_invulnerability)*4)) != 0 {
-		if *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_invulnerability)*4)) > 4*32 || *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_invulnerability)*4))&int32(8) != 0 {
+	if player.Fpowers[pw_invulnerability] != 0 {
+		if player.Fpowers[pw_invulnerability] > 4*32 || player.Fpowers[pw_invulnerability]&int32(8) != 0 {
 			(*player_t)(unsafe.Pointer(player)).Ffixedcolormap = int32(INVERSECOLORMAP)
 		} else {
 			(*player_t)(unsafe.Pointer(player)).Ffixedcolormap = 0
 		}
 	} else {
-		if *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_infrared)*4)) != 0 {
-			if *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_infrared)*4)) > 4*32 || *(*int32)(unsafe.Pointer(player + 56 + uintptr(pw_infrared)*4))&int32(8) != 0 {
+		if player.Fpowers[pw_infrared] != 0 {
+			if player.Fpowers[pw_infrared] > 4*32 || player.Fpowers[pw_infrared]&int32(8) != 0 {
 				// almost full bright
 				(*player_t)(unsafe.Pointer(player)).Ffixedcolormap = 1
 			} else {
@@ -41319,7 +41318,7 @@ func ST_Responder(tls *libc.TLS, ev *event_t) (r boolean) {
 					}
 					if cht_CheckCheat(&cheat_powerup[i], int8(ev.Fdata2)) != 0 {
 						if plyr.Fpowers[i] == 0 {
-							P_GivePower((uintptr)(unsafe.Pointer(plyr)), i)
+							P_GivePower(plyr, i)
 						} else {
 							if i != int32(pw_strength) {
 								plyr.Fpowers[i] = 1
@@ -47587,6 +47586,16 @@ var player_names [4]uintptr
 var playeringame [4]boolean
 
 var players [4]player_t
+
+func playerIndex(p *player_t) int32 {
+	for i := int32(0); i < 4; i++ {
+		if &players[i] == p {
+			return i
+		}
+	}
+	log.Fatalf("playerIndex: player %p not found in players", p)
+	return -1 // unreachable
+}
 
 var playerstarts [4]mapthing_t
 
