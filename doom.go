@@ -1962,7 +1962,7 @@ const ps_flash = 1
 const NUMPSPRITES = 2
 
 type pspdef_t struct {
-	Fstate uintptr
+	Fstate *state_t
 	Ftics  int32
 	Fsx    fixed_t
 	Fsy    fixed_t
@@ -29217,15 +29217,14 @@ const ANG905 = 1073741824
 //	// P_SetPsprite
 //	//
 func P_SetPsprite(tls *libc.TLS, player *player_t, position int32, stnum statenum_t) {
-	var state uintptr
 	psp := &player.Fpsprites[position]
 	for cond := true; cond; cond = !(psp.Ftics != 0) {
 		if !(stnum != 0) {
 			// object removed itself
-			psp.Fstate = libc.UintptrFromInt32(0)
+			psp.Fstate = nil
 			break
 		}
-		state = uintptr(unsafe.Pointer(&states)) + uintptr(stnum)*40
+		state := &states[stnum]
 		psp.Fstate = state
 		psp.Ftics = (*state_t)(unsafe.Pointer(state)).Ftics // could be 0
 		if (*state_t)(unsafe.Pointer(state)).Fmisc1 != 0 {
@@ -29235,9 +29234,9 @@ func P_SetPsprite(tls *libc.TLS, player *player_t, position int32, stnum statenu
 		}
 		// Call action routine.
 		// Modified handling.
-		if *(*actionf_p2)(unsafe.Pointer(state + 16)) != 0 {
+		if state.Faction.Facv != 0 {
 			(*(*func(*libc.TLS, *player_t, *pspdef_t))(unsafe.Pointer(&struct{ uintptr }{*(*actionf_p2)(unsafe.Pointer(&(*state_t)(unsafe.Pointer(state)).Faction))})))(tls, player, psp)
-			if !(psp.Fstate != 0) {
+			if !(psp.Fstate != nil) {
 				break
 			}
 		}
@@ -29379,7 +29378,7 @@ func A_WeaponReady(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	if (*mobj_t)(unsafe.Pointer(player.Fmo)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_PLAY_ATK1)*40 || (*mobj_t)(unsafe.Pointer(player.Fmo)).Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_PLAY_ATK2)*40 {
 		P_SetMobjState(tls, player.Fmo, int32(S_PLAY))
 	}
-	if player.Freadyweapon == wp_chainsaw && psp.Fstate == uintptr(unsafe.Pointer(&states))+uintptr(S_SAW)*40 {
+	if player.Freadyweapon == wp_chainsaw && psp.Fstate == &states[S_SAW] {
 		S_StartSound(tls, player.Fmo, int32(sfx_sawidl))
 	}
 	// check for change
@@ -29710,7 +29709,8 @@ func A_FireCGun(tls *libc.TLS, player *player_t, psp *pspdef_t) {
 	}
 	P_SetMobjState(tls, player.Fmo, int32(S_PLAY_ATK2))
 	DecreaseAmmo(tls, player, weaponinfo[player.Freadyweapon].Fammo, 1)
-	P_SetPsprite(tls, player, int32(ps_flash), int32((int64(uintptr(weaponinfo[player.Freadyweapon].Fflashstate)*40+psp.Fstate)-int64(uintptr(unsafe.Pointer(&states))+uintptr(S_CHAIN1)*40))/40))
+	newState := weaponinfo[player.Freadyweapon].Fflashstate + stateIndex(psp.Fstate) - S_CHAIN1
+	P_SetPsprite(tls, player, int32(ps_flash), newState)
 	P_BulletSlope(tls, player.Fmo)
 	P_GunShot(tls, player.Fmo, libc.BoolUint32(!(player.Frefire != 0)))
 }
@@ -29798,7 +29798,7 @@ func P_SetupPsprites(tls *libc.TLS, player *player_t) {
 		if !(i < int32(NUMPSPRITES)) {
 			break
 		}
-		(*(*pspdef_t)(unsafe.Pointer(&player.Fpsprites[i]))).Fstate = libc.UintptrFromInt32(0)
+		(*(*pspdef_t)(unsafe.Pointer(&player.Fpsprites[i]))).Fstate = nil
 		goto _1
 	_1:
 		;
@@ -29817,7 +29817,7 @@ func P_SetupPsprites(tls *libc.TLS, player *player_t) {
 //	//
 func P_MovePsprites(tls *libc.TLS, player *player_t) {
 	var i int32
-	var v2 uintptr
+	var v2 *state_t
 	i = 0
 	for {
 		if !(i < int32(NUMPSPRITES)) {
@@ -29826,13 +29826,13 @@ func P_MovePsprites(tls *libc.TLS, player *player_t) {
 		psp := &player.Fpsprites[i]
 		// a null state means not active
 		v2 = psp.Fstate
-		if v2 != 0 {
+		if v2 != nil {
 			// drop tic count and possibly change state
 			// a -1 tic count never changes
 			if psp.Ftics != -1 {
 				psp.Ftics--
 				if !(psp.Ftics != 0) {
-					P_SetPsprite(tls, player, i, (*state_t)(unsafe.Pointer(psp.Fstate)).Fnextstate)
+					P_SetPsprite(tls, player, i, psp.Fstate.Fnextstate)
 				}
 			}
 		}
@@ -30261,9 +30261,9 @@ func saveg_read_pspdef_t(tls *libc.TLS, str *pspdef_t) {
 	// state_t* state;
 	state = saveg_read32(tls)
 	if state > 0 {
-		str.Fstate = uintptr(unsafe.Pointer(&states)) + uintptr(state)*40
+		str.Fstate = &states[state]
 	} else {
-		str.Fstate = libc.UintptrFromInt32(0)
+		str.Fstate = nil
 	}
 	// int tics;
 	str.Ftics = saveg_read32(tls)
@@ -30275,8 +30275,8 @@ func saveg_read_pspdef_t(tls *libc.TLS, str *pspdef_t) {
 
 func saveg_write_pspdef_t(tls *libc.TLS, str *pspdef_t) {
 	// state_t* state;
-	if str.Fstate != 0 {
-		saveg_write32(tls, int32((int64(str.Fstate)-int64(uintptr(unsafe.Pointer(&states))))/40))
+	if str.Fstate != nil {
+		saveg_write32(tls, stateIndex(str.Fstate))
 	} else {
 		saveg_write32(tls, 0)
 	}
@@ -38728,7 +38728,7 @@ func R_DrawPlayerSprites(tls *libc.TLS) {
 			break
 		}
 		psp := &viewplayer.Fpsprites[i]
-		if psp.Fstate != 0 {
+		if psp.Fstate != nil {
 			R_DrawPSprite(tls, psp)
 		}
 		goto _1
@@ -48056,6 +48056,16 @@ var startskill skill_t
 var starttime int32
 
 var states [967]state_t
+
+func stateIndex(s *state_t) int32 {
+	for i := 0; i < len(states); i++ {
+		if &states[i] == s {
+			return int32(i)
+		}
+	}
+	log.Fatalf("stateIndex: state %p not found in states", s)
+	return -1 // unreachable
+}
 
 var stdc_wad_file wad_file_class_t
 
