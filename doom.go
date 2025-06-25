@@ -2287,7 +2287,7 @@ type netgame_startup_callback_t = uintptr
 
 type loop_interface_t struct {
 	FProcessEvents func(tls *libc.TLS)
-	FBuildTiccmd   func(*libc.TLS, uintptr, int32)
+	FBuildTiccmd   func(*libc.TLS, *ticcmd_t, int32)
 	FRunTic        func(*libc.TLS, uintptr, uintptr)
 	FRunMenu       func(tls *libc.TLS)
 }
@@ -4283,7 +4283,7 @@ func GetAdjustedTime() (r int32) {
 }
 
 func BuildNewTic(tls *libc.TLS) (r boolean) {
-	bp := alloc(16)
+	var cmd ticcmd_t
 	var gameticdiv int32
 	gameticdiv = gametic / ticdup
 	I_StartTic()
@@ -4310,10 +4310,11 @@ func BuildNewTic(tls *libc.TLS) (r boolean) {
 		}
 	}
 	//printf ("mk:%i ",maketic);
-	xmemset(bp, 0, uint64(16))
-	loop_interface.FBuildTiccmd(tls, bp, maketic)
-	*(*ticcmd_t)(unsafe.Pointer(uintptr(unsafe.Pointer(&ticdata)) + uintptr(maketic%int32(BACKUPTICS))*160 + uintptr(localplayer)*16)) = *(*ticcmd_t)(unsafe.Pointer(bp))
-	*(*boolean)(unsafe.Pointer(uintptr(unsafe.Pointer(&ticdata)) + uintptr(maketic%int32(BACKUPTICS))*160 + 128 + uintptr(localplayer)*4)) = 1
+	loop_interface.FBuildTiccmd(tls, &cmd, maketic)
+
+	ticdata[maketic%BACKUPTICS].Fcmds[localplayer] = cmd
+	ticdata[maketic%BACKUPTICS].Fingame[localplayer] = 1
+
 	maketic++
 	return 1
 }
@@ -7634,13 +7635,12 @@ func G_NextWeapon(direction int32) (r int32) {
 //	// or reads it from the demo buffer.
 //	// If recording a demo, write it out
 //	//
-func G_BuildTiccmd(tls *libc.TLS, cmd uintptr, maketic int32) {
+func G_BuildTiccmd(tls *libc.TLS, cmd *ticcmd_t, maketic int32) {
 	var bstrafe, strafe boolean
 	var desired_angleturn int16
 	var forward, i, key, side, speed, tspeed, v1, v16 int32
-	var p11, p12, p13, p14, p15, p17, p18, p2, p3, p4, p5, p6, p7, p8, p9 uintptr
-	xmemset(cmd, 0, uint64(16))
-	(*ticcmd_t)(unsafe.Pointer(cmd)).Fconsistancy = *(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(consoleplayer)*128 + uintptr(maketic%int32(BACKUPTICS))))
+	*cmd = ticcmd_t{}
+	cmd.Fconsistancy = *(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(consoleplayer)*128 + uintptr(maketic%int32(BACKUPTICS))))
 	strafe = libc.BoolUint32(gamekeydown[key_strafe] != 0 || *(*boolean)(unsafe.Pointer(mousebuttons + uintptr(mousebstrafe)*4)) != 0 || *(*boolean)(unsafe.Pointer(joybuttons + uintptr(joybstrafe)*4)) != 0)
 	// fraggle: support the old "joyb_speed = 31" hack which
 	// allowed an autorun effect
@@ -7678,20 +7678,16 @@ func G_BuildTiccmd(tls *libc.TLS, cmd uintptr, maketic int32) {
 		}
 	} else {
 		if gamekeydown[key_right] != 0 {
-			p2 = cmd + 2
-			*(*int16)(unsafe.Pointer(p2)) = int16(int32(*(*int16)(unsafe.Pointer(p2))) - angleturn[tspeed])
+			cmd.Fangleturn -= int16(angleturn[tspeed])
 		}
 		if gamekeydown[key_left] != 0 {
-			p3 = cmd + 2
-			*(*int16)(unsafe.Pointer(p3)) = int16(int32(*(*int16)(unsafe.Pointer(p3))) + angleturn[tspeed])
+			cmd.Fangleturn += int16(angleturn[tspeed])
 		}
 		if joyxmove > 0 {
-			p4 = cmd + 2
-			*(*int16)(unsafe.Pointer(p4)) = int16(int32(*(*int16)(unsafe.Pointer(p4))) - angleturn[tspeed])
+			cmd.Fangleturn -= int16(angleturn[tspeed])
 		}
 		if joyxmove < 0 {
-			p5 = cmd + 2
-			*(*int16)(unsafe.Pointer(p5)) = int16(int32(*(*int16)(unsafe.Pointer(p5))) + angleturn[tspeed])
+			cmd.Fangleturn += int16(angleturn[tspeed])
 		}
 	}
 	if gamekeydown[key_up] != 0 {
@@ -7715,14 +7711,12 @@ func G_BuildTiccmd(tls *libc.TLS, cmd uintptr, maketic int32) {
 		side += sidemove[speed]
 	}
 	// buttons
-	(*ticcmd_t)(unsafe.Pointer(cmd)).Fchatchar = libc.Uint8FromInt8(HU_dequeueChatChar())
+	cmd.Fchatchar = libc.Uint8FromInt8(HU_dequeueChatChar())
 	if gamekeydown[key_fire] != 0 || *(*boolean)(unsafe.Pointer(mousebuttons + uintptr(mousebfire)*4)) != 0 || *(*boolean)(unsafe.Pointer(joybuttons + uintptr(joybfire)*4)) != 0 {
-		p6 = cmd + 5
-		*(*uint8)(unsafe.Pointer(p6)) = uint8(int32(*(*uint8)(unsafe.Pointer(p6))) | int32(BT_ATTACK))
+		cmd.Fbuttons |= BT_ATTACK
 	}
 	if gamekeydown[key_use] != 0 || *(*boolean)(unsafe.Pointer(joybuttons + uintptr(joybuse)*4)) != 0 || *(*boolean)(unsafe.Pointer(mousebuttons + uintptr(mousebuse)*4)) != 0 {
-		p7 = cmd + 5
-		*(*uint8)(unsafe.Pointer(p7)) = uint8(int32(*(*uint8)(unsafe.Pointer(p7))) | int32(BT_USE))
+		cmd.Fbuttons |= BT_USE
 		// clear double clicks if hit use button
 		dclicks = 0
 	}
@@ -7731,10 +7725,8 @@ func G_BuildTiccmd(tls *libc.TLS, cmd uintptr, maketic int32) {
 	// we generate a ticcmd.  Choose a new weapon.
 	if gamestate == int32(GS_LEVEL) && next_weapon != 0 {
 		i = G_NextWeapon(next_weapon)
-		p8 = cmd + 5
-		*(*uint8)(unsafe.Pointer(p8)) = uint8(int32(*(*uint8)(unsafe.Pointer(p8))) | int32(BT_CHANGE))
-		p9 = cmd + 5
-		*(*uint8)(unsafe.Pointer(p9)) = uint8(int32(*(*uint8)(unsafe.Pointer(p9))) | i<<int32(BT_WEAPONSHIFT))
+		cmd.Fbuttons |= BT_CHANGE
+		cmd.Fbuttons |= uint8(i << BT_WEAPONSHIFT)
 	} else {
 		// Check weapon keys.
 		i = 0
@@ -7744,10 +7736,8 @@ func G_BuildTiccmd(tls *libc.TLS, cmd uintptr, maketic int32) {
 			}
 			key = *(*int32)(unsafe.Pointer(weapon_keys[i]))
 			if gamekeydown[key] != 0 {
-				p11 = cmd + 5
-				*(*uint8)(unsafe.Pointer(p11)) = uint8(int32(*(*uint8)(unsafe.Pointer(p11))) | int32(BT_CHANGE))
-				p12 = cmd + 5
-				*(*uint8)(unsafe.Pointer(p12)) = uint8(int32(*(*uint8)(unsafe.Pointer(p12))) | i<<int32(BT_WEAPONSHIFT))
+				cmd.Fbuttons |= BT_CHANGE
+				cmd.Fbuttons |= uint8(i << BT_WEAPONSHIFT)
 				break
 			}
 			goto _10
@@ -7772,8 +7762,7 @@ func G_BuildTiccmd(tls *libc.TLS, cmd uintptr, maketic int32) {
 				dclicks++
 			}
 			if dclicks == 2 {
-				p13 = cmd + 5
-				*(*uint8)(unsafe.Pointer(p13)) = uint8(int32(*(*uint8)(unsafe.Pointer(p13))) | int32(BT_USE))
+				cmd.Fbuttons |= BT_USE
 				dclicks = 0
 			} else {
 				dclicktime = 0
@@ -7793,8 +7782,7 @@ func G_BuildTiccmd(tls *libc.TLS, cmd uintptr, maketic int32) {
 				dclicks2++
 			}
 			if dclicks2 == 2 {
-				p14 = cmd + 5
-				*(*uint8)(unsafe.Pointer(p14)) = uint8(int32(*(*uint8)(unsafe.Pointer(p14))) | int32(BT_USE))
+				cmd.Fbuttons |= BT_USE
 				dclicks2 = 0
 			} else {
 				dclicktime2 = 0
@@ -7811,8 +7799,7 @@ func G_BuildTiccmd(tls *libc.TLS, cmd uintptr, maketic int32) {
 	if strafe != 0 {
 		side += mousex * 2
 	} else {
-		p15 = cmd + 2
-		*(*int16)(unsafe.Pointer(p15)) = int16(int32(*(*int16)(unsafe.Pointer(p15))) - mousex*0x8)
+		cmd.Fangleturn -= int16(mousex * 8)
 	}
 	if mousex == 0 {
 		// No movement in the previous frame
@@ -7835,28 +7822,26 @@ func G_BuildTiccmd(tls *libc.TLS, cmd uintptr, maketic int32) {
 			side = -forwardmove[int32(1)]
 		}
 	}
-	p17 = cmd
-	*(*int8)(unsafe.Pointer(p17)) = int8(int32(*(*int8)(unsafe.Pointer(p17))) + forward)
-	p18 = cmd + 1
-	*(*int8)(unsafe.Pointer(p18)) = int8(int32(*(*int8)(unsafe.Pointer(p18))) + side)
+	cmd.Fforwardmove += int8(forward)
+	cmd.Fsidemove += int8(side)
 	// special buttons
 	if sendpause != 0 {
 		sendpause = 0
-		(*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons = libc.Uint8FromInt32(int32(BT_SPECIAL) | int32(BTS_PAUSE))
+		cmd.Fbuttons = libc.Uint8FromInt32(int32(BT_SPECIAL) | int32(BTS_PAUSE))
 	}
 	if sendsave != 0 {
 		sendsave = 0
-		(*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons = libc.Uint8FromInt32(int32(BT_SPECIAL) | int32(BTS_SAVEGAME) | savegameslot<<int32(BTS_SAVESHIFT))
+		cmd.Fbuttons = libc.Uint8FromInt32(int32(BT_SPECIAL) | int32(BTS_SAVEGAME) | savegameslot<<int32(BTS_SAVESHIFT))
 	}
 	// low-res turning
 	if lowres_turn != 0 {
-		desired_angleturn = int16(int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn) + int32(carry))
+		desired_angleturn = int16(int32(cmd.Fangleturn) + int32(carry))
 		// round angleturn to the nearest 256 unit boundary
 		// for recording demos with single byte values for turn
-		(*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn = int16((int32(desired_angleturn) + 128) & int32(0xff00))
+		cmd.Fangleturn = int16((int32(desired_angleturn) + 128) & int32(0xff00))
 		// Carry forward the error from the reduced resolution to the
 		// next tic, so that successive small movements can accumulate.
-		carry = int16(int32(desired_angleturn) - int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn))
+		carry = int16(int32(desired_angleturn) - int32(cmd.Fangleturn))
 	}
 }
 
