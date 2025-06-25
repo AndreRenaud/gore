@@ -4648,33 +4648,33 @@ const SNDDEVICE_GUS = 5
 const SNDDEVICE_GENMIDI = 8
 
 type sound_module_t struct {
-	Fsound_devices     uintptr
+	Fsound_devices     []snddevice_t
 	Fnum_sound_devices int32
-	FInit              uintptr
-	FShutdown          uintptr
-	FGetSfxLumpNum     uintptr
-	FUpdate            uintptr
-	FUpdateSoundParams uintptr
-	FStartSound        uintptr
-	FStopSound         uintptr
-	FSoundIsPlaying    uintptr
-	FCacheSounds       uintptr
+	FInit              func(boolean) boolean
+	FShutdown          func()
+	FGetSfxLumpNum     func(sfxinfo *sfxinfo_t) int32
+	FUpdate            func()
+	FUpdateSoundParams func(channel int32, vol int32, sep int32)
+	FStartSound        func(sfxinfo *sfxinfo_t, channel int32, vol int32, sep int32) int32
+	FStopSound         func(channel int32)
+	FSoundIsPlaying    func(channel int32) boolean
+	FCacheSounds       func([]sfxinfo_t) boolean
 }
 
 type music_module_t struct {
 	Fsound_devices     uintptr
 	Fnum_sound_devices int32
-	FInit              uintptr
-	FShutdown          uintptr
-	FSetMusicVolume    uintptr
-	FPauseMusic        uintptr
-	FResumeMusic       uintptr
-	FRegisterSong      uintptr
-	FUnRegisterSong    uintptr
-	FPlaySong          uintptr
-	FStopSong          uintptr
+	FInit              func()
+	FShutdown          func()
+	FSetMusicVolume    func(volume int32)
+	FPauseMusic        func()
+	FResumeMusic       func()
+	FRegisterSong      func(data uintptr, len1 int32) (r uintptr)
+	FUnRegisterSong    func(handle uintptr)
+	FPlaySong          func(handle uintptr, looping boolean) (r boolean)
+	FStopSong          func()
 	FMusicIsPlaying    uintptr
-	FPoll              uintptr
+	FPoll              func()
 }
 
 const mus_None = 0
@@ -5045,8 +5045,8 @@ func D_GrabMouseCallback() (r boolean) {
 func doomgeneric_Tick(tls *libc.TLS) {
 	// frame syncronous IO operations
 	I_StartFrame()
-	TryRunTics(tls)                                 // will run at least one tic
-	S_UpdateSounds(tls, players[consoleplayer].Fmo) // move positional sounds
+	TryRunTics(tls)                            // will run at least one tic
+	S_UpdateSounds(players[consoleplayer].Fmo) // move positional sounds
 	// Update display, next frame, with current state.
 	D_Display(tls)
 }
@@ -5966,8 +5966,8 @@ func D_DoomMain(tls *libc.TLS) {
 	}
 	fprintf_ccgo(os.Stdout, 4992)
 	I_CheckIsScreensaver()
-	I_InitSound(tls, 1)
-	I_InitMusic(tls)
+	I_InitSound(1)
+	I_InitMusic()
 	// Initial netgame startup. Connect to server etc.
 	D_ConnectNetGame()
 	// get skill / episode / map from parms
@@ -8191,9 +8191,9 @@ func G_Ticker(tls *libc.TLS) {
 				case int32(BTS_PAUSE):
 					paused = boolean(paused ^ libc.Uint32FromInt32(1))
 					if paused != 0 {
-						S_PauseSound(tls)
+						S_PauseSound()
 					} else {
-						S_ResumeSound(tls)
+						S_ResumeSound()
 					}
 				case int32(BTS_SAVEGAME):
 					if !(savedescription[0] != 0) {
@@ -8894,7 +8894,7 @@ func G_InitNew(tls *libc.TLS, skill skill_t, episode int32, map1 int32) {
 	var skytexturename uintptr
 	if paused != 0 {
 		paused = 0
-		S_ResumeSound(tls)
+		S_ResumeSound()
 	}
 	/*
 		    // Note: This commented-out block of code was added at some point
@@ -18068,8 +18068,8 @@ func init() {
 
 // Low-level sound and music modules we are using
 
-var sound_module = libc.UintptrFromInt32(0)
-var music_module = libc.UintptrFromInt32(0)
+var sound_module *sound_module_t
+var music_module *music_module_t
 
 func init() {
 	snd_musicdevice = int32(SNDDEVICE_SB)
@@ -18090,18 +18090,18 @@ var snd_mport = 0
 
 // Compiled-in sound modules:
 
-var sound_modules = [1]uintptr{}
+var sound_modules = []sound_module_t{}
 
 // Check if a sound device is in the given list of devices
 
-func SndDeviceInList(tls *libc.TLS, device snddevice_t, list uintptr, len1 int32) (r boolean) {
+func SndDeviceInList(device snddevice_t, list []snddevice_t, len1 int32) (r boolean) {
 	var i int32
 	i = 0
 	for {
 		if !(i < len1) {
 			break
 		}
-		if device == *(*snddevice_t)(unsafe.Pointer(list + uintptr(i)*4)) {
+		if device == list[i] {
 			return 1
 		}
 		goto _1
@@ -18115,33 +18115,24 @@ func SndDeviceInList(tls *libc.TLS, device snddevice_t, list uintptr, len1 int32
 // Find and initialize a sound_module_t appropriate for the setting
 // in snd_sfxdevice.
 
-func InitSfxModule(tls *libc.TLS, use_sfx_prefix boolean) {
-	var i int32
-	sound_module = libc.UintptrFromInt32(0)
-	i = 0
-	for {
-		if !(sound_modules[i] != libc.UintptrFromInt32(0)) {
-			break
-		}
+func InitSfxModule(use_sfx_prefix boolean) {
+	for i := range sound_modules {
+		s := &sound_modules[i]
 		// Is the sfx device in the list of devices supported by
 		// this module?
-		if SndDeviceInList(tls, snd_sfxdevice, (*sound_module_t)(unsafe.Pointer(sound_modules[i])).Fsound_devices, (*sound_module_t)(unsafe.Pointer(sound_modules[i])).Fnum_sound_devices) != 0 {
+		if SndDeviceInList(snd_sfxdevice, s.Fsound_devices, s.Fnum_sound_devices) != 0 {
 			// Initialize the module
-			if (*(*func(*libc.TLS, boolean) boolean)(unsafe.Pointer(&struct{ uintptr }{(*sound_module_t)(unsafe.Pointer(sound_modules[i])).FInit})))(tls, use_sfx_prefix) != 0 {
-				sound_module = sound_modules[i]
+			if s.FInit(use_sfx_prefix) != 0 {
+				sound_module = s
 				return
 			}
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 }
 
 // Initialize music according to snd_musicdevice.
 
-func InitMusicModule(tls *libc.TLS) {
+func InitMusicModule() {
 }
 
 //
@@ -18150,7 +18141,7 @@ func InitMusicModule(tls *libc.TLS) {
 //  allocates channel buffer, sets S_sfx lookup.
 //
 
-func I_InitSound(tls *libc.TLS, use_sfx_prefix boolean) {
+func I_InitSound(use_sfx_prefix boolean) {
 	var nomusic, nosfx, nosound boolean
 	//!
 	// @vanilla
@@ -18179,152 +18170,142 @@ func I_InitSound(tls *libc.TLS, use_sfx_prefix boolean) {
 			//I_InitTimidityConfig();
 		}
 		if !(nosfx != 0) {
-			InitSfxModule(tls, use_sfx_prefix)
+			InitSfxModule(use_sfx_prefix)
 		}
 		if !(nomusic != 0) {
-			InitMusicModule(tls)
+			InitMusicModule()
 		}
 	}
 }
 
 func I_ShutdownSound(tls *libc.TLS) {
-	if sound_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS))(unsafe.Pointer(&struct{ uintptr }{(*sound_module_t)(unsafe.Pointer(sound_module)).FShutdown})))(tls)
+	if sound_module != nil {
+		sound_module.FShutdown()
 	}
-	if music_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS))(unsafe.Pointer(&struct{ uintptr }{(*music_module_t)(unsafe.Pointer(music_module)).FShutdown})))(tls)
+	if music_module != nil {
+		music_module.FShutdown()
 	}
 }
 
 func I_GetSfxLumpNum(tls *libc.TLS, sfxinfo *sfxinfo_t) (r int32) {
-	if sound_module != libc.UintptrFromInt32(0) {
-		return (*(*func(*libc.TLS, *sfxinfo_t) int32)(unsafe.Pointer(&struct{ uintptr }{(*sound_module_t)(unsafe.Pointer(sound_module)).FGetSfxLumpNum})))(tls, sfxinfo)
+	if sound_module != nil {
+		return sound_module.FGetSfxLumpNum(sfxinfo)
 	} else {
 		return 0
 	}
 }
 
-func I_UpdateSound(tls *libc.TLS) {
-	if sound_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS))(unsafe.Pointer(&struct{ uintptr }{(*sound_module_t)(unsafe.Pointer(sound_module)).FUpdate})))(tls)
+func I_UpdateSound() {
+	if sound_module != nil {
+		sound_module.FUpdate()
 	}
-	if music_module != libc.UintptrFromInt32(0) && (*music_module_t)(unsafe.Pointer(music_module)).FPoll != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS))(unsafe.Pointer(&struct{ uintptr }{(*music_module_t)(unsafe.Pointer(music_module)).FPoll})))(tls)
+	if music_module != nil && music_module.FPoll != nil {
+		music_module.FPoll()
 	}
 }
 
-func CheckVolumeSeparation(tls *libc.TLS, vol uintptr, sep uintptr) {
-	if *(*int32)(unsafe.Pointer(sep)) < 0 {
-		*(*int32)(unsafe.Pointer(sep)) = 0
+func CheckVolumeSeparation(vol *int32, sep *int32) {
+	if *sep < 0 {
+		*sep = 0
 	} else {
-		if *(*int32)(unsafe.Pointer(sep)) > 254 {
-			*(*int32)(unsafe.Pointer(sep)) = 254
+		if *sep > 254 {
+			*sep = 254
 		}
 	}
-	if *(*int32)(unsafe.Pointer(vol)) < 0 {
-		*(*int32)(unsafe.Pointer(vol)) = 0
+	if *vol < 0 {
+		*vol = 0
 	} else {
-		if *(*int32)(unsafe.Pointer(vol)) > 127 {
-			*(*int32)(unsafe.Pointer(vol)) = 127
+		if *vol > 127 {
+			*vol = 127
 		}
 	}
 }
 
-func I_UpdateSoundParams(tls *libc.TLS, channel int32, _vol int32, _sep int32) {
-	bp := alloc(16)
-	*(*int32)(unsafe.Pointer(bp)) = _vol
-	*(*int32)(unsafe.Pointer(bp + 4)) = _sep
-	if sound_module != libc.UintptrFromInt32(0) {
-		CheckVolumeSeparation(tls, bp, bp+4)
-		(*(*func(*libc.TLS, int32, int32, int32))(unsafe.Pointer(&struct{ uintptr }{(*sound_module_t)(unsafe.Pointer(sound_module)).FUpdateSoundParams})))(tls, channel, *(*int32)(unsafe.Pointer(bp)), *(*int32)(unsafe.Pointer(bp + 4)))
+func I_UpdateSoundParams(channel int32, vol int32, sep int32) {
+	if sound_module != nil {
+		CheckVolumeSeparation(&vol, &sep)
+		sound_module.FUpdateSoundParams(channel, vol, sep)
 	}
 }
 
-func I_StartSound(tls *libc.TLS, sfxinfo *sfxinfo_t, channel int32, _vol int32, _sep int32) (r int32) {
-	bp := alloc(16)
-	*(*int32)(unsafe.Pointer(bp)) = _vol
-	*(*int32)(unsafe.Pointer(bp + 4)) = _sep
-	if sound_module != libc.UintptrFromInt32(0) {
-		CheckVolumeSeparation(tls, bp, bp+4)
-		return (*(*func(*libc.TLS, *sfxinfo_t, int32, int32, int32) int32)(unsafe.Pointer(&struct{ uintptr }{(*sound_module_t)(unsafe.Pointer(sound_module)).FStartSound})))(tls, sfxinfo, channel, *(*int32)(unsafe.Pointer(bp)), *(*int32)(unsafe.Pointer(bp + 4)))
-	} else {
-		return 0
+func I_StartSound(sfxinfo *sfxinfo_t, channel int32, vol int32, sep int32) (r int32) {
+	if sound_module != nil {
+		CheckVolumeSeparation(&vol, &sep)
+		return sound_module.FStartSound(sfxinfo, channel, vol, sep)
 	}
-	return r
+	return 0
 }
 
-func I_StopSound(tls *libc.TLS, channel int32) {
-	if sound_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS, int32))(unsafe.Pointer(&struct{ uintptr }{(*sound_module_t)(unsafe.Pointer(sound_module)).FStopSound})))(tls, channel)
+func I_StopSound(channel int32) {
+	if sound_module != nil {
+		sound_module.FStopSound(channel)
 	}
 }
 
-func I_SoundIsPlaying(tls *libc.TLS, channel int32) (r boolean) {
-	if sound_module != libc.UintptrFromInt32(0) {
-		return (*(*func(*libc.TLS, int32) boolean)(unsafe.Pointer(&struct{ uintptr }{(*sound_module_t)(unsafe.Pointer(sound_module)).FSoundIsPlaying})))(tls, channel)
-	} else {
-		return 0
+func I_SoundIsPlaying(channel int32) (r boolean) {
+	if sound_module != nil {
+		return sound_module.FSoundIsPlaying(channel)
 	}
-	return r
+	return 0
 }
 
-func I_PrecacheSounds(tls *libc.TLS, sounds uintptr, num_sounds int32) {
-	if sound_module != libc.UintptrFromInt32(0) && (*sound_module_t)(unsafe.Pointer(sound_module)).FCacheSounds != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS, uintptr, int32))(unsafe.Pointer(&struct{ uintptr }{(*sound_module_t)(unsafe.Pointer(sound_module)).FCacheSounds})))(tls, sounds, num_sounds)
+func I_PrecacheSounds(sounds []sfxinfo_t) {
+	if sound_module != nil && sound_module.FCacheSounds != nil {
+		sound_module.FCacheSounds(sounds)
 	}
 }
 
-func I_InitMusic(tls *libc.TLS) {
-	if music_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS) boolean)(unsafe.Pointer(&struct{ uintptr }{(*music_module_t)(unsafe.Pointer(music_module)).FInit})))(tls)
+func I_InitMusic() {
+	if music_module != nil {
+		music_module.FInit()
 	}
 }
 
-func I_ShutdownMusic(tls *libc.TLS) {
+func I_ShutdownMusic() {
 }
 
-func I_SetMusicVolume(tls *libc.TLS, volume int32) {
-	if music_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS, int32))(unsafe.Pointer(&struct{ uintptr }{(*music_module_t)(unsafe.Pointer(music_module)).FSetMusicVolume})))(tls, volume)
+func I_SetMusicVolume(volume int32) {
+	if music_module != nil {
+		music_module.FSetMusicVolume(volume)
 	}
 }
 
-func I_PauseSong(tls *libc.TLS) {
-	if music_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS))(unsafe.Pointer(&struct{ uintptr }{(*music_module_t)(unsafe.Pointer(music_module)).FPauseMusic})))(tls)
+func I_PauseSong() {
+	if music_module != nil {
+		music_module.FPauseMusic()
 	}
 }
 
-func I_ResumeSong(tls *libc.TLS) {
-	if music_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS))(unsafe.Pointer(&struct{ uintptr }{(*music_module_t)(unsafe.Pointer(music_module)).FResumeMusic})))(tls)
+func I_ResumeSong() {
+	if music_module != nil {
+		music_module.FResumeMusic()
 	}
 }
 
-func I_RegisterSong(tls *libc.TLS, data uintptr, len1 int32) (r uintptr) {
-	if music_module != libc.UintptrFromInt32(0) {
-		return (*(*func(*libc.TLS, uintptr, int32) uintptr)(unsafe.Pointer(&struct{ uintptr }{(*music_module_t)(unsafe.Pointer(music_module)).FRegisterSong})))(tls, data, len1)
+func I_RegisterSong(data uintptr, len1 int32) (r uintptr) {
+	if music_module != nil {
+		music_module.FRegisterSong(data, len1)
 	} else {
 		return libc.UintptrFromInt32(0)
 	}
 	return r
 }
 
-func I_UnRegisterSong(tls *libc.TLS, handle uintptr) {
-	if music_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS, uintptr))(unsafe.Pointer(&struct{ uintptr }{(*music_module_t)(unsafe.Pointer(music_module)).FUnRegisterSong})))(tls, handle)
+func I_UnRegisterSong(handle uintptr) {
+	if music_module != nil {
+		music_module.FUnRegisterSong(handle)
 	}
 }
 
-func I_PlaySong(tls *libc.TLS, handle uintptr, looping boolean) {
-	if music_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS, uintptr, boolean))(unsafe.Pointer(&struct{ uintptr }{(*music_module_t)(unsafe.Pointer(music_module)).FPlaySong})))(tls, handle, looping)
+func I_PlaySong(handle uintptr, looping boolean) {
+	if music_module != nil {
+		music_module.FPlaySong(handle, looping)
 	}
 }
 
-func I_StopSong(tls *libc.TLS) {
-	if music_module != libc.UintptrFromInt32(0) {
-		(*(*func(*libc.TLS))(unsafe.Pointer(&struct{ uintptr }{(*music_module_t)(unsafe.Pointer(music_module)).FStopSong})))(tls)
+func I_StopSong() {
+	if music_module != nil {
+		music_module.FStopSong()
 	}
 }
 
@@ -28430,7 +28411,7 @@ func P_RemoveMobj(tls *libc.TLS, mobj uintptr) {
 	// unlink from sector and block lists
 	P_UnsetThingPosition(mobj)
 	// stop any playing sound
-	S_StopSound(tls, mobj)
+	S_StopSound(mobj)
 	// free block
 	P_RemoveThinker(tls, &(*mobj_t)(unsafe.Pointer(mobj)).Fthinker)
 }
@@ -41849,7 +41830,7 @@ var mus_paused boolean
 
 // Music currently being played
 
-var mus_playing = libc.UintptrFromInt32(0)
+var mus_playing *musicinfo_t
 
 //
 // Initializes sound stuff, including volume
@@ -41859,7 +41840,7 @@ var mus_playing = libc.UintptrFromInt32(0)
 
 func S_Init(tls *libc.TLS, sfxVolume int32, musicVolume int32) {
 	var i, v3 int32
-	I_PrecacheSounds(tls, uintptr(unsafe.Pointer(&S_sfx)), int32(NUMSFX))
+	I_PrecacheSounds(S_sfx[:])
 	S_SetSfxVolume(tls, sfxVolume)
 	S_SetMusicVolume(tls, musicVolume)
 	// Allocating the internal channels for mixing
@@ -41899,17 +41880,17 @@ func S_Init(tls *libc.TLS, sfxVolume int32, musicVolume int32) {
 
 func S_Shutdown(tls *libc.TLS) {
 	I_ShutdownSound(tls)
-	I_ShutdownMusic(tls)
+	I_ShutdownMusic()
 }
 
-func S_StopChannel(tls *libc.TLS, cnum int32) {
+func S_StopChannel(cnum int32) {
 	var c uintptr
 	var i int32
 	c = channels + uintptr(cnum)*24
 	if (*channel_t)(unsafe.Pointer(c)).Fsfxinfo != nil {
 		// stop the sound playing
-		if I_SoundIsPlaying(tls, (*channel_t)(unsafe.Pointer(c)).Fhandle) != 0 {
-			I_StopSound(tls, (*channel_t)(unsafe.Pointer(c)).Fhandle)
+		if I_SoundIsPlaying((*channel_t)(unsafe.Pointer(c)).Fhandle) != 0 {
+			I_StopSound((*channel_t)(unsafe.Pointer(c)).Fhandle)
 		}
 		// check to see if other channels are playing the sound
 		i = 0
@@ -41948,7 +41929,7 @@ func S_Start(tls *libc.TLS) {
 			break
 		}
 		if (*(*channel_t)(unsafe.Pointer(channels + uintptr(cnum)*24))).Fsfxinfo != nil {
-			S_StopChannel(tls, cnum)
+			S_StopChannel(cnum)
 		}
 		goto _1
 	_1:
@@ -41980,7 +41961,7 @@ func S_Start(tls *libc.TLS) {
 	S_ChangeMusic(tls, mnum, 1)
 }
 
-func S_StopSound(tls *libc.TLS, origin uintptr) {
+func S_StopSound(origin uintptr) {
 	var cnum int32
 	cnum = 0
 	for {
@@ -41988,7 +41969,7 @@ func S_StopSound(tls *libc.TLS, origin uintptr) {
 			break
 		}
 		if (*(*channel_t)(unsafe.Pointer(channels + uintptr(cnum)*24))).Fsfxinfo != nil && (*(*channel_t)(unsafe.Pointer(channels + uintptr(cnum)*24))).Forigin == origin {
-			S_StopChannel(tls, cnum)
+			S_StopChannel(cnum)
 			break
 		}
 		goto _1
@@ -42003,7 +41984,7 @@ func S_StopSound(tls *libc.TLS, origin uintptr) {
 //   If none available, return -1.  Otherwise channel #.
 //
 
-func S_GetChannel(tls *libc.TLS, origin uintptr, sfxinfo *sfxinfo_t) (r int32) {
+func S_GetChannel(origin uintptr, sfxinfo *sfxinfo_t) (r int32) {
 	var c uintptr
 	var cnum int32
 	// Find an open channel
@@ -42016,7 +41997,7 @@ func S_GetChannel(tls *libc.TLS, origin uintptr, sfxinfo *sfxinfo_t) (r int32) {
 			break
 		} else {
 			if origin != 0 && (*(*channel_t)(unsafe.Pointer(channels + uintptr(cnum)*24))).Forigin == origin {
-				S_StopChannel(tls, cnum)
+				S_StopChannel(cnum)
 				break
 			}
 		}
@@ -42046,7 +42027,7 @@ func S_GetChannel(tls *libc.TLS, origin uintptr, sfxinfo *sfxinfo_t) (r int32) {
 			return -1
 		} else {
 			// Otherwise, kick out lower priority.
-			S_StopChannel(tls, cnum)
+			S_StopChannel(cnum)
 		}
 	}
 	c = channels + uintptr(cnum)*24
@@ -42144,9 +42125,9 @@ func S_StartSound(tls *libc.TLS, origin_p uintptr, sfx_id int32) {
 		*(*int32)(unsafe.Pointer(bp)) = int32(NORM_SEP)
 	}
 	// kill old sound
-	S_StopSound(tls, origin)
+	S_StopSound(origin)
 	// try to find a channel
-	cnum = S_GetChannel(tls, origin, sfx)
+	cnum = S_GetChannel(origin, sfx)
 	if cnum < 0 {
 		return
 	}
@@ -42155,23 +42136,23 @@ func S_StartSound(tls *libc.TLS, origin_p uintptr, sfx_id int32) {
 	if sfx.Flumpnum < 0 {
 		sfx.Flumpnum = I_GetSfxLumpNum(tls, sfx)
 	}
-	(*(*channel_t)(unsafe.Pointer(channels + uintptr(cnum)*24))).Fhandle = I_StartSound(tls, sfx, cnum, *(*int32)(unsafe.Pointer(bp + 4)), *(*int32)(unsafe.Pointer(bp)))
+	(*(*channel_t)(unsafe.Pointer(channels + uintptr(cnum)*24))).Fhandle = I_StartSound(sfx, cnum, *(*int32)(unsafe.Pointer(bp + 4)), *(*int32)(unsafe.Pointer(bp)))
 }
 
 //
 // Stop and resume music, during game PAUSE.
 //
 
-func S_PauseSound(tls *libc.TLS) {
-	if mus_playing != 0 && !(mus_paused != 0) {
-		I_PauseSong(tls)
+func S_PauseSound() {
+	if mus_playing != nil && !(mus_paused != 0) {
+		I_PauseSong()
 		mus_paused = 1
 	}
 }
 
-func S_ResumeSound(tls *libc.TLS) {
-	if mus_playing != 0 && mus_paused != 0 {
-		I_ResumeSong(tls)
+func S_ResumeSound() {
+	if mus_playing != nil && mus_paused != 0 {
+		I_ResumeSong()
 		mus_paused = 0
 	}
 }
@@ -42180,12 +42161,12 @@ func S_ResumeSound(tls *libc.TLS) {
 // Updates music & sounds
 //
 
-func S_UpdateSounds(tls *libc.TLS, listener uintptr) {
+func S_UpdateSounds(listener uintptr) {
 	bp := alloc(16)
 	var audible, cnum int32
 	var c uintptr
 	var sfx *sfxinfo_t
-	I_UpdateSound(tls)
+	I_UpdateSound()
 	cnum = 0
 	for {
 		if !(cnum < snd_channels) {
@@ -42194,14 +42175,14 @@ func S_UpdateSounds(tls *libc.TLS, listener uintptr) {
 		c = channels + uintptr(cnum)*24
 		sfx = (*channel_t)(unsafe.Pointer(c)).Fsfxinfo
 		if sfx != nil {
-			if I_SoundIsPlaying(tls, (*channel_t)(unsafe.Pointer(c)).Fhandle) != 0 {
+			if I_SoundIsPlaying((*channel_t)(unsafe.Pointer(c)).Fhandle) != 0 {
 				// initialize parameters
 				*(*int32)(unsafe.Pointer(bp)) = snd_SfxVolume
 				*(*int32)(unsafe.Pointer(bp + 4)) = int32(NORM_SEP)
 				if (*sfxinfo_t)(unsafe.Pointer(sfx)).Flink != 0 {
 					*(*int32)(unsafe.Pointer(bp)) += (*sfxinfo_t)(unsafe.Pointer(sfx)).Fvolume
 					if *(*int32)(unsafe.Pointer(bp)) < 1 {
-						S_StopChannel(tls, cnum)
+						S_StopChannel(cnum)
 						goto _1
 					} else {
 						if *(*int32)(unsafe.Pointer(bp)) > snd_SfxVolume {
@@ -42214,15 +42195,15 @@ func S_UpdateSounds(tls *libc.TLS, listener uintptr) {
 				if (*channel_t)(unsafe.Pointer(c)).Forigin != 0 && listener != (*channel_t)(unsafe.Pointer(c)).Forigin {
 					audible = S_AdjustSoundParams(listener, (*channel_t)(unsafe.Pointer(c)).Forigin, bp, bp+4)
 					if !(audible != 0) {
-						S_StopChannel(tls, cnum)
+						S_StopChannel(cnum)
 					} else {
-						I_UpdateSoundParams(tls, (*channel_t)(unsafe.Pointer(c)).Fhandle, *(*int32)(unsafe.Pointer(bp)), *(*int32)(unsafe.Pointer(bp + 4)))
+						I_UpdateSoundParams((*channel_t)(unsafe.Pointer(c)).Fhandle, *(*int32)(unsafe.Pointer(bp)), *(*int32)(unsafe.Pointer(bp + 4)))
 					}
 				}
 			} else {
 				// if channel is allocated but sound has stopped,
 				//  free it
-				S_StopChannel(tls, cnum)
+				S_StopChannel(cnum)
 			}
 		}
 		goto _1
@@ -42236,7 +42217,7 @@ func S_SetMusicVolume(tls *libc.TLS, volume int32) {
 	if volume < 0 || volume > 127 {
 		I_Error(tls, __ccgo_ts(27997), volume)
 	}
-	I_SetMusicVolume(tls, volume)
+	I_SetMusicVolume(volume)
 }
 
 func S_SetSfxVolume(tls *libc.TLS, volume int32) {
@@ -42256,8 +42237,8 @@ func S_StartMusic(tls *libc.TLS, m_id int32) {
 
 func S_ChangeMusic(tls *libc.TLS, musicnum int32, looping int32) {
 	bp := alloc(32)
-	var handle, music uintptr
-	music = libc.UintptrFromInt32(0)
+	var handle uintptr
+	var music *musicinfo_t
 	// The Doom IWAD file has two versions of the intro music: d_intro
 	// and d_introa.  The latter is used for OPL playback.
 	if musicnum == int32(mus_intro) && (snd_musicdevice == int32(SNDDEVICE_ADLIB) || snd_musicdevice == int32(SNDDEVICE_SB)) {
@@ -42266,7 +42247,7 @@ func S_ChangeMusic(tls *libc.TLS, musicnum int32, looping int32) {
 	if musicnum <= int32(mus_None) || musicnum >= int32(NUMMUSIC) {
 		I_Error(tls, __ccgo_ts(28063), musicnum)
 	} else {
-		music = uintptr(unsafe.Pointer(&S_music)) + uintptr(musicnum)*32
+		music = &S_music[musicnum]
 	}
 	if mus_playing == music {
 		return
@@ -42274,27 +42255,27 @@ func S_ChangeMusic(tls *libc.TLS, musicnum int32, looping int32) {
 	// shutdown old music
 	S_StopMusic(tls)
 	// get lumpnum if neccessary
-	if !((*musicinfo_t)(unsafe.Pointer(music)).Flumpnum != 0) {
-		M_snprintf(tls, bp, uint64(9), __ccgo_ts(28083), libc.VaList(bp+24, (*musicinfo_t)(unsafe.Pointer(music)).Fname))
-		(*musicinfo_t)(unsafe.Pointer(music)).Flumpnum = W_GetNumForName(tls, bp)
+	if !(music.Flumpnum != 0) {
+		M_snprintf(tls, bp, uint64(9), __ccgo_ts(28083), libc.VaList(bp+24, music.Fname))
+		music.Flumpnum = W_GetNumForName(tls, bp)
 	}
-	(*musicinfo_t)(unsafe.Pointer(music)).Fdata = W_CacheLumpNum(tls, (*musicinfo_t)(unsafe.Pointer(music)).Flumpnum, int32(PU_STATIC))
-	handle = I_RegisterSong(tls, (*musicinfo_t)(unsafe.Pointer(music)).Fdata, W_LumpLength(tls, libc.Uint32FromInt32((*musicinfo_t)(unsafe.Pointer(music)).Flumpnum)))
-	(*musicinfo_t)(unsafe.Pointer(music)).Fhandle = handle
-	I_PlaySong(tls, handle, libc.Uint32FromInt32(looping))
+	music.Fdata = W_CacheLumpNum(tls, music.Flumpnum, int32(PU_STATIC))
+	handle = I_RegisterSong(music.Fdata, W_LumpLength(tls, libc.Uint32FromInt32(music.Flumpnum)))
+	music.Fhandle = handle
+	I_PlaySong(handle, libc.Uint32FromInt32(looping))
 	mus_playing = music
 }
 
 func S_StopMusic(tls *libc.TLS) {
-	if mus_playing != 0 {
+	if mus_playing != nil {
 		if mus_paused != 0 {
-			I_ResumeSong(tls)
+			I_ResumeSong()
 		}
-		I_StopSong(tls)
-		I_UnRegisterSong(tls, (*musicinfo_t)(unsafe.Pointer(mus_playing)).Fhandle)
-		W_ReleaseLumpNum(tls, (*musicinfo_t)(unsafe.Pointer(mus_playing)).Flumpnum)
-		(*musicinfo_t)(unsafe.Pointer(mus_playing)).Fdata = libc.UintptrFromInt32(0)
-		mus_playing = libc.UintptrFromInt32(0)
+		I_StopSong()
+		I_UnRegisterSong(mus_playing.Fhandle)
+		W_ReleaseLumpNum(tls, mus_playing.Flumpnum)
+		mus_playing.Fdata = libc.UintptrFromInt32(0)
+		mus_playing = nil
 	}
 }
 
@@ -45958,7 +45939,7 @@ var S_music [68]musicinfo_t
 // Information about all the sfx
 //
 
-var S_sfx [109]sfxinfo_t
+var S_sfx [NUMSFX]sfxinfo_t
 
 var SaveDef menu_t
 
