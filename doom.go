@@ -18550,7 +18550,6 @@ var mem_dump_custom [10]uint8
 var dos_mem_dump = uintptr(unsafe.Pointer(&mem_dump_dos622))
 
 func I_GetMemoryValue(tls *libc.TLS, offset uint32, value uintptr, size int32) (r boolean) {
-	bp := alloc(16)
 	var i, p, v2 int32
 	if firsttime != 0 {
 		firsttime = 0
@@ -18583,10 +18582,11 @@ func I_GetMemoryValue(tls *libc.TLS, offset uint32, value uintptr, size int32) (
 						if p >= myargc || int32(*(*int8)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(myargv + uintptr(p)*8))))) == int32('-') {
 							break
 						}
-						M_StrToInt(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p)*8)), bp)
+						var f int32
+						M_StrToInt(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p)*8)), &f)
 						v2 = i
 						i++
-						mem_dump_custom[v2] = libc.Uint8FromInt32(*(*int32)(unsafe.Pointer(bp)))
+						mem_dump_custom[v2] = uint8(f)
 						goto _1
 					_1:
 						;
@@ -21879,9 +21879,14 @@ func M_TempFile(tls *libc.TLS, s string) string {
 	return __ccgo_ts_str(23139) + __ccgo_ts_str(1252) + s
 }
 
-func M_StrToInt(tls *libc.TLS, str uintptr, result uintptr) (r boolean) {
-	bp := alloc(16)
-	return libc.BoolUint32(libc.Xsscanf(tls, str, __ccgo_ts(23144), libc.VaList(bp+8, result)) == 1 || libc.Xsscanf(tls, str, __ccgo_ts(23150), libc.VaList(bp+8, result)) == 1 || libc.Xsscanf(tls, str, __ccgo_ts(23156), libc.VaList(bp+8, result)) == 1 || libc.Xsscanf(tls, str, __ccgo_ts(23161), libc.VaList(bp+8, result)) == 1)
+func M_StrToInt(tls *libc.TLS, str uintptr, result *int32) (r boolean) {
+	gStr := libc.GoString(str)
+	val, err := strconv.Atoi(gStr)
+	*result = int32(val)
+	if err != nil {
+		return 0
+	}
+	return 1
 }
 
 func M_ExtractFileBase(tls *libc.TLS, path string, dest uintptr) {
@@ -27187,9 +27192,9 @@ func P_ChangeSector(tls *libc.TLS, sector *sector_t, crunch boolean) (r boolean)
 // PrBoom plus port.  A big thanks to Andrey for this.
 
 func SpechitOverrun(tls *libc.TLS, ld *line_t) {
-	var addr uint32
+	var addr int32
 	var p int32
-	if baseaddr == uint32(0) {
+	if baseaddr == 0 {
 		// This is the first time we have had an overrun.  Work out
 		// what base address we are going to use.
 		// Allow a spechit value to be specified on the command line.
@@ -27201,13 +27206,13 @@ func SpechitOverrun(tls *libc.TLS, ld *line_t) {
 		//
 		p = M_CheckParmWithArgs(__ccgo_ts(24727), 1)
 		if p > 0 {
-			M_StrToInt(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)), uintptr(unsafe.Pointer(&baseaddr)))
+			M_StrToInt(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)), &baseaddr)
 		} else {
-			baseaddr = uint32(DEFAULT_SPECHIT_MAGIC)
+			baseaddr = DEFAULT_SPECHIT_MAGIC
 		}
 	}
 	// Calculate address used in doom2.exe
-	addr = baseaddr + uint32(lineIndex(ld))*0x3E
+	addr = baseaddr + int32(lineIndex(ld))*0x3E
 	switch numspechit {
 	case 9:
 		fallthrough
@@ -27216,18 +27221,18 @@ func SpechitOverrun(tls *libc.TLS, ld *line_t) {
 	case 11:
 		fallthrough
 	case 12:
-		tmbbox[numspechit-int32(9)] = libc.Int32FromUint32(addr)
+		tmbbox[numspechit-int32(9)] = addr
 	case 13:
-		crushchange = addr
+		crushchange = boolean(addr)
 	case 14:
-		nofit = addr
+		nofit = boolean(addr)
 	default:
 		fprintf_ccgo(os.Stderr, 24736, numspechit)
 		break
 	}
 }
 
-var baseaddr uint32
+var baseaddr int32
 
 const INT_MAX11 = 2147483647
 
@@ -33196,8 +33201,8 @@ func DonutOverrun(tls *libc.TLS, s3_floorheight uintptr, s3_floorpic uintptr, li
 			// 0000:0000    (00 00 00 00) 65 04 70 00-(16 00)
 			// DOSBox under XP:
 			// 0000:0000    (00 00 00 F1) ?? ?? ?? 00-(07 00)
-			M_StrToInt(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)), uintptr(unsafe.Pointer(&tmp_s3_floorheight)))
-			M_StrToInt(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(2))*8)), uintptr(unsafe.Pointer(&tmp_s3_floorpic)))
+			M_StrToInt(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(1))*8)), &tmp_s3_floorheight)
+			M_StrToInt(tls, *(*uintptr)(unsafe.Pointer(myargv + uintptr(p+int32(2))*8)), &tmp_s3_floorpic)
 			if tmp_s3_floorpic >= numflats {
 				fprintf_ccgo(os.Stderr, 25438, numflats, DONUT_FLOORPIC_DEFAULT)
 				tmp_s3_floorpic = int32(DONUT_FLOORPIC_DEFAULT)
