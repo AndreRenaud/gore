@@ -2881,7 +2881,7 @@ func AM_initVariables() {
 
 var st_notify = event_t{
 	Ftype1: ev_keyup,
-	Fdata1: libc.Int32FromUint8('a')<<24 + libc.Int32FromUint8('m')<<16 | libc.Int32FromUint8('e')<<8,
+	Fdata1: int32('a')<<24 + libc.Int32FromUint8('m')<<16 | libc.Int32FromUint8('e')<<8,
 }
 
 // C documentation
@@ -2973,7 +2973,7 @@ func AM_Stop() {
 
 var st_notify1 = event_t{
 	Fdata1: ev_keyup,
-	Fdata2: libc.Int32FromUint8('a')<<24 + libc.Int32FromUint8('m')<<16 | libc.Int32FromUint8('x')<<8,
+	Fdata2: int32('a')<<24 + libc.Int32FromUint8('m')<<16 | libc.Int32FromUint8('x')<<8,
 }
 
 // C documentation
@@ -4420,7 +4420,7 @@ func OldNetSync() {
 			break
 		}
 		if local_playeringame[i] != 0 {
-			keyplayer = libc.Int32FromUint32(i)
+			keyplayer = int32(i)
 			break
 		}
 		goto _1
@@ -4489,7 +4489,7 @@ func TicdupSquash(set *ticcmd_set_t) {
 		}
 		cmd := &set.Fcmds[i]
 		cmd.Fchatchar = uint8(0)
-		if libc.Int32FromUint8(cmd.Fbuttons)&int32(BT_SPECIAL) != 0 {
+		if int32(cmd.Fbuttons)&int32(BT_SPECIAL) != 0 {
 			cmd.Fbuttons = uint8(0)
 		}
 		goto _1
@@ -5243,7 +5243,7 @@ func GetGameName(gamename uintptr) (r uintptr) {
 			// We need to expand via printf to include the Doom version number
 			// We also need to cut off spaces to get the basic name
 			gamename_size = uint64(len(deh_sub) + 10)
-			gamename = Z_Malloc(libc.Int32FromUint64(gamename_size), int32(PU_STATIC), uintptr(0))
+			gamename = Z_Malloc(int32(gamename_size), int32(PU_STATIC), uintptr(0))
 			version = G_VanillaVersionCode()
 			M_snprintf(gamename, gamename_size, deh_sub, version/int32(100), version%int32(100))
 			for {
@@ -6247,9 +6247,9 @@ func SaveGameSettings(settings *net_gamesettings_t) {
 	settings.Fskill = startskill
 	settings.Floadgame = startloadgame
 	settings.Fgameversion = gameversion
-	settings.Fnomonsters = libc.Int32FromUint32(nomonsters)
-	settings.Ffast_monsters = libc.Int32FromUint32(fastparm)
-	settings.Frespawn_monsters = libc.Int32FromUint32(respawnparm)
+	settings.Fnomonsters = int32(nomonsters)
+	settings.Ffast_monsters = int32(fastparm)
+	settings.Frespawn_monsters = int32(respawnparm)
 	settings.Ftimelimit = timelimit
 	settings.Flowres_turn = libc.BoolInt32(M_CheckParm(__ccgo_ts(5361)) > 0 && M_CheckParm(__ccgo_ts(5530)) == 0)
 }
@@ -6677,7 +6677,7 @@ func F_TextWrite() {
 	cx = 10
 	cy = 10
 	ch = finaletext
-	count = (libc.Int32FromUint32(finalecount) - 10) / int32(TEXTSPEED)
+	count = (int32(finalecount) - 10) / int32(TEXTSPEED)
 	if count < 0 {
 		count = 0
 	}
@@ -6697,7 +6697,7 @@ func F_TextWrite() {
 			goto _3
 		}
 		c = xtoupper(c) - int32('!')
-		if c < 0 || c > libc.Int32FromUint8('_')-libc.Int32FromUint8('!')+1 {
+		if c < 0 || c > int32('_')-libc.Int32FromUint8('!')+1 {
 			cx += 4
 			goto _3
 		}
@@ -6987,7 +6987,7 @@ func F_CastPrint(text uintptr) {
 			break
 		}
 		c = xtoupper(c) - int32('!')
-		if c < 0 || c > libc.Int32FromUint8('_')-libc.Int32FromUint8('!')+1 {
+		if c < 0 || c > int32('_')-libc.Int32FromUint8('!')+1 {
 			width += 4
 			continue
 		}
@@ -7005,7 +7005,7 @@ func F_CastPrint(text uintptr) {
 			break
 		}
 		c = xtoupper(c) - int32('!')
-		if c < 0 || c > libc.Int32FromUint8('_')-libc.Int32FromUint8('!')+1 {
+		if c < 0 || c > int32('_')-libc.Int32FromUint8('!')+1 {
 			cx += 4
 			continue
 		}
@@ -7050,10 +7050,10 @@ func F_DrawPatchCol(x int32, patch uintptr, col int32) {
 	column = patch + uintptr(*(*int32)(unsafe.Pointer(patch + 8 + uintptr(col)*4)))
 	desttop = I_VideoBuffer + uintptr(x)
 	// step through the posts in a column
-	for libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Ftopdelta) != int32(0xff) {
+	for int32((*column_t)(unsafe.Pointer(column)).Ftopdelta) != int32(0xff) {
 		source = column + uintptr(3)
-		dest = desttop + uintptr(libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Ftopdelta)*int32(SCREENWIDTH))
-		count = libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Flength)
+		dest = desttop + uintptr(int32((*column_t)(unsafe.Pointer(column)).Ftopdelta)*int32(SCREENWIDTH))
+		count = int32((*column_t)(unsafe.Pointer(column)).Flength)
 		for {
 			v1 = count
 			count--
@@ -7081,7 +7081,7 @@ func F_BunnyScroll() {
 	p1 = W_CacheLumpName(__ccgo_ts(13640), int32(PU_LEVEL))
 	p2 = W_CacheLumpName(__ccgo_ts(13646), int32(PU_LEVEL))
 	V_MarkRect(0, 0, int32(SCREENWIDTH), int32(SCREENHEIGHT))
-	scrolled = 320 - (libc.Int32FromUint32(finalecount)-int32(230))/int32(2)
+	scrolled = 320 - (int32(finalecount)-int32(230))/int32(2)
 	if scrolled > 320 {
 		scrolled = 320
 	}
@@ -7111,7 +7111,7 @@ func F_BunnyScroll() {
 		laststage = 0
 		return
 	}
-	stage = libc.Int32FromUint32((finalecount - uint32(1180)) / uint32(5))
+	stage = int32((finalecount - uint32(1180)) / uint32(5))
 	if stage > 6 {
 		stage = 6
 	}
@@ -7219,19 +7219,19 @@ func wipe_doColorXForm(width int32, height int32, ticks int32) (r int32) {
 	w = wipe_scr
 	e = wipe_scr_end
 	for w != wipe_scr+uintptr(width*height) {
-		if libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(w))) != libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(e))) {
-			if libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(w))) > libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(e))) {
-				newval = libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(w))) - ticks
-				if newval < libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(e))) {
+		if int32(*(*uint8)(unsafe.Pointer(w))) != libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(e))) {
+			if int32(*(*uint8)(unsafe.Pointer(w))) > libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(e))) {
+				newval = int32(*(*uint8)(unsafe.Pointer(w))) - ticks
+				if newval < int32(*(*uint8)(unsafe.Pointer(e))) {
 					*(*uint8)(unsafe.Pointer(w)) = *(*uint8)(unsafe.Pointer(e))
 				} else {
 					*(*uint8)(unsafe.Pointer(w)) = libc.Uint8FromInt32(newval)
 				}
 				changed = 1
 			} else {
-				if libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(w))) < libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(e))) {
-					newval = libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(w))) + ticks
-					if newval > libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(e))) {
+				if int32(*(*uint8)(unsafe.Pointer(w))) < libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(e))) {
+					newval = int32(*(*uint8)(unsafe.Pointer(w))) + ticks
+					if newval > int32(*(*uint8)(unsafe.Pointer(e))) {
 						*(*uint8)(unsafe.Pointer(w)) = *(*uint8)(unsafe.Pointer(e))
 					} else {
 						*(*uint8)(unsafe.Pointer(w)) = libc.Uint8FromInt32(newval)
@@ -7262,7 +7262,7 @@ func wipe_initMelt(width int32, height int32, ticks int32) (r1 int32) {
 	wipe_shittyColMajorXform(wipe_scr_end, width/int32(2), height)
 	// setup initial column positions
 	// (y<0 => not ready to scroll yet)
-	y_screen = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(width)*uint64(4)), int32(PU_STATIC), uintptr(0))
+	y_screen = Z_Malloc(int32(libc.Uint64FromInt32(width)*uint64(4)), int32(PU_STATIC), uintptr(0))
 	*(*int32)(unsafe.Pointer(y_screen)) = -(M_Random() % 16)
 	i = 1
 	for {
@@ -7361,7 +7361,7 @@ func wipe_doMelt(width int32, height int32, ticks int32) (r int32) {
 			i++
 		}
 	}
-	return libc.Int32FromUint32(done)
+	return int32(done)
 }
 
 func wipe_exitMelt(width int32, height int32, ticks int32) (r int32) {
@@ -7615,7 +7615,7 @@ func G_NextWeapon(direction int32) (r int32) {
 	start_i = i
 	for cond := true; cond; cond = i != start_i && !(WeaponSelectable(weapon_order_table[i].Fweapon) != 0) {
 		i += direction
-		i = libc.Int32FromUint64((libc.Uint64FromInt32(i) + 72/8) % (72 / 8))
+		i = int32((libc.Uint64FromInt32(i) + 72/8) % (72 / 8))
 	}
 	return weapon_order_table[i].Fweapon_num
 }
@@ -8140,8 +8140,8 @@ func G_Ticker() {
 				turbodetected[i] = 0
 			}
 			if netgame != 0 && !(netdemo != 0) && !(gametic%ticdup != 0) {
-				if gametic > int32(BACKUPTICS) && libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))) != libc.Int32FromUint8(cmd.Fconsistancy) {
-					I_Error(__ccgo_ts(13760), libc.Int32FromUint8(cmd.Fconsistancy), libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))))
+				if gametic > int32(BACKUPTICS) && int32(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))) != libc.Int32FromUint8(cmd.Fconsistancy) {
+					I_Error(__ccgo_ts(13760), int32(cmd.Fconsistancy), libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))))
 				}
 				if players[i].Fmo != 0 {
 					*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf))) = libc.Uint8FromInt32((*mobj_t)(unsafe.Pointer(players[i].Fmo)).Fx)
@@ -8162,8 +8162,8 @@ func G_Ticker() {
 			break
 		}
 		if playeringame[i] != 0 {
-			if libc.Int32FromUint8(players[i].Fcmd.Fbuttons)&int32(BT_SPECIAL) != 0 {
-				switch libc.Int32FromUint8(players[i].Fcmd.Fbuttons) & int32(BT_SPECIALMASK) {
+			if int32(players[i].Fcmd.Fbuttons)&int32(BT_SPECIAL) != 0 {
+				switch int32(players[i].Fcmd.Fbuttons) & int32(BT_SPECIALMASK) {
 				case int32(BTS_PAUSE):
 					paused = boolean(paused ^ 1)
 					if paused != 0 {
@@ -8175,7 +8175,7 @@ func G_Ticker() {
 					if !(savedescription[0] != 0) {
 						M_StringCopy(uintptr(unsafe.Pointer(&savedescription)), __ccgo_ts(13798), uint64(32))
 					}
-					savegameslot = libc.Int32FromUint8(players[i].Fcmd.Fbuttons) & int32(BTS_SAVEMASK) >> int32(BTS_SAVESHIFT)
+					savegameslot = int32(players[i].Fcmd.Fbuttons) & int32(BTS_SAVEMASK) >> int32(BTS_SAVESHIFT)
 					gameaction = ga_savegame
 					break
 				}
@@ -9028,29 +9028,29 @@ func G_InitNew(skill skill_t, episode int32, map1 int32) {
 
 func G_ReadDemoTiccmd(cmd *ticcmd_t) {
 	var v1, v2, v3, v5, v6, v7 uintptr
-	if libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(demo_p))) == int32(DEMOMARKER) {
+	if int32(*(*uint8)(unsafe.Pointer(demo_p))) == int32(DEMOMARKER) {
 		// end of demo data stream
 		G_CheckDemoStatus()
 		return
 	}
 	v1 = demo_p
 	demo_p++
-	cmd.Fforwardmove = libc.Int8FromUint8(*(*uint8)(unsafe.Pointer(v1)))
+	cmd.Fforwardmove = int8(*(*uint8)(unsafe.Pointer(v1)))
 	v2 = demo_p
 	demo_p++
-	cmd.Fsidemove = libc.Int8FromUint8(*(*uint8)(unsafe.Pointer(v2)))
+	cmd.Fsidemove = int8(*(*uint8)(unsafe.Pointer(v2)))
 	// If this is a longtics demo, read back in higher resolution
 	if longtics != 0 {
 		v3 = demo_p
 		demo_p++
-		cmd.Fangleturn = libc.Int16FromUint8(*(*uint8)(unsafe.Pointer(v3)))
+		cmd.Fangleturn = int16(*(*uint8)(unsafe.Pointer(v3)))
 		v5 = demo_p
 		demo_p++
-		cmd.Fangleturn |= libc.Int16FromUint8(*(*uint8)(unsafe.Pointer(v5))) << 8
+		cmd.Fangleturn |= int16(*(*uint8)(unsafe.Pointer(v5))) << 8
 	} else {
 		v6 = demo_p
 		demo_p++
-		cmd.Fangleturn = int16(libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(v6))) << 8)
+		cmd.Fangleturn = int16(int32(*(*uint8)(unsafe.Pointer(v6))) << 8)
 	}
 	v7 = demo_p
 	demo_p++
@@ -9277,7 +9277,7 @@ func G_DoPlayDemo() {
 	demobuffer = v1
 	v2 = demo_p
 	demo_p++
-	demoversion = libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(v2)))
+	demoversion = int32(*(*uint8)(unsafe.Pointer(v2)))
 	if demoversion == G_VanillaVersionCode() {
 		longtics = 0
 	} else {
@@ -9294,13 +9294,13 @@ func G_DoPlayDemo() {
 	skill = skill_t(*(*uint8)(unsafe.Pointer(v3)))
 	v4 = demo_p
 	demo_p++
-	episode = libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(v4)))
+	episode = int32(*(*uint8)(unsafe.Pointer(v4)))
 	v5 = demo_p
 	demo_p++
-	map1 = libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(v5)))
+	map1 = int32(*(*uint8)(unsafe.Pointer(v5)))
 	v6 = demo_p
 	demo_p++
-	deathmatch = libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(v6)))
+	deathmatch = int32(*(*uint8)(unsafe.Pointer(v6)))
 	v7 = demo_p
 	demo_p++
 	respawnparm = uint32(*(*uint8)(unsafe.Pointer(v7)))
@@ -9312,7 +9312,7 @@ func G_DoPlayDemo() {
 	nomonsters = uint32(*(*uint8)(unsafe.Pointer(v9)))
 	v10 = demo_p
 	demo_p++
-	consoleplayer = libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(v10)))
+	consoleplayer = int32(*(*uint8)(unsafe.Pointer(v10)))
 	i = 0
 	for {
 		if !(i < int32(MAXPLAYERS)) {
@@ -9490,12 +9490,12 @@ func HUlib_drawTextLine(l *hu_textline_t, drawcursor boolean) {
 			break
 		}
 		c = libc.Uint8FromInt32(xtoupper(int32(l.Fl[i])))
-		if libc.Int32FromUint8(c) != int32(' ') && libc.Int32FromUint8(c) >= l.Fsc && libc.Int32FromUint8(c) <= int32('_') {
-			w = int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(l.Ff + uintptr(libc.Int32FromUint8(c)-l.Fsc)*8)))).Fwidth)
+		if int32(c) != int32(' ') && libc.Int32FromUint8(c) >= l.Fsc && libc.Int32FromUint8(c) <= int32('_') {
+			w = int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(l.Ff + uintptr(int32(c)-l.Fsc)*8)))).Fwidth)
 			if x+w > int32(SCREENWIDTH) {
 				break
 			}
-			V_DrawPatchDirect(x, l.Fy, *(*uintptr)(unsafe.Pointer(l.Ff + uintptr(libc.Int32FromUint8(c)-l.Fsc)*8)))
+			V_DrawPatchDirect(x, l.Fy, *(*uintptr)(unsafe.Pointer(l.Ff + uintptr(int32(c)-l.Fsc)*8)))
 			x += w
 		} else {
 			x += 4
@@ -9643,14 +9643,14 @@ func HUlib_resetIText(it *hu_itext_t) {
 //	// wrapper function for handling general keyed input.
 //	// returns true if it ate the key
 func HUlib_keyInIText(it *hu_itext_t, ch uint8) (r boolean) {
-	ch = libc.Uint8FromInt32(xtoupper(libc.Int32FromUint8(ch)))
-	if libc.Int32FromUint8(ch) >= int32(' ') && libc.Int32FromUint8(ch) <= int32('_') {
-		HUlib_addCharToTextLine(&it.Fl, libc.Int8FromUint8(ch))
+	ch = libc.Uint8FromInt32(xtoupper(int32(ch)))
+	if int32(ch) >= int32(' ') && libc.Int32FromUint8(ch) <= int32('_') {
+		HUlib_addCharToTextLine(&it.Fl, int8(ch))
 	} else {
-		if libc.Int32FromUint8(ch) == int32(KEY_BACKSPACE1) {
+		if int32(ch) == int32(KEY_BACKSPACE1) {
 			HUlib_delCharFromIText(it)
 		} else {
-			if libc.Int32FromUint8(ch) != int32(KEY_ENTER) {
+			if int32(ch) != int32(KEY_ENTER) {
 				return 0
 			}
 		}
@@ -9873,7 +9873,7 @@ func HU_Init() {
 	j = int32('!')
 	i = 0
 	for {
-		if !(i < libc.Int32FromUint8('_')-libc.Int32FromUint8('!')+1) {
+		if !(i < int32('_')-libc.Int32FromUint8('!')+1) {
 			break
 		}
 		v2 = j
@@ -10007,14 +10007,14 @@ func HU_Ticker() {
 				goto _3
 			}
 			if v5 = i != consoleplayer; v5 {
-				v4 = libc.Int8FromUint8(players[i].Fcmd.Fchatchar)
+				v4 = int8(players[i].Fcmd.Fchatchar)
 				c = v4
 			}
 			if v5 && v4 != 0 {
 				if int32(c) <= int32(HU_BROADCAST) {
 					chat_dest[i] = c
 				} else {
-					rc = libc.Int32FromUint32(HUlib_keyInIText(&w_inputbuffer[i], libc.Uint8FromInt8(c)))
+					rc = int32(HUlib_keyInIText(&w_inputbuffer[i], libc.Uint8FromInt8(c)))
 					if rc != 0 && int32(c) == int32(KEY_ENTER) {
 						if w_inputbuffer[i].Fl.Flen1 != 0 && (int32(chat_dest[i]) == consoleplayer+int32(1) || int32(chat_dest[i]) == int32(HU_BROADCAST)) {
 							HUlib_addMessageToSText(&w_message, player_names[i], libc.GoString(uintptr(unsafe.Pointer(&w_inputbuffer[i].Fl.Fl[0]))))
@@ -10155,7 +10155,7 @@ func HU_Responder(ev *event_t) (r boolean) {
 		// send a macro
 		if altdown != 0 {
 			c = libc.Uint8FromInt32(ev.Fdata1 - int32('0'))
-			if libc.Int32FromUint8(c) > 9 {
+			if int32(c) > 9 {
 				return 0
 			}
 			// fprintf(stderr, "got here\n");
@@ -10179,18 +10179,18 @@ func HU_Responder(ev *event_t) (r boolean) {
 			eatkey = HUlib_keyInIText(&w_chat, c)
 			if eatkey != 0 {
 				// static unsigned char buf[20]; // DEBUG
-				HU_queueChatChar(libc.Int8FromUint8(c))
+				HU_queueChatChar(int8(c))
 				// M_snprintf(buf, sizeof(buf), "KEY: %d => %d", ev->data1, c);
 				//        plr->message = buf;
 			}
-			if libc.Int32FromUint8(c) == int32(KEY_ENTER) {
+			if int32(c) == int32(KEY_ENTER) {
 				chat_on = 0
 				if w_chat.Fl.Flen1 != 0 {
 					lastmessage = libc.GoString(uintptr(unsafe.Pointer(&w_chat.Fl.Fl[0])))
 					plr1.Fmessage = lastmessage
 				}
 			} else {
-				if libc.Int32FromUint8(c) == int32(KEY_ESCAPE) {
+				if int32(c) == int32(KEY_ESCAPE) {
 					chat_on = 0
 				}
 			}
@@ -18376,7 +18376,7 @@ func I_ZoneBase(size uintptr) (r uintptr) {
 
 func I_PrintBanner(msg uintptr) {
 	var i, spaces int32
-	spaces = libc.Int32FromUint64(uint64(35) - xstrlen(msg)/uint64(2))
+	spaces = int32(uint64(35) - xstrlen(msg)/uint64(2))
 	i = 0
 	for {
 		if !(i < spaces) {
@@ -18577,10 +18577,10 @@ func I_GetMemoryValue(offset uint32, value uintptr, size int32) (r boolean) {
 		*(*uint8)(unsafe.Pointer(value)) = *(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset)))
 		return 1
 	case 2:
-		*(*uint16)(unsafe.Pointer(value)) = libc.Uint16FromInt32(libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset)))) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(1)))))<<int32(8))
+		*(*uint16)(unsafe.Pointer(value)) = libc.Uint16FromInt32(int32(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset)))) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(1)))))<<int32(8))
 		return 1
 	case 4:
-		*(*uint32)(unsafe.Pointer(value)) = uint32(libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset)))) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(1)))))<<int32(8) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(2)))))<<int32(16) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(3)))))<<int32(24))
+		*(*uint32)(unsafe.Pointer(value)) = uint32(int32(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset)))) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(1)))))<<int32(8) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(2)))))<<int32(16) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(3)))))<<int32(24))
 		return 1
 	}
 	return 0
@@ -18602,7 +18602,7 @@ func I_GetTime() (r int32) {
 		basetime = ticks
 	}
 	ticks -= basetime
-	return libc.Int32FromUint32(ticks * uint32(TICRATE) / uint32(1000))
+	return int32(ticks * uint32(TICRATE) / uint32(1000))
 }
 
 //
@@ -18615,7 +18615,7 @@ func I_GetTimeMS() (r int32) {
 	if basetime == uint32(0) {
 		basetime = ticks
 	}
-	return libc.Int32FromUint32(ticks - basetime)
+	return int32(ticks - basetime)
 }
 
 // Sleep for a specified number of ms
@@ -19089,7 +19089,7 @@ var doom_defaults_list = [76]default_t{
 
 var doom_defaults = default_collection_t{
 	Fdefaults:    uintptr(unsafe.Pointer(&doom_defaults_list)),
-	Fnumdefaults: libc.Int32FromUint64(2432 / 32),
+	Fnumdefaults: int32(2432 / 32),
 }
 
 //! @begin_config_file extended
@@ -19527,7 +19527,7 @@ var extra_defaults_list = [119]default_t{
 
 var extra_defaults = default_collection_t{
 	Fdefaults:    uintptr(unsafe.Pointer(&extra_defaults_list)),
-	Fnumdefaults: libc.Int32FromUint64(3808 / 32),
+	Fnumdefaults: int32(3808 / 32),
 }
 
 // Search a collection for a variable
@@ -20622,7 +20622,7 @@ func M_SaveSelect(choice int32) {
 	if !(xstrcmp(uintptr(unsafe.Pointer(&savegamestrings))+uintptr(choice)*24, __ccgo_ts(22118)) != 0) {
 		*(*int8)(unsafe.Pointer(uintptr(unsafe.Pointer(&savegamestrings)) + uintptr(choice)*24)) = 0
 	}
-	saveCharIndex = libc.Int32FromUint64(xstrlen(uintptr(unsafe.Pointer(&savegamestrings)) + uintptr(choice)*24))
+	saveCharIndex = int32(xstrlen(uintptr(unsafe.Pointer(&savegamestrings)) + uintptr(choice)*24))
 }
 
 // C documentation
@@ -21109,7 +21109,7 @@ func M_DrawThermo(x int32, y int32, thermWidth int32, thermDot int32) {
 }
 
 func M_StartMessage(string1 string, routine uintptr, input boolean) {
-	messageLastMenuActive = libc.Int32FromUint32(menuactive)
+	messageLastMenuActive = int32(menuactive)
 	messageToPrint = 1
 	messageString = string1
 	messageRoutine = routine
@@ -21128,7 +21128,7 @@ func M_StringWidth(string1 string) (r int32) {
 	w = 0
 	for i := 0; i < len(string1); i++ {
 		c = xtoupper(int32(string1[i])) - int32('!')
-		if c < 0 || c >= libc.Int32FromUint8('_')-libc.Int32FromUint8('!')+1 {
+		if c < 0 || c >= int32('_')-libc.Int32FromUint8('!')+1 {
 			w += 4
 		} else {
 			w += int32((*patch_t)(unsafe.Pointer(hu_font[c])).Fwidth)
@@ -21174,7 +21174,7 @@ func M_WriteText(x int32, y int32, string1 string) {
 			continue
 		}
 		c = xtoupper(c) - int32('!')
-		if c < 0 || c >= libc.Int32FromUint8('_')-libc.Int32FromUint8('!')+1 {
+		if c < 0 || c >= int32('_')-libc.Int32FromUint8('!')+1 {
 			cx += 4
 			continue
 		}
@@ -21335,7 +21335,7 @@ func M_Responder(ev *event_t) (r boolean) {
 				ch = key
 			}
 			ch = xtoupper(ch)
-			if ch != int32(' ') && (ch-int32('!') < 0 || ch-int32('!') >= libc.Int32FromUint8('_')-libc.Int32FromUint8('!')+1) {
+			if ch != int32(' ') && (ch-int32('!') < 0 || ch-int32('!') >= int32('_')-libc.Int32FromUint8('!')+1) {
 				break
 			}
 			if ch >= 32 && ch <= 127 && saveCharIndex < SAVESTRINGSIZE-1 && M_StringWidth(libc.GoString(uintptr(unsafe.Pointer(&savegamestrings))+uintptr(saveSlot)*24)) < (SAVESTRINGSIZE-2)*8 {
@@ -21753,7 +21753,7 @@ func M_Init() {
 	screenSize = screenblocks - 3
 	messageToPrint = 0
 	messageString = ""
-	messageLastMenuActive = libc.Int32FromUint32(menuactive)
+	messageLastMenuActive = int32(menuactive)
 	quickSaveSlot = -1
 	// Here we could catch other version dependencies,
 	//  like HELP1/2, and four episodes.
@@ -22219,12 +22219,12 @@ var rndtable = [256]uint8{
 //	// Which one is deterministic?
 func P_Random() (r int32) {
 	prndindex = (prndindex + 1) & int32(0xff)
-	return libc.Int32FromUint8(rndtable[prndindex])
+	return int32(rndtable[prndindex])
 }
 
 func M_Random() (r int32) {
 	rndindex = (rndindex + 1) & int32(0xff)
-	return libc.Int32FromUint8(rndtable[rndindex])
+	return int32(rndtable[rndindex])
 }
 
 func M_ClearRandom() {
@@ -23491,7 +23491,7 @@ func A_Chase(actor uintptr) {
 	// turn towards movement direction if not there yet
 	if (*mobj_t)(unsafe.Pointer(actor)).Fmovedir < 8 {
 		*(*angle_t)(unsafe.Pointer(actor + 56)) &= 7 << 29
-		delta = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(actor)).Fangle - uint32((*mobj_t)(unsafe.Pointer(actor)).Fmovedir<<29))
+		delta = int32((*mobj_t)(unsafe.Pointer(actor)).Fangle - uint32((*mobj_t)(unsafe.Pointer(actor)).Fmovedir<<29))
 		if delta > 0 {
 			*(*angle_t)(unsafe.Pointer(actor + 56)) -= uint32(ANG903 / 2)
 		} else {
@@ -23586,7 +23586,7 @@ func A_PosAttack(actor uintptr) {
 		return
 	}
 	A_FaceTarget(actor)
-	angle = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
+	angle = int32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
 	slope = P_AimLineAttack(actor, uint32(angle), 32*64*(1<<FRACBITS))
 	S_StartSound(actor, int32(sfx_pistol))
 	angle += (P_Random() - P_Random()) << 20
@@ -23601,7 +23601,7 @@ func A_SPosAttack(actor uintptr) {
 	}
 	S_StartSound(actor, int32(sfx_shotgn))
 	A_FaceTarget(actor)
-	bangle = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
+	bangle = int32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
 	slope = P_AimLineAttack(actor, uint32(bangle), 32*64*(1<<FRACBITS))
 	i = 0
 	for {
@@ -23625,7 +23625,7 @@ func A_CPosAttack(actor uintptr) {
 	}
 	S_StartSound(actor, int32(sfx_shotgn))
 	A_FaceTarget(actor)
-	bangle = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
+	bangle = int32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
 	slope = P_AimLineAttack(actor, uint32(bangle), 32*64*(1<<FRACBITS))
 	angle = bangle + (P_Random()-P_Random())<<int32(20)
 	damage = (P_Random()%int32(5) + 1) * 3
@@ -23998,7 +23998,7 @@ func A_VileAttack(actor uintptr) {
 	S_StartSound(actor, int32(sfx_barexp))
 	P_DamageMobj((*mobj_t)(unsafe.Pointer(actor)).Ftarget, actor, actor, 20)
 	(*mobj_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Ftarget)).Fmomz = 1000 * (1 << FRACBITS) / (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Ftarget)).Finfo)).Fmass
-	an = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(actor)).Fangle >> int32(ANGLETOFINESHIFT))
+	an = int32((*mobj_t)(unsafe.Pointer(actor)).Fangle >> int32(ANGLETOFINESHIFT))
 	fire = (*mobj_t)(unsafe.Pointer(actor)).Ftracer
 	if !(fire != 0) {
 		return
@@ -24031,7 +24031,7 @@ func A_FatAttack1(actor uintptr) {
 	P_SpawnMissile(actor, target, int32(MT_FATSHOT))
 	mo = P_SpawnMissile(actor, target, int32(MT_FATSHOT))
 	*(*angle_t)(unsafe.Pointer(mo + 56)) += uint32(ANG903 / 8)
-	an = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
+	an = int32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomx = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finecosine[an])
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomy = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finesine[an])
 }
@@ -24046,7 +24046,7 @@ func A_FatAttack2(actor uintptr) {
 	P_SpawnMissile(actor, target, int32(MT_FATSHOT))
 	mo = P_SpawnMissile(actor, target, int32(MT_FATSHOT))
 	*(*angle_t)(unsafe.Pointer(mo + 56)) -= uint32(ANG903 / 8 * 2)
-	an = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
+	an = int32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomx = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finecosine[an])
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomy = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finesine[an])
 }
@@ -24058,12 +24058,12 @@ func A_FatAttack3(actor uintptr) {
 	target = P_SubstNullMobj((*mobj_t)(unsafe.Pointer(actor)).Ftarget)
 	mo = P_SpawnMissile(actor, target, int32(MT_FATSHOT))
 	*(*angle_t)(unsafe.Pointer(mo + 56)) -= uint32(ANG903 / 8 / 2)
-	an = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
+	an = int32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomx = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finecosine[an])
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomy = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finesine[an])
 	mo = P_SpawnMissile(actor, target, int32(MT_FATSHOT))
 	*(*angle_t)(unsafe.Pointer(mo + 56)) += uint32(ANG903 / 8 / 2)
-	an = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
+	an = int32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomx = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finecosine[an])
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomy = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finesine[an])
 }
@@ -26953,7 +26953,7 @@ func P_UseLines(player *player_t) {
 	var angle int32
 	var x1, x2, y1, y2 fixed_t
 	usething = player.Fmo
-	angle = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle >> int32(ANGLETOFINESHIFT))
+	angle = int32((*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle >> int32(ANGLETOFINESHIFT))
 	x1 = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fx
 	y1 = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy
 	x2 = x1 + 64*(1<<FRACBITS)>>FRACBITS*finecosine[angle]
@@ -27809,7 +27809,7 @@ func InterceptsOverrun(num_intercepts int32, intercept uintptr) {
 	// address translated into the correct address value for
 	// Vanilla Doom.
 	InterceptsMemoryOverrun(location, (*intercept_t)(unsafe.Pointer(intercept)).Ffrac)
-	InterceptsMemoryOverrun(location+int32(4), libc.Int32FromUint32((*intercept_t)(unsafe.Pointer(intercept)).Fisaline))
+	InterceptsMemoryOverrun(location+int32(4), int32((*intercept_t)(unsafe.Pointer(intercept)).Fisaline))
 	InterceptsMemoryOverrun(location+int32(8), int32(*(*uintptr)(unsafe.Pointer(intercept + 8))))
 }
 
@@ -29183,7 +29183,7 @@ func A_WeaponReady(player *player_t, psp *pspdef_t) {
 	}
 	// check for fire
 	//  the missile launcher and bfg do not auto fire
-	if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 {
+	if int32(player.Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 {
 		if !(player.Fattackdown != 0) || player.Freadyweapon != wp_missile && player.Freadyweapon != wp_bfg {
 			player.Fattackdown = 1
 			P_FireWeapon(player)
@@ -29209,7 +29209,7 @@ func A_WeaponReady(player *player_t, psp *pspdef_t) {
 func A_ReFire(player *player_t, psp *pspdef_t) {
 	// check for fire
 	//  (if a weaponchange is pending, let it go through instead)
-	if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 && player.Fpendingweapon == wp_nochange && player.Fhealth != 0 {
+	if int32(player.Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 && player.Fpendingweapon == wp_nochange && player.Fhealth != 0 {
 		player.Frefire++
 		P_FireWeapon(player)
 	} else {
@@ -29329,7 +29329,7 @@ func A_Saw(player *player_t, psp *pspdef_t) {
 	// turn to face target
 	angle = R_PointToAngle2((*mobj_t)(unsafe.Pointer(player.Fmo)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy, (*mobj_t)(unsafe.Pointer(linetarget)).Fx, (*mobj_t)(unsafe.Pointer(linetarget)).Fy)
 	if angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle > uint32(ANG1807) {
-		if libc.Int32FromUint32(angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle) < -ANG905/20 {
+		if int32(angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle) < -ANG905/20 {
 			(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = angle + uint32(ANG905/21)
 		} else {
 			*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) -= uint32(ANG905 / 20)
@@ -29682,8 +29682,8 @@ func saveg_write8(_value uint8) {
 
 func saveg_read16() (r int16) {
 	var result int32
-	result = libc.Int32FromUint8(saveg_read8())
-	result |= libc.Int32FromUint8(saveg_read8()) << 8
+	result = int32(saveg_read8())
+	result |= int32(saveg_read8()) << 8
 	return int16(result)
 }
 
@@ -29694,10 +29694,10 @@ func saveg_write16(value int16) {
 
 func saveg_read32() (r int32) {
 	var result int32
-	result = libc.Int32FromUint8(saveg_read8())
-	result |= libc.Int32FromUint8(saveg_read8()) << 8
-	result |= libc.Int32FromUint8(saveg_read8()) << 16
-	result |= libc.Int32FromUint8(saveg_read8()) << 24
+	result = int32(saveg_read8())
+	result |= int32(saveg_read8()) << 8
+	result |= int32(saveg_read8()) << 16
+	result |= int32(saveg_read8()) << 24
 	return result
 }
 
@@ -29713,7 +29713,7 @@ func saveg_write32(value int32) {
 func saveg_read_pad() {
 	var i, padding int32
 	pos, _ := save_stream.Seek(0, io.SeekCurrent)
-	padding = libc.Int32FromUint64((uint64(4) - uint64(pos)&uint64(3)) & uint64(3))
+	padding = int32((uint64(4) - uint64(pos)&uint64(3)) & uint64(3))
 	i = 0
 	for {
 		if !(i < padding) {
@@ -29730,7 +29730,7 @@ func saveg_read_pad() {
 func saveg_write_pad() {
 	var i, padding int32
 	pos, _ := save_stream.Seek(0, io.SeekCurrent)
-	padding = libc.Int32FromUint64((uint64(4) - uint64(pos)&uint64(3)) & uint64(3))
+	padding = int32((uint64(4) - uint64(pos)&uint64(3)) & uint64(3))
 	i = 0
 	for {
 		if !(i < padding) {
@@ -29930,7 +29930,7 @@ func saveg_write_mobj_t(str uintptr) {
 	// struct mobj_t* sprev;
 	saveg_writep((*mobj_t)(unsafe.Pointer(str)).Fsprev)
 	// angle_t angle;
-	saveg_write32(libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(str)).Fangle))
+	saveg_write32(int32((*mobj_t)(unsafe.Pointer(str)).Fangle))
 	// spritenum_t sprite;
 	saveg_write32((*mobj_t)(unsafe.Pointer(str)).Fsprite)
 	// int frame;
@@ -30001,9 +30001,9 @@ func saveg_write_mobj_t(str uintptr) {
 
 func saveg_read_ticcmd_t(str *ticcmd_t) {
 	// signed char forwardmove;
-	str.Fforwardmove = libc.Int8FromUint8(saveg_read8())
+	str.Fforwardmove = int8(saveg_read8())
 	// signed char sidemove;
-	str.Fsidemove = libc.Int8FromUint8(saveg_read8())
+	str.Fsidemove = int8(saveg_read8())
 	// short angleturn;
 	str.Fangleturn = saveg_read16()
 	// short consistancy;
@@ -30022,7 +30022,7 @@ func saveg_write_ticcmd_t(str *ticcmd_t) {
 	// short angleturn;
 	saveg_write16(str.Fangleturn)
 	// short consistancy;
-	saveg_write16(libc.Int16FromUint8(str.Fconsistancy))
+	saveg_write16(int16(str.Fconsistancy))
 	// byte chatchar;
 	saveg_write8(str.Fchatchar)
 	// byte buttons;
@@ -30202,7 +30202,7 @@ func saveg_write_player_t(str *player_t) {
 		i++
 	}
 	// boolean backpack;
-	saveg_write32(libc.Int32FromUint32(str.Fbackpack))
+	saveg_write32(int32(str.Fbackpack))
 	// int frags[MAXPLAYERS];
 	i = 0
 	for {
@@ -30300,7 +30300,7 @@ func saveg_write_player_t(str *player_t) {
 		i++
 	}
 	// boolean didsecret;
-	saveg_write32(libc.Int32FromUint32(str.Fdidsecret))
+	saveg_write32(int32(str.Fdidsecret))
 }
 
 //
@@ -30346,7 +30346,7 @@ func saveg_write_ceiling_t(str uintptr) {
 	// fixed_t speed;
 	saveg_write32((*ceiling_t)(unsafe.Pointer(str)).Fspeed)
 	// boolean crush;
-	saveg_write32(libc.Int32FromUint32((*ceiling_t)(unsafe.Pointer(str)).Fcrush))
+	saveg_write32(int32((*ceiling_t)(unsafe.Pointer(str)).Fcrush))
 	// int direction;
 	saveg_write32((*ceiling_t)(unsafe.Pointer(str)).Fdirection)
 	// int tag;
@@ -30432,7 +30432,7 @@ func saveg_write_floormove_t(str uintptr) {
 	// floor_e type;
 	saveg_write32((*floormove_t)(unsafe.Pointer(str)).Ftype1)
 	// boolean crush;
-	saveg_write32(libc.Int32FromUint32((*floormove_t)(unsafe.Pointer(str)).Fcrush))
+	saveg_write32(int32((*floormove_t)(unsafe.Pointer(str)).Fcrush))
 	// sector_t* sector;
 	saveg_write32(sectorIndex((*floormove_t)(unsafe.Pointer(str)).Fsector))
 	// int direction;
@@ -30500,7 +30500,7 @@ func saveg_write_plat_t(str uintptr) {
 	// plat_e oldstatus;
 	saveg_write32((*plat_t)(unsafe.Pointer(str)).Foldstatus)
 	// boolean crush;
-	saveg_write32(libc.Int32FromUint32((*plat_t)(unsafe.Pointer(str)).Fcrush))
+	saveg_write32(int32((*plat_t)(unsafe.Pointer(str)).Fcrush))
 	// int tag;
 	saveg_write32((*plat_t)(unsafe.Pointer(str)).Ftag)
 	// plattype_e type;
@@ -30704,7 +30704,7 @@ func P_ReadSaveGameHeader() (r boolean) {
 		if !(i < int32(VERSIONSIZE)) {
 			break
 		}
-		(*(*[16]int8)(unsafe.Pointer(bp + 16)))[i] = libc.Int8FromUint8(saveg_read8())
+		(*(*[16]int8)(unsafe.Pointer(bp + 16)))[i] = int8(saveg_read8())
 		goto _2
 	_2:
 		;
@@ -30716,8 +30716,8 @@ func P_ReadSaveGameHeader() (r boolean) {
 		return 0
 	} // bad version
 	gameskill = skill_t(saveg_read8())
-	gameepisode = libc.Int32FromUint8(saveg_read8())
-	gamemap = libc.Int32FromUint8(saveg_read8())
+	gameepisode = int32(saveg_read8())
+	gamemap = int32(saveg_read8())
 	i = 0
 	for {
 		if !(i < int32(MAXPLAYERS)) {
@@ -30733,7 +30733,7 @@ func P_ReadSaveGameHeader() (r boolean) {
 	a = saveg_read8()
 	b = saveg_read8()
 	c = saveg_read8()
-	leveltime = libc.Int32FromUint8(a)<<int32(16) + libc.Int32FromUint8(b)<<int32(8) + libc.Int32FromUint8(c)
+	leveltime = int32(a)<<int32(16) + libc.Int32FromUint8(b)<<int32(8) + libc.Int32FromUint8(c)
 	return 1
 }
 
@@ -30743,7 +30743,7 @@ func P_ReadSaveGameHeader() (r boolean) {
 
 func P_ReadSaveGameEOF() (r boolean) {
 	var value int32
-	value = libc.Int32FromUint8(saveg_read8())
+	value = int32(saveg_read8())
 	return libc.BoolUint32(value == int32(SAVEGAME_EOF))
 }
 
@@ -30931,7 +30931,7 @@ func P_UnArchiveThinkers() {
 	// read in saved thinkers
 	for 1 != 0 {
 		tclass = saveg_read8()
-		switch libc.Int32FromUint8(tclass) {
+		switch int32(tclass) {
 		case tc_end:
 			return // end of list
 		case tc_mobj:
@@ -31066,7 +31066,7 @@ func P_UnArchiveSpecials() {
 	// read in saved thinkers
 	for 1 != 0 {
 		tclass = saveg_read8()
-		switch libc.Int32FromUint8(tclass) {
+		switch int32(tclass) {
 		case tc_endspecials:
 			return // end of list
 		case tc_ceiling:
@@ -31138,7 +31138,7 @@ func P_LoadVertexes(lump int32) {
 	var data, ml uintptr
 	// Determine number of lumps:
 	//  total lump length / vertex record length.
-	numvertexes = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(4))
+	numvertexes = int32(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(4))
 	// Allocate zone memory for buffer.
 	vertexes = make([]vertex_t, numvertexes)
 	// Load data into cache.
@@ -31184,8 +31184,8 @@ func P_LoadSegs(lump int32) {
 	var data, li, ml uintptr
 	var ldef *line_t
 	var i, linedef, side, sidenum int32
-	numsegs = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(12))
-	segs = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numsegs)*uint64(56)), int32(PU_LEVEL), uintptr(0))
+	numsegs = int32(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(12))
+	segs = Z_Malloc(int32(libc.Uint64FromInt32(numsegs)*uint64(56)), int32(PU_LEVEL), uintptr(0))
 	xmemset(segs, 0, libc.Uint64FromInt32(numsegs)*uint64(56))
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
 	ml = data
@@ -31237,7 +31237,7 @@ func P_LoadSegs(lump int32) {
 //	//
 func P_LoadSubsectors(lump int32) {
 	var data, ms uintptr
-	numsubsectors = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(4))
+	numsubsectors = int32(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(4))
 	subsectors = make([]subsector_t, numsubsectors)
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
 	ms = data
@@ -31256,7 +31256,7 @@ func P_LoadSubsectors(lump int32) {
 //	//
 func P_LoadSectors(lump int32) {
 	var data uintptr
-	numsectors = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapsector_t{})))
+	numsectors = int32(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapsector_t{})))
 	sectors = make([]sector_t, numsectors)
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
 	mapsectors := unsafe.Slice((*mapsector_t)(unsafe.Pointer(data)), numsectors)
@@ -31282,7 +31282,7 @@ func P_LoadSectors(lump int32) {
 //	//
 func P_LoadNodes(lump int32) {
 	var data uintptr
-	numnodes = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapnode_t{})))
+	numnodes = int32(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapnode_t{})))
 	nodes = make([]node_t, numnodes)
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
 	mapnodes := unsafe.Slice((*mapnode_t)(unsafe.Pointer(data)), numnodes)
@@ -31313,7 +31313,7 @@ func P_LoadThings(lump int32) {
 	var numthings int32
 	var spawn boolean
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
-	numthings = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapthing_t{})))
+	numthings = int32(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapthing_t{})))
 	mthings := unsafe.Slice((*mapthing_t)(unsafe.Pointer(data)), numthings)
 	for i := int32(0); i < numthings; i++ {
 		mt := &mthings[i]
@@ -31370,7 +31370,7 @@ func P_LoadLineDefs(lump int32) {
 	var data, mld uintptr
 	var v1, v2, v21, v3 *vertex_t
 	var i int32
-	numlines = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(14))
+	numlines = int32(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(14))
 	lines = make([]line_t, numlines)
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
 	mld = data
@@ -31439,8 +31439,8 @@ func P_LoadLineDefs(lump int32) {
 func P_LoadSideDefs(lump int32) {
 	var data, msd, sd uintptr
 	var i int32
-	numsides = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(30))
-	sides = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numsides)*uint64(24)), int32(PU_LEVEL), uintptr(0))
+	numsides = int32(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(30))
+	sides = Z_Malloc(int32(libc.Uint64FromInt32(numsides)*uint64(24)), int32(PU_LEVEL), uintptr(0))
 	xmemset(sides, 0, libc.Uint64FromInt32(numsides)*uint64(24))
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
 	msd = data
@@ -31496,7 +31496,7 @@ func P_LoadBlockMap(lump int32) {
 	bmapwidth = int32(*(*int16)(unsafe.Pointer(blockmaplump + 2*2)))
 	bmapheight = int32(*(*int16)(unsafe.Pointer(blockmaplump + 3*2)))
 	// Clear out mobj chains
-	count = libc.Int32FromUint64(uint64(8) * libc.Uint64FromInt32(bmapwidth) * libc.Uint64FromInt32(bmapheight))
+	count = int32(uint64(8) * libc.Uint64FromInt32(bmapwidth) * libc.Uint64FromInt32(bmapheight))
 	blocklinks = Z_Malloc(count, int32(PU_LEVEL), uintptr(0))
 	xmemset(blocklinks, 0, libc.Uint64FromInt32(count))
 }
@@ -31988,7 +31988,7 @@ func P_CrossBSPNode(bspnum int32) (r boolean) {
 		side = 0
 	} // an "on" should cross both sides
 	// cross the starting side
-	if !(P_CrossBSPNode(libc.Int32FromUint16(*(*uint16)(unsafe.Pointer(bsp + 48 + uintptr(side)*2)))) != 0) {
+	if !(P_CrossBSPNode(int32(*(*uint16)(unsafe.Pointer(bsp + 48 + uintptr(side)*2)))) != 0) {
 		return 0
 	}
 	// the partition plane is crossed here
@@ -31997,7 +31997,7 @@ func P_CrossBSPNode(bspnum int32) (r boolean) {
 		return 1
 	}
 	// cross the ending side
-	return P_CrossBSPNode(libc.Int32FromUint16(*(*uint16)(unsafe.Pointer(bsp + 48 + uintptr(side^int32(1))*2))))
+	return P_CrossBSPNode(int32(*(*uint16)(unsafe.Pointer(bsp + 48 + uintptr(side^int32(1))*2))))
 }
 
 // C documentation
@@ -32018,7 +32018,7 @@ func P_CheckSight(t1 uintptr, t2 uintptr) (r boolean) {
 	bytenum = pnum >> 3
 	bitnum = 1 << (pnum & 7)
 	// Check in REJECT table.
-	if libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(rejectmatrix + uintptr(bytenum))))&bitnum != 0 {
+	if int32(*(*uint8)(unsafe.Pointer(rejectmatrix + uintptr(bytenum))))&bitnum != 0 {
 		sightcounts[0]++
 		// can't possibly be connected
 		return 0
@@ -34420,7 +34420,7 @@ func P_DeathThink(player *player_t) {
 			player.Fdamagecount--
 		}
 	}
-	if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_USE) != 0 {
+	if int32(player.Fcmd.Fbuttons)&int32(BT_USE) != 0 {
 		player.Fplayerstate = int32(PST_REBORN)
 	}
 }
@@ -34464,14 +34464,14 @@ func P_PlayerThink(player *player_t) {
 	}
 	// Check for weapon change.
 	// A special event has no other buttons.
-	if libc.Int32FromUint8(cmd.Fbuttons)&int32(BT_SPECIAL) != 0 {
+	if int32(cmd.Fbuttons)&int32(BT_SPECIAL) != 0 {
 		cmd.Fbuttons = uint8(0)
 	}
-	if libc.Int32FromUint8(cmd.Fbuttons)&int32(BT_CHANGE) != 0 {
+	if int32(cmd.Fbuttons)&int32(BT_CHANGE) != 0 {
 		// The actual changing of the weapon is done
 		//  when the weapon psprite can do it
 		//  (read: not in the middle of an attack).
-		newweapon = libc.Int32FromUint8(cmd.Fbuttons) & int32(BT_WEAPONMASK) >> int32(BT_WEAPONSHIFT)
+		newweapon = int32(cmd.Fbuttons) & int32(BT_WEAPONMASK) >> int32(BT_WEAPONSHIFT)
 		if newweapon == wp_fist && player.Fweaponowned[wp_chainsaw] != 0 && !(player.Freadyweapon == wp_chainsaw && player.Fpowers[pw_strength] != 0) {
 			newweapon = wp_chainsaw
 		}
@@ -34487,7 +34487,7 @@ func P_PlayerThink(player *player_t) {
 		}
 	}
 	// check for use
-	if libc.Int32FromUint8(cmd.Fbuttons)&int32(BT_USE) != 0 {
+	if int32(cmd.Fbuttons)&int32(BT_USE) != 0 {
 		if !(player.Fusedown != 0) {
 			P_UseLines(player)
 			player.Fusedown = 1
@@ -34723,7 +34723,7 @@ func R_AddLine(line uintptr) {
 		return
 	}
 	// Global angle needed by segcalc.
-	rw_angle1 = libc.Int32FromUint32(angle1)
+	rw_angle1 = int32(angle1)
 	angle1 -= viewangle
 	angle2 -= viewangle
 	tspan = angle1 + clipangle
@@ -34979,10 +34979,10 @@ func R_RenderBSPNode(bspnum int32) {
 	// Decide which side the view point is on.
 	side = R_PointOnSide(viewx, viewy, &nodes[bspnum])
 	// Recursively divide front space.
-	R_RenderBSPNode(libc.Int32FromUint16(*(*uint16)(unsafe.Pointer(bsp + 48 + uintptr(side)*2))))
+	R_RenderBSPNode(int32(*(*uint16)(unsafe.Pointer(bsp + 48 + uintptr(side)*2))))
 	// Possibly divide back space.
 	if R_CheckBBox(bsp+16+uintptr(side^int32(1))*16) != 0 {
-		R_RenderBSPNode(libc.Int32FromUint16(*(*uint16)(unsafe.Pointer(bsp + 48 + uintptr(side^int32(1))*2))))
+		R_RenderBSPNode(int32(*(*uint16)(unsafe.Pointer(bsp + 48 + uintptr(side^int32(1))*2))))
 	}
 }
 
@@ -35095,10 +35095,10 @@ type texture_t struct {
 func R_DrawColumnInCache(patch uintptr, cache uintptr, originy int32, cacheheight int32) {
 	var count, position int32
 	var source uintptr
-	for libc.Int32FromUint8((*column_t)(unsafe.Pointer(patch)).Ftopdelta) != int32(0xff) {
+	for int32((*column_t)(unsafe.Pointer(patch)).Ftopdelta) != int32(0xff) {
 		source = patch + uintptr(3)
-		count = libc.Int32FromUint8((*column_t)(unsafe.Pointer(patch)).Flength)
-		position = originy + libc.Int32FromUint8((*column_t)(unsafe.Pointer(patch)).Ftopdelta)
+		count = int32((*column_t)(unsafe.Pointer(patch)).Flength)
+		position = originy + int32((*column_t)(unsafe.Pointer(patch)).Ftopdelta)
 		if position < 0 {
 			count += position
 			position = 0
@@ -35240,7 +35240,7 @@ func R_GenerateLookup(texnum int32) {
 			return
 		}
 		// I_Error ("R_GenerateLookup: column without a patch");
-		if libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(bp)) + uintptr(x)))) > 1 {
+		if int32(*(*uint8)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(bp)) + uintptr(x)))) > 1 {
 			// Use the cached block.
 			*(*int16)(unsafe.Pointer(collump + uintptr(x)*2)) = int16(-1)
 			*(*uint16)(unsafe.Pointer(colofs + uintptr(x)*2)) = libc.Uint16FromInt32(*(*int32)(unsafe.Pointer(texturecompositesize + uintptr(texnum)*4)))
@@ -35266,7 +35266,7 @@ func R_GetColumn(tex int32, col int32) (r uintptr) {
 	var lump, ofs int32
 	col &= *(*int32)(unsafe.Pointer(texturewidthmask + uintptr(tex)*4))
 	lump = int32(*(*int16)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(texturecolumnlump + uintptr(tex)*8)) + uintptr(col)*2)))
-	ofs = libc.Int32FromUint16(*(*uint16)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(texturecolumnofs + uintptr(tex)*8)) + uintptr(col)*2)))
+	ofs = int32(*(*uint16)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(texturecolumnofs + uintptr(tex)*8)) + uintptr(col)*2)))
 	if lump > 0 {
 		return W_CacheLumpNum(lump, int32(PU_CACHE)) + uintptr(ofs)
 	}
@@ -35279,7 +35279,7 @@ func R_GetColumn(tex int32, col int32) (r uintptr) {
 func GenerateTextureHashTable() {
 	var i, key int32
 	var rover uintptr
-	textures_hashtable = Z_Malloc(libc.Int32FromUint64(uint64(8)*libc.Uint64FromInt32(numtextures)), int32(PU_STATIC), uintptr(0))
+	textures_hashtable = Z_Malloc(int32(uint64(8)*libc.Uint64FromInt32(numtextures)), int32(PU_STATIC), uintptr(0))
 	xmemset(textures_hashtable, 0, uint64(8)*libc.Uint64FromInt32(numtextures))
 	// Add all textures to hash table
 	i = 0
@@ -35294,7 +35294,7 @@ func GenerateTextureHashTable() {
 		// entries with the same name, the first one in the array
 		// wins. The new entry must therefore be added at the end
 		// of the hash chain, so that earlier entries win.
-		key = libc.Int32FromUint32(W_LumpNameHash(*(*uintptr)(unsafe.Pointer(textures + uintptr(i)*8))) % uint32(numtextures))
+		key = int32(W_LumpNameHash(*(*uintptr)(unsafe.Pointer(textures + uintptr(i)*8))) % uint32(numtextures))
 		rover = textures_hashtable + uintptr(key)*8
 		for *(*uintptr)(unsafe.Pointer(rover)) != uintptr(0) {
 			rover = *(*uintptr)(unsafe.Pointer(rover)) + 16
@@ -35325,7 +35325,7 @@ func R_InitTextures() {
 	names = W_CacheLumpName(__ccgo_ts(26022), int32(PU_STATIC))
 	nummappatches = *(*int32)(unsafe.Pointer(names))
 	name_p = names + uintptr(4)
-	patchlookup = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(nummappatches)*uint64(4)), int32(PU_STATIC), uintptr(0))
+	patchlookup = Z_Malloc(int32(libc.Uint64FromInt32(nummappatches)*uint64(4)), int32(PU_STATIC), uintptr(0))
 	i = 0
 	for {
 		if !(i < nummappatches) {
@@ -35357,13 +35357,13 @@ func R_InitTextures() {
 		maxoff2 = 0
 	}
 	numtextures = numtextures1 + numtextures2
-	textures = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numtextures)*uint64(8)), int32(PU_STATIC), uintptr(0))
-	texturecolumnlump = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numtextures)*uint64(8)), int32(PU_STATIC), uintptr(0))
-	texturecolumnofs = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numtextures)*uint64(8)), int32(PU_STATIC), uintptr(0))
-	texturecomposite = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numtextures)*uint64(8)), int32(PU_STATIC), uintptr(0))
-	texturecompositesize = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numtextures)*uint64(4)), int32(PU_STATIC), uintptr(0))
-	texturewidthmask = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numtextures)*uint64(4)), int32(PU_STATIC), uintptr(0))
-	textureheight = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numtextures)*uint64(4)), int32(PU_STATIC), uintptr(0))
+	textures = Z_Malloc(int32(libc.Uint64FromInt32(numtextures)*uint64(8)), int32(PU_STATIC), uintptr(0))
+	texturecolumnlump = Z_Malloc(int32(libc.Uint64FromInt32(numtextures)*uint64(8)), int32(PU_STATIC), uintptr(0))
+	texturecolumnofs = Z_Malloc(int32(libc.Uint64FromInt32(numtextures)*uint64(8)), int32(PU_STATIC), uintptr(0))
+	texturecomposite = Z_Malloc(int32(libc.Uint64FromInt32(numtextures)*uint64(8)), int32(PU_STATIC), uintptr(0))
+	texturecompositesize = Z_Malloc(int32(libc.Uint64FromInt32(numtextures)*uint64(4)), int32(PU_STATIC), uintptr(0))
+	texturewidthmask = Z_Malloc(int32(libc.Uint64FromInt32(numtextures)*uint64(4)), int32(PU_STATIC), uintptr(0))
+	textureheight = Z_Malloc(int32(libc.Uint64FromInt32(numtextures)*uint64(4)), int32(PU_STATIC), uintptr(0))
 	totalwidth = 0
 	//	Really complex printing shit...
 	temp1 = W_GetNumForName(__ccgo_ts(26047)) // P_???????
@@ -35417,7 +35417,7 @@ func R_InitTextures() {
 			I_Error(__ccgo_ts(26069), 0)
 		}
 		mtexture = maptex + uintptr(offset)
-		v6 = Z_Malloc(libc.Int32FromUint64(uint64(40)+uint64(8)*libc.Uint64FromInt32(int32((*maptexture_t)(unsafe.Pointer(mtexture)).Fpatchcount)-1)), int32(PU_STATIC), uintptr(0))
+		v6 = Z_Malloc(int32(uint64(40)+uint64(8)*libc.Uint64FromInt32(int32((*maptexture_t)(unsafe.Pointer(mtexture)).Fpatchcount)-1)), int32(PU_STATIC), uintptr(0))
 		*(*uintptr)(unsafe.Pointer(textures + uintptr(i)*8)) = v6
 		texture = v6
 		(*texture_t)(unsafe.Pointer(texture)).Fwidth = (*maptexture_t)(unsafe.Pointer(mtexture)).Fwidth
@@ -35444,8 +35444,8 @@ func R_InitTextures() {
 			mpatch += 10
 			patch += 8
 		}
-		*(*uintptr)(unsafe.Pointer(texturecolumnlump + uintptr(i)*8)) = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt16((*texture_t)(unsafe.Pointer(texture)).Fwidth)*uint64(2)), int32(PU_STATIC), uintptr(0))
-		*(*uintptr)(unsafe.Pointer(texturecolumnofs + uintptr(i)*8)) = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt16((*texture_t)(unsafe.Pointer(texture)).Fwidth)*uint64(2)), int32(PU_STATIC), uintptr(0))
+		*(*uintptr)(unsafe.Pointer(texturecolumnlump + uintptr(i)*8)) = Z_Malloc(int32(libc.Uint64FromInt16((*texture_t)(unsafe.Pointer(texture)).Fwidth)*uint64(2)), int32(PU_STATIC), uintptr(0))
+		*(*uintptr)(unsafe.Pointer(texturecolumnofs + uintptr(i)*8)) = Z_Malloc(int32(libc.Uint64FromInt16((*texture_t)(unsafe.Pointer(texture)).Fwidth)*uint64(2)), int32(PU_STATIC), uintptr(0))
 		j = 1
 		for j*int32(2) <= int32((*texture_t)(unsafe.Pointer(texture)).Fwidth) {
 			j <<= 1
@@ -35477,7 +35477,7 @@ func R_InitTextures() {
 		i++
 	}
 	// Create translation table for global animation.
-	texturetranslation = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numtextures+1)*uint64(4)), int32(PU_STATIC), uintptr(0))
+	texturetranslation = Z_Malloc(int32(libc.Uint64FromInt32(numtextures+1)*uint64(4)), int32(PU_STATIC), uintptr(0))
 	i = 0
 	for {
 		if !(i < numtextures) {
@@ -35503,7 +35503,7 @@ func R_InitFlats() {
 	lastflat = W_GetNumForName(__ccgo_ts(26159)) - 1
 	numflats = lastflat - firstflat + 1
 	// Create translation table for global animation.
-	flattranslation = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numflats+1)*uint64(4)), int32(PU_STATIC), uintptr(0))
+	flattranslation = Z_Malloc(int32(libc.Uint64FromInt32(numflats+1)*uint64(4)), int32(PU_STATIC), uintptr(0))
 	i = 0
 	for {
 		if !(i < numflats) {
@@ -35531,9 +35531,9 @@ func R_InitSpriteLumps() {
 	firstspritelump = W_GetNumForName(__ccgo_ts(26047)) + 1
 	lastspritelump = W_GetNumForName(__ccgo_ts(26055)) - 1
 	numspritelumps = lastspritelump - firstspritelump + 1
-	spritewidth = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numspritelumps)*uint64(4)), int32(PU_STATIC), uintptr(0))
-	spriteoffset = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numspritelumps)*uint64(4)), int32(PU_STATIC), uintptr(0))
-	spritetopoffset = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numspritelumps)*uint64(4)), int32(PU_STATIC), uintptr(0))
+	spritewidth = Z_Malloc(int32(libc.Uint64FromInt32(numspritelumps)*uint64(4)), int32(PU_STATIC), uintptr(0))
+	spriteoffset = Z_Malloc(int32(libc.Uint64FromInt32(numspritelumps)*uint64(4)), int32(PU_STATIC), uintptr(0))
+	spritetopoffset = Z_Malloc(int32(libc.Uint64FromInt32(numspritelumps)*uint64(4)), int32(PU_STATIC), uintptr(0))
 	i = 0
 	for {
 		if !(i < numspritelumps) {
@@ -35616,7 +35616,7 @@ func R_CheckTextureNumForName(name uintptr) (r int32) {
 	if int32(*(*int8)(unsafe.Pointer(name))) == int32('-') {
 		return 0
 	}
-	key = libc.Int32FromUint32(W_LumpNameHash(name) % uint32(numtextures))
+	key = int32(W_LumpNameHash(name) % uint32(numtextures))
 	texture = *(*uintptr)(unsafe.Pointer(textures_hashtable + uintptr(key)*8))
 	for texture != uintptr(0) {
 		if !(xstrncasecmp(texture, name, uint64(8)) != 0) {
@@ -35981,7 +35981,7 @@ func R_DrawFuzzColumn() {
 		//  a pixel that is either one column
 		//  left or right of the current one.
 		// Add index from colormap to index.
-		*(*uint8)(unsafe.Pointer(dest)) = *(*lighttable_t)(unsafe.Pointer(colormaps + uintptr(6*256+libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dest + uintptr(fuzzoffset[fuzzpos])))))))
+		*(*uint8)(unsafe.Pointer(dest)) = *(*lighttable_t)(unsafe.Pointer(colormaps + uintptr(6*256+int32(*(*uint8)(unsafe.Pointer(dest + uintptr(fuzzoffset[fuzzpos])))))))
 		// Clamp table lookup index.
 		fuzzpos++
 		v3 = fuzzpos
@@ -36037,8 +36037,8 @@ func R_DrawFuzzColumnLow() {
 		//  a pixel that is either one column
 		//  left or right of the current one.
 		// Add index from colormap to index.
-		*(*uint8)(unsafe.Pointer(dest)) = *(*lighttable_t)(unsafe.Pointer(colormaps + uintptr(6*256+libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dest + uintptr(fuzzoffset[fuzzpos])))))))
-		*(*uint8)(unsafe.Pointer(dest2)) = *(*lighttable_t)(unsafe.Pointer(colormaps + uintptr(6*256+libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dest2 + uintptr(fuzzoffset[fuzzpos])))))))
+		*(*uint8)(unsafe.Pointer(dest)) = *(*lighttable_t)(unsafe.Pointer(colormaps + uintptr(6*256+int32(*(*uint8)(unsafe.Pointer(dest + uintptr(fuzzoffset[fuzzpos])))))))
+		*(*uint8)(unsafe.Pointer(dest2)) = *(*lighttable_t)(unsafe.Pointer(colormaps + uintptr(6*256+int32(*(*uint8)(unsafe.Pointer(dest2 + uintptr(fuzzoffset[fuzzpos])))))))
 		// Clamp table lookup index.
 		fuzzpos++
 		v3 = fuzzpos
@@ -36200,7 +36200,7 @@ func R_DrawSpan() {
 		// Calculate current texture index in u,v.
 		ytemp = position >> 4 & uint32(0x0fc0)
 		xtemp = position >> 26
-		spot = libc.Int32FromUint32(xtemp | ytemp)
+		spot = int32(xtemp | ytemp)
 		// Lookup pixel from flat texture tile,
 		//  re-index using light/colormap.
 		v3 = dest
@@ -36245,7 +36245,7 @@ func R_DrawSpanLow() {
 		// Calculate current texture index in u,v.
 		ytemp = position >> 4 & uint32(0x0fc0)
 		xtemp = position >> 26
-		spot = libc.Int32FromUint32(xtemp | ytemp)
+		spot = int32(xtemp | ytemp)
 		// Lowres/blocky mode does it twice,
 		//  while scale is adjusted appropriately.
 		v3 = dest
@@ -36665,7 +36665,7 @@ func R_PointToDist(x fixed_t, y fixed_t) (r fixed_t) {
 	} else {
 		frac = 0
 	}
-	angle = libc.Int32FromUint32((tantoangle[frac>>(FRACBITS-SLOPEBITS)] + uint32(ANG909)) >> int32(ANGLETOFINESHIFT))
+	angle = int32((tantoangle[frac>>(FRACBITS-SLOPEBITS)] + uint32(ANG909)) >> int32(ANGLETOFINESHIFT))
 	// use as cosine
 	dist = FixedDiv(dx, finesine[angle])
 	return dist
@@ -37010,7 +37010,7 @@ func R_PointInSubsector(x fixed_t, y fixed_t) *subsector_t {
 	for !(nodenum&NF_SUBSECTOR5 != 0) {
 		node := &nodes[nodenum]
 		side = R_PointOnSide(x, y, node)
-		nodenum = libc.Int32FromUint16(node.Fchildren[side])
+		nodenum = int32(node.Fchildren[side])
 	}
 	return &subsectors[nodenum & ^NF_SUBSECTOR5]
 }
@@ -37299,10 +37299,10 @@ func R_DrawPlanes() {
 				if !(x <= pl.Fmaxx) {
 					break
 				}
-				dc_yl = libc.Int32FromUint8(pl.Ftop[x])
-				dc_yh = libc.Int32FromUint8(pl.Fbottom[x])
+				dc_yl = int32(pl.Ftop[x])
+				dc_yh = int32(pl.Fbottom[x])
 				if dc_yl <= dc_yh {
-					angle = libc.Int32FromUint32((viewangle + xtoviewangle[x]) >> int32(ANGLETOSKYSHIFT))
+					angle = int32((viewangle + xtoviewangle[x]) >> int32(ANGLETOSKYSHIFT))
 					dc_x = x
 					dc_source = R_GetColumn(skytexture, angle)
 					(*(*func())(unsafe.Pointer(&struct{ uintptr }{colfunc})))()
@@ -37459,7 +37459,7 @@ func R_RenderMaskedSegRange(ds *drawseg_t, x1 int32, x2 int32) {
 				dc_colormap = *(*uintptr)(unsafe.Pointer(walllights + uintptr(index)*8))
 			}
 			sprtopscreen = centeryfrac - FixedMul(dc_texturemid, spryscale)
-			dc_iscale = libc.Int32FromUint32(uint32(0xffffffff) / uint32(spryscale))
+			dc_iscale = int32(uint32(0xffffffff) / uint32(spryscale))
 			// draw the texture
 			col = R_GetColumn(texnum, int32(*(*int16)(unsafe.Pointer(maskedtexturecol + uintptr(dc_x)*2)))) - libc.UintptrFromInt32(3)
 			R_DrawMaskedColumn(col)
@@ -37542,7 +37542,7 @@ func R_RenderSegLoop() {
 			}
 			dc_colormap = *(*uintptr)(unsafe.Pointer(walllights + uintptr(index)*8))
 			dc_x = rw_x
-			dc_iscale = libc.Int32FromUint32(uint32(0xffffffff) / uint32(rw_scale))
+			dc_iscale = int32(uint32(0xffffffff) / uint32(rw_scale))
 		} else {
 			// purely to shut up the compiler
 			texturecolumn = 0
@@ -37650,7 +37650,7 @@ func R_StoreWallRange(start int32, stop int32) {
 	linedef.Fflags |= ML_MAPPED
 	// calculate rw_distance for scale calculation
 	rw_normalangle = (*seg_t)(unsafe.Pointer(curline)).Fangle + uint32(ANG909)
-	offsetangle = uint32(xabs(libc.Int32FromUint32(rw_normalangle - uint32(rw_angle1))))
+	offsetangle = uint32(xabs(int32(rw_normalangle - uint32(rw_angle1))))
 	if offsetangle > uint32(ANG909) {
 		offsetangle = uint32(ANG909)
 	}
@@ -37683,7 +37683,7 @@ func R_StoreWallRange(start int32, stop int32) {
 	worldbottom = (*sector_t)(unsafe.Pointer(frontsector)).Ffloorheight - viewz
 	v7 = 0
 	maskedtexture = v7
-	v6 = libc.Int32FromUint32(v7)
+	v6 = int32(v7)
 	bottomtexture = v6
 	v5 = v6
 	toptexture = v5
@@ -37934,8 +37934,8 @@ func R_InstallSpriteLump(lump int32, frame uint32, rotation uint32, flipped bool
 	if frame >= uint32(29) || rotation > uint32(8) {
 		I_Error(__ccgo_ts(26603), lump)
 	}
-	if libc.Int32FromUint32(frame) > maxframe {
-		maxframe = libc.Int32FromUint32(frame)
+	if int32(frame) > maxframe {
+		maxframe = int32(frame)
 	}
 	if rotation == uint32(0) {
 		// the lump should be used for all rotations
@@ -38003,7 +38003,7 @@ func R_InitSpriteDefs(namelist uintptr) {
 	if !(numsprites != 0) {
 		return
 	}
-	sprites = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numsprites)*uint64(16)), int32(PU_STATIC), uintptr(0))
+	sprites = Z_Malloc(int32(libc.Uint64FromInt32(numsprites)*uint64(16)), int32(PU_STATIC), uintptr(0))
 	start = firstspritelump - 1
 	end = lastspritelump + 1
 	// scan all the lump names for each of the names,
@@ -38055,7 +38055,7 @@ func R_InitSpriteDefs(namelist uintptr) {
 			if !(frame < maxframe) {
 				break
 			}
-			switch libc.Int32FromUint32(sprtemp[frame].Frotate) {
+			switch int32(sprtemp[frame].Frotate) {
 			case -1:
 				goto _4
 			case 0:
@@ -38103,7 +38103,7 @@ func R_InitSpriteDefs(namelist uintptr) {
 		}
 		// allocate space for the frames present and copy sprtemp to it
 		(*(*spritedef_t)(unsafe.Pointer(sprites + uintptr(i)*16))).Fnumframes = maxframe
-		(*(*spritedef_t)(unsafe.Pointer(sprites + uintptr(i)*16))).Fspriteframes = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(maxframe)*uint64(28)), int32(PU_STATIC), uintptr(0))
+		(*(*spritedef_t)(unsafe.Pointer(sprites + uintptr(i)*16))).Fspriteframes = Z_Malloc(int32(libc.Uint64FromInt32(maxframe)*uint64(28)), int32(PU_STATIC), uintptr(0))
 		xmemcpy((*(*spritedef_t)(unsafe.Pointer(sprites + uintptr(i)*16))).Fspriteframes, uintptr(unsafe.Pointer(&sprtemp)), libc.Uint64FromInt32(maxframe)*uint64(28))
 		goto _1
 	_1:
@@ -38157,13 +38157,13 @@ func R_DrawMaskedColumn(column uintptr) {
 	var bottomscreen, topscreen int32
 	basetexturemid = dc_texturemid
 	for {
-		if !(libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Ftopdelta) != int32(0xff)) {
+		if !(int32((*column_t)(unsafe.Pointer(column)).Ftopdelta) != int32(0xff)) {
 			break
 		}
 		// calculate unclipped screen coordinates
 		//  for post
-		topscreen = sprtopscreen + spryscale*libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Ftopdelta)
-		bottomscreen = topscreen + spryscale*libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Flength)
+		topscreen = sprtopscreen + spryscale*int32((*column_t)(unsafe.Pointer(column)).Ftopdelta)
+		bottomscreen = topscreen + spryscale*int32((*column_t)(unsafe.Pointer(column)).Flength)
 		dc_yl = (topscreen + 1<<FRACBITS - 1) >> int32(FRACBITS)
 		dc_yh = (bottomscreen - 1) >> int32(FRACBITS)
 		if dc_yh >= int32(*(*int16)(unsafe.Pointer(mfloorclip + uintptr(dc_x)*2))) {
@@ -38174,7 +38174,7 @@ func R_DrawMaskedColumn(column uintptr) {
 		}
 		if dc_yl <= dc_yh {
 			dc_source = column + uintptr(3)
-			dc_texturemid = basetexturemid - libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Ftopdelta)<<int32(FRACBITS)
+			dc_texturemid = basetexturemid - int32((*column_t)(unsafe.Pointer(column)).Ftopdelta)<<int32(FRACBITS)
 			// dc_source = (byte *)column + 3 - column->topdelta;
 			// Drawn by either R_DrawColumn
 			//  or (SHADOW) R_DrawFuzzColumn.
@@ -38833,357 +38833,357 @@ func Transform(hd uintptr, data uintptr) {
 		i++
 		p2 += uintptr(4)
 	}
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(d^b&(c^d))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[0])))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(d^b&(c^d))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[0])))
 	b = b<<30 | b>>(32-30)
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(c^a&(b^c))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(1)])))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(c^a&(b^c))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(1)])))
 	a = a<<30 | a>>(32-30)
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(b^e&(a^b))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(2)])))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(b^e&(a^b))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(2)])))
 	e = e<<30 | e>>(32-30)
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(a^d&(e^a))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(3)])))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(a^d&(e^a))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(3)])))
 	d = d<<30 | d>>(32-30)
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(e^c&(d^e))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(4)])))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(e^c&(d^e))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(4)])))
 	c = c<<30 | c>>(32-30)
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(d^b&(c^d))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(5)])))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(d^b&(c^d))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(5)])))
 	b = b<<30 | b>>(32-30)
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(c^a&(b^c))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(6)])))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(c^a&(b^c))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(6)])))
 	a = a<<30 | a>>(32-30)
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(b^e&(a^b))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(7)])))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(b^e&(a^b))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(7)])))
 	e = e<<30 | e>>(32-30)
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(a^d&(e^a))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(8)])))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(a^d&(e^a))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(8)])))
 	d = d<<30 | d>>(32-30)
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(e^c&(d^e))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(9)])))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(e^c&(d^e))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(9)])))
 	c = c<<30 | c>>(32-30)
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(d^b&(c^d))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(10)])))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(d^b&(c^d))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(10)])))
 	b = b<<30 | b>>(32-30)
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(c^a&(b^c))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(11)])))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(c^a&(b^c))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(11)])))
 	a = a<<30 | a>>(32-30)
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(b^e&(a^b))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(12)])))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(b^e&(a^b))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(12)])))
 	e = e<<30 | e>>(32-30)
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(a^d&(e^a))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(13)])))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(a^d&(e^a))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(13)])))
 	d = d<<30 | d>>(32-30)
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(e^c&(d^e))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(14)])))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(e^c&(d^e))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(14)])))
 	c = c<<30 | c>>(32-30)
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(d^b&(c^d))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(15)])))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(d^b&(c^d))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32((*(*[16]uint32)(unsafe.Pointer(bp)))[int32(15)])))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[16&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(16-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(16-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(16-3)&0x0f]
 	v6 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[16&0x0f] = v6
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(c^a&(b^c))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32(v6)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(c^a&(b^c))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32(v6)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[17&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(17-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(17-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(17-3)&0x0f]
 	v7 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[17&0x0f] = v7
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(b^e&(a^b))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32(v7)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(b^e&(a^b))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32(v7)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[18&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(18-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(18-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(18-3)&0x0f]
 	v8 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[18&0x0f] = v8
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(a^d&(e^a))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32(v8)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(a^d&(e^a))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32(v8)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[19&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(19-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(19-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(19-3)&0x0f]
 	v9 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[19&0x0f] = v9
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(e^c&(d^e))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32(v9)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(e^c&(d^e))) + libc.Int64FromInt64(0x5A827999) + libc.Int64FromUint32(v9)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[20&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(20-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(20-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(20-3)&0x0f]
 	v10 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[20&0x0f] = v10
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v10)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v10)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[21&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(21-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(21-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(21-3)&0x0f]
 	v11 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[21&0x0f] = v11
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v11)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v11)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[22&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(22-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(22-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(22-3)&0x0f]
 	v12 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[22&0x0f] = v12
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v12)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v12)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[23&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(23-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(23-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(23-3)&0x0f]
 	v13 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[23&0x0f] = v13
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v13)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v13)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[24&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(24-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(24-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(24-3)&0x0f]
 	v14 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[24&0x0f] = v14
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v14)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v14)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[25&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(25-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(25-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(25-3)&0x0f]
 	v15 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[25&0x0f] = v15
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v15)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v15)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[26&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(26-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(26-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(26-3)&0x0f]
 	v16 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[26&0x0f] = v16
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v16)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v16)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[27&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(27-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(27-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(27-3)&0x0f]
 	v17 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[27&0x0f] = v17
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v17)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v17)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[28&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(28-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(28-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(28-3)&0x0f]
 	v18 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[28&0x0f] = v18
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v18)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v18)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[29&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(29-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(29-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(29-3)&0x0f]
 	v19 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[29&0x0f] = v19
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v19)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v19)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[30&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(30-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(30-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(30-3)&0x0f]
 	v20 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[30&0x0f] = v20
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v20)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v20)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[31&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(31-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(31-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(31-3)&0x0f]
 	v21 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[31&0x0f] = v21
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v21)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v21)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[32&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(32-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(32-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(32-3)&0x0f]
 	v22 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[32&0x0f] = v22
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v22)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v22)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[33&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(33-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(33-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(33-3)&0x0f]
 	v23 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[33&0x0f] = v23
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v23)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v23)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[34&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(34-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(34-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(34-3)&0x0f]
 	v24 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[34&0x0f] = v24
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v24)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v24)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[35&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(35-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(35-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(35-3)&0x0f]
 	v25 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[35&0x0f] = v25
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v25)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v25)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[36&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(36-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(36-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(36-3)&0x0f]
 	v26 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[36&0x0f] = v26
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v26)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v26)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[37&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(37-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(37-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(37-3)&0x0f]
 	v27 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[37&0x0f] = v27
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v27)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v27)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[38&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(38-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(38-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(38-3)&0x0f]
 	v28 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[38&0x0f] = v28
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v28)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v28)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[39&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(39-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(39-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(39-3)&0x0f]
 	v29 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[39&0x0f] = v29
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v29)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0x6ED9EBA1) + libc.Int64FromUint32(v29)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[40&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(40-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(40-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(40-3)&0x0f]
 	v30 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[40&0x0f] = v30
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b&c|d&(b|c))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v30)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b&c|d&(b|c))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v30)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[41&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(41-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(41-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(41-3)&0x0f]
 	v31 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[41&0x0f] = v31
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a&b|c&(a|b))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v31)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a&b|c&(a|b))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v31)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[42&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(42-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(42-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(42-3)&0x0f]
 	v32 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[42&0x0f] = v32
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e&a|b&(e|a))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v32)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e&a|b&(e|a))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v32)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[43&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(43-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(43-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(43-3)&0x0f]
 	v33 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[43&0x0f] = v33
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d&e|a&(d|e))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v33)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d&e|a&(d|e))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v33)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[44&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(44-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(44-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(44-3)&0x0f]
 	v34 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[44&0x0f] = v34
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c&d|e&(c|d))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v34)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c&d|e&(c|d))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v34)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[45&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(45-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(45-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(45-3)&0x0f]
 	v35 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[45&0x0f] = v35
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b&c|d&(b|c))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v35)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b&c|d&(b|c))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v35)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[46&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(46-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(46-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(46-3)&0x0f]
 	v36 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[46&0x0f] = v36
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a&b|c&(a|b))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v36)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a&b|c&(a|b))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v36)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[47&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(47-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(47-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(47-3)&0x0f]
 	v37 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[47&0x0f] = v37
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e&a|b&(e|a))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v37)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e&a|b&(e|a))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v37)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[48&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(48-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(48-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(48-3)&0x0f]
 	v38 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[48&0x0f] = v38
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d&e|a&(d|e))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v38)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d&e|a&(d|e))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v38)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[49&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(49-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(49-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(49-3)&0x0f]
 	v39 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[49&0x0f] = v39
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c&d|e&(c|d))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v39)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c&d|e&(c|d))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v39)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[50&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(50-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(50-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(50-3)&0x0f]
 	v40 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[50&0x0f] = v40
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b&c|d&(b|c))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v40)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b&c|d&(b|c))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v40)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[51&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(51-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(51-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(51-3)&0x0f]
 	v41 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[51&0x0f] = v41
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a&b|c&(a|b))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v41)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a&b|c&(a|b))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v41)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[52&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(52-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(52-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(52-3)&0x0f]
 	v42 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[52&0x0f] = v42
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e&a|b&(e|a))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v42)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e&a|b&(e|a))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v42)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[53&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(53-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(53-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(53-3)&0x0f]
 	v43 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[53&0x0f] = v43
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d&e|a&(d|e))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v43)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d&e|a&(d|e))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v43)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[54&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(54-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(54-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(54-3)&0x0f]
 	v44 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[54&0x0f] = v44
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c&d|e&(c|d))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v44)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c&d|e&(c|d))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v44)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[55&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(55-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(55-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(55-3)&0x0f]
 	v45 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[55&0x0f] = v45
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b&c|d&(b|c))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v45)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b&c|d&(b|c))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v45)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[56&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(56-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(56-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(56-3)&0x0f]
 	v46 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[56&0x0f] = v46
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a&b|c&(a|b))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v46)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a&b|c&(a|b))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v46)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[57&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(57-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(57-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(57-3)&0x0f]
 	v47 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[57&0x0f] = v47
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e&a|b&(e|a))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v47)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e&a|b&(e|a))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v47)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[58&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(58-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(58-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(58-3)&0x0f]
 	v48 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[58&0x0f] = v48
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d&e|a&(d|e))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v48)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d&e|a&(d|e))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v48)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[59&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(59-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(59-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(59-3)&0x0f]
 	v49 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[59&0x0f] = v49
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c&d|e&(c|d))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v49)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c&d|e&(c|d))) + libc.Int64FromInt64(0x8F1BBCDC) + libc.Int64FromUint32(v49)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[60&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(60-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(60-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(60-3)&0x0f]
 	v50 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[60&0x0f] = v50
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v50)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v50)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[61&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(61-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(61-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(61-3)&0x0f]
 	v51 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[61&0x0f] = v51
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v51)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v51)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[62&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(62-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(62-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(62-3)&0x0f]
 	v52 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[62&0x0f] = v52
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v52)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v52)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[63&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(63-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(63-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(63-3)&0x0f]
 	v53 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[63&0x0f] = v53
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v53)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v53)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[64&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(64-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(64-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(64-3)&0x0f]
 	v54 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[64&0x0f] = v54
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v54)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v54)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[65&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(65-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(65-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(65-3)&0x0f]
 	v55 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[65&0x0f] = v55
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v55)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v55)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[66&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(66-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(66-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(66-3)&0x0f]
 	v56 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[66&0x0f] = v56
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v56)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v56)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[67&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(67-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(67-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(67-3)&0x0f]
 	v57 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[67&0x0f] = v57
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v57)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v57)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[68&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(68-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(68-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(68-3)&0x0f]
 	v58 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[68&0x0f] = v58
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v58)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v58)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[69&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(69-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(69-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(69-3)&0x0f]
 	v59 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[69&0x0f] = v59
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v59)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v59)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[70&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(70-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(70-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(70-3)&0x0f]
 	v60 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[70&0x0f] = v60
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v60)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v60)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[71&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(71-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(71-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(71-3)&0x0f]
 	v61 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[71&0x0f] = v61
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v61)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v61)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[72&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(72-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(72-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(72-3)&0x0f]
 	v62 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[72&0x0f] = v62
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v62)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v62)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[73&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(73-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(73-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(73-3)&0x0f]
 	v63 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[73&0x0f] = v63
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v63)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v63)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[74&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(74-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(74-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(74-3)&0x0f]
 	v64 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[74&0x0f] = v64
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v64)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v64)))
 	c = c<<30 | c>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[75&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(75-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(75-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(75-3)&0x0f]
 	v65 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[75&0x0f] = v65
-	e = uint32(int64(e) + (libc.Int64FromUint32(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v65)))
+	e = uint32(int64(e) + (int64(a<<5|a>>(32-5)+(b^c^d)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v65)))
 	b = b<<30 | b>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[76&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(76-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(76-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(76-3)&0x0f]
 	v66 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[76&0x0f] = v66
-	d = uint32(int64(d) + (libc.Int64FromUint32(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v66)))
+	d = uint32(int64(d) + (int64(e<<5|e>>(32-5)+(a^b^c)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v66)))
 	a = a<<30 | a>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[77&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(77-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(77-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(77-3)&0x0f]
 	v67 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[77&0x0f] = v67
-	c = uint32(int64(c) + (libc.Int64FromUint32(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v67)))
+	c = uint32(int64(c) + (int64(d<<5|d>>(32-5)+(e^a^b)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v67)))
 	e = e<<30 | e>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[78&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(78-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(78-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(78-3)&0x0f]
 	v68 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[78&0x0f] = v68
-	b = uint32(int64(b) + (libc.Int64FromUint32(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v68)))
+	b = uint32(int64(b) + (int64(c<<5|c>>(32-5)+(d^e^a)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v68)))
 	d = d<<30 | d>>(32-30)
 	tm = (*(*[16]uint32)(unsafe.Pointer(bp)))[79&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(79-14)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(79-8)&0x0f] ^ (*(*[16]uint32)(unsafe.Pointer(bp)))[(79-3)&0x0f]
 	v69 = tm<<1 | tm>>(32-1)
 	(*(*[16]uint32)(unsafe.Pointer(bp)))[79&0x0f] = v69
-	a = uint32(int64(a) + (libc.Int64FromUint32(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v69)))
+	a = uint32(int64(a) + (int64(b<<5|b>>(32-5)+(c^d^e)) + libc.Int64FromInt64(0xCA62C1D6) + libc.Int64FromUint32(v69)))
 	c = c<<30 | c>>(32-30)
 	/* update chainig vars */
 	*(*uint32)(unsafe.Pointer(hd)) += a
@@ -40941,11 +40941,11 @@ func ST_Responder(ev *event_t) (r boolean) {
 	var v6, v8 GameMission_t
 	var v10 bool
 	// Filter automap on/off.
-	if ev.Ftype1 == ev_keyup && uint32(ev.Fdata1)&uint32(0xffff0000) == uint32(libc.Int32FromUint8('a')<<24+libc.Int32FromUint8('m')<<16) {
+	if ev.Ftype1 == ev_keyup && uint32(ev.Fdata1)&uint32(0xffff0000) == uint32(int32('a')<<24+libc.Int32FromUint8('m')<<16) {
 		switch ev.Fdata1 {
-		case libc.Int32FromUint8('a')<<24 + libc.Int32FromUint8('m')<<16 | libc.Int32FromUint8('e')<<8:
+		case int32('a')<<24 + libc.Int32FromUint8('m')<<16 | libc.Int32FromUint8('e')<<8:
 			st_firsttime = 1
-		case libc.Int32FromUint8('a')<<24 + libc.Int32FromUint8('m')<<16 | libc.Int32FromUint8('x')<<8:
+		case int32('a')<<24 + libc.Int32FromUint8('m')<<16 | libc.Int32FromUint8('x')<<8:
 			//	fprintf(stderr, "AM exited\n");
 			break
 		}
@@ -41471,8 +41471,8 @@ func ST_drawWidgets(refresh boolean) {
 		STlib_updateNum(&w_ammo[i], refresh)
 		STlib_updateNum(&w_maxammo[i], refresh)
 	}
-	STlib_updatePercent(&w_health, libc.Int32FromUint32(refresh))
-	STlib_updatePercent(&w_armor, libc.Int32FromUint32(refresh))
+	STlib_updatePercent(&w_health, int32(refresh))
+	STlib_updatePercent(&w_armor, int32(refresh))
 	STlib_updateBinIcon(&w_armsbg, refresh)
 	for i := 0; i < 6; i++ {
 		STlib_updateMultIcon(&w_arms[i], refresh)
@@ -41783,7 +41783,7 @@ func S_Init(sfxVolume int32, musicVolume int32) {
 	// Allocating the internal channels for mixing
 	// (the maximum numer of sounds rendered
 	// simultaneously) within zone memory.
-	channels = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(snd_channels)*uint64(24)), int32(PU_STATIC), uintptr(0))
+	channels = Z_Malloc(int32(libc.Uint64FromInt32(snd_channels)*uint64(24)), int32(PU_STATIC), uintptr(0))
 	// Free all channels for use
 	i = 0
 	for {
@@ -42229,7 +42229,7 @@ func SlopeDiv(num uint32, den uint32) (r int32) {
 	} else {
 		ans = num << 3 / (den >> 8)
 		if ans <= uint32(SLOPERANGE) {
-			return libc.Int32FromUint32(ans)
+			return int32(ans)
 		} else {
 			return int32(SLOPERANGE)
 		}
@@ -42337,10 +42337,10 @@ func V_DrawPatch(x int32, y int32, patch uintptr) {
 		}
 		column = patch + uintptr(*(*int32)(unsafe.Pointer(patch + 8 + uintptr(col)*4)))
 		// step through the posts in a column
-		for libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Ftopdelta) != int32(0xff) {
+		for int32((*column_t)(unsafe.Pointer(column)).Ftopdelta) != int32(0xff) {
 			source = column + uintptr(3)
-			dest = desttop + uintptr(libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Ftopdelta)*int32(SCREENWIDTH))
-			count = libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Flength)
+			dest = desttop + uintptr(int32((*column_t)(unsafe.Pointer(column)).Ftopdelta)*int32(SCREENWIDTH))
+			count = int32((*column_t)(unsafe.Pointer(column)).Flength)
 			for {
 				v2 = count
 				count--
@@ -42386,10 +42386,10 @@ func V_DrawPatchFlipped(x int32, y int32, patch uintptr) {
 		}
 		column = patch + uintptr(*(*int32)(unsafe.Pointer(patch + 8 + uintptr(w-1-col)*4)))
 		// step through the posts in a column
-		for libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Ftopdelta) != int32(0xff) {
+		for int32((*column_t)(unsafe.Pointer(column)).Ftopdelta) != int32(0xff) {
 			source = column + uintptr(3)
-			dest = desttop + uintptr(libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Ftopdelta)*int32(SCREENWIDTH))
-			count = libc.Int32FromUint8((*column_t)(unsafe.Pointer(column)).Flength)
+			dest = desttop + uintptr(int32((*column_t)(unsafe.Pointer(column)).Ftopdelta)*int32(SCREENWIDTH))
+			count = int32((*column_t)(unsafe.Pointer(column)).Flength)
 			for {
 				v2 = count
 				count--
@@ -42597,7 +42597,7 @@ func WritePCXfile(filename string, data uintptr, width int32, height int32, pale
 		if !(i < width*height) {
 			break
 		}
-		if libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(data)))&int32(0xc0) != int32(0xc0) {
+		if int32(*(*uint8)(unsafe.Pointer(data)))&int32(0xc0) != int32(0xc0) {
 			v2 = pack
 			pack++
 			v3 = data
@@ -43151,9 +43151,9 @@ var epsd2animinfo = [6]anim_t1{
 }
 
 var NUMANIMS = [4]int32{
-	0: libc.Int32FromUint64(720 / 72),
-	1: libc.Int32FromUint64(648 / 72),
-	2: libc.Int32FromUint64(432 / 72),
+	0: int32(720 / 72),
+	1: int32(648 / 72),
+	2: int32(432 / 72),
 }
 
 var anims1 = [4]uintptr{
@@ -44318,7 +44318,7 @@ func WI_checkForAccelerate() {
 	for i := 0; i < MAXPLAYERS; i++ {
 		if playeringame[i] != 0 {
 			player := &players[i]
-			if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 {
+			if int32(player.Fcmd.Fbuttons)&int32(BT_ATTACK) != 0 {
 				if !(player.Fattackdown != 0) {
 					acceleratestage = 1
 				}
@@ -44326,7 +44326,7 @@ func WI_checkForAccelerate() {
 			} else {
 				player.Fattackdown = 0
 			}
-			if libc.Int32FromUint8(player.Fcmd.Fbuttons)&int32(BT_USE) != 0 {
+			if int32(player.Fcmd.Fbuttons)&int32(BT_USE) != 0 {
 				if !(player.Fusedown != 0) {
 					acceleratestage = 1
 				}
@@ -44535,9 +44535,9 @@ func WI_loadCallback(name uintptr, variable uintptr) {
 func WI_loadData() {
 	if gamemode == commercial {
 		NUMCMAPS = 32
-		lnames = Z_Malloc(libc.Int32FromUint64(uint64(8)*libc.Uint64FromInt32(NUMCMAPS)), int32(PU_STATIC), uintptr(0))
+		lnames = Z_Malloc(int32(uint64(8)*libc.Uint64FromInt32(NUMCMAPS)), int32(PU_STATIC), uintptr(0))
 	} else {
-		lnames = Z_Malloc(libc.Int32FromUint64(8*libc.Uint64FromInt32(NUMMAPS)), int32(PU_STATIC), uintptr(0))
+		lnames = Z_Malloc(int32(8*libc.Uint64FromInt32(NUMMAPS)), int32(PU_STATIC), uintptr(0))
 	}
 	WI_loadUnloadData(WI_loadCallback)
 	// These two graphics are special cased because we're sharing
@@ -44828,7 +44828,7 @@ func W_AddFile(filename string) *os.File {
 		fprintf_ccgo(os.Stdout, 28631, filename)
 		return nil
 	}
-	newnumlumps = libc.Int32FromUint32(numlumps)
+	newnumlumps = int32(numlumps)
 	if !strings.EqualFold(filepath.Ext(filename), ".wad") {
 		// single lump file
 		// fraggle: Swap the filepos and size here.  The WAD directory
@@ -44854,13 +44854,13 @@ func W_AddFile(filename string) *os.File {
 		}
 		(*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps = (*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps
 		(*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs = (*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs
-		length = libc.Int32FromUint64(libc.Uint64FromInt32((*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps) * uint64(16))
+		length = int32(libc.Uint64FromInt32((*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps) * uint64(16))
 		fileinfo = Z_Malloc(length, int32(PU_STATIC), uintptr(0))
 		W_Read(wad_file, uint32((*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs), fileinfo, libc.Uint64FromInt32(length))
 		newnumlumps += (*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps
 	}
 	// Increase size of numlumps array to accomodate the new file.
-	startlump = libc.Int32FromUint32(numlumps)
+	startlump = int32(numlumps)
 	ExtendLumpInfo(newnumlumps)
 	lump_p = lumpinfo + uintptr(startlump)*40
 	filerover = fileinfo
@@ -44901,7 +44901,7 @@ func W_CheckNumForName(name uintptr) (r int32) {
 	// Do we have a hash table yet?
 	if lumphash != uintptr(0) {
 		// We do! Excellent.
-		hash = libc.Int32FromUint32(W_LumpNameHash(name) % numlumps)
+		hash = int32(W_LumpNameHash(name) % numlumps)
 		lump_p = *(*uintptr)(unsafe.Pointer(lumphash + uintptr(hash)*8))
 		for {
 			if !(lump_p != uintptr(0)) {
@@ -44919,7 +44919,7 @@ func W_CheckNumForName(name uintptr) (r int32) {
 		// We don't have a hash table generate yet. Linear search :-(
 		//
 		// scan backwards so patch lump files take precedence
-		i = libc.Int32FromUint32(numlumps - uint32(1))
+		i = int32(numlumps - uint32(1))
 		for {
 			if !(i >= 0) {
 				break
@@ -44980,7 +44980,7 @@ func W_ReadLump(lump uint32, dest uintptr) {
 	}
 	l = lumpinfo + uintptr(lump)*40
 	I_BeginRead()
-	c = libc.Int32FromUint64(W_Read((*lumpinfo_t)(unsafe.Pointer(l)).Fwad_file, uint32((*lumpinfo_t)(unsafe.Pointer(l)).Fposition), dest, libc.Uint64FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fsize)))
+	c = int32(W_Read((*lumpinfo_t)(unsafe.Pointer(l)).Fwad_file, uint32((*lumpinfo_t)(unsafe.Pointer(l)).Fposition), dest, libc.Uint64FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fsize)))
 	if c < (*lumpinfo_t)(unsafe.Pointer(l)).Fsize {
 		I_Error(__ccgo_ts(28793), c, (*lumpinfo_t)(unsafe.Pointer(l)).Fsize, lump)
 	}
@@ -45064,7 +45064,7 @@ func W_GenerateHashTable() {
 	}
 	// Generate hash table
 	if numlumps > uint32(0) {
-		lumphash = Z_Malloc(libc.Int32FromUint64(uint64(8)*uint64(numlumps)), int32(PU_STATIC), uintptr(0))
+		lumphash = Z_Malloc(int32(uint64(8)*uint64(numlumps)), int32(PU_STATIC), uintptr(0))
 		xmemset(lumphash, 0, uint64(8)*uint64(numlumps))
 		i = uint32(0)
 		for {
@@ -45232,7 +45232,7 @@ func Z_Init() {
 	(*memblock_t)(unsafe.Pointer(block)).Fprev = v3
 	// free block
 	(*memblock_t)(unsafe.Pointer(block)).Ftag = int32(PU_FREE)
-	(*memblock_t)(unsafe.Pointer(block)).Fsize = libc.Int32FromUint64(libc.Uint64FromInt32((*memzone_t)(unsafe.Pointer(mainzone)).Fsize) - uint64(56))
+	(*memblock_t)(unsafe.Pointer(block)).Fsize = int32(libc.Uint64FromInt32((*memzone_t)(unsafe.Pointer(mainzone)).Fsize) - uint64(56))
 }
 
 // C documentation
@@ -45285,7 +45285,7 @@ func Z_Free(ptr uintptr) {
 func Z_Malloc(size int32, tag int32, user uintptr) (r uintptr) {
 	var base, newblock, result, rover, start, v1 uintptr
 	var extra int32
-	size = libc.Int32FromUint64((libc.Uint64FromInt32(size) + uint64(8) - uint64(1)) & 0xffff_fff8)
+	size = int32((libc.Uint64FromInt32(size) + uint64(8) - uint64(1)) & 0xffff_fff8)
 	// scan through the block list,
 	// looking for the first free block
 	// of sufficient size,
@@ -45629,7 +45629,7 @@ func I_GetEvent() {
 			// (shift-translated, etc)
 			bp.Ftype1 = ev_keydown
 			bp.Fdata1 = int32(event.Key)
-			bp.Fdata2 = libc.Int32FromUint8(GetTypedChar(event.Key))
+			bp.Fdata2 = int32(GetTypedChar(event.Key))
 			if bp.Fdata1 != 0 {
 				D_PostEvent(&bp)
 			}
