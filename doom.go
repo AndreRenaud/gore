@@ -83,6 +83,24 @@ func xstrcmp(s1, s2 uintptr) int32 {
 	}
 }
 
+func xstrncmp(s1, s2 uintptr, n uint64) int32 {
+	var ch1, ch2 byte
+	for ; n != 0; n-- {
+		ch1 = *(*byte)(unsafe.Pointer(s1))
+		s1++
+		ch2 = *(*byte)(unsafe.Pointer(s2))
+		s2++
+		if ch1 != ch2 {
+			return int32(ch1) - int32(ch2)
+		}
+
+		if ch1 == 0 {
+			return 0
+		}
+	}
+	return 0
+}
+
 func xstrncpy(dest, src uintptr, n uint64) (r uintptr) {
 	r = dest
 	for c := *(*int8)(unsafe.Pointer(src)); c != 0 && n > 0; n-- {
@@ -44832,7 +44850,7 @@ func ExtendLumpInfo(tls *libc.TLS, newnumlumps int32) {
 	var i uint32
 	var newlumpinfo uintptr
 	var nextlumpnum int32
-	newlumpinfo = libc.Xcalloc(tls, libc.Uint64FromInt32(newnumlumps), uint64(40))
+	newlumpinfo = xmalloc(uint64(newnumlumps * 40))
 	if newlumpinfo == libc.UintptrFromInt32(0) {
 		I_Error(tls, __ccgo_ts(28605), 0)
 	}
@@ -44913,9 +44931,9 @@ func W_AddFile(tls *libc.TLS, filename string) *os.File {
 	} else {
 		// WAD file
 		W_Read(wad_file, uint32(0), bp, uint64(12))
-		if libc.Xstrncmp(tls, bp, __ccgo_ts(28654), uint64(4)) != 0 {
+		if xstrncmp(bp, __ccgo_ts(28654), uint64(4)) != 0 {
 			// Homebrew levels?
-			if libc.Xstrncmp(tls, bp, __ccgo_ts(28659), uint64(4)) != 0 {
+			if xstrncmp(bp, __ccgo_ts(28659), uint64(4)) != 0 {
 				I_Error(tls, __ccgo_ts(28664), filename)
 			}
 			// ???modifiedgame = true;
