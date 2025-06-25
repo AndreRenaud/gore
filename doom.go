@@ -2288,7 +2288,7 @@ type netgame_startup_callback_t = uintptr
 type loop_interface_t struct {
 	FProcessEvents func(tls *libc.TLS)
 	FBuildTiccmd   func(*libc.TLS, *ticcmd_t, int32)
-	FRunTic        func(*libc.TLS, uintptr, uintptr)
+	FRunTic        func(*libc.TLS, []ticcmd_t, []boolean)
 	FRunMenu       func(tls *libc.TLS)
 }
 
@@ -4474,18 +4474,17 @@ func PlayersInGame() (r boolean) {
 // When using ticdup, certain values must be cleared out when running
 // the duplicate ticcmds.
 
-func TicdupSquash(set uintptr) {
-	var cmd uintptr
+func TicdupSquash(set *ticcmd_set_t) {
 	var i uint32
 	i = uint32(0)
 	for {
 		if !(i < uint32(NET_MAXPLAYERS)) {
 			break
 		}
-		cmd = set + uintptr(i)*16
-		(*ticcmd_t)(unsafe.Pointer(cmd)).Fchatchar = uint8(0)
-		if libc.Int32FromUint8((*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons)&int32(BT_SPECIAL) != 0 {
-			(*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons = uint8(0)
+		cmd := &set.Fcmds[i]
+		cmd.Fchatchar = uint8(0)
+		if libc.Int32FromUint8(cmd.Fbuttons)&int32(BT_SPECIAL) != 0 {
+			cmd.Fbuttons = uint8(0)
 		}
 		goto _1
 	_1:
@@ -4497,7 +4496,7 @@ func TicdupSquash(set uintptr) {
 // When running in single player mode, clear all the ingame[] array
 // except the local player.
 
-func SinglePlayerClear(set uintptr) {
+func SinglePlayerClear(set *ticcmd_set_t) {
 	var i uint32
 	i = uint32(0)
 	for {
@@ -4505,7 +4504,7 @@ func SinglePlayerClear(set uintptr) {
 			break
 		}
 		if i != libc.Uint32FromInt32(localplayer) {
-			*(*boolean)(unsafe.Pointer(set + 128 + uintptr(i)*4)) = 0
+			set.Fingame[i] = 0
 		}
 		goto _1
 	_1:
@@ -4520,7 +4519,7 @@ func SinglePlayerClear(set uintptr) {
 
 func TryRunTics(tls *libc.TLS) {
 	var availabletics, counts, entertic, i, lowtic, realtics, v1 int32
-	var set uintptr
+	var set *ticcmd_set_t
 	// get real tics
 	entertic = I_GetTime(tls) / ticdup
 	realtics = entertic - oldentertics
@@ -4582,7 +4581,7 @@ func TryRunTics(tls *libc.TLS) {
 		if !(PlayersInGame() != 0) {
 			return
 		}
-		set = uintptr(unsafe.Pointer(&ticdata)) + uintptr(gametic/ticdup%int32(BACKUPTICS))*160
+		set = &ticdata[gametic/ticdup%BACKUPTICS]
 		if !(net_client_connected != 0) {
 			SinglePlayerClear(set)
 		}
@@ -4594,8 +4593,8 @@ func TryRunTics(tls *libc.TLS) {
 			if gametic/ticdup > lowtic {
 				I_Error(tls, __ccgo_ts(1475), 0)
 			}
-			xmemcpy(uintptr(unsafe.Pointer(&local_playeringame)), set+128, uint64(32))
-			loop_interface.FRunTic(tls, set, set+128)
+			local_playeringame = set.Fingame
+			loop_interface.FRunTic(tls, set.Fcmds[:], set.Fingame[:])
 			gametic++
 			// modify command for duplicated tics
 			TicdupSquash(set)
@@ -6183,7 +6182,7 @@ func PlayerQuitGame(tls *libc.TLS, player uintptr) {
 
 var exitmsg [80]int8
 
-func RunTic(tls *libc.TLS, cmds uintptr, ingame uintptr) {
+func RunTic(tls *libc.TLS, cmds []ticcmd_t, ingame []boolean) {
 	var i uint32
 	// Check for player quits.
 	i = uint32(0)
@@ -6191,7 +6190,7 @@ func RunTic(tls *libc.TLS, cmds uintptr, ingame uintptr) {
 		if !(i < uint32(MAXPLAYERS)) {
 			break
 		}
-		if !(demoplayback != 0) && playeringame[i] != 0 && !(*(*boolean)(unsafe.Pointer(ingame + uintptr(i)*4)) != 0) {
+		if !(demoplayback != 0) && playeringame[i] != 0 && ingame[i] == 0 {
 			PlayerQuitGame(tls, uintptr(unsafe.Pointer(&players))+uintptr(i)*328)
 		}
 		goto _1
@@ -8075,7 +8074,7 @@ func G_Responder(tls *libc.TLS, ev *event_t) (r boolean) {
 func G_Ticker(tls *libc.TLS) {
 	bp := alloc(32)
 	var buf, i int32
-	var cmd uintptr
+	var cmd *ticcmd_t
 	// do player reborns if needed
 	i = 0
 	for {
@@ -8126,8 +8125,8 @@ func G_Ticker(tls *libc.TLS) {
 			break
 		}
 		if playeringame[i] != 0 {
-			cmd = uintptr(unsafe.Pointer(&players)) + uintptr(i)*328 + 12
-			xmemcpy(cmd, netcmds+uintptr(i)*16, uint64(16))
+			cmd = &players[i].Fcmd
+			*cmd = netcmds[i]
 			if demoplayback != 0 {
 				G_ReadDemoTiccmd(tls, cmd)
 			}
@@ -8140,7 +8139,7 @@ func G_Ticker(tls *libc.TLS) {
 			// over the past 4 seconds.  offset the checking period
 			// for each player so messages are not displayed at the
 			// same time.
-			if int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove) > int32(TURBOTHRESHOLD) {
+			if int32(cmd.Fforwardmove) > int32(TURBOTHRESHOLD) {
 				turbodetected[i] = 1
 			}
 			if gametic&int32(31) == 0 && gametic>>int32(5)%int32(MAXPLAYERS) == i && turbodetected[i] != 0 {
@@ -8149,8 +8148,8 @@ func G_Ticker(tls *libc.TLS) {
 				turbodetected[i] = 0
 			}
 			if netgame != 0 && !(netdemo != 0) && !(gametic%ticdup != 0) {
-				if gametic > int32(BACKUPTICS) && libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))) != libc.Int32FromUint8((*ticcmd_t)(unsafe.Pointer(cmd)).Fconsistancy) {
-					I_Error(tls, __ccgo_ts(13760), libc.Int32FromUint8((*ticcmd_t)(unsafe.Pointer(cmd)).Fconsistancy), libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))))
+				if gametic > int32(BACKUPTICS) && libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))) != libc.Int32FromUint8(cmd.Fconsistancy) {
+					I_Error(tls, __ccgo_ts(13760), libc.Int32FromUint8(cmd.Fconsistancy), libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))))
 				}
 				if players[i].Fmo != 0 {
 					*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf))) = libc.Uint8FromInt32((*mobj_t)(unsafe.Pointer(players[i].Fmo)).Fx)
@@ -9035,8 +9034,8 @@ func G_InitNew(tls *libc.TLS, skill skill_t, episode int32, map1 int32) {
 // DEMO RECORDING
 //
 
-func G_ReadDemoTiccmd(tls *libc.TLS, cmd uintptr) {
-	var v1, v2, v3, v5, v6, v7, p4 uintptr
+func G_ReadDemoTiccmd(tls *libc.TLS, cmd *ticcmd_t) {
+	var v1, v2, v3, v5, v6, v7 uintptr
 	if libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(demo_p))) == int32(DEMOMARKER) {
 		// end of demo data stream
 		G_CheckDemoStatus(tls)
@@ -9044,27 +9043,26 @@ func G_ReadDemoTiccmd(tls *libc.TLS, cmd uintptr) {
 	}
 	v1 = demo_p
 	demo_p++
-	(*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove = libc.Int8FromUint8(*(*uint8)(unsafe.Pointer(v1)))
+	cmd.Fforwardmove = libc.Int8FromUint8(*(*uint8)(unsafe.Pointer(v1)))
 	v2 = demo_p
 	demo_p++
-	(*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove = libc.Int8FromUint8(*(*uint8)(unsafe.Pointer(v2)))
+	cmd.Fsidemove = libc.Int8FromUint8(*(*uint8)(unsafe.Pointer(v2)))
 	// If this is a longtics demo, read back in higher resolution
 	if longtics != 0 {
 		v3 = demo_p
 		demo_p++
-		(*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn = libc.Int16FromUint8(*(*uint8)(unsafe.Pointer(v3)))
-		p4 = cmd + 2
+		cmd.Fangleturn = libc.Int16FromUint8(*(*uint8)(unsafe.Pointer(v3)))
 		v5 = demo_p
 		demo_p++
-		*(*int16)(unsafe.Pointer(p4)) = int16(int32(*(*int16)(unsafe.Pointer(p4))) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(v5)))<<8)
+		cmd.Fangleturn |= libc.Int16FromUint8(*(*uint8)(unsafe.Pointer(v5))) << 8
 	} else {
 		v6 = demo_p
 		demo_p++
-		(*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn = int16(libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(v6))) << 8)
+		cmd.Fangleturn = int16(libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(v6))) << 8)
 	}
 	v7 = demo_p
 	demo_p++
-	(*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons = *(*uint8)(unsafe.Pointer(v7))
+	cmd.Fbuttons = *(*uint8)(unsafe.Pointer(v7))
 }
 
 // Increase the size of the demo buffer to allow unlimited demos
@@ -9087,7 +9085,7 @@ func IncreaseDemoBuffer(tls *libc.TLS) {
 	demoend = demobuffer + uintptr(new_length)
 }
 
-func G_WriteDemoTiccmd(tls *libc.TLS, cmd uintptr) {
+func G_WriteDemoTiccmd(tls *libc.TLS, cmd *ticcmd_t) {
 	var demo_start, v1, v2, v3, v4, v5, v6 uintptr
 	if gamekeydown[key_demo_quit] != 0 { // press q to end demo recording
 		G_CheckDemoStatus(tls)
@@ -9095,26 +9093,26 @@ func G_WriteDemoTiccmd(tls *libc.TLS, cmd uintptr) {
 	demo_start = demo_p
 	v1 = demo_p
 	demo_p++
-	*(*uint8)(unsafe.Pointer(v1)) = libc.Uint8FromInt8((*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove)
+	*(*uint8)(unsafe.Pointer(v1)) = libc.Uint8FromInt8(cmd.Fforwardmove)
 	v2 = demo_p
 	demo_p++
-	*(*uint8)(unsafe.Pointer(v2)) = libc.Uint8FromInt8((*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove)
+	*(*uint8)(unsafe.Pointer(v2)) = libc.Uint8FromInt8(cmd.Fsidemove)
 	// If this is a longtics demo, record in higher resolution
 	if longtics != 0 {
 		v3 = demo_p
 		demo_p++
-		*(*uint8)(unsafe.Pointer(v3)) = libc.Uint8FromInt32(int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn) & 0xff)
+		*(*uint8)(unsafe.Pointer(v3)) = libc.Uint8FromInt32(int32(cmd.Fangleturn) & 0xff)
 		v4 = demo_p
 		demo_p++
-		*(*uint8)(unsafe.Pointer(v4)) = libc.Uint8FromInt32(int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn) >> 8 & int32(0xff))
+		*(*uint8)(unsafe.Pointer(v4)) = libc.Uint8FromInt32(int32(cmd.Fangleturn) >> 8 & int32(0xff))
 	} else {
 		v5 = demo_p
 		demo_p++
-		*(*uint8)(unsafe.Pointer(v5)) = libc.Uint8FromInt32(int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn) >> 8)
+		*(*uint8)(unsafe.Pointer(v5)) = libc.Uint8FromInt32(int32(cmd.Fangleturn) >> 8)
 	}
 	v6 = demo_p
 	demo_p++
-	*(*uint8)(unsafe.Pointer(v6)) = (*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons
+	*(*uint8)(unsafe.Pointer(v6)) = cmd.Fbuttons
 	// reset demo pointer back
 	demo_p = demo_start
 	if demo_p > demoend-uintptr(16) {
@@ -30066,17 +30064,17 @@ func saveg_read_ticcmd_t(tls *libc.TLS, str *ticcmd_t) {
 
 func saveg_write_ticcmd_t(tls *libc.TLS, str *ticcmd_t) {
 	// signed char forwardmove;
-	saveg_write8(tls, libc.Uint8FromInt8((*ticcmd_t)(unsafe.Pointer(str)).Fforwardmove))
+	saveg_write8(tls, libc.Uint8FromInt8(str.Fforwardmove))
 	// signed char sidemove;
-	saveg_write8(tls, libc.Uint8FromInt8((*ticcmd_t)(unsafe.Pointer(str)).Fsidemove))
+	saveg_write8(tls, libc.Uint8FromInt8(str.Fsidemove))
 	// short angleturn;
-	saveg_write16(tls, (*ticcmd_t)(unsafe.Pointer(str)).Fangleturn)
+	saveg_write16(tls, str.Fangleturn)
 	// short consistancy;
-	saveg_write16(tls, libc.Int16FromUint8((*ticcmd_t)(unsafe.Pointer(str)).Fconsistancy))
+	saveg_write16(tls, libc.Int16FromUint8(str.Fconsistancy))
 	// byte chatchar;
-	saveg_write8(tls, (*ticcmd_t)(unsafe.Pointer(str)).Fchatchar)
+	saveg_write8(tls, str.Fchatchar)
 	// byte buttons;
-	saveg_write8(tls, (*ticcmd_t)(unsafe.Pointer(str)).Fbuttons)
+	saveg_write8(tls, str.Fbuttons)
 }
 
 //
@@ -34410,17 +34408,17 @@ func P_CalcHeight(tls *libc.TLS, player *player_t) {
 //	//
 func P_MovePlayer(tls *libc.TLS, player *player_t) {
 	cmd := &player.Fcmd
-	*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += libc.Uint32FromInt32(int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn) << 16)
+	*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += libc.Uint32FromInt32(int32(cmd.Fangleturn) << 16)
 	// Do not let the player control movement
 	//  if not onground.
 	onground = libc.BoolUint32((*mobj_t)(unsafe.Pointer(player.Fmo)).Fz <= (*mobj_t)(unsafe.Pointer(player.Fmo)).Ffloorz)
-	if (*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove != 0 && onground != 0 {
-		P_Thrust(tls, player, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle, int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove)*int32(2048))
+	if cmd.Fforwardmove != 0 && onground != 0 {
+		P_Thrust(tls, player, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle, int32(cmd.Fforwardmove)*int32(2048))
 	}
-	if (*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove != 0 && onground != 0 {
-		P_Thrust(tls, player, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle-uint32(ANG907), int32((*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove)*int32(2048))
+	if cmd.Fsidemove != 0 && onground != 0 {
+		P_Thrust(tls, player, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle-uint32(ANG907), int32(cmd.Fsidemove)*int32(2048))
 	}
-	if ((*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove != 0 || (*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove != 0) && (*mobj_t)(unsafe.Pointer(player.Fmo)).Fstate == &states[S_PLAY] {
+	if (cmd.Fforwardmove != 0 || cmd.Fsidemove != 0) && (*mobj_t)(unsafe.Pointer(player.Fmo)).Fstate == &states[S_PLAY] {
 		P_SetMobjState(tls, player.Fmo, int32(S_PLAY_RUN1))
 	}
 }
@@ -34487,9 +34485,9 @@ func P_PlayerThink(tls *libc.TLS, player *player_t) {
 	// chain saw run forward
 	cmd := &player.Fcmd
 	if (*mobj_t)(unsafe.Pointer(player.Fmo)).Fflags&int32(MF_JUSTATTACKED) != 0 {
-		(*ticcmd_t)(unsafe.Pointer(cmd)).Fangleturn = 0
-		(*ticcmd_t)(unsafe.Pointer(cmd)).Fforwardmove = int8(0xc800 / 512)
-		(*ticcmd_t)(unsafe.Pointer(cmd)).Fsidemove = 0
+		cmd.Fangleturn = 0
+		cmd.Fforwardmove = int8(0xc800 / 512)
+		cmd.Fsidemove = 0
 		*(*int32)(unsafe.Pointer(player.Fmo + 160)) &= ^int32(MF_JUSTATTACKED)
 	}
 	if player.Fplayerstate == int32(PST_DEAD) {
@@ -34510,14 +34508,14 @@ func P_PlayerThink(tls *libc.TLS, player *player_t) {
 	}
 	// Check for weapon change.
 	// A special event has no other buttons.
-	if libc.Int32FromUint8((*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons)&int32(BT_SPECIAL) != 0 {
-		(*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons = uint8(0)
+	if libc.Int32FromUint8(cmd.Fbuttons)&int32(BT_SPECIAL) != 0 {
+		cmd.Fbuttons = uint8(0)
 	}
-	if libc.Int32FromUint8((*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons)&int32(BT_CHANGE) != 0 {
+	if libc.Int32FromUint8(cmd.Fbuttons)&int32(BT_CHANGE) != 0 {
 		// The actual changing of the weapon is done
 		//  when the weapon psprite can do it
 		//  (read: not in the middle of an attack).
-		newweapon = libc.Int32FromUint8((*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons) & int32(BT_WEAPONMASK) >> int32(BT_WEAPONSHIFT)
+		newweapon = libc.Int32FromUint8(cmd.Fbuttons) & int32(BT_WEAPONMASK) >> int32(BT_WEAPONSHIFT)
 		if newweapon == wp_fist && player.Fweaponowned[wp_chainsaw] != 0 && !(player.Freadyweapon == wp_chainsaw && player.Fpowers[pw_strength] != 0) {
 			newweapon = wp_chainsaw
 		}
@@ -34533,7 +34531,7 @@ func P_PlayerThink(tls *libc.TLS, player *player_t) {
 		}
 	}
 	// check for use
-	if libc.Int32FromUint8((*ticcmd_t)(unsafe.Pointer(cmd)).Fbuttons)&int32(BT_USE) != 0 {
+	if libc.Int32FromUint8(cmd.Fbuttons)&int32(BT_USE) != 0 {
 		if !(player.Fusedown != 0) {
 			P_UseLines(tls, player)
 			player.Fusedown = 1
@@ -47148,7 +47146,7 @@ var net_client_connected boolean
 //	Main loop stuff.
 //
 
-var netcmds uintptr
+var netcmds []ticcmd_t
 
 var netdemo boolean
 
