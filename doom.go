@@ -3106,7 +3106,7 @@ func AM_Responder(tls *libc.TLS, ev *event_t) (r boolean) {
 													}
 												} else {
 													if key == key_map_mark {
-														M_snprintf(uintptr(unsafe.Pointer(&buffer)), uint64(20), __ccgo_ts(57), __ccgo_ts_str(63), markpointnum)
+														M_snprintf(uintptr(unsafe.Pointer(&buffer)), uint64(20), __ccgo_ts_str(57), __ccgo_ts_str(63), markpointnum)
 														plr.Fmessage = uintptr(unsafe.Pointer(&buffer))
 														AM_addMark()
 													} else {
@@ -5031,7 +5031,7 @@ func D_BindVariables(tls *libc.TLS) {
 		if !(i < 10) {
 			break
 		}
-		M_snprintf(bp, uint64(12), __ccgo_ts(1654), i)
+		M_snprintf(bp, uint64(12), __ccgo_ts_str(1654), i)
 		M_BindVariable(tls, bp, uintptr(unsafe.Pointer(&chat_macros))+uintptr(i)*8)
 		goto _1
 	_1:
@@ -5222,14 +5222,14 @@ func D_StartTitle() {
 // These are from the original source: some of them are perhaps
 // not used in any dehacked patches
 
-var banners = [7]uintptr{
-	0: __ccgo_ts(1960),
-	1: __ccgo_ts(2041),
-	2: __ccgo_ts(2126),
-	3: __ccgo_ts(2212),
-	4: __ccgo_ts(2291),
-	5: __ccgo_ts(2373),
-	6: __ccgo_ts(2452),
+var banners = [7]string{
+	0: __ccgo_ts_str(1960),
+	1: __ccgo_ts_str(2041),
+	2: __ccgo_ts_str(2126),
+	3: __ccgo_ts_str(2212),
+	4: __ccgo_ts_str(2291),
+	5: __ccgo_ts_str(2373),
+	6: __ccgo_ts_str(2452),
 }
 
 //
@@ -5238,7 +5238,7 @@ var banners = [7]uintptr{
 //
 
 func GetGameName(tls *libc.TLS, gamename uintptr) (r uintptr) {
-	var deh_sub uintptr
+	var deh_sub string
 	var gamename_size, i uint64
 	var version, v2, v3, v6, v7 int32
 	var v5, v9 bool
@@ -5253,7 +5253,7 @@ func GetGameName(tls *libc.TLS, gamename uintptr) (r uintptr) {
 			// Has been replaced.
 			// We need to expand via printf to include the Doom version number
 			// We also need to cut off spaces to get the basic name
-			gamename_size = xstrlen(deh_sub) + uint64(10)
+			gamename_size = uint64(len(deh_sub) + 10)
 			gamename = Z_Malloc(tls, libc.Int32FromUint64(gamename_size), int32(PU_STATIC), uintptr(0))
 			version = G_VanillaVersionCode(tls)
 			M_snprintf(gamename, gamename_size, deh_sub, version/int32(100), version%int32(100))
@@ -8174,7 +8174,7 @@ func G_Ticker(tls *libc.TLS) {
 				turbodetected[i] = 1
 			}
 			if gametic&int32(31) == 0 && gametic>>int32(5)%int32(MAXPLAYERS) == i && turbodetected[i] != 0 {
-				M_snprintf(uintptr(unsafe.Pointer(&turbomessage)), uint64(80), __ccgo_ts(13747), libc.GoString(player_names[i]))
+				M_snprintf(uintptr(unsafe.Pointer(&turbomessage)), uint64(80), __ccgo_ts_str(13747), libc.GoString(player_names[i]))
 				players[consoleplayer].Fmessage = uintptr(unsafe.Pointer(&turbomessage))
 				turbodetected[i] = 0
 			}
@@ -9299,7 +9299,7 @@ func DemoVersionDescription(tls *libc.TLS, version int32) (r uintptr) {
 	if version >= 0 && version <= 4 {
 		return __ccgo_ts(14201)
 	} else {
-		M_snprintf(uintptr(unsafe.Pointer(&resultbuf)), uint64(16), __ccgo_ts(14216), version/int32(100), version%int32(100))
+		M_snprintf(uintptr(unsafe.Pointer(&resultbuf)), uint64(16), __ccgo_ts_str(14216), version/int32(100), version%int32(100))
 		return uintptr(unsafe.Pointer(&resultbuf))
 	}
 	return r
@@ -18052,7 +18052,7 @@ func I_BindJoystickVariables(tls *libc.TLS) {
 		if !(i < int32(NUM_VIRTUAL_BUTTONS)) {
 			break
 		}
-		M_snprintf(bp, uint64(32), __ccgo_ts(18442), i)
+		M_snprintf(bp, uint64(32), __ccgo_ts_str(18442), i)
 		M_BindVariable(tls, bp, uintptr(unsafe.Pointer(&joystick_physical_buttons))+uintptr(i)*4)
 		goto _1
 	_1:
@@ -19941,7 +19941,7 @@ func M_BindChatControls(tls *libc.TLS, num_players uint32) {
 		if !(i < num_players) {
 			break
 		}
-		M_snprintf(bp, uint64(32), __ccgo_ts(22078), i+1)
+		M_snprintf(bp, uint64(32), __ccgo_ts_str(22078), i+1)
 		M_BindVariable(tls, bp, uintptr(unsafe.Pointer(&key_multi_msgplayer))+uintptr(i)*4)
 		goto _1
 	_1:
@@ -21987,8 +21987,8 @@ func M_StringJoin(tls *libc.TLS, s uintptr, va uintptr) (r uintptr) {
 // C documentation
 //
 //	// Safe, portable snprintf().
-func M_snprintf(buf uintptr, buf_len uint64, s uintptr, args ...any) (r int32) {
-	val := fmt.Sprintf(libc.GoString(s), args...)
+func M_snprintf(buf uintptr, buf_len uint64, s string, args ...any) (r int32) {
+	val := fmt.Sprintf(s, args...)
 	i := 0
 	bufBytes := unsafe.Slice((*byte)(unsafe.Pointer(buf)), int(buf_len))
 	for ; i < len(val) && i < int(buf_len-1); i++ {
@@ -30708,7 +30708,7 @@ func P_WriteSaveGameHeader(tls *libc.TLS, description uintptr) {
 		i++
 	}
 	xmemset(bp, 0, uint64(16))
-	M_snprintf(bp, uint64(16), __ccgo_ts(25058), G_VanillaVersionCode(tls))
+	M_snprintf(bp, uint64(16), __ccgo_ts_str(25058), G_VanillaVersionCode(tls))
 	i = 0
 	for {
 		if !(i < int32(VERSIONSIZE)) {
@@ -30771,7 +30771,7 @@ func P_ReadSaveGameHeader(tls *libc.TLS) (r boolean) {
 		i++
 	}
 	xmemset(bp, 0, uint64(16))
-	M_snprintf(bp, uint64(16), __ccgo_ts(25058), G_VanillaVersionCode(tls))
+	M_snprintf(bp, uint64(16), __ccgo_ts_str(25058), G_VanillaVersionCode(tls))
 	if xstrcmp(bp+16, bp) != 0 {
 		return 0
 	} // bad version
@@ -41182,7 +41182,7 @@ func ST_Responder(tls *libc.TLS, ev *event_t) (r boolean) {
 						plyr.Fmessage = __ccgo_ts(27778)
 					} else {
 						if cht_CheckCheat(&cheat_mypos, int8(ev.Fdata2)) != 0 {
-							M_snprintf(uintptr(unsafe.Pointer(&buf)), uint64(52), __ccgo_ts(27800), (*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).Fangle, (*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).Fx, (*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).Fy)
+							M_snprintf(uintptr(unsafe.Pointer(&buf)), uint64(52), __ccgo_ts_str(27800), (*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).Fangle, (*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).Fx, (*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).Fy)
 							plyr.Fmessage = uintptr(unsafe.Pointer(&buf))
 						}
 					}
@@ -42255,7 +42255,7 @@ func S_ChangeMusic(tls *libc.TLS, musicnum int32, looping int32) {
 	S_StopMusic(tls)
 	// get lumpnum if neccessary
 	if !(music.Flumpnum != 0) {
-		M_snprintf(bp, uint64(9), __ccgo_ts(28083), libc.GoString(music.Fname))
+		M_snprintf(bp, uint64(9), __ccgo_ts_str(28083), libc.GoString(music.Fname))
 		music.Flumpnum = W_GetNumForName(tls, bp)
 	}
 	music.Fdata = W_CacheLumpNum(tls, music.Flumpnum, int32(PU_STATIC))
