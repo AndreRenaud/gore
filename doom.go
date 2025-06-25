@@ -4010,7 +4010,7 @@ func SearchDirectoryForIWAD(dir string, mask int32, mission *GameMission_t) stri
 	var i uint64
 	i = uint64(0)
 	for {
-		if !(i < libc.Uint64FromInt64(336)/libc.Uint64FromInt64(24)) {
+		if !(i < 336/24) {
 			break
 		}
 		if 1<<iwads[i].Fmission&mask == 0 {
@@ -4038,7 +4038,7 @@ func IdentifyIWADByName(name string, mask int32) (r GameMission_t) {
 	mission = int32(none)
 	i = uint64(0)
 	for {
-		if !(i < libc.Uint64FromInt64(336)/libc.Uint64FromInt64(24)) {
+		if !(i < 336/24) {
 			break
 		}
 		// Check if the filename is this IWAD name.
@@ -4182,7 +4182,7 @@ func D_SaveGameIWADName(gamemission GameMission_t) string {
 	// in the same place.
 	i = uint64(0)
 	for {
-		if !(i < libc.Uint64FromInt64(336)/libc.Uint64FromInt64(24)) {
+		if !(i < 336/24) {
 			break
 		}
 		if gamemission == iwads[i].Fmission {
@@ -4201,7 +4201,7 @@ func D_SuggestGameName(mission GameMission_t, mode GameMode_t) (r uintptr) {
 	var i int32
 	i = 0
 	for {
-		if !(libc.Uint64FromInt32(i) < libc.Uint64FromInt64(336)/libc.Uint64FromInt64(24)) {
+		if !(libc.Uint64FromInt32(i) < 336/24) {
 			break
 		}
 		if iwads[i].Fmission == mission && (mode == int32(indetermined) || iwads[i].Fmode == mode) {
@@ -5228,7 +5228,7 @@ func GetGameName(tls *libc.TLS, gamename uintptr) (r uintptr) {
 	var v5, v9 bool
 	i = uint64(0)
 	for {
-		if !(i < libc.Uint64FromInt64(56)/libc.Uint64FromInt64(8)) {
+		if !(i < 56/8) {
 			break
 		}
 		// Has the banner been replaced?
@@ -5279,7 +5279,7 @@ func SetMissionForPackName(tls *libc.TLS, pack_name uintptr) {
 	var i int32
 	i = 0
 	for {
-		if !(libc.Uint64FromInt32(i) < libc.Uint64FromInt64(48)/libc.Uint64FromInt64(16)) {
+		if !(libc.Uint64FromInt32(i) < 48/16) {
 			break
 		}
 		if !(xstrcasecmp(pack_name, packs[i].Fname) != 0) {
@@ -5294,7 +5294,7 @@ func SetMissionForPackName(tls *libc.TLS, pack_name uintptr) {
 	fprintf_ccgo(os.Stdout, 2552)
 	i = 0
 	for {
-		if !(libc.Uint64FromInt32(i) < libc.Uint64FromInt64(48)/libc.Uint64FromInt64(16)) {
+		if !(libc.Uint64FromInt32(i) < 48/16) {
 			break
 		}
 		fprintf_ccgo(os.Stdout, 2578, libc.GoString(packs[i].Fname))
@@ -5518,7 +5518,7 @@ func PrintDehackedBanners() {
 	var i uint64
 	i = uint64(0)
 	for {
-		if !(i < libc.Uint64FromInt64(24)/libc.Uint64FromInt64(8)) {
+		if !(i < 24/8) {
 			break
 		}
 		deh_s = copyright_banners[i]
@@ -6542,7 +6542,7 @@ func F_StartFinale(tls *libc.TLS) {
 	// Find the right screen and set the text and background
 	i = uint64(0)
 	for {
-		if !(i < libc.Uint64FromInt64(704)/libc.Uint64FromInt64(32)) {
+		if !(i < 704/32) {
 			break
 		}
 		screen = uintptr(unsafe.Pointer(&textscreens)) + uintptr(i)*32
@@ -7606,7 +7606,7 @@ func G_NextWeapon(direction int32) (r int32) {
 	}
 	i = 0
 	for {
-		if !(libc.Uint64FromInt32(i) < libc.Uint64FromInt64(72)/libc.Uint64FromInt64(8)) {
+		if !(libc.Uint64FromInt32(i) < 72/8) {
 			break
 		}
 		if weapon_order_table[i].Fweapon == weapon {
@@ -7621,7 +7621,7 @@ func G_NextWeapon(direction int32) (r int32) {
 	start_i = i
 	for cond := true; cond; cond = i != start_i && !(WeaponSelectable(weapon_order_table[i].Fweapon) != 0) {
 		i += direction
-		i = libc.Int32FromUint64((libc.Uint64FromInt32(i) + libc.Uint64FromInt64(72)/libc.Uint64FromInt64(8)) % (libc.Uint64FromInt64(72) / libc.Uint64FromInt64(8)))
+		i = libc.Int32FromUint64((libc.Uint64FromInt32(i) + 72/8) % (72 / 8))
 	}
 	return weapon_order_table[i].Fweapon_num
 }
@@ -7739,7 +7739,7 @@ func G_BuildTiccmd(tls *libc.TLS, cmd uintptr, maketic int32) {
 		// Check weapon keys.
 		i = 0
 		for {
-			if !(libc.Uint64FromInt32(i) < libc.Uint64FromInt64(64)/libc.Uint64FromInt64(8)) {
+			if !(libc.Uint64FromInt32(i) < 64/8) {
 				break
 			}
 			key = *(*int32)(unsafe.Pointer(weapon_keys[i]))
@@ -8189,7 +8189,7 @@ func G_Ticker(tls *libc.TLS) {
 			if libc.Int32FromUint8(players[i].Fcmd.Fbuttons)&int32(BT_SPECIAL) != 0 {
 				switch libc.Int32FromUint8(players[i].Fcmd.Fbuttons) & int32(BT_SPECIALMASK) {
 				case int32(BTS_PAUSE):
-					paused = boolean(paused ^ libc.Uint32FromInt32(1))
+					paused = boolean(paused ^ 1)
 					if paused != 0 {
 						S_PauseSound()
 					} else {
@@ -8876,7 +8876,7 @@ func G_DoNewGame(tls *libc.TLS) {
 	netdemo = 0
 	netgame = 0
 	deathmatch = 0
-	v2 = libc.Uint32FromInt32(0)
+	v2 = 0
 	playeringame[int32(3)] = v2
 	v1 = v2
 	playeringame[int32(2)] = v1
@@ -9412,7 +9412,7 @@ func G_CheckDemoStatus(tls *libc.TLS) {
 		netdemo = 0
 		netgame = 0
 		deathmatch = 0
-		v2 = libc.Uint32FromInt32(0)
+		v2 = 0
 		playeringame[int32(3)] = v2
 		v1 = v2
 		playeringame[int32(2)] = v1
@@ -19114,7 +19114,7 @@ var doom_defaults_list = [76]default_t{
 
 var doom_defaults = default_collection_t{
 	Fdefaults:    uintptr(unsafe.Pointer(&doom_defaults_list)),
-	Fnumdefaults: libc.Int32FromUint64(libc.Uint64FromInt64(2432) / libc.Uint64FromInt64(32)),
+	Fnumdefaults: libc.Int32FromUint64(2432 / 32),
 }
 
 //! @begin_config_file extended
@@ -19552,7 +19552,7 @@ var extra_defaults_list = [119]default_t{
 
 var extra_defaults = default_collection_t{
 	Fdefaults:    uintptr(unsafe.Pointer(&extra_defaults_list)),
-	Fnumdefaults: libc.Int32FromUint64(libc.Uint64FromInt64(3808) / libc.Uint64FromInt64(32)),
+	Fnumdefaults: libc.Int32FromUint64(3808 / 32),
 }
 
 // Search a collection for a variable
@@ -21697,7 +21697,7 @@ func M_Drawer(tls *libc.TLS) {
 						(*(*[80]int8)(unsafe.Pointer(bp)))[i] = int8('\000')
 					}
 					foundnewline = 1
-					start = int32(uint32(start) + (i + libc.Uint32FromInt32(1)))
+					start = int32(uint32(start) + (i + 1))
 					break
 				}
 				goto _1
@@ -36684,7 +36684,7 @@ func R_PointToAngle(x fixed_t, y fixed_t) (r angle_t) {
 			// y>= 0
 			if x > y {
 				// octant 3
-				return libc.Uint32FromUint32(ANG18011) - libc.Uint32FromInt32(1) - tantoangle[SlopeDiv(libc.Uint32FromInt32(y), libc.Uint32FromInt32(x))]
+				return libc.Uint32FromUint32(ANG18011) - 1 - tantoangle[SlopeDiv(libc.Uint32FromInt32(y), libc.Uint32FromInt32(x))]
 			} else {
 				// octant 2
 				return uint32(ANG909) + tantoangle[SlopeDiv(libc.Uint32FromInt32(x), libc.Uint32FromInt32(y))]
@@ -36697,7 +36697,7 @@ func R_PointToAngle(x fixed_t, y fixed_t) (r angle_t) {
 				return uint32(ANG18011) + tantoangle[SlopeDiv(libc.Uint32FromInt32(y), libc.Uint32FromInt32(x))]
 			} else {
 				// octant 5
-				return libc.Uint32FromUint32(ANG2705) - libc.Uint32FromInt32(1) - tantoangle[SlopeDiv(libc.Uint32FromInt32(x), libc.Uint32FromInt32(y))]
+				return libc.Uint32FromUint32(ANG2705) - 1 - tantoangle[SlopeDiv(libc.Uint32FromInt32(x), libc.Uint32FromInt32(y))]
 			}
 		}
 	}
@@ -37742,7 +37742,7 @@ func R_StoreWallRange(tls *libc.TLS, start int32, stop int32) {
 	//  and decide if floor / ceiling marks are needed
 	worldtop = (*sector_t)(unsafe.Pointer(frontsector)).Fceilingheight - viewz
 	worldbottom = (*sector_t)(unsafe.Pointer(frontsector)).Ffloorheight - viewz
-	v7 = libc.Uint32FromInt32(0)
+	v7 = 0
 	maskedtexture = v7
 	v6 = libc.Int32FromUint32(v7)
 	bottomtexture = v6
@@ -38338,7 +38338,7 @@ func R_ProjectSprite(tls *libc.TLS, thing uintptr) {
 	if (*spriteframe_t)(unsafe.Pointer(sprframe)).Frotate != 0 {
 		// choose a different rotation based on player view
 		ang = R_PointToAngle((*mobj_t)(unsafe.Pointer(thing)).Fx, (*mobj_t)(unsafe.Pointer(thing)).Fy)
-		rot = (ang - (*mobj_t)(unsafe.Pointer(thing)).Fangle + libc.Uint32FromInt32(ANG455/2)*libc.Uint32FromInt32(9)) >> 29
+		rot = (ang - (*mobj_t)(unsafe.Pointer(thing)).Fangle + libc.Uint32FromInt32(ANG455/2)*9) >> 29
 		lump = int32(*(*int16)(unsafe.Pointer(sprframe + 4 + uintptr(rot)*2)))
 		flip = uint32(*(*uint8)(unsafe.Pointer(sprframe + 20 + uintptr(rot))))
 	} else {
@@ -40869,7 +40869,7 @@ var st_randomnumber int32
 func init() {
 	cheat_mus = cheatseq_t{
 		Fsequence:        [25]int8{'i', 'd', 'm', 'u', 's'},
-		Fsequence_len:    libc.Uint64FromInt64(6) - libc.Uint64FromInt32(1),
+		Fsequence_len:    6 - 1,
 		Fparameter_chars: 2,
 		Fparameter_buf:   [5]int8{},
 	}
@@ -40878,7 +40878,7 @@ func init() {
 func init() {
 	cheat_god = cheatseq_t{
 		Fsequence:      [25]int8{'i', 'd', 'd', 'q', 'd'},
-		Fsequence_len:  libc.Uint64FromInt64(6) - libc.Uint64FromInt32(1),
+		Fsequence_len:  6 - 1,
 		Fparameter_buf: [5]int8{},
 	}
 }
@@ -40886,7 +40886,7 @@ func init() {
 func init() {
 	cheat_ammo = cheatseq_t{
 		Fsequence:      [25]int8{'i', 'd', 'k', 'f', 'a'},
-		Fsequence_len:  libc.Uint64FromInt64(6) - libc.Uint64FromInt32(1),
+		Fsequence_len:  6 - 1,
 		Fparameter_buf: [5]int8{},
 	}
 }
@@ -40894,7 +40894,7 @@ func init() {
 func init() {
 	cheat_ammonokey = cheatseq_t{
 		Fsequence:      [25]int8{'i', 'd', 'f', 'a'},
-		Fsequence_len:  libc.Uint64FromInt64(5) - libc.Uint64FromInt32(1),
+		Fsequence_len:  5 - 1,
 		Fparameter_buf: [5]int8{},
 	}
 }
@@ -40902,7 +40902,7 @@ func init() {
 func init() {
 	cheat_noclip = cheatseq_t{
 		Fsequence:      [25]int8{'i', 'd', 's', 'p', 'i', 's', 'p', 'o', 'p', 'd'},
-		Fsequence_len:  libc.Uint64FromInt64(11) - libc.Uint64FromInt32(1),
+		Fsequence_len:  11 - 1,
 		Fparameter_buf: [5]int8{},
 	}
 }
@@ -40910,7 +40910,7 @@ func init() {
 func init() {
 	cheat_commercial_noclip = cheatseq_t{
 		Fsequence:      [25]int8{'i', 'd', 'c', 'l', 'i', 'p'},
-		Fsequence_len:  libc.Uint64FromInt64(7) - libc.Uint64FromInt32(1),
+		Fsequence_len:  7 - 1,
 		Fparameter_buf: [5]int8{},
 	}
 }
@@ -40919,37 +40919,37 @@ func init() {
 	cheat_powerup = [7]cheatseq_t{
 		0: {
 			Fsequence:      [25]int8{'i', 'd', 'b', 'e', 'h', 'o', 'l', 'd', 'v'},
-			Fsequence_len:  libc.Uint64FromInt64(10) - libc.Uint64FromInt32(1),
+			Fsequence_len:  10 - 1,
 			Fparameter_buf: [5]int8{},
 		},
 		1: {
 			Fsequence:      [25]int8{'i', 'd', 'b', 'e', 'h', 'o', 'l', 'd', 's'},
-			Fsequence_len:  libc.Uint64FromInt64(10) - libc.Uint64FromInt32(1),
+			Fsequence_len:  10 - 1,
 			Fparameter_buf: [5]int8{},
 		},
 		2: {
 			Fsequence:      [25]int8{'i', 'd', 'b', 'e', 'h', 'o', 'l', 'd', 'i'},
-			Fsequence_len:  libc.Uint64FromInt64(10) - libc.Uint64FromInt32(1),
+			Fsequence_len:  10 - 1,
 			Fparameter_buf: [5]int8{},
 		},
 		3: {
 			Fsequence:      [25]int8{'i', 'd', 'b', 'e', 'h', 'o', 'l', 'd', 'r'},
-			Fsequence_len:  libc.Uint64FromInt64(10) - libc.Uint64FromInt32(1),
+			Fsequence_len:  10 - 1,
 			Fparameter_buf: [5]int8{},
 		},
 		4: {
 			Fsequence:      [25]int8{'i', 'd', 'b', 'e', 'h', 'o', 'l', 'd', 'a'},
-			Fsequence_len:  libc.Uint64FromInt64(10) - libc.Uint64FromInt32(1),
+			Fsequence_len:  10 - 1,
 			Fparameter_buf: [5]int8{},
 		},
 		5: {
 			Fsequence:      [25]int8{'i', 'd', 'b', 'e', 'h', 'o', 'l', 'd', 'l'},
-			Fsequence_len:  libc.Uint64FromInt64(10) - libc.Uint64FromInt32(1),
+			Fsequence_len:  10 - 1,
 			Fparameter_buf: [5]int8{},
 		},
 		6: {
 			Fsequence:      [25]int8{'i', 'd', 'b', 'e', 'h', 'o', 'l', 'd'},
-			Fsequence_len:  libc.Uint64FromInt64(9) - libc.Uint64FromInt32(1),
+			Fsequence_len:  9 - 1,
 			Fparameter_buf: [5]int8{},
 		},
 	}
@@ -40958,7 +40958,7 @@ func init() {
 func init() {
 	cheat_choppers = cheatseq_t{
 		Fsequence:      [25]int8{'i', 'd', 'c', 'h', 'o', 'p', 'p', 'e', 'r', 's'},
-		Fsequence_len:  libc.Uint64FromInt64(11) - libc.Uint64FromInt32(1),
+		Fsequence_len:  11 - 1,
 		Fparameter_buf: [5]int8{},
 	}
 }
@@ -40966,7 +40966,7 @@ func init() {
 func init() {
 	cheat_clev = cheatseq_t{
 		Fsequence:        [25]int8{'i', 'd', 'c', 'l', 'e', 'v'},
-		Fsequence_len:    libc.Uint64FromInt64(7) - libc.Uint64FromInt32(1),
+		Fsequence_len:    7 - 1,
 		Fparameter_chars: 2,
 		Fparameter_buf:   [5]int8{},
 	}
@@ -40975,7 +40975,7 @@ func init() {
 func init() {
 	cheat_mypos = cheatseq_t{
 		Fsequence:      [25]int8{'i', 'd', 'm', 'y', 'p', 'o', 's'},
-		Fsequence_len:  libc.Uint64FromInt64(8) - libc.Uint64FromInt32(1),
+		Fsequence_len:  8 - 1,
 		Fparameter_buf: [5]int8{},
 	}
 }
@@ -43214,9 +43214,9 @@ var epsd2animinfo = [6]anim_t1{
 }
 
 var NUMANIMS = [4]int32{
-	0: libc.Int32FromUint64(libc.Uint64FromInt64(720) / libc.Uint64FromInt64(72)),
-	1: libc.Int32FromUint64(libc.Uint64FromInt64(648) / libc.Uint64FromInt64(72)),
-	2: libc.Int32FromUint64(libc.Uint64FromInt64(432) / libc.Uint64FromInt64(72)),
+	0: libc.Int32FromUint64(720 / 72),
+	1: libc.Int32FromUint64(648 / 72),
+	2: libc.Int32FromUint64(432 / 72),
 }
 
 var anims1 = [4]uintptr{
@@ -44600,7 +44600,7 @@ func WI_loadData(tls *libc.TLS) {
 		NUMCMAPS = 32
 		lnames = Z_Malloc(tls, libc.Int32FromUint64(uint64(8)*libc.Uint64FromInt32(NUMCMAPS)), int32(PU_STATIC), libc.UintptrFromInt32(0))
 	} else {
-		lnames = Z_Malloc(tls, libc.Int32FromUint64(libc.Uint64FromInt64(8)*libc.Uint64FromInt32(NUMMAPS)), int32(PU_STATIC), libc.UintptrFromInt32(0))
+		lnames = Z_Malloc(tls, libc.Int32FromUint64(8*libc.Uint64FromInt32(NUMMAPS)), int32(PU_STATIC), libc.UintptrFromInt32(0))
 	}
 	WI_loadUnloadData(tls, WI_loadCallback)
 	// These two graphics are special cased because we're sharing
@@ -45177,7 +45177,7 @@ func W_CheckCorrectIWAD(tls *libc.TLS, mission GameMission_t) {
 	var i, lumpnum int32
 	i = 0
 	for {
-		if !(libc.Uint64FromInt32(i) < libc.Uint64FromInt64(64)/libc.Uint64FromInt64(16)) {
+		if !(libc.Uint64FromInt32(i) < 64/16) {
 			break
 		}
 		if mission != unique_lumps[i].Fmission {
@@ -45348,13 +45348,13 @@ func Z_Free(tls *libc.TLS, ptr uintptr) {
 func Z_Malloc(tls *libc.TLS, size int32, tag int32, user uintptr) (r uintptr) {
 	var base, newblock, result, rover, start, v1 uintptr
 	var extra int32
-	size = libc.Int32FromUint64((libc.Uint64FromInt32(size) + uint64(8) - uint64(1)) & ^(libc.Uint64FromInt64(8) - libc.Uint64FromInt32(1)))
+	size = libc.Int32FromUint64((libc.Uint64FromInt32(size) + uint64(8) - uint64(1)) & 0xffff_fff8)
 	// scan through the block list,
 	// looking for the first free block
 	// of sufficient size,
 	// throwing out any purgable blocks along the way.
 	// account for size of block header
-	size = int32(uint64(size) + libc.Uint64FromInt64(40))
+	size = int32(uint64(size) + 40)
 	// if there is a free block behind the rover,
 	//  back up over them
 	base = (*memzone_t)(unsafe.Pointer(mainzone)).Frover
