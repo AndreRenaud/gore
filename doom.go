@@ -3166,7 +3166,7 @@ func AM_Responder(ev *event_t) (r boolean) {
 			}
 		}
 	}
-	return libc.Uint32FromInt32(rc)
+	return uint32(rc)
 }
 
 var bigstate int32
@@ -4377,7 +4377,7 @@ func D_StartNetGame(settings *net_gamesettings_t, callback netgame_startup_callb
 	settings.Fextratics = 1
 	settings.Fticdup = 1
 	ticdup = settings.Fticdup
-	new_sync = libc.Uint32FromInt32(settings.Fnew_sync)
+	new_sync = uint32(settings.Fnew_sync)
 }
 
 func D_InitNetGame(connect_data *net_connect_data_t) (r boolean) {
@@ -4509,7 +4509,7 @@ func SinglePlayerClear(set *ticcmd_set_t) {
 		if !(i < uint32(NET_MAXPLAYERS)) {
 			break
 		}
-		if i != libc.Uint32FromInt32(localplayer) {
+		if i != uint32(localplayer) {
 			set.Fingame[i] = 0
 		}
 		goto _1
@@ -4965,7 +4965,7 @@ func D_Display() {
 			I_Sleep(1)
 		}
 		wipestart = nowtime
-		done = libc.Uint32FromInt32(wipe_ScreenWipe(int32(wipe_Melt), 0, 0, int32(SCREENWIDTH), int32(SCREENHEIGHT), tics))
+		done = uint32(wipe_ScreenWipe(int32(wipe_Melt), 0, 0, int32(SCREENWIDTH), int32(SCREENHEIGHT), tics))
 		I_UpdateNoBlit()
 		M_Drawer()       // menu is drawn even on top of wipes
 		I_FinishUpdate() // page flip or blit buffer
@@ -5249,7 +5249,7 @@ func GetGameName(gamename uintptr) (r uintptr) {
 			for {
 				if v5 = int32(*(*int8)(unsafe.Pointer(gamename))) != int32('\000'); v5 {
 					v2 = int32(*(*int8)(unsafe.Pointer(gamename)))
-					v3 = libc.BoolInt32(v2 == int32(' ') || libc.Uint32FromInt32(v2)-uint32('\t') < uint32(5))
+					v3 = libc.BoolInt32(v2 == int32(' ') || uint32(v2)-uint32('\t') < uint32(5))
 					goto _4
 				_4:
 				}
@@ -5261,7 +5261,7 @@ func GetGameName(gamename uintptr) (r uintptr) {
 			for {
 				if v9 = int32(*(*int8)(unsafe.Pointer(gamename))) != int32('\000'); v9 {
 					v6 = int32(*(*int8)(unsafe.Pointer(gamename + uintptr(xstrlen(gamename)-uint64(1)))))
-					v7 = libc.BoolInt32(v6 == int32(' ') || libc.Uint32FromInt32(v6)-uint32('\t') < uint32(5))
+					v7 = libc.BoolInt32(v6 == int32(' ') || uint32(v6)-uint32('\t') < uint32(5))
 					goto _8
 				_8:
 				}
@@ -5731,26 +5731,26 @@ func D_DoomMain() {
 	//
 	// Disable monsters.
 	//
-	nomonsters = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts(4064)))
+	nomonsters = uint32(M_CheckParm(__ccgo_ts(4064)))
 	//!
 	// @vanilla
 	//
 	// Monsters respawn after being killed.
 	//
-	respawnparm = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts(4076)))
+	respawnparm = uint32(M_CheckParm(__ccgo_ts(4076)))
 	//!
 	// @vanilla
 	//
 	// Monsters move faster.
 	//
-	fastparm = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts(4085)))
+	fastparm = uint32(M_CheckParm(__ccgo_ts(4085)))
 	//!
 	// @vanilla
 	//
 	// Developer mode.  F1 saves a screenshot in the current working
 	// directory.
 	//
-	devparm = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts(4091)))
+	devparm = uint32(M_CheckParm(__ccgo_ts(4091)))
 	I_DisplayFPSDots(devparm)
 	//!
 	// @category net
@@ -6221,17 +6221,17 @@ func LoadGameSettings(settings *net_gamesettings_t) {
 	startmap = settings.Fmap1
 	startskill = settings.Fskill
 	startloadgame = settings.Floadgame
-	lowres_turn = libc.Uint32FromInt32(settings.Flowres_turn)
-	nomonsters = libc.Uint32FromInt32(settings.Fnomonsters)
-	fastparm = libc.Uint32FromInt32(settings.Ffast_monsters)
-	respawnparm = libc.Uint32FromInt32(settings.Frespawn_monsters)
+	lowres_turn = uint32(settings.Flowres_turn)
+	nomonsters = uint32(settings.Fnomonsters)
+	fastparm = uint32(settings.Ffast_monsters)
+	respawnparm = uint32(settings.Frespawn_monsters)
 	timelimit = settings.Ftimelimit
 	consoleplayer = settings.Fconsoleplayer
 	if lowres_turn != 0 {
 		fprintf_ccgo(os.Stdout, 5423)
 	}
 	for i := uint32(0); i < MAXPLAYERS; i++ {
-		playeringame[i] = libc.BoolUint32(i < libc.Uint32FromInt32(settings.Fnum_players))
+		playeringame[i] = libc.BoolUint32(i < uint32(settings.Fnum_players))
 	}
 }
 
@@ -7922,7 +7922,7 @@ func SetJoyButtons(buttons_mask uint32) {
 		if !(i < int32(MAX_JOY_BUTTONS)) {
 			break
 		}
-		button_on = libc.BoolInt32(buttons_mask&libc.Uint32FromInt32(1<<i) != uint32(0))
+		button_on = libc.BoolInt32(buttons_mask&uint32(1<<i) != uint32(0))
 		// Detect button press:
 		if !(*(*boolean)(unsafe.Pointer(joybuttons + uintptr(i)*4)) != 0) && button_on != 0 {
 			// Weapon cycling:
@@ -7934,7 +7934,7 @@ func SetJoyButtons(buttons_mask uint32) {
 				}
 			}
 		}
-		*(*boolean)(unsafe.Pointer(joybuttons + uintptr(i)*4)) = libc.Uint32FromInt32(button_on)
+		*(*boolean)(unsafe.Pointer(joybuttons + uintptr(i)*4)) = uint32(button_on)
 		goto _1
 	_1:
 		;
@@ -7950,7 +7950,7 @@ func SetMouseButtons(buttons_mask uint32) {
 		if !(i < int32(MAX_MOUSE_BUTTONS)) {
 			break
 		}
-		button_on = libc.BoolUint32(buttons_mask&libc.Uint32FromInt32(1<<i) != uint32(0))
+		button_on = libc.BoolUint32(buttons_mask&uint32(1<<i) != uint32(0))
 		// Detect button press:
 		if !(*(*boolean)(unsafe.Pointer(mousebuttons + uintptr(i)*4)) != 0) && button_on != 0 {
 			if i == mousebprevweapon {
@@ -8043,12 +8043,12 @@ func G_Responder(ev *event_t) (r boolean) {
 		}
 		return 0 // always let key up events filter down
 	case ev_mouse:
-		SetMouseButtons(libc.Uint32FromInt32(ev.Fdata1))
+		SetMouseButtons(uint32(ev.Fdata1))
 		mousex = ev.Fdata2 * (mouseSensitivity + 5) / 10
 		mousey = ev.Fdata3 * (mouseSensitivity + 5) / 10
 		return 1 // eat events
 	case ev_joystick:
-		SetJoyButtons(libc.Uint32FromInt32(ev.Fdata1))
+		SetJoyButtons(uint32(ev.Fdata1))
 		joyxmove = ev.Fdata2
 		joyymove = ev.Fdata3
 		joystrafemove = ev.Fdata4
@@ -9350,7 +9350,7 @@ func G_TimeDemo(name uintptr) {
 	//
 	// Disable rendering the screen entirely.
 	//
-	nodrawers = libc.Uint32FromInt32(M_CheckParm(__ccgo_ts(14458)))
+	nodrawers = uint32(M_CheckParm(__ccgo_ts(14458)))
 	timingdemo = 1
 	singletics = 1
 	defdemoname = name
@@ -9531,10 +9531,10 @@ func HUlib_eraseTextLine(l *hu_textline_t) {
 				break
 			}
 			if y < viewwindowy || y >= viewwindowy+viewheight {
-				R_VideoErase(libc.Uint32FromInt32(yoffset), int32(SCREENWIDTH))
+				R_VideoErase(uint32(yoffset), int32(SCREENWIDTH))
 			} else {
-				R_VideoErase(libc.Uint32FromInt32(yoffset), viewwindowx) // erase left border
-				R_VideoErase(libc.Uint32FromInt32(yoffset+viewwindowx+viewwidth), viewwindowx)
+				R_VideoErase(uint32(yoffset), viewwindowx) // erase left border
+				R_VideoErase(uint32(yoffset+viewwindowx+viewwidth), viewwindowx)
 				// erase right border
 			}
 			goto _1
@@ -18580,7 +18580,7 @@ func I_GetMemoryValue(offset uint32, value uintptr, size int32) (r boolean) {
 		*(*uint16)(unsafe.Pointer(value)) = libc.Uint16FromInt32(libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset)))) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(1)))))<<int32(8))
 		return 1
 	case 4:
-		*(*uint32)(unsafe.Pointer(value)) = libc.Uint32FromInt32(libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset)))) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(1)))))<<int32(8) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(2)))))<<int32(16) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(3)))))<<int32(24))
+		*(*uint32)(unsafe.Pointer(value)) = uint32(libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset)))) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(1)))))<<int32(8) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(2)))))<<int32(16) | libc.Int32FromUint8(*(*uint8)(unsafe.Pointer(dos_mem_dump + uintptr(offset+uint32(3)))))<<int32(24))
 		return 1
 	}
 	return 0
@@ -18597,7 +18597,7 @@ func I_GetTicks() (r int32) {
 
 func I_GetTime() (r int32) {
 	var ticks uint32
-	ticks = libc.Uint32FromInt32(I_GetTicks())
+	ticks = uint32(I_GetTicks())
 	if basetime == uint32(0) {
 		basetime = ticks
 	}
@@ -18611,7 +18611,7 @@ func I_GetTime() (r int32) {
 
 func I_GetTimeMS() (r int32) {
 	var ticks uint32
-	ticks = libc.Uint32FromInt32(I_GetTicks())
+	ticks = uint32(I_GetTicks())
 	if basetime == uint32(0) {
 		basetime = ticks
 	}
@@ -21355,7 +21355,7 @@ func M_Responder(ev *event_t) (r boolean) {
 				return 0
 			}
 		}
-		menuactive = libc.Uint32FromInt32(messageLastMenuActive)
+		menuactive = uint32(messageLastMenuActive)
 		messageToPrint = 0
 		if messageRoutine != 0 {
 			(*(*func(int32))(unsafe.Pointer(&struct{ uintptr }{messageRoutine})))(key)
@@ -23141,7 +23141,7 @@ func P_Move(actor uintptr) (r boolean) {
 	if (*mobj_t)(unsafe.Pointer(actor)).Fmovedir == DI_NODIR {
 		return 0
 	}
-	if libc.Uint32FromInt32((*mobj_t)(unsafe.Pointer(actor)).Fmovedir) >= uint32(8) {
+	if uint32((*mobj_t)(unsafe.Pointer(actor)).Fmovedir) >= uint32(8) {
 		I_Error(__ccgo_ts(23654), 0)
 	}
 	tryx = (*mobj_t)(unsafe.Pointer(actor)).Fx + (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fspeed*xspeed[(*mobj_t)(unsafe.Pointer(actor)).Fmovedir]
@@ -23357,7 +23357,7 @@ func P_LookForPlayers(actor uintptr, allaround boolean) (r boolean) {
 		} // out of sight
 		if !(allaround != 0) {
 			an = R_PointToAngle2((*mobj_t)(unsafe.Pointer(actor)).Fx, (*mobj_t)(unsafe.Pointer(actor)).Fy, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy) - (*mobj_t)(unsafe.Pointer(actor)).Fangle
-			if an > uint32(ANG903) && an < uint32(ANG2703) {
+			if an > ANG903 && an < ANG2703 {
 				dist = P_AproxDistance((*mobj_t)(unsafe.Pointer(player.Fmo)).Fx-(*mobj_t)(unsafe.Pointer(actor)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy-(*mobj_t)(unsafe.Pointer(actor)).Fy)
 				// if real close, react anyway
 				if dist > 64*(1<<FRACBITS) {
@@ -23491,12 +23491,12 @@ func A_Chase(actor uintptr) {
 	// turn towards movement direction if not there yet
 	if (*mobj_t)(unsafe.Pointer(actor)).Fmovedir < 8 {
 		*(*angle_t)(unsafe.Pointer(actor + 56)) &= 7 << 29
-		delta = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(actor)).Fangle - libc.Uint32FromInt32((*mobj_t)(unsafe.Pointer(actor)).Fmovedir<<29))
+		delta = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(actor)).Fangle - uint32((*mobj_t)(unsafe.Pointer(actor)).Fmovedir<<29))
 		if delta > 0 {
-			*(*angle_t)(unsafe.Pointer(actor + 56)) -= libc.Uint32FromInt32(ANG903 / 2)
+			*(*angle_t)(unsafe.Pointer(actor + 56)) -= uint32(ANG903 / 2)
 		} else {
 			if delta < 0 {
-				*(*angle_t)(unsafe.Pointer(actor + 56)) += libc.Uint32FromInt32(ANG903 / 2)
+				*(*angle_t)(unsafe.Pointer(actor + 56)) += uint32(ANG903 / 2)
 			}
 		}
 	}
@@ -23571,7 +23571,7 @@ func A_FaceTarget(actor uintptr) {
 	*(*int32)(unsafe.Pointer(actor + 160)) &= ^int32(MF_AMBUSH)
 	(*mobj_t)(unsafe.Pointer(actor)).Fangle = R_PointToAngle2((*mobj_t)(unsafe.Pointer(actor)).Fx, (*mobj_t)(unsafe.Pointer(actor)).Fy, (*mobj_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Ftarget)).Fx, (*mobj_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Ftarget)).Fy)
 	if (*mobj_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Ftarget)).Fflags&int32(MF_SHADOW) != 0 {
-		*(*angle_t)(unsafe.Pointer(actor + 56)) += libc.Uint32FromInt32((P_Random() - P_Random()) << 21)
+		*(*angle_t)(unsafe.Pointer(actor + 56)) += uint32((P_Random() - P_Random()) << 21)
 	}
 }
 
@@ -23587,11 +23587,11 @@ func A_PosAttack(actor uintptr) {
 	}
 	A_FaceTarget(actor)
 	angle = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
-	slope = P_AimLineAttack(actor, libc.Uint32FromInt32(angle), 32*64*(1<<FRACBITS))
+	slope = P_AimLineAttack(actor, uint32(angle), 32*64*(1<<FRACBITS))
 	S_StartSound(actor, int32(sfx_pistol))
 	angle += (P_Random() - P_Random()) << 20
 	damage = (P_Random()%int32(5) + 1) * 3
-	P_LineAttack(actor, libc.Uint32FromInt32(angle), 32*64*(1<<FRACBITS), slope, damage)
+	P_LineAttack(actor, uint32(angle), 32*64*(1<<FRACBITS), slope, damage)
 }
 
 func A_SPosAttack(actor uintptr) {
@@ -23602,7 +23602,7 @@ func A_SPosAttack(actor uintptr) {
 	S_StartSound(actor, int32(sfx_shotgn))
 	A_FaceTarget(actor)
 	bangle = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
-	slope = P_AimLineAttack(actor, libc.Uint32FromInt32(bangle), 32*64*(1<<FRACBITS))
+	slope = P_AimLineAttack(actor, uint32(bangle), 32*64*(1<<FRACBITS))
 	i = 0
 	for {
 		if !(i < 3) {
@@ -23610,7 +23610,7 @@ func A_SPosAttack(actor uintptr) {
 		}
 		angle = bangle + (P_Random()-P_Random())<<int32(20)
 		damage = (P_Random()%int32(5) + 1) * 3
-		P_LineAttack(actor, libc.Uint32FromInt32(angle), 32*64*(1<<FRACBITS), slope, damage)
+		P_LineAttack(actor, uint32(angle), 32*64*(1<<FRACBITS), slope, damage)
 		goto _1
 	_1:
 		;
@@ -23626,10 +23626,10 @@ func A_CPosAttack(actor uintptr) {
 	S_StartSound(actor, int32(sfx_shotgn))
 	A_FaceTarget(actor)
 	bangle = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
-	slope = P_AimLineAttack(actor, libc.Uint32FromInt32(bangle), 32*64*(1<<FRACBITS))
+	slope = P_AimLineAttack(actor, uint32(bangle), 32*64*(1<<FRACBITS))
 	angle = bangle + (P_Random()-P_Random())<<int32(20)
 	damage = (P_Random()%int32(5) + 1) * 3
-	P_LineAttack(actor, libc.Uint32FromInt32(angle), 32*64*(1<<FRACBITS), slope, damage)
+	P_LineAttack(actor, uint32(angle), 32*64*(1<<FRACBITS), slope, damage)
 }
 
 func A_CPosRefire(actor uintptr) {
@@ -23781,12 +23781,12 @@ func A_Tracer(actor uintptr) {
 	exact = R_PointToAngle2((*mobj_t)(unsafe.Pointer(actor)).Fx, (*mobj_t)(unsafe.Pointer(actor)).Fy, (*mobj_t)(unsafe.Pointer(dest)).Fx, (*mobj_t)(unsafe.Pointer(dest)).Fy)
 	if exact != (*mobj_t)(unsafe.Pointer(actor)).Fangle {
 		if exact-(*mobj_t)(unsafe.Pointer(actor)).Fangle > uint32(0x80000000) {
-			*(*angle_t)(unsafe.Pointer(actor + 56)) -= libc.Uint32FromInt32(TRACEANGLE)
+			*(*angle_t)(unsafe.Pointer(actor + 56)) -= uint32(TRACEANGLE)
 			if exact-(*mobj_t)(unsafe.Pointer(actor)).Fangle < uint32(0x80000000) {
 				(*mobj_t)(unsafe.Pointer(actor)).Fangle = exact
 			}
 		} else {
-			*(*angle_t)(unsafe.Pointer(actor + 56)) += libc.Uint32FromInt32(TRACEANGLE)
+			*(*angle_t)(unsafe.Pointer(actor + 56)) += uint32(TRACEANGLE)
 			if exact-(*mobj_t)(unsafe.Pointer(actor)).Fangle > uint32(0x80000000) {
 				(*mobj_t)(unsafe.Pointer(actor)).Fangle = exact
 			}
@@ -24026,11 +24026,11 @@ func A_FatAttack1(actor uintptr) {
 	var mo, target uintptr
 	A_FaceTarget(actor)
 	// Change direction  to ...
-	*(*angle_t)(unsafe.Pointer(actor + 56)) += libc.Uint32FromInt32(ANG903 / 8)
+	*(*angle_t)(unsafe.Pointer(actor + 56)) += uint32(ANG903 / 8)
 	target = P_SubstNullMobj((*mobj_t)(unsafe.Pointer(actor)).Ftarget)
 	P_SpawnMissile(actor, target, int32(MT_FATSHOT))
 	mo = P_SpawnMissile(actor, target, int32(MT_FATSHOT))
-	*(*angle_t)(unsafe.Pointer(mo + 56)) += libc.Uint32FromInt32(ANG903 / 8)
+	*(*angle_t)(unsafe.Pointer(mo + 56)) += uint32(ANG903 / 8)
 	an = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomx = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finecosine[an])
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomy = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finesine[an])
@@ -24041,11 +24041,11 @@ func A_FatAttack2(actor uintptr) {
 	var mo, target uintptr
 	A_FaceTarget(actor)
 	// Now here choose opposite deviation.
-	*(*angle_t)(unsafe.Pointer(actor + 56)) -= libc.Uint32FromInt32(ANG903 / 8)
+	*(*angle_t)(unsafe.Pointer(actor + 56)) -= uint32(ANG903 / 8)
 	target = P_SubstNullMobj((*mobj_t)(unsafe.Pointer(actor)).Ftarget)
 	P_SpawnMissile(actor, target, int32(MT_FATSHOT))
 	mo = P_SpawnMissile(actor, target, int32(MT_FATSHOT))
-	*(*angle_t)(unsafe.Pointer(mo + 56)) -= libc.Uint32FromInt32(ANG903 / 8 * 2)
+	*(*angle_t)(unsafe.Pointer(mo + 56)) -= uint32(ANG903 / 8 * 2)
 	an = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomx = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finecosine[an])
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomy = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finesine[an])
@@ -24057,12 +24057,12 @@ func A_FatAttack3(actor uintptr) {
 	A_FaceTarget(actor)
 	target = P_SubstNullMobj((*mobj_t)(unsafe.Pointer(actor)).Ftarget)
 	mo = P_SpawnMissile(actor, target, int32(MT_FATSHOT))
-	*(*angle_t)(unsafe.Pointer(mo + 56)) -= libc.Uint32FromInt32(ANG903 / 8 / 2)
+	*(*angle_t)(unsafe.Pointer(mo + 56)) -= uint32(ANG903 / 8 / 2)
 	an = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomx = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finecosine[an])
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomy = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finesine[an])
 	mo = P_SpawnMissile(actor, target, int32(MT_FATSHOT))
-	*(*angle_t)(unsafe.Pointer(mo + 56)) += libc.Uint32FromInt32(ANG903 / 8 / 2)
+	*(*angle_t)(unsafe.Pointer(mo + 56)) += uint32(ANG903 / 8 / 2)
 	an = libc.Int32FromUint32((*mobj_t)(unsafe.Pointer(mo)).Fangle >> int32(ANGLETOFINESHIFT))
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomx = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finecosine[an])
 	(*mobj_t)(unsafe.Pointer(mo)).Fmomy = FixedMul((*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(mo)).Finfo)).Fspeed, finesine[an])
@@ -26304,7 +26304,7 @@ func PIT_CheckThing(thing uintptr) (r boolean) {
 	}
 	// check for special pickup
 	if (*mobj_t)(unsafe.Pointer(thing)).Fflags&int32(MF_SPECIAL) != 0 {
-		solid = libc.Uint32FromInt32((*mobj_t)(unsafe.Pointer(thing)).Fflags & int32(MF_SOLID))
+		solid = uint32((*mobj_t)(unsafe.Pointer(thing)).Fflags & int32(MF_SOLID))
 		if tmflags&int32(MF_PICKUP) != 0 {
 			// can remove thing
 			P_TouchSpecialThing(thing, tmthing)
@@ -27292,8 +27292,8 @@ func P_PointOnDivlineSide(x fixed_t, y fixed_t, line uintptr) (r int32) {
 	dx = x - (*divline_t)(unsafe.Pointer(line)).Fx
 	dy = y - (*divline_t)(unsafe.Pointer(line)).Fy
 	// try to quickly decide by looking at sign bits
-	if libc.Uint32FromInt32((*divline_t)(unsafe.Pointer(line)).Fdy^(*divline_t)(unsafe.Pointer(line)).Fdx^dx^dy)&uint32(0x80000000) != 0 {
-		if libc.Uint32FromInt32((*divline_t)(unsafe.Pointer(line)).Fdy^dx)&uint32(0x80000000) != 0 {
+	if uint32((*divline_t)(unsafe.Pointer(line)).Fdy^(*divline_t)(unsafe.Pointer(line)).Fdx^dx^dy)&uint32(0x80000000) != 0 {
+		if uint32((*divline_t)(unsafe.Pointer(line)).Fdy^dx)&uint32(0x80000000) != 0 {
 			return 1
 		} // (left is negative)
 		return 0
@@ -27825,7 +27825,7 @@ func InterceptsOverrun(num_intercepts int32, intercept uintptr) {
 func P_PathTraverse(x1 fixed_t, y1 fixed_t, x2 fixed_t, y2 fixed_t, flags int32, trav uintptr) (r boolean) {
 	var count, mapx, mapxstep, mapy, mapystep int32
 	var partial, xintercept, xstep, xt1, xt2, yintercept, ystep, yt1, yt2 fixed_t
-	earlyout = libc.Uint32FromInt32(flags & int32(PT_EARLYOUT))
+	earlyout = uint32(flags & int32(PT_EARLYOUT))
 	validcount++
 	intercept_p = uintptr(unsafe.Pointer(&intercepts))
 	if (x1-bmaporgx)&(MAPBLOCKUNITS*(1<<FRACBITS)-1) == 0 {
@@ -28223,7 +28223,7 @@ func P_NightmareRespawn(mobj uintptr) {
 	// inherit attributes from deceased one
 	mo = P_SpawnMobj(x, y, z, (*mobj_t)(unsafe.Pointer(mobj)).Ftype1)
 	(*mobj_t)(unsafe.Pointer(mo)).Fspawnpoint = (*mobj_t)(unsafe.Pointer(mobj)).Fspawnpoint
-	(*mobj_t)(unsafe.Pointer(mo)).Fangle = libc.Uint32FromInt32(int32(ANG453) * (int32(mthing.Fangle) / 45))
+	(*mobj_t)(unsafe.Pointer(mo)).Fangle = uint32(int32(ANG453) * (int32(mthing.Fangle) / 45))
 	if int32(mthing.Foptions)&int32(MTF_AMBUSH) != 0 {
 		*(*int32)(unsafe.Pointer(mo + 160)) |= int32(MF_AMBUSH)
 	}
@@ -28403,7 +28403,7 @@ func P_RespawnSpecials() {
 	}
 	mo = P_SpawnMobj(x, y, z, i)
 	(*mobj_t)(unsafe.Pointer(mo)).Fspawnpoint = *mthing
-	(*mobj_t)(unsafe.Pointer(mo)).Fangle = libc.Uint32FromInt32(int32(ANG453) * (int32(mthing.Fangle) / 45))
+	(*mobj_t)(unsafe.Pointer(mo)).Fangle = uint32(int32(ANG453) * (int32(mthing.Fangle) / 45))
 	// pull it from the que
 	iquetail = (iquetail + 1) & (ITEMQUESIZE - 1)
 }
@@ -28440,7 +28440,7 @@ func P_SpawnPlayer(mthing *mapthing_t) {
 	if int32(mthing.Ftype1) > 1 {
 		*(*int32)(unsafe.Pointer(mobj + 160)) |= (int32(mthing.Ftype1) - 1) << int32(MF_TRANSSHIFT)
 	}
-	(*mobj_t)(unsafe.Pointer(mobj)).Fangle = libc.Uint32FromInt32(int32(ANG453) * (int32(mthing.Fangle) / 45))
+	(*mobj_t)(unsafe.Pointer(mobj)).Fangle = uint32(int32(ANG453) * (int32(mthing.Fangle) / 45))
 	(*mobj_t)(unsafe.Pointer(mobj)).Fplayer = p
 	(*mobj_t)(unsafe.Pointer(mobj)).Fhealth = p.Fhealth
 	p.Fmo = mobj
@@ -28569,7 +28569,7 @@ func P_SpawnMapThing(mthing *mapthing_t) {
 	if (*mobj_t)(unsafe.Pointer(mobj)).Fflags&int32(MF_COUNTITEM) != 0 {
 		totalitems++
 	}
-	(*mobj_t)(unsafe.Pointer(mobj)).Fangle = libc.Uint32FromInt32(int32(ANG453) * (int32(mthing.Fangle) / 45))
+	(*mobj_t)(unsafe.Pointer(mobj)).Fangle = uint32(int32(ANG453) * (int32(mthing.Fangle) / 45))
 	if int32(mthing.Foptions)&int32(MTF_AMBUSH) != 0 {
 		*(*int32)(unsafe.Pointer(mobj + 160)) |= int32(MF_AMBUSH)
 	}
@@ -28671,7 +28671,7 @@ func P_SpawnMissile(source uintptr, dest uintptr, type1 mobjtype_t) (r uintptr) 
 	an = R_PointToAngle2((*mobj_t)(unsafe.Pointer(source)).Fx, (*mobj_t)(unsafe.Pointer(source)).Fy, (*mobj_t)(unsafe.Pointer(dest)).Fx, (*mobj_t)(unsafe.Pointer(dest)).Fy)
 	// fuzzy player
 	if (*mobj_t)(unsafe.Pointer(dest)).Fflags&int32(MF_SHADOW) != 0 {
-		an += libc.Uint32FromInt32((P_Random() - P_Random()) << 20)
+		an += uint32((P_Random() - P_Random()) << 20)
 	}
 	(*mobj_t)(unsafe.Pointer(th)).Fangle = an
 	an >>= uint32(ANGLETOFINESHIFT)
@@ -28701,10 +28701,10 @@ func P_SpawnPlayerMissile(source uintptr, type1 mobjtype_t) {
 	an = (*mobj_t)(unsafe.Pointer(source)).Fangle
 	slope = P_AimLineAttack(source, an, 16*64*(1<<FRACBITS))
 	if !(linetarget != 0) {
-		an += libc.Uint32FromInt32(1 << 26)
+		an += uint32(1 << 26)
 		slope = P_AimLineAttack(source, an, 16*64*(1<<FRACBITS))
 		if !(linetarget != 0) {
-			an -= libc.Uint32FromInt32(2 << 26)
+			an -= uint32(2 << 26)
 			slope = P_AimLineAttack(source, an, 16*64*(1<<FRACBITS))
 		}
 		if !(linetarget != 0) {
@@ -29297,7 +29297,7 @@ func A_Punch(player *player_t, psp *pspdef_t) {
 		damage *= 10
 	}
 	angle = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle
-	angle += libc.Uint32FromInt32((P_Random() - P_Random()) << 18)
+	angle += uint32((P_Random() - P_Random()) << 18)
 	slope = P_AimLineAttack(player.Fmo, angle, 64*(1<<FRACBITS))
 	P_LineAttack(player.Fmo, angle, 64*(1<<FRACBITS), slope, damage)
 	// turn to face target
@@ -29317,7 +29317,7 @@ func A_Saw(player *player_t, psp *pspdef_t) {
 	var damage, slope int32
 	damage = 2 * (P_Random()%int32(10) + 1)
 	angle = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle
-	angle += libc.Uint32FromInt32((P_Random() - P_Random()) << 18)
+	angle += uint32((P_Random() - P_Random()) << 18)
 	// use meleerange + 1 se the puff doesn't skip the flash
 	slope = P_AimLineAttack(player.Fmo, angle, 64*(1<<FRACBITS)+1)
 	P_LineAttack(player.Fmo, angle, 64*(1<<FRACBITS)+1, slope, damage)
@@ -29330,15 +29330,15 @@ func A_Saw(player *player_t, psp *pspdef_t) {
 	angle = R_PointToAngle2((*mobj_t)(unsafe.Pointer(player.Fmo)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy, (*mobj_t)(unsafe.Pointer(linetarget)).Fx, (*mobj_t)(unsafe.Pointer(linetarget)).Fy)
 	if angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle > uint32(ANG1807) {
 		if libc.Int32FromUint32(angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle) < -ANG905/20 {
-			(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = angle + libc.Uint32FromInt32(ANG905/21)
+			(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = angle + uint32(ANG905/21)
 		} else {
-			*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) -= libc.Uint32FromInt32(ANG905 / 20)
+			*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) -= uint32(ANG905 / 20)
 		}
 	} else {
-		if angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle > libc.Uint32FromInt32(ANG905/20) {
-			(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = angle - libc.Uint32FromInt32(ANG905/21)
+		if angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle > uint32(ANG905/20) {
+			(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = angle - uint32(ANG905/21)
 		} else {
-			*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += libc.Uint32FromInt32(ANG905 / 20)
+			*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += uint32(ANG905 / 20)
 		}
 	}
 	*(*int32)(unsafe.Pointer(player.Fmo + 160)) |= int32(MF_JUSTATTACKED)
@@ -29395,10 +29395,10 @@ func P_BulletSlope(mo uintptr) {
 	an = (*mobj_t)(unsafe.Pointer(mo)).Fangle
 	bulletslope = P_AimLineAttack(mo, an, 16*64*(1<<FRACBITS))
 	if !(linetarget != 0) {
-		an += libc.Uint32FromInt32(1 << 26)
+		an += uint32(1 << 26)
 		bulletslope = P_AimLineAttack(mo, an, 16*64*(1<<FRACBITS))
 		if !(linetarget != 0) {
-			an -= libc.Uint32FromInt32(2 << 26)
+			an -= uint32(2 << 26)
 			bulletslope = P_AimLineAttack(mo, an, 16*64*(1<<FRACBITS))
 		}
 	}
@@ -29415,7 +29415,7 @@ func P_GunShot(mo uintptr, accurate boolean) {
 	damage = 5 * (P_Random()%int32(3) + 1)
 	angle = (*mobj_t)(unsafe.Pointer(mo)).Fangle
 	if !(accurate != 0) {
-		angle += libc.Uint32FromInt32((P_Random() - P_Random()) << 18)
+		angle += uint32((P_Random() - P_Random()) << 18)
 	}
 	P_LineAttack(mo, angle, 32*64*(1<<FRACBITS), bulletslope, damage)
 }
@@ -29479,7 +29479,7 @@ func A_FireShotgun2(player *player_t, psp *pspdef_t) {
 		}
 		damage = 5 * (P_Random()%int32(3) + 1)
 		angle = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle
-		angle += libc.Uint32FromInt32((P_Random() - P_Random()) << 19)
+		angle += uint32((P_Random() - P_Random()) << 19)
 		P_LineAttack(player.Fmo, angle, 32*64*(1<<FRACBITS), bulletslope+(P_Random()-P_Random())<<int32(5), damage)
 		goto _1
 	_1:
@@ -29538,7 +29538,7 @@ func A_BFGSpray(mo uintptr) {
 		if !(i < 40) {
 			break
 		}
-		an = (*mobj_t)(unsafe.Pointer(mo)).Fangle - libc.Uint32FromInt32(ANG905/2) + libc.Uint32FromInt32(ANG905/40*i)
+		an = (*mobj_t)(unsafe.Pointer(mo)).Fangle - uint32(ANG905/2) + uint32(ANG905/40*i)
 		// mo->target is the originator (player)
 		//  of the missile
 		P_AimLineAttack((*mobj_t)(unsafe.Pointer(mo)).Ftarget, an, 16*64*(1<<FRACBITS))
@@ -29851,7 +29851,7 @@ func saveg_read_mobj_t(str uintptr) {
 	// struct mobj_t* sprev;
 	(*mobj_t)(unsafe.Pointer(str)).Fsprev = saveg_readp()
 	// angle_t angle;
-	(*mobj_t)(unsafe.Pointer(str)).Fangle = libc.Uint32FromInt32(saveg_read32())
+	(*mobj_t)(unsafe.Pointer(str)).Fangle = uint32(saveg_read32())
 	// spritenum_t sprite;
 	(*mobj_t)(unsafe.Pointer(str)).Fsprite = saveg_read32()
 	// int frame;
@@ -30096,10 +30096,10 @@ func saveg_read_player_t(str *player_t) {
 	}
 	// boolean cards[NUMCARDS];
 	for i := 0; i < NUMCARDS; i++ {
-		str.Fcards[i] = libc.Uint32FromInt32(saveg_read32())
+		str.Fcards[i] = uint32(saveg_read32())
 	}
 	// boolean backpack;
-	str.Fbackpack = libc.Uint32FromInt32(saveg_read32())
+	str.Fbackpack = uint32(saveg_read32())
 	// int frags[MAXPLAYERS];
 	for i := 0; i < MAXPLAYERS; i++ {
 		str.Ffrags[i] = saveg_read32()
@@ -30110,7 +30110,7 @@ func saveg_read_player_t(str *player_t) {
 	str.Fpendingweapon = saveg_read32()
 	// boolean weaponowned[NUMWEAPONS];
 	for i := 0; i < NUMWEAPONS; i++ {
-		str.Fweaponowned[i] = libc.Uint32FromInt32(saveg_read32())
+		str.Fweaponowned[i] = uint32(saveg_read32())
 	}
 	for i := 0; i < NUMAMMO; i++ {
 		str.Fammo[i] = saveg_read32()
@@ -30152,7 +30152,7 @@ func saveg_read_player_t(str *player_t) {
 		saveg_read_pspdef_t(&str.Fpsprites[i])
 	}
 	// boolean didsecret;
-	str.Fdidsecret = libc.Uint32FromInt32(saveg_read32())
+	str.Fdidsecret = uint32(saveg_read32())
 }
 
 func saveg_write_player_t(str *player_t) {
@@ -30323,7 +30323,7 @@ func saveg_read_ceiling_t(str uintptr) {
 	// fixed_t speed;
 	(*ceiling_t)(unsafe.Pointer(str)).Fspeed = saveg_read32()
 	// boolean crush;
-	(*ceiling_t)(unsafe.Pointer(str)).Fcrush = libc.Uint32FromInt32(saveg_read32())
+	(*ceiling_t)(unsafe.Pointer(str)).Fcrush = uint32(saveg_read32())
 	// int direction;
 	(*ceiling_t)(unsafe.Pointer(str)).Fdirection = saveg_read32()
 	// int tag;
@@ -30410,7 +30410,7 @@ func saveg_read_floormove_t(str uintptr) {
 	// floor_e type;
 	(*floormove_t)(unsafe.Pointer(str)).Ftype1 = saveg_read32()
 	// boolean crush;
-	(*floormove_t)(unsafe.Pointer(str)).Fcrush = libc.Uint32FromInt32(saveg_read32())
+	(*floormove_t)(unsafe.Pointer(str)).Fcrush = uint32(saveg_read32())
 	// sector_t* sector;
 	sector = saveg_read32()
 	(*floormove_t)(unsafe.Pointer(str)).Fsector = &sectors[sector]
@@ -30473,7 +30473,7 @@ func saveg_read_plat_t(str uintptr) {
 	// plat_e oldstatus;
 	(*plat_t)(unsafe.Pointer(str)).Foldstatus = saveg_read32()
 	// boolean crush;
-	(*plat_t)(unsafe.Pointer(str)).Fcrush = libc.Uint32FromInt32(saveg_read32())
+	(*plat_t)(unsafe.Pointer(str)).Fcrush = uint32(saveg_read32())
 	// int tag;
 	(*plat_t)(unsafe.Pointer(str)).Ftag = saveg_read32()
 	// plattype_e type;
@@ -31138,7 +31138,7 @@ func P_LoadVertexes(lump int32) {
 	var data, ml uintptr
 	// Determine number of lumps:
 	//  total lump length / vertex record length.
-	numvertexes = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(libc.Uint32FromInt32(lump))) / uint64(4))
+	numvertexes = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(4))
 	// Allocate zone memory for buffer.
 	vertexes = make([]vertex_t, numvertexes)
 	// Load data into cache.
@@ -31184,7 +31184,7 @@ func P_LoadSegs(lump int32) {
 	var data, li, ml uintptr
 	var ldef *line_t
 	var i, linedef, side, sidenum int32
-	numsegs = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(libc.Uint32FromInt32(lump))) / uint64(12))
+	numsegs = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(12))
 	segs = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numsegs)*uint64(56)), int32(PU_LEVEL), uintptr(0))
 	xmemset(segs, 0, libc.Uint64FromInt32(numsegs)*uint64(56))
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
@@ -31197,7 +31197,7 @@ func P_LoadSegs(lump int32) {
 		}
 		(*seg_t)(unsafe.Pointer(li)).Fv1 = &vertexes[(*mapseg_t)(unsafe.Pointer(ml)).Fv1]
 		(*seg_t)(unsafe.Pointer(li)).Fv2 = &vertexes[(*mapseg_t)(unsafe.Pointer(ml)).Fv2]
-		(*seg_t)(unsafe.Pointer(li)).Fangle = libc.Uint32FromInt32(int32((*mapseg_t)(unsafe.Pointer(ml)).Fangle) << 16)
+		(*seg_t)(unsafe.Pointer(li)).Fangle = uint32(int32((*mapseg_t)(unsafe.Pointer(ml)).Fangle) << 16)
 		(*seg_t)(unsafe.Pointer(li)).Foffset = int32((*mapseg_t)(unsafe.Pointer(ml)).Foffset) << 16
 		linedef = int32((*mapseg_t)(unsafe.Pointer(ml)).Flinedef)
 		ldef = &lines[linedef]
@@ -31237,7 +31237,7 @@ func P_LoadSegs(lump int32) {
 //	//
 func P_LoadSubsectors(lump int32) {
 	var data, ms uintptr
-	numsubsectors = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(libc.Uint32FromInt32(lump))) / uint64(4))
+	numsubsectors = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(4))
 	subsectors = make([]subsector_t, numsubsectors)
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
 	ms = data
@@ -31256,7 +31256,7 @@ func P_LoadSubsectors(lump int32) {
 //	//
 func P_LoadSectors(lump int32) {
 	var data uintptr
-	numsectors = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(libc.Uint32FromInt32(lump))) / uint64(unsafe.Sizeof(mapsector_t{})))
+	numsectors = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapsector_t{})))
 	sectors = make([]sector_t, numsectors)
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
 	mapsectors := unsafe.Slice((*mapsector_t)(unsafe.Pointer(data)), numsectors)
@@ -31282,7 +31282,7 @@ func P_LoadSectors(lump int32) {
 //	//
 func P_LoadNodes(lump int32) {
 	var data uintptr
-	numnodes = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(libc.Uint32FromInt32(lump))) / uint64(unsafe.Sizeof(mapnode_t{})))
+	numnodes = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapnode_t{})))
 	nodes = make([]node_t, numnodes)
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
 	mapnodes := unsafe.Slice((*mapnode_t)(unsafe.Pointer(data)), numnodes)
@@ -31313,7 +31313,7 @@ func P_LoadThings(lump int32) {
 	var numthings int32
 	var spawn boolean
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
-	numthings = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(libc.Uint32FromInt32(lump))) / uint64(unsafe.Sizeof(mapthing_t{})))
+	numthings = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapthing_t{})))
 	mthings := unsafe.Slice((*mapthing_t)(unsafe.Pointer(data)), numthings)
 	for i := int32(0); i < numthings; i++ {
 		mt := &mthings[i]
@@ -31370,7 +31370,7 @@ func P_LoadLineDefs(lump int32) {
 	var data, mld uintptr
 	var v1, v2, v21, v3 *vertex_t
 	var i int32
-	numlines = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(libc.Uint32FromInt32(lump))) / uint64(14))
+	numlines = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(14))
 	lines = make([]line_t, numlines)
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
 	mld = data
@@ -31439,7 +31439,7 @@ func P_LoadLineDefs(lump int32) {
 func P_LoadSideDefs(lump int32) {
 	var data, msd, sd uintptr
 	var i int32
-	numsides = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(libc.Uint32FromInt32(lump))) / uint64(30))
+	numsides = libc.Int32FromUint64(libc.Uint64FromInt32(W_LumpLength(uint32(lump))) / uint64(30))
 	sides = Z_Malloc(libc.Int32FromUint64(libc.Uint64FromInt32(numsides)*uint64(24)), int32(PU_LEVEL), uintptr(0))
 	xmemset(sides, 0, libc.Uint64FromInt32(numsides)*uint64(24))
 	data = W_CacheLumpNum(lump, int32(PU_STATIC))
@@ -31473,10 +31473,10 @@ func P_LoadSideDefs(lump int32) {
 //	//
 func P_LoadBlockMap(lump int32) {
 	var count, i, lumplen int32
-	lumplen = W_LumpLength(libc.Uint32FromInt32(lump))
+	lumplen = W_LumpLength(uint32(lump))
 	count = lumplen / 2
 	blockmaplump = Z_Malloc(lumplen, int32(PU_LEVEL), uintptr(0))
-	W_ReadLump(libc.Uint32FromInt32(lump), blockmaplump)
+	W_ReadLump(uint32(lump), blockmaplump)
 	blockmap = blockmaplump + uintptr(4)*2
 	// Swap all short integers to native byte ordering.
 	i = 0
@@ -31632,7 +31632,7 @@ func PadRejectArray(array uintptr, len1 uint32) {
 	var rejectpad [4]uint32
 	// Values to pad the REJECT array with:
 	rejectpad = [4]uint32{
-		0: libc.Uint32FromInt32((totallines*int32(4)+int32(3)) & ^3 + 24),
+		0: uint32((totallines*int32(4)+int32(3)) & ^3 + 24),
 		2: uint32(50),
 		3: uint32(0x1d4a11),
 	}
@@ -31672,13 +31672,13 @@ func P_LoadReject(lumpnum int32) {
 	// If the lump meets the minimum length, it can be loaded directly.
 	// Otherwise, we need to allocate a buffer of the correct size
 	// and pad it with appropriate data.
-	lumplen = W_LumpLength(libc.Uint32FromInt32(lumpnum))
+	lumplen = W_LumpLength(uint32(lumpnum))
 	if lumplen >= minlength {
 		rejectmatrix = W_CacheLumpNum(lumpnum, int32(PU_LEVEL))
 	} else {
 		rejectmatrix = Z_Malloc(minlength, int32(PU_LEVEL), uintptr(unsafe.Pointer(&rejectmatrix)))
-		W_ReadLump(libc.Uint32FromInt32(lumpnum), rejectmatrix)
-		PadRejectArray(rejectmatrix+uintptr(lumplen), libc.Uint32FromInt32(minlength-lumplen))
+		W_ReadLump(uint32(lumpnum), rejectmatrix)
+		PadRejectArray(rejectmatrix+uintptr(lumplen), uint32(minlength-lumplen))
 	}
 }
 
@@ -32269,7 +32269,7 @@ func P_InitPicAnims() {
 			lastanim.Fpicnum = R_FlatNumForName(endname)
 			lastanim.Fbasepic = R_FlatNumForName(startname)
 		}
-		lastanim.Fistexture = libc.Uint32FromInt32(animdefs[i].Fistexture)
+		lastanim.Fistexture = uint32(animdefs[i].Fistexture)
 		lastanim.Fnumpics = lastanim.Fpicnum - lastanim.Fbasepic + 1
 		if lastanim.Fnumpics < 2 {
 			I_Error(__ccgo_ts(25279), startname, endname)
@@ -34364,7 +34364,7 @@ func P_CalcHeight(player *player_t) {
 //	//
 func P_MovePlayer(player *player_t) {
 	cmd := &player.Fcmd
-	*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += libc.Uint32FromInt32(int32(cmd.Fangleturn) << 16)
+	*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += uint32(int32(cmd.Fangleturn) << 16)
 	// Do not let the player control movement
 	//  if not onground.
 	onground = libc.BoolUint32((*mobj_t)(unsafe.Pointer(player.Fmo)).Fz <= (*mobj_t)(unsafe.Pointer(player.Fmo)).Ffloorz)
@@ -34401,7 +34401,7 @@ func P_DeathThink(player *player_t) {
 	if player.Fattacker != 0 && player.Fattacker != player.Fmo {
 		angle = R_PointToAngle2((*mobj_t)(unsafe.Pointer(player.Fmo)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy, (*mobj_t)(unsafe.Pointer(player.Fattacker)).Fx, (*mobj_t)(unsafe.Pointer(player.Fattacker)).Fy)
 		delta = angle - (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle
-		if delta < libc.Uint32FromInt32(ANG907/18) || delta > libc.Uint32FromInt32(-(ANG907/18)) {
+		if delta < uint32(ANG907/18) || delta > uint32((-(ANG907/18))&0xffff_ffff) {
 			// Looking at killer,
 			//  so fade damage flash down.
 			(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = angle
@@ -34410,9 +34410,9 @@ func P_DeathThink(player *player_t) {
 			}
 		} else {
 			if delta < uint32(ANG1809) {
-				*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += libc.Uint32FromInt32(ANG907 / 18)
+				*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) += uint32(ANG907 / 18)
 			} else {
-				*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) -= libc.Uint32FromInt32(ANG907 / 18)
+				*(*angle_t)(unsafe.Pointer(player.Fmo + 56)) -= uint32(ANG907 / 18)
 			}
 		}
 	} else {
@@ -35294,7 +35294,7 @@ func GenerateTextureHashTable() {
 		// entries with the same name, the first one in the array
 		// wins. The new entry must therefore be added at the end
 		// of the hash chain, so that earlier entries win.
-		key = libc.Int32FromUint32(W_LumpNameHash(*(*uintptr)(unsafe.Pointer(textures + uintptr(i)*8))) % libc.Uint32FromInt32(numtextures))
+		key = libc.Int32FromUint32(W_LumpNameHash(*(*uintptr)(unsafe.Pointer(textures + uintptr(i)*8))) % uint32(numtextures))
 		rover = textures_hashtable + uintptr(key)*8
 		for *(*uintptr)(unsafe.Pointer(rover)) != uintptr(0) {
 			rover = *(*uintptr)(unsafe.Pointer(rover)) + 16
@@ -35345,12 +35345,12 @@ func R_InitTextures() {
 	v2 = W_CacheLumpName(__ccgo_ts(26029), int32(PU_STATIC))
 	maptex = v2
 	numtextures1 = *(*int32)(unsafe.Pointer(maptex))
-	maxoff = W_LumpLength(libc.Uint32FromInt32(W_GetNumForName(__ccgo_ts(26029))))
+	maxoff = W_LumpLength(uint32(W_GetNumForName(__ccgo_ts(26029))))
 	directory = maptex + uintptr(1)*4
 	if W_CheckNumForName(__ccgo_ts(26038)) != -1 {
 		maptex2 = W_CacheLumpName(__ccgo_ts(26038), int32(PU_STATIC))
 		numtextures2 = *(*int32)(unsafe.Pointer(maptex2))
-		maxoff2 = W_LumpLength(libc.Uint32FromInt32(W_GetNumForName(__ccgo_ts(26038))))
+		maxoff2 = W_LumpLength(uint32(W_GetNumForName(__ccgo_ts(26038))))
 	} else {
 		maptex2 = uintptr(0)
 		numtextures2 = 0
@@ -35616,7 +35616,7 @@ func R_CheckTextureNumForName(name uintptr) (r int32) {
 	if int32(*(*int8)(unsafe.Pointer(name))) == int32('-') {
 		return 0
 	}
-	key = libc.Int32FromUint32(W_LumpNameHash(name) % libc.Uint32FromInt32(numtextures))
+	key = libc.Int32FromUint32(W_LumpNameHash(name) % uint32(numtextures))
 	texture = *(*uintptr)(unsafe.Pointer(textures_hashtable + uintptr(key)*8))
 	for texture != uintptr(0) {
 		if !(xstrncasecmp(texture, name, uint64(8)) != 0) {
@@ -35811,7 +35811,7 @@ func R_DrawColumn() {
 	if count < 0 {
 		return
 	}
-	if libc.Uint32FromInt32(dc_x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
+	if uint32(dc_x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
 		I_Error(__ccgo_ts(26239), dc_yl, dc_yh, dc_x)
 	}
 	// Framebuffer destination address.
@@ -35855,7 +35855,7 @@ func R_DrawColumnLow() {
 	if count < 0 {
 		return
 	}
-	if libc.Uint32FromInt32(dc_x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
+	if uint32(dc_x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
 		I_Error(__ccgo_ts(26239), dc_yl, dc_yh, dc_x)
 	}
 	//	dccount++;
@@ -35966,7 +35966,7 @@ func R_DrawFuzzColumn() {
 	if count < 0 {
 		return
 	}
-	if libc.Uint32FromInt32(dc_x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
+	if uint32(dc_x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
 		I_Error(__ccgo_ts(26268), dc_yl, dc_yh, dc_x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[dc_x])
@@ -36021,7 +36021,7 @@ func R_DrawFuzzColumnLow() {
 	}
 	// low detail mode, need to multiply by 2
 	x = dc_x << 1
-	if libc.Uint32FromInt32(x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
+	if uint32(x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
 		I_Error(__ccgo_ts(26268), dc_yl, dc_yh, dc_x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[x])
@@ -36067,7 +36067,7 @@ func R_DrawTranslatedColumn() {
 	if count < 0 {
 		return
 	}
-	if libc.Uint32FromInt32(dc_x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
+	if uint32(dc_x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
 		I_Error(__ccgo_ts(26239), dc_yl, dc_yh, dc_x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[dc_x])
@@ -36105,7 +36105,7 @@ func R_DrawTranslatedColumnLow() {
 	}
 	// low detail, need to scale by 2
 	x = dc_x << 1
-	if libc.Uint32FromInt32(x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
+	if uint32(x) >= uint32(SCREENWIDTH) || dc_yl < 0 || dc_yh >= int32(SCREENHEIGHT) {
 		I_Error(__ccgo_ts(26239), dc_yl, dc_yh, x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[x])
@@ -36183,7 +36183,7 @@ func R_DrawSpan() {
 	var count, spot, v1 int32
 	var dest, v3 uintptr
 	var position, step, xtemp, ytemp uint32
-	if ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= int32(SCREENWIDTH) || libc.Uint32FromInt32(ds_y) > uint32(SCREENHEIGHT) {
+	if ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= int32(SCREENWIDTH) || uint32(ds_y) > uint32(SCREENHEIGHT) {
 		I_Error(__ccgo_ts(26301), ds_x1, ds_x2, ds_y)
 	}
 	//	dscount++;
@@ -36191,8 +36191,8 @@ func R_DrawSpan() {
 	// with x in the top 16 bits and y in the bottom 16 bits.  For
 	// each 16-bit part, the top 6 bits are the integer part and the
 	// bottom 10 bits are the fractional part of the pixel position.
-	position = libc.Uint32FromInt32(ds_xfrac<<10)&uint32(0xffff0000) | libc.Uint32FromInt32(ds_yfrac>>6&0x0000ffff)
-	step = libc.Uint32FromInt32(ds_xstep<<10)&uint32(0xffff0000) | libc.Uint32FromInt32(ds_ystep>>6&0x0000ffff)
+	position = uint32(ds_xfrac<<10)&uint32(0xffff0000) | uint32(ds_yfrac>>6&0x0000ffff)
+	step = uint32(ds_xstep<<10)&uint32(0xffff0000) | uint32(ds_ystep>>6&0x0000ffff)
 	dest = ylookup[ds_y] + uintptr(columnofs[ds_x1])
 	// We do not check for zero spans here?
 	count = ds_x2 - ds_x1
@@ -36230,12 +36230,12 @@ func R_DrawSpanLow() {
 	var count, spot, v1 int32
 	var dest, v3, v4 uintptr
 	var position, step, xtemp, ytemp uint32
-	if ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= int32(SCREENWIDTH) || libc.Uint32FromInt32(ds_y) > uint32(SCREENHEIGHT) {
+	if ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= int32(SCREENWIDTH) || uint32(ds_y) > uint32(SCREENHEIGHT) {
 		I_Error(__ccgo_ts(26301), ds_x1, ds_x2, ds_y)
 	}
 	//	dscount++;
-	position = libc.Uint32FromInt32(ds_xfrac<<10)&uint32(0xffff0000) | libc.Uint32FromInt32(ds_yfrac>>6&0x0000ffff)
-	step = libc.Uint32FromInt32(ds_xstep<<10)&uint32(0xffff0000) | libc.Uint32FromInt32(ds_ystep>>6&0x0000ffff)
+	position = uint32(ds_xfrac<<10)&uint32(0xffff0000) | uint32(ds_yfrac>>6&0x0000ffff)
+	step = uint32(ds_xstep<<10)&uint32(0xffff0000) | uint32(ds_ystep>>6&0x0000ffff)
 	count = ds_x2 - ds_x1
 	// Blocky mode, need to multiply by 2.
 	ds_x1 <<= 1
@@ -36466,7 +36466,7 @@ func R_DrawViewBorder() {
 	R_VideoErase(uint32(0), top*int32(SCREENWIDTH)+side)
 	// copy one line of right side and bottom
 	ofs = (viewheight+top)*int32(SCREENWIDTH) - side
-	R_VideoErase(libc.Uint32FromInt32(ofs), top*int32(SCREENWIDTH)+side)
+	R_VideoErase(uint32(ofs), top*int32(SCREENWIDTH)+side)
 	// copy sides using wraparound
 	ofs = top*int32(SCREENWIDTH) + int32(SCREENWIDTH) - side
 	side <<= 1
@@ -36475,7 +36475,7 @@ func R_DrawViewBorder() {
 		if !(i < viewheight) {
 			break
 		}
-		R_VideoErase(libc.Uint32FromInt32(ofs), side)
+		R_VideoErase(uint32(ofs), side)
 		ofs += int32(SCREENWIDTH)
 		goto _1
 	_1:
@@ -36522,8 +36522,8 @@ func R_PointOnSide(x fixed_t, y fixed_t, node *node_t) (r int32) {
 	dx = x - node.Fx
 	dy = y - node.Fy
 	// Try to quickly decide by looking at sign bits.
-	if libc.Uint32FromInt32(node.Fdy^node.Fdx^dx^dy)&uint32(0x80000000) != 0 {
-		if libc.Uint32FromInt32(node.Fdy^dx)&uint32(0x80000000) != 0 {
+	if uint32(node.Fdy^node.Fdx^dx^dy)&uint32(0x80000000) != 0 {
+		if uint32(node.Fdy^dx)&uint32(0x80000000) != 0 {
 			// (left is negative)
 			return 1
 		}
@@ -36560,8 +36560,8 @@ func R_PointOnSegSide(x fixed_t, y fixed_t, line uintptr) (r int32) {
 	dx = x - lx
 	dy = y - ly
 	// Try to quickly decide by looking at sign bits.
-	if libc.Uint32FromInt32(ldy^ldx^dx^dy)&uint32(0x80000000) != 0 {
-		if libc.Uint32FromInt32(ldy^dx)&uint32(0x80000000) != 0 {
+	if uint32(ldy^ldx^dx^dy)&uint32(0x80000000) != 0 {
+		if uint32(ldy^dx)&uint32(0x80000000) != 0 {
 			// (left is negative)
 			return 1
 		}
@@ -36600,20 +36600,20 @@ func R_PointToAngle(x fixed_t, y fixed_t) (r angle_t) {
 			// y>= 0
 			if x > y {
 				// octant 0
-				return tantoangle[SlopeDiv(libc.Uint32FromInt32(y), libc.Uint32FromInt32(x))]
+				return tantoangle[SlopeDiv(uint32(y), uint32(x))]
 			} else {
 				// octant 1
-				return libc.Uint32FromInt32(ANG909-1) - tantoangle[SlopeDiv(libc.Uint32FromInt32(x), libc.Uint32FromInt32(y))]
+				return uint32(ANG909-1) - tantoangle[SlopeDiv(uint32(x), uint32(y))]
 			}
 		} else {
 			// y<0
 			y = -y
 			if x > y {
 				// octant 8
-				return -tantoangle[SlopeDiv(libc.Uint32FromInt32(y), libc.Uint32FromInt32(x))]
+				return -tantoangle[SlopeDiv(uint32(y), uint32(x))]
 			} else {
 				// octant 7
-				return uint32(ANG2705) + tantoangle[SlopeDiv(libc.Uint32FromInt32(x), libc.Uint32FromInt32(y))]
+				return uint32(ANG2705) + tantoangle[SlopeDiv(uint32(x), uint32(y))]
 			}
 		}
 	} else {
@@ -36623,20 +36623,20 @@ func R_PointToAngle(x fixed_t, y fixed_t) (r angle_t) {
 			// y>= 0
 			if x > y {
 				// octant 3
-				return libc.Uint32FromUint32(ANG18011) - 1 - tantoangle[SlopeDiv(libc.Uint32FromInt32(y), libc.Uint32FromInt32(x))]
+				return libc.Uint32FromUint32(ANG18011) - 1 - tantoangle[SlopeDiv(uint32(y), uint32(x))]
 			} else {
 				// octant 2
-				return uint32(ANG909) + tantoangle[SlopeDiv(libc.Uint32FromInt32(x), libc.Uint32FromInt32(y))]
+				return uint32(ANG909) + tantoangle[SlopeDiv(uint32(x), uint32(y))]
 			}
 		} else {
 			// y<0
 			y = -y
 			if x > y {
 				// octant 4
-				return uint32(ANG18011) + tantoangle[SlopeDiv(libc.Uint32FromInt32(y), libc.Uint32FromInt32(x))]
+				return uint32(ANG18011) + tantoangle[SlopeDiv(uint32(y), uint32(x))]
 			} else {
 				// octant 5
-				return libc.Uint32FromUint32(ANG2705) - 1 - tantoangle[SlopeDiv(libc.Uint32FromInt32(x), libc.Uint32FromInt32(y))]
+				return libc.Uint32FromUint32(ANG2705) - 1 - tantoangle[SlopeDiv(uint32(x), uint32(y))]
 			}
 		}
 	}
@@ -36780,7 +36780,7 @@ func R_InitTextureMapping() {
 		for viewangletox[i] > x {
 			i++
 		}
-		xtoviewangle[x] = libc.Uint32FromInt32(i<<int32(ANGLETOFINESHIFT) - int32(ANG909))
+		xtoviewangle[x] = uint32(i<<int32(ANGLETOFINESHIFT) - int32(ANG909))
 		goto _2
 	_2:
 		;
@@ -37025,7 +37025,7 @@ func R_SetupFrame(player *player_t) {
 	viewplayer = player
 	viewx = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fx
 	viewy = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy
-	viewangle = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle + libc.Uint32FromInt32(viewangleoffset)
+	viewangle = (*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle + uint32(viewangleoffset)
 	extralight = player.Fextralight
 	viewz = player.Fviewz
 	viewsin = finesine[viewangle>>int32(ANGLETOFINESHIFT)]
@@ -37131,9 +37131,9 @@ func R_MapPlane(y int32, x1 int32, x2 int32) {
 	if fixedcolormap != 0 {
 		ds_colormap = fixedcolormap
 	} else {
-		index = libc.Uint32FromInt32(distance >> int32(LIGHTZSHIFT))
+		index = uint32(distance >> int32(LIGHTZSHIFT))
 		if index >= uint32(MAXLIGHTZ) {
-			index = libc.Uint32FromInt32(MAXLIGHTZ - 1)
+			index = uint32(MAXLIGHTZ - 1)
 		}
 		ds_colormap = *(*uintptr)(unsafe.Pointer(planezlight + uintptr(index)*8))
 	}
@@ -37452,14 +37452,14 @@ func R_RenderMaskedSegRange(ds *drawseg_t, x1 int32, x2 int32) {
 		// calculate lighting
 		if int32(*(*int16)(unsafe.Pointer(maskedtexturecol + uintptr(dc_x)*2))) != int32(SHRT_MAX1) {
 			if !(fixedcolormap != 0) {
-				index = libc.Uint32FromInt32(spryscale >> int32(LIGHTSCALESHIFT))
+				index = uint32(spryscale >> int32(LIGHTSCALESHIFT))
 				if index >= uint32(MAXLIGHTSCALE) {
-					index = libc.Uint32FromInt32(MAXLIGHTSCALE - 1)
+					index = uint32(MAXLIGHTSCALE - 1)
 				}
 				dc_colormap = *(*uintptr)(unsafe.Pointer(walllights + uintptr(index)*8))
 			}
 			sprtopscreen = centeryfrac - FixedMul(dc_texturemid, spryscale)
-			dc_iscale = libc.Int32FromUint32(uint32(0xffffffff) / libc.Uint32FromInt32(spryscale))
+			dc_iscale = libc.Int32FromUint32(uint32(0xffffffff) / uint32(spryscale))
 			// draw the texture
 			col = R_GetColumn(texnum, int32(*(*int16)(unsafe.Pointer(maskedtexturecol + uintptr(dc_x)*2)))) - libc.UintptrFromInt32(3)
 			R_DrawMaskedColumn(col)
@@ -37536,13 +37536,13 @@ func R_RenderSegLoop() {
 			texturecolumn = rw_offset - FixedMul(finetangent[angle], rw_distance)
 			texturecolumn >>= int32(FRACBITS)
 			// calculate lighting
-			index = libc.Uint32FromInt32(rw_scale >> int32(LIGHTSCALESHIFT))
+			index = uint32(rw_scale >> int32(LIGHTSCALESHIFT))
 			if index >= uint32(MAXLIGHTSCALE) {
-				index = libc.Uint32FromInt32(MAXLIGHTSCALE - 1)
+				index = uint32(MAXLIGHTSCALE - 1)
 			}
 			dc_colormap = *(*uintptr)(unsafe.Pointer(walllights + uintptr(index)*8))
 			dc_x = rw_x
-			dc_iscale = libc.Int32FromUint32(uint32(0xffffffff) / libc.Uint32FromInt32(rw_scale))
+			dc_iscale = libc.Int32FromUint32(uint32(0xffffffff) / uint32(rw_scale))
 		} else {
 			// purely to shut up the compiler
 			texturecolumn = 0
@@ -37650,7 +37650,7 @@ func R_StoreWallRange(start int32, stop int32) {
 	linedef.Fflags |= ML_MAPPED
 	// calculate rw_distance for scale calculation
 	rw_normalangle = (*seg_t)(unsafe.Pointer(curline)).Fangle + uint32(ANG909)
-	offsetangle = libc.Uint32FromInt32(xabs(libc.Int32FromUint32(rw_normalangle - libc.Uint32FromInt32(rw_angle1))))
+	offsetangle = uint32(xabs(libc.Int32FromUint32(rw_normalangle - uint32(rw_angle1))))
 	if offsetangle > uint32(ANG909) {
 		offsetangle = uint32(ANG909)
 	}
@@ -37806,9 +37806,9 @@ func R_StoreWallRange(start int32, stop int32) {
 		}
 	}
 	// calculate rw_offset (only needed for textured lines)
-	segtextured = libc.Uint32FromInt32(midtexture|toptexture|bottomtexture) | maskedtexture
+	segtextured = uint32(midtexture|toptexture|bottomtexture) | maskedtexture
 	if segtextured != 0 {
-		offsetangle = rw_normalangle - libc.Uint32FromInt32(rw_angle1)
+		offsetangle = rw_normalangle - uint32(rw_angle1)
 		if offsetangle > uint32(ANG18013) {
 			offsetangle = -offsetangle
 		}
@@ -37817,7 +37817,7 @@ func R_StoreWallRange(start int32, stop int32) {
 		}
 		sineval = finesine[offsetangle>>int32(ANGLETOFINESHIFT)]
 		rw_offset = FixedMul(hyp, sineval)
-		if rw_normalangle-libc.Uint32FromInt32(rw_angle1) < uint32(ANG18013) {
+		if rw_normalangle-uint32(rw_angle1) < uint32(ANG18013) {
 			rw_offset = -rw_offset
 		}
 		rw_offset += sidedef.Ftextureoffset + (*seg_t)(unsafe.Pointer(curline)).Foffset
@@ -38032,11 +38032,11 @@ func R_InitSpriteDefs(namelist uintptr) {
 				} else {
 					patched = l
 				}
-				R_InstallSpriteLump(patched, libc.Uint32FromInt32(frame), libc.Uint32FromInt32(rotation), 0)
+				R_InstallSpriteLump(patched, uint32(frame), uint32(rotation), 0)
 				if *(*int8)(unsafe.Pointer(lumpinfo + uintptr(l)*40 + 6)) != 0 {
 					frame = int32(*(*int8)(unsafe.Pointer(lumpinfo + uintptr(l)*40 + 6))) - int32('A')
 					rotation = int32(*(*int8)(unsafe.Pointer(lumpinfo + uintptr(l)*40 + 7))) - int32('0')
-					R_InstallSpriteLump(l, libc.Uint32FromInt32(frame), libc.Uint32FromInt32(rotation), 1)
+					R_InstallSpriteLump(l, uint32(frame), uint32(rotation), 1)
 				}
 			}
 			goto _2
@@ -38266,7 +38266,7 @@ func R_ProjectSprite(thing uintptr) {
 		return
 	}
 	// decide which patch to use for sprite relative to player
-	if libc.Uint32FromInt32((*mobj_t)(unsafe.Pointer(thing)).Fsprite) >= libc.Uint32FromInt32(numsprites) {
+	if uint32((*mobj_t)(unsafe.Pointer(thing)).Fsprite) >= uint32(numsprites) {
 		I_Error(__ccgo_ts(26979), (*mobj_t)(unsafe.Pointer(thing)).Fsprite)
 	}
 	sprdef = sprites + uintptr((*mobj_t)(unsafe.Pointer(thing)).Fsprite)*16
@@ -38277,7 +38277,7 @@ func R_ProjectSprite(thing uintptr) {
 	if (*spriteframe_t)(unsafe.Pointer(sprframe)).Frotate != 0 {
 		// choose a different rotation based on player view
 		ang = R_PointToAngle((*mobj_t)(unsafe.Pointer(thing)).Fx, (*mobj_t)(unsafe.Pointer(thing)).Fy)
-		rot = (ang - (*mobj_t)(unsafe.Pointer(thing)).Fangle + libc.Uint32FromInt32(ANG455/2)*9) >> 29
+		rot = (ang - (*mobj_t)(unsafe.Pointer(thing)).Fangle + uint32(ANG455/2)*9) >> 29
 		lump = int32(*(*int16)(unsafe.Pointer(sprframe + 4 + uintptr(rot)*2)))
 		flip = uint32(*(*uint8)(unsafe.Pointer(sprframe + 20 + uintptr(rot))))
 	} else {
@@ -38409,7 +38409,7 @@ func R_DrawPSprite(psp *pspdef_t) {
 	var vis *vissprite_t
 	var tx fixed_t
 	// decide which patch to use
-	if libc.Uint32FromInt32(psp.Fstate.Fsprite) >= libc.Uint32FromInt32(numsprites) {
+	if uint32(psp.Fstate.Fsprite) >= uint32(numsprites) {
 		I_Error(__ccgo_ts(26979), psp.Fstate.Fsprite)
 	}
 	sprdef = sprites + uintptr(psp.Fstate.Fsprite)*16
@@ -39273,7 +39273,7 @@ func SHA1_Final(digest uintptr, hd uintptr) {
 	msb = t >> 26
 	/* add the count */
 	t = lsb
-	lsb += libc.Uint32FromInt32((*sha1_context_t)(unsafe.Pointer(hd)).Fcount)
+	lsb += uint32((*sha1_context_t)(unsafe.Pointer(hd)).Fcount)
 	if lsb < t {
 		msb++
 	}
@@ -40525,7 +40525,7 @@ func STlib_updatePercent(per *st_percent_t, refresh int32) {
 	if refresh != 0 && *(*boolean)(unsafe.Pointer(per.Fn.Fon)) != 0 {
 		V_DrawPatch(per.Fn.Fx, per.Fn.Fy, per.Fp)
 	}
-	STlib_updateNum(&per.Fn, libc.Uint32FromInt32(refresh))
+	STlib_updateNum(&per.Fn, uint32(refresh))
 }
 
 func STlib_initMultIcon(st *st_multicon_t, x int32, y int32, il uintptr, inum uintptr, on *boolean) {
@@ -40941,7 +40941,7 @@ func ST_Responder(ev *event_t) (r boolean) {
 	var v6, v8 GameMission_t
 	var v10 bool
 	// Filter automap on/off.
-	if ev.Ftype1 == ev_keyup && libc.Uint32FromInt32(ev.Fdata1)&uint32(0xffff0000) == libc.Uint32FromInt32(libc.Int32FromUint8('a')<<24+libc.Int32FromUint8('m')<<16) {
+	if ev.Ftype1 == ev_keyup && uint32(ev.Fdata1)&uint32(0xffff0000) == uint32(libc.Int32FromUint8('a')<<24+libc.Int32FromUint8('m')<<16) {
 		switch ev.Fdata1 {
 		case libc.Int32FromUint8('a')<<24 + libc.Int32FromUint8('m')<<16 | libc.Int32FromUint8('e')<<8:
 			st_firsttime = 1
@@ -42197,9 +42197,9 @@ func S_ChangeMusic(musicnum int32, looping int32) {
 		music.Flumpnum = W_GetNumForName(bp)
 	}
 	music.Fdata = W_CacheLumpNum(music.Flumpnum, int32(PU_STATIC))
-	handle = I_RegisterSong(music.Fdata, W_LumpLength(libc.Uint32FromInt32(music.Flumpnum)))
+	handle = I_RegisterSong(music.Fdata, W_LumpLength(uint32(music.Flumpnum)))
 	music.Fhandle = handle
-	I_PlaySong(handle, libc.Uint32FromInt32(looping))
+	I_PlaySong(handle, uint32(looping))
 	mus_playing = music
 }
 
@@ -44637,9 +44637,9 @@ func ChecksumAddLump(sha1_context uintptr, lump uintptr) {
 	bp := alloc(16)
 	M_StringCopy(bp, lump, uint64(9))
 	SHA1_UpdateString(sha1_context, bp)
-	SHA1_UpdateInt32(sha1_context, libc.Uint32FromInt32(GetFileNumber((*lumpinfo_t)(unsafe.Pointer(lump)).Fwad_file)))
-	SHA1_UpdateInt32(sha1_context, libc.Uint32FromInt32((*lumpinfo_t)(unsafe.Pointer(lump)).Fposition))
-	SHA1_UpdateInt32(sha1_context, libc.Uint32FromInt32((*lumpinfo_t)(unsafe.Pointer(lump)).Fsize))
+	SHA1_UpdateInt32(sha1_context, uint32(GetFileNumber((*lumpinfo_t)(unsafe.Pointer(lump)).Fwad_file)))
+	SHA1_UpdateInt32(sha1_context, uint32((*lumpinfo_t)(unsafe.Pointer(lump)).Fposition))
+	SHA1_UpdateInt32(sha1_context, uint32((*lumpinfo_t)(unsafe.Pointer(lump)).Fsize))
 }
 
 func W_Checksum(digest uintptr) {
@@ -44748,7 +44748,7 @@ func W_LumpNameHash(s uintptr) (r uint32) {
 		if !(i < uint32(8) && int32(*(*int8)(unsafe.Pointer(s + uintptr(i)))) != int32('\000')) {
 			break
 		}
-		result = result<<int32(5) ^ result ^ libc.Uint32FromInt32(xtoupper(int32(*(*int8)(unsafe.Pointer(s + uintptr(i))))))
+		result = result<<int32(5) ^ result ^ uint32(xtoupper(int32(*(*int8)(unsafe.Pointer(s + uintptr(i))))))
 		goto _1
 	_1:
 		;
@@ -44773,7 +44773,7 @@ func ExtendLumpInfo(newnumlumps int32) {
 	// pointers to the new location.
 	i = uint32(0)
 	for {
-		if !(i < numlumps && i < libc.Uint32FromInt32(newnumlumps)) {
+		if !(i < numlumps && i < uint32(newnumlumps)) {
 			break
 		}
 		xmemcpy(newlumpinfo+uintptr(i)*40, lumpinfo+uintptr(i)*40, uint64(40))
@@ -44794,7 +44794,7 @@ func ExtendLumpInfo(newnumlumps int32) {
 	// All done.
 	xfree(lumpinfo)
 	lumpinfo = newlumpinfo
-	numlumps = libc.Uint32FromInt32(newnumlumps)
+	numlumps = uint32(newnumlumps)
 }
 
 // LUMP BASED ROUTINES.
@@ -44856,7 +44856,7 @@ func W_AddFile(filename string) *os.File {
 		(*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs = (*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs
 		length = libc.Int32FromUint64(libc.Uint64FromInt32((*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps) * uint64(16))
 		fileinfo = Z_Malloc(length, int32(PU_STATIC), uintptr(0))
-		W_Read(wad_file, libc.Uint32FromInt32((*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs), fileinfo, libc.Uint64FromInt32(length))
+		W_Read(wad_file, uint32((*(*wadinfo_t)(unsafe.Pointer(bp))).Finfotableofs), fileinfo, libc.Uint64FromInt32(length))
 		newnumlumps += (*(*wadinfo_t)(unsafe.Pointer(bp))).Fnumlumps
 	}
 	// Increase size of numlumps array to accomodate the new file.
@@ -44864,7 +44864,7 @@ func W_AddFile(filename string) *os.File {
 	ExtendLumpInfo(newnumlumps)
 	lump_p = lumpinfo + uintptr(startlump)*40
 	filerover = fileinfo
-	i = libc.Uint32FromInt32(startlump)
+	i = uint32(startlump)
 	for {
 		if !(i < numlumps) {
 			break
@@ -44980,7 +44980,7 @@ func W_ReadLump(lump uint32, dest uintptr) {
 	}
 	l = lumpinfo + uintptr(lump)*40
 	I_BeginRead()
-	c = libc.Int32FromUint64(W_Read((*lumpinfo_t)(unsafe.Pointer(l)).Fwad_file, libc.Uint32FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fposition), dest, libc.Uint64FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fsize)))
+	c = libc.Int32FromUint64(W_Read((*lumpinfo_t)(unsafe.Pointer(l)).Fwad_file, uint32((*lumpinfo_t)(unsafe.Pointer(l)).Fposition), dest, libc.Uint64FromInt32((*lumpinfo_t)(unsafe.Pointer(l)).Fsize)))
 	if c < (*lumpinfo_t)(unsafe.Pointer(l)).Fsize {
 		I_Error(__ccgo_ts(28793), c, (*lumpinfo_t)(unsafe.Pointer(l)).Fsize, lump)
 	}
@@ -45001,7 +45001,7 @@ func W_ReadLump(lump uint32, dest uintptr) {
 
 func W_CacheLumpNum(lumpnum int32, tag int32) (r uintptr) {
 	var lump, result uintptr
-	if libc.Uint32FromInt32(lumpnum) >= numlumps {
+	if uint32(lumpnum) >= numlumps {
 		I_Error(__ccgo_ts(28835), lumpnum)
 	}
 	lump = lumpinfo + uintptr(lumpnum)*40
@@ -45015,8 +45015,8 @@ func W_CacheLumpNum(lumpnum int32, tag int32) (r uintptr) {
 		Z_ChangeTag2((*lumpinfo_t)(unsafe.Pointer(lump)).Fcache, tag, __ccgo_ts(28866), 410)
 	} else {
 		// Not yet loaded, so load it now
-		(*lumpinfo_t)(unsafe.Pointer(lump)).Fcache = Z_Malloc(W_LumpLength(libc.Uint32FromInt32(lumpnum)), tag, lump+24)
-		W_ReadLump(libc.Uint32FromInt32(lumpnum), (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache)
+		(*lumpinfo_t)(unsafe.Pointer(lump)).Fcache = Z_Malloc(W_LumpLength(uint32(lumpnum)), tag, lump+24)
+		W_ReadLump(uint32(lumpnum), (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache)
 		result = (*lumpinfo_t)(unsafe.Pointer(lump)).Fcache
 	}
 	return result
@@ -45043,7 +45043,7 @@ func W_CacheLumpName(name uintptr, tag int32) (r uintptr) {
 
 func W_ReleaseLumpNum(lumpnum int32) {
 	var lump uintptr
-	if libc.Uint32FromInt32(lumpnum) >= numlumps {
+	if uint32(lumpnum) >= numlumps {
 		I_Error(__ccgo_ts(28874), lumpnum)
 	}
 	lump = lumpinfo + uintptr(lumpnum)*40
