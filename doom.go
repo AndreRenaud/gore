@@ -1754,10 +1754,7 @@ const MF_TRANSLATION = 201326592
 const MF_TRANSSHIFT = 26
 
 type mobj_t struct {
-	Fthinker      thinker_t
-	Fx            fixed_t
-	Fy            fixed_t
-	Fz            fixed_t
+	degenmobj_t
 	Fsnext        uintptr
 	Fsprev        uintptr
 	Fangle        angle_t
@@ -2162,7 +2159,7 @@ type button_t struct {
 	Fwhere    bwhere_e
 	Fbtexture int32
 	Fbtimer   int32
-	Fsoundorg uintptr
+	Fsoundorg *degenmobj_t
 }
 
 type plat_e = int32
@@ -5037,8 +5034,8 @@ func D_GrabMouseCallback() (r boolean) {
 func doomgeneric_Tick() {
 	// frame syncronous IO operations
 	I_StartFrame()
-	TryRunTics()                               // will run at least one tic
-	S_UpdateSounds(players[consoleplayer].Fmo) // move positional sounds
+	TryRunTics()                                                                         // will run at least one tic
+	S_UpdateSounds(&((*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).degenmobj_t)) // move positional sounds
 	// Update display, next frame, with current state.
 	D_Display()
 }
@@ -6813,7 +6810,7 @@ func F_CastTicker() {
 			castnum = 0
 		}
 		if mobjinfo[castorder[castnum].Ftype1].Fseesound != 0 {
-			S_StartSound(uintptr(0), mobjinfo[castorder[castnum].Ftype1].Fseesound)
+			S_StartSound(nil, mobjinfo[castorder[castnum].Ftype1].Fseesound)
 		}
 		caststate = &states[mobjinfo[castorder[castnum].Ftype1].Fseestate]
 		castframes = 0
@@ -6884,7 +6881,7 @@ func F_CastTicker() {
 			break
 		}
 		if sfx != 0 {
-			S_StartSound(uintptr(0), sfx)
+			S_StartSound(nil, sfx)
 		}
 	}
 	if castframes == 12 {
@@ -6944,7 +6941,7 @@ func F_CastResponder(ev *event_t) (r boolean) {
 	castframes = 0
 	castattacking = 0
 	if mobjinfo[castorder[castnum].Ftype1].Fdeathsound != 0 {
-		S_StartSound(uintptr(0), mobjinfo[castorder[castnum].Ftype1].Fdeathsound)
+		S_StartSound(nil, mobjinfo[castorder[castnum].Ftype1].Fdeathsound)
 	}
 	return 1
 }
@@ -7094,7 +7091,7 @@ func F_BunnyScroll() {
 		stage = 6
 	}
 	if stage > laststage {
-		S_StartSound(uintptr(0), int32(sfx_pistol))
+		S_StartSound(nil, int32(sfx_pistol))
 		laststage = stage
 	}
 	snprintf_ccgo(bp, 10, 13657, stage)
@@ -8310,7 +8307,7 @@ func G_CheckSpot(playernum int32, mthing *mapthing_t) (r boolean) {
 	}
 	mo = P_SpawnMobj(x+int32(20)*xa, y+int32(20)*ya, ss.Fsector.Ffloorheight, int32(MT_TFOG))
 	if players[consoleplayer].Fviewz != 1 {
-		S_StartSound(mo, int32(sfx_telept))
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), int32(sfx_telept))
 	} // don't start sound on first frame
 	return 1
 }
@@ -9984,9 +9981,9 @@ func HU_Ticker() {
 							message_on = 1
 							message_counter = 4 * TICRATE
 							if gamemode == commercial {
-								S_StartSound(uintptr(0), int32(sfx_radio))
+								S_StartSound(nil, int32(sfx_radio))
 							} else {
-								S_StartSound(uintptr(0), int32(sfx_tink))
+								S_StartSound(nil, int32(sfx_tink))
 							}
 						}
 						HUlib_resetIText(&w_inputbuffer[i])
@@ -20578,13 +20575,13 @@ func M_SaveGame(choice int32) {
 func M_QuickSaveResponse(key int32) {
 	if key == key_menu_confirm {
 		M_DoSave(quickSaveSlot)
-		S_StartSound(uintptr(0), int32(sfx_swtchx))
+		S_StartSound(nil, int32(sfx_swtchx))
 	}
 }
 
 func M_QuickSave() {
 	if !(usergame != 0) {
-		S_StartSound(uintptr(0), int32(sfx_oof))
+		S_StartSound(nil, int32(sfx_oof))
 		return
 	}
 	if gamestate != GS_LEVEL {
@@ -20609,7 +20606,7 @@ func M_QuickSave() {
 func M_QuickLoadResponse(key int32) {
 	if key == key_menu_confirm {
 		M_LoadSelect(quickSaveSlot)
-		S_StartSound(uintptr(0), int32(sfx_swtchx))
+		S_StartSound(nil, int32(sfx_swtchx))
 	}
 }
 
@@ -20866,7 +20863,7 @@ func M_EndGameResponse(key int32) {
 
 func M_EndGame(choice int32) {
 	if !(usergame != 0) {
-		S_StartSound(uintptr(0), int32(sfx_oof))
+		S_StartSound(nil, int32(sfx_oof))
 		return
 	}
 	if netgame != 0 {
@@ -20932,9 +20929,9 @@ func M_QuitResponse(key int32) {
 	}
 	if !(netgame != 0) {
 		if gamemode == commercial {
-			S_StartSound(uintptr(0), quitsounds2[gametic>>int32(2)&int32(7)])
+			S_StartSound(nil, quitsounds2[gametic>>int32(2)&int32(7)])
 		} else {
-			S_StartSound(uintptr(0), quitsounds[gametic>>int32(2)&int32(7)])
+			S_StartSound(nil, quitsounds[gametic>>int32(2)&int32(7)])
 		}
 	}
 	I_Quit()
@@ -21148,7 +21145,7 @@ func M_Responder(ev *event_t) (r boolean) {
 		if menuactive != 0 && messageToPrint != 0 && messageRoutine == __ccgo_fp(M_QuitResponse) {
 			M_QuitResponse(key_menu_confirm)
 		} else {
-			S_StartSound(uintptr(0), int32(sfx_swtchn))
+			S_StartSound(nil, int32(sfx_swtchn))
 			M_QuitDOOM(0)
 		}
 		return 1
@@ -21288,7 +21285,7 @@ func M_Responder(ev *event_t) (r boolean) {
 			(*(*func(int32))(unsafe.Pointer(&struct{ uintptr }{messageRoutine})))(key)
 		}
 		menuactive = 0
-		S_StartSound(uintptr(0), int32(sfx_swtchx))
+		S_StartSound(nil, int32(sfx_swtchx))
 		return 1
 	}
 	// F-Keys
@@ -21298,7 +21295,7 @@ func M_Responder(ev *event_t) (r boolean) {
 				return 0
 			}
 			M_SizeDisplay(0)
-			S_StartSound(uintptr(0), int32(sfx_stnmov))
+			S_StartSound(nil, int32(sfx_stnmov))
 			return 1
 		} else {
 			if key == key_menu_incscreen { // Screen size up
@@ -21306,7 +21303,7 @@ func M_Responder(ev *event_t) (r boolean) {
 					return 0
 				}
 				M_SizeDisplay(int32(1))
-				S_StartSound(uintptr(0), int32(sfx_stnmov))
+				S_StartSound(nil, int32(sfx_stnmov))
 				return 1
 			} else {
 				if key == key_menu_help { // Help key
@@ -21317,18 +21314,18 @@ func M_Responder(ev *event_t) (r boolean) {
 						currentMenu = &ReadDef1
 					}
 					itemOn = 0
-					S_StartSound(uintptr(0), int32(sfx_swtchn))
+					S_StartSound(nil, int32(sfx_swtchn))
 					return 1
 				} else {
 					if key == key_menu_save { // Save
 						M_StartControlPanel()
-						S_StartSound(uintptr(0), int32(sfx_swtchn))
+						S_StartSound(nil, int32(sfx_swtchn))
 						M_SaveGame(0)
 						return 1
 					} else {
 						if key == key_menu_load { // Load
 							M_StartControlPanel()
-							S_StartSound(uintptr(0), int32(sfx_swtchn))
+							S_StartSound(nil, int32(sfx_swtchn))
 							M_LoadGame(0)
 							return 1
 						} else {
@@ -21336,36 +21333,36 @@ func M_Responder(ev *event_t) (r boolean) {
 								M_StartControlPanel()
 								currentMenu = &SoundDef
 								itemOn = int16(sfx_vol)
-								S_StartSound(uintptr(0), int32(sfx_swtchn))
+								S_StartSound(nil, int32(sfx_swtchn))
 								return 1
 							} else {
 								if key == key_menu_detail { // Detail toggle
 									M_ChangeDetail(0)
-									S_StartSound(uintptr(0), int32(sfx_swtchn))
+									S_StartSound(nil, int32(sfx_swtchn))
 									return 1
 								} else {
 									if key == key_menu_qsave { // Quicksave
-										S_StartSound(uintptr(0), int32(sfx_swtchn))
+										S_StartSound(nil, int32(sfx_swtchn))
 										M_QuickSave()
 										return 1
 									} else {
 										if key == key_menu_endgame { // End game
-											S_StartSound(uintptr(0), int32(sfx_swtchn))
+											S_StartSound(nil, int32(sfx_swtchn))
 											M_EndGame(0)
 											return 1
 										} else {
 											if key == key_menu_messages { // Toggle messages
 												M_ChangeMessages(0)
-												S_StartSound(uintptr(0), int32(sfx_swtchn))
+												S_StartSound(nil, int32(sfx_swtchn))
 												return 1
 											} else {
 												if key == key_menu_qload { // Quickload
-													S_StartSound(uintptr(0), int32(sfx_swtchn))
+													S_StartSound(nil, int32(sfx_swtchn))
 													M_QuickLoad()
 													return 1
 												} else {
 													if key == key_menu_quit { // Quit DOOM
-														S_StartSound(uintptr(0), int32(sfx_swtchn))
+														S_StartSound(nil, int32(sfx_swtchn))
 														M_QuitDOOM(0)
 														return 1
 													} else {
@@ -21395,7 +21392,7 @@ func M_Responder(ev *event_t) (r boolean) {
 	if !(menuactive != 0) {
 		if key == key_menu_activate {
 			M_StartControlPanel()
-			S_StartSound(uintptr(0), int32(sfx_swtchn))
+			S_StartSound(nil, int32(sfx_swtchn))
 			return 1
 		}
 		return 0
@@ -21409,7 +21406,7 @@ func M_Responder(ev *event_t) (r boolean) {
 			} else {
 				itemOn++
 			}
-			S_StartSound(uintptr(0), int32(sfx_pstop))
+			S_StartSound(nil, int32(sfx_pstop))
 		}
 		return 1
 	} else {
@@ -21421,14 +21418,14 @@ func M_Responder(ev *event_t) (r boolean) {
 				} else {
 					itemOn--
 				}
-				S_StartSound(uintptr(0), int32(sfx_pstop))
+				S_StartSound(nil, int32(sfx_pstop))
 			}
 			return 1
 		} else {
 			if key == key_menu_left {
 				// Slide slider left
 				if currentMenu.Fmenuitems[itemOn].Froutine != nil && int32(currentMenu.Fmenuitems[itemOn].Fstatus) == 2 {
-					S_StartSound(uintptr(0), int32(sfx_stnmov))
+					S_StartSound(nil, int32(sfx_stnmov))
 					currentMenu.Fmenuitems[itemOn].Froutine(0)
 				}
 				return 1
@@ -21436,7 +21433,7 @@ func M_Responder(ev *event_t) (r boolean) {
 				if key == key_menu_right {
 					// Slide slider right
 					if currentMenu.Fmenuitems[itemOn].Froutine != nil && int32(currentMenu.Fmenuitems[itemOn].Fstatus) == 2 {
-						S_StartSound(uintptr(0), int32(sfx_stnmov))
+						S_StartSound(nil, int32(sfx_stnmov))
 						currentMenu.Fmenuitems[itemOn].Froutine(1)
 					}
 					return 1
@@ -21447,10 +21444,10 @@ func M_Responder(ev *event_t) (r boolean) {
 							currentMenu.FlastOn = itemOn
 							if int32(currentMenu.Fmenuitems[itemOn].Fstatus) == 2 {
 								currentMenu.Fmenuitems[itemOn].Froutine(1) // right arrow
-								S_StartSound(uintptr(0), int32(sfx_stnmov))
+								S_StartSound(nil, int32(sfx_stnmov))
 							} else {
 								currentMenu.Fmenuitems[itemOn].Froutine(int32(itemOn))
-								S_StartSound(uintptr(0), int32(sfx_pistol))
+								S_StartSound(nil, int32(sfx_pistol))
 							}
 						}
 						return 1
@@ -21459,7 +21456,7 @@ func M_Responder(ev *event_t) (r boolean) {
 							// Deactivate menu
 							currentMenu.FlastOn = itemOn
 							M_ClearMenus()
-							S_StartSound(uintptr(0), int32(sfx_swtchx))
+							S_StartSound(nil, int32(sfx_swtchx))
 							return 1
 						} else {
 							if key == key_menu_back {
@@ -21468,7 +21465,7 @@ func M_Responder(ev *event_t) (r boolean) {
 								if currentMenu.FprevMenu != nil {
 									currentMenu = currentMenu.FprevMenu
 									itemOn = currentMenu.FlastOn
-									S_StartSound(uintptr(0), int32(sfx_swtchn))
+									S_StartSound(nil, int32(sfx_swtchn))
 								}
 								return 1
 							} else {
@@ -21480,7 +21477,7 @@ func M_Responder(ev *event_t) (r boolean) {
 										}
 										if int32(currentMenu.Fmenuitems[i].FalphaKey) == ch {
 											itemOn = int16(i)
-											S_StartSound(uintptr(0), int32(sfx_pstop))
+											S_StartSound(nil, int32(sfx_pstop))
 											return 1
 										}
 										goto _2
@@ -21495,7 +21492,7 @@ func M_Responder(ev *event_t) (r boolean) {
 										}
 										if int32(currentMenu.Fmenuitems[i].FalphaKey) == ch {
 											itemOn = int16(i)
-											S_StartSound(uintptr(0), int32(sfx_pstop))
+											S_StartSound(nil, int32(sfx_pstop))
 											return 1
 										}
 										goto _3
@@ -22108,7 +22105,7 @@ func T_MoveCeiling(ceiling *ceiling_t) {
 			switch ceiling.Ftype1 {
 			case int32(silentCrushAndRaise):
 			default:
-				S_StartSound((uintptr)(unsafe.Pointer(&ceiling.Fsector.Fsoundorg)), int32(sfx_stnmov))
+				S_StartSound(&ceiling.Fsector.Fsoundorg, int32(sfx_stnmov))
 				// ?
 				break
 			}
@@ -22118,7 +22115,7 @@ func T_MoveCeiling(ceiling *ceiling_t) {
 			case int32(raiseToHighest):
 				P_RemoveActiveCeiling(ceiling)
 			case int32(silentCrushAndRaise):
-				S_StartSound((uintptr)(unsafe.Pointer(&ceiling.Fsector.Fsoundorg)), int32(sfx_pstop))
+				S_StartSound(&ceiling.Fsector.Fsoundorg, int32(sfx_pstop))
 				fallthrough
 			case int32(fastCrushAndRaise):
 				fallthrough
@@ -22135,13 +22132,13 @@ func T_MoveCeiling(ceiling *ceiling_t) {
 			switch ceiling.Ftype1 {
 			case int32(silentCrushAndRaise):
 			default:
-				S_StartSound((uintptr)(unsafe.Pointer(&ceiling.Fsector.Fsoundorg)), int32(sfx_stnmov))
+				S_StartSound(&ceiling.Fsector.Fsoundorg, int32(sfx_stnmov))
 			}
 		}
 		if res == int32(pastdest) {
 			switch ceiling.Ftype1 {
 			case int32(silentCrushAndRaise):
-				S_StartSound((uintptr)(unsafe.Pointer(&ceiling.Fsector.Fsoundorg)), int32(sfx_pstop))
+				S_StartSound(&ceiling.Fsector.Fsoundorg, int32(sfx_pstop))
 				fallthrough
 			case int32(crushAndRaise):
 				ceiling.Fspeed = 1 << FRACBITS
@@ -22377,13 +22374,13 @@ func T_VerticalDoor(door *vldoor_t) {
 			switch door.Ftype1 {
 			case int32(vld_blazeRaise):
 				door.Fdirection = -1 // time to go back down
-				S_StartSound((uintptr)(unsafe.Pointer(&door.Fsector.Fsoundorg)), int32(sfx_bdcls))
+				S_StartSound(&door.Fsector.Fsoundorg, int32(sfx_bdcls))
 			case int32(vld_normal):
 				door.Fdirection = -1 // time to go back down
-				S_StartSound((uintptr)(unsafe.Pointer(&door.Fsector.Fsoundorg)), int32(sfx_dorcls))
+				S_StartSound(&door.Fsector.Fsoundorg, int32(sfx_dorcls))
 			case int32(vld_close30ThenOpen):
 				door.Fdirection = 1
-				S_StartSound((uintptr)(unsafe.Pointer(&door.Fsector.Fsoundorg)), int32(sfx_doropn))
+				S_StartSound(&door.Fsector.Fsoundorg, int32(sfx_doropn))
 			default:
 				break
 			}
@@ -22396,7 +22393,7 @@ func T_VerticalDoor(door *vldoor_t) {
 			case int32(vld_raiseIn5Mins):
 				door.Fdirection = 1
 				door.Ftype1 = int32(vld_normal)
-				S_StartSound((uintptr)(unsafe.Pointer(&door.Fsector.Fsoundorg)), int32(sfx_doropn))
+				S_StartSound(&door.Fsector.Fsoundorg, int32(sfx_doropn))
 			default:
 				break
 			}
@@ -22411,7 +22408,7 @@ func T_VerticalDoor(door *vldoor_t) {
 			case int32(vld_blazeClose):
 				(*sector_t)(unsafe.Pointer(door.Fsector)).Fspecialdata = uintptr(0)
 				P_RemoveThinker(&door.Fthinker) // unlink and free
-				S_StartSound((uintptr)(unsafe.Pointer(&door.Fsector.Fsoundorg)), int32(sfx_bdcls))
+				S_StartSound(&door.Fsector.Fsoundorg, int32(sfx_bdcls))
 			case int32(vld_normal):
 				fallthrough
 			case int32(vld_close):
@@ -22431,7 +22428,7 @@ func T_VerticalDoor(door *vldoor_t) {
 				case int32(vld_close): // DO NOT GO BACK UP!
 				default:
 					door.Fdirection = 1
-					S_StartSound((uintptr)(unsafe.Pointer(&door.Fsector.Fsoundorg)), int32(sfx_doropn))
+					S_StartSound(&door.Fsector.Fsoundorg, int32(sfx_doropn))
 					break
 				}
 			}
@@ -22481,7 +22478,7 @@ func EV_DoLockedDoor(line *line_t, type1 vldoor_e, thing uintptr) (r int32) {
 		}
 		if !(p.Fcards[it_bluecard] != 0) && !(p.Fcards[it_blueskull] != 0) {
 			p.Fmessage = __ccgo_ts_str(23343)
-			S_StartSound(uintptr(0), int32(sfx_oof))
+			S_StartSound(nil, int32(sfx_oof))
 			return 0
 		}
 	case 134: // Red Lock
@@ -22492,7 +22489,7 @@ func EV_DoLockedDoor(line *line_t, type1 vldoor_e, thing uintptr) (r int32) {
 		}
 		if !(p.Fcards[it_redcard] != 0) && !(p.Fcards[it_redskull] != 0) {
 			p.Fmessage = __ccgo_ts_str(23387)
-			S_StartSound(uintptr(0), int32(sfx_oof))
+			S_StartSound(nil, int32(sfx_oof))
 			return 0
 		}
 	case 136: // Yellow Lock
@@ -22503,7 +22500,7 @@ func EV_DoLockedDoor(line *line_t, type1 vldoor_e, thing uintptr) (r int32) {
 		}
 		if !(p.Fcards[it_yellowcard] != 0) && !(p.Fcards[it_yellowskull] != 0) {
 			p.Fmessage = __ccgo_ts_str(23430)
-			S_StartSound(uintptr(0), int32(sfx_oof))
+			S_StartSound(nil, int32(sfx_oof))
 			return 0
 		}
 		break
@@ -22543,16 +22540,16 @@ func EV_DoDoor(line *line_t, type1 vldoor_e) (r int32) {
 			doorP.Ftopheight -= 4 * (1 << FRACBITS)
 			doorP.Fdirection = -1
 			doorP.Fspeed = 1 << FRACBITS * 2 * 4
-			S_StartSound((uintptr)(unsafe.Pointer(&doorP.Fsector.Fsoundorg)), int32(sfx_bdcls))
+			S_StartSound(&doorP.Fsector.Fsoundorg, int32(sfx_bdcls))
 		case int32(vld_close):
 			doorP.Ftopheight = P_FindLowestCeilingSurrounding(sec)
 			doorP.Ftopheight -= 4 * (1 << FRACBITS)
 			doorP.Fdirection = -1
-			S_StartSound((uintptr)(unsafe.Pointer(&doorP.Fsector.Fsoundorg)), int32(sfx_dorcls))
+			S_StartSound(&doorP.Fsector.Fsoundorg, int32(sfx_dorcls))
 		case int32(vld_close30ThenOpen):
 			doorP.Ftopheight = sec.Fceilingheight
 			doorP.Fdirection = -1
-			S_StartSound((uintptr)(unsafe.Pointer(&doorP.Fsector.Fsoundorg)), int32(sfx_dorcls))
+			S_StartSound(&doorP.Fsector.Fsoundorg, int32(sfx_dorcls))
 		case int32(vld_blazeRaise):
 			fallthrough
 		case int32(vld_blazeOpen):
@@ -22561,7 +22558,7 @@ func EV_DoDoor(line *line_t, type1 vldoor_e) (r int32) {
 			doorP.Ftopheight -= 4 * (1 << FRACBITS)
 			doorP.Fspeed = 1 << FRACBITS * 2 * 4
 			if doorP.Ftopheight != sec.Fceilingheight {
-				S_StartSound((uintptr)(unsafe.Pointer(&doorP.Fsector.Fsoundorg)), int32(sfx_bdopn))
+				S_StartSound(&doorP.Fsector.Fsoundorg, int32(sfx_bdopn))
 			}
 		case int32(vld_normal):
 			fallthrough
@@ -22570,7 +22567,7 @@ func EV_DoDoor(line *line_t, type1 vldoor_e) (r int32) {
 			doorP.Ftopheight = P_FindLowestCeilingSurrounding(sec)
 			doorP.Ftopheight -= 4 * (1 << FRACBITS)
 			if doorP.Ftopheight != sec.Fceilingheight {
-				S_StartSound((uintptr)(unsafe.Pointer(&doorP.Fsector.Fsoundorg)), int32(sfx_doropn))
+				S_StartSound(&doorP.Fsector.Fsoundorg, int32(sfx_doropn))
 			}
 		default:
 			break
@@ -22601,7 +22598,7 @@ func EV_VerticalDoor(line *line_t, thing uintptr) {
 		}
 		if !(player.Fcards[it_bluecard] != 0) && !(player.Fcards[it_blueskull] != 0) {
 			player.Fmessage = __ccgo_ts_str(23476)
-			S_StartSound(uintptr(0), int32(sfx_oof))
+			S_StartSound(nil, int32(sfx_oof))
 			return
 		}
 	case 27: // Yellow Lock
@@ -22612,7 +22609,7 @@ func EV_VerticalDoor(line *line_t, thing uintptr) {
 		}
 		if !(player.Fcards[it_yellowcard] != 0) && !(player.Fcards[it_yellowskull] != 0) {
 			player.Fmessage = __ccgo_ts_str(23514)
-			S_StartSound(uintptr(0), int32(sfx_oof))
+			S_StartSound(nil, int32(sfx_oof))
 			return
 		}
 	case 28: // Red Lock
@@ -22623,7 +22620,7 @@ func EV_VerticalDoor(line *line_t, thing uintptr) {
 		}
 		if !(player.Fcards[it_redcard] != 0) && !(player.Fcards[it_redskull] != 0) {
 			player.Fmessage = __ccgo_ts_str(23554)
-			S_StartSound(uintptr(0), int32(sfx_oof))
+			S_StartSound(nil, int32(sfx_oof))
 			return
 		}
 		break
@@ -22673,14 +22670,14 @@ func EV_VerticalDoor(line *line_t, thing uintptr) {
 	switch int32(line.Fspecial) {
 	case 117: // BLAZING DOOR RAISE
 		fallthrough
-	case 118: // BLAZING DOOR OPEN
-		S_StartSound((uintptr)(unsafe.Pointer(&sec.Fsoundorg)), int32(sfx_bdopn))
+	case 118: // BLAZING DOOR OPN
+		S_StartSound(&sec.Fsoundorg, int32(sfx_bdopn))
 	case 1: // NORMAL DOOR SOUND
 		fallthrough
 	case 31:
-		S_StartSound((uintptr)(unsafe.Pointer(&sec.Fsoundorg)), int32(sfx_doropn))
+		S_StartSound(&sec.Fsoundorg, int32(sfx_doropn))
 	default: // LOCKED DOOR SOUND
-		S_StartSound((uintptr)(unsafe.Pointer(&sec.Fsoundorg)), int32(sfx_doropn))
+		S_StartSound(&sec.Fsoundorg, int32(sfx_doropn))
 		break
 	}
 	// new door thinker
@@ -23321,9 +23318,9 @@ seeyou:
 		}
 		if (*mobj_t)(unsafe.Pointer(actor)).Ftype1 == int32(MT_SPIDER) || (*mobj_t)(unsafe.Pointer(actor)).Ftype1 == int32(MT_CYBORG) {
 			// full volume
-			S_StartSound(uintptr(0), sound)
+			S_StartSound(nil, sound)
 		} else {
-			S_StartSound(actor, sound)
+			S_StartSound(&(*mobj_t)(unsafe.Pointer(actor)).degenmobj_t, sound)
 		}
 	}
 	P_SetMobjState(actor, (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fseestate)
@@ -23381,7 +23378,7 @@ func A_Chase(actor uintptr) {
 	// check for melee attack
 	if (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fmeleestate != 0 && P_CheckMeleeRange(actor) != 0 {
 		if (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fattacksound != 0 {
-			S_StartSound(actor, (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fattacksound)
+			S_StartSound(&((*mobj_t)(unsafe.Pointer(actor))).degenmobj_t, (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fattacksound)
 		}
 		P_SetMobjState(actor, (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fmeleestate)
 		return
@@ -23417,7 +23414,7 @@ nomissile:
 	}
 	// make active sound
 	if (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Factivesound != 0 && P_Random() < 3 {
-		S_StartSound(actor, (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Factivesound)
+		S_StartSound(&(*mobj_t)(unsafe.Pointer(actor)).degenmobj_t, (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Factivesound)
 	}
 }
 
@@ -23450,7 +23447,7 @@ func A_PosAttack(actor uintptr) {
 	A_FaceTarget(actor)
 	angle = int32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
 	slope = P_AimLineAttack(actor, uint32(angle), 32*64*(1<<FRACBITS))
-	S_StartSound(actor, int32(sfx_pistol))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(actor))).degenmobj_t, int32(sfx_pistol))
 	angle += (P_Random() - P_Random()) << 20
 	damage = (P_Random()%int32(5) + 1) * 3
 	P_LineAttack(actor, uint32(angle), 32*64*(1<<FRACBITS), slope, damage)
@@ -23461,7 +23458,7 @@ func A_SPosAttack(actor uintptr) {
 	if !((*mobj_t)(unsafe.Pointer(actor)).Ftarget != 0) {
 		return
 	}
-	S_StartSound(actor, int32(sfx_shotgn))
+	S_StartSound(&(*mobj_t)(unsafe.Pointer(actor)).degenmobj_t, int32(sfx_shotgn))
 	A_FaceTarget(actor)
 	bangle = int32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
 	slope = P_AimLineAttack(actor, uint32(bangle), 32*64*(1<<FRACBITS))
@@ -23485,7 +23482,7 @@ func A_CPosAttack(actor uintptr) {
 	if !((*mobj_t)(unsafe.Pointer(actor)).Ftarget != 0) {
 		return
 	}
-	S_StartSound(actor, int32(sfx_shotgn))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_shotgn))
 	A_FaceTarget(actor)
 	bangle = int32((*mobj_t)(unsafe.Pointer(actor)).Fangle)
 	slope = P_AimLineAttack(actor, uint32(bangle), 32*64*(1<<FRACBITS))
@@ -23537,7 +23534,7 @@ func A_TroopAttack(actor uintptr) {
 	}
 	A_FaceTarget(actor)
 	if P_CheckMeleeRange(actor) != 0 {
-		S_StartSound(actor, int32(sfx_claw))
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_claw))
 		damage = (P_Random()%int32(8) + 1) * 3
 		P_DamageMobj((*mobj_t)(unsafe.Pointer(actor)).Ftarget, actor, actor, damage)
 		return
@@ -23587,7 +23584,7 @@ func A_BruisAttack(actor uintptr) {
 		return
 	}
 	if P_CheckMeleeRange(actor) != 0 {
-		S_StartSound(actor, int32(sfx_claw))
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_claw))
 		damage = (P_Random()%int32(8) + 1) * 10
 		P_DamageMobj((*mobj_t)(unsafe.Pointer(actor)).Ftarget, actor, actor, damage)
 		return
@@ -23676,7 +23673,7 @@ func A_SkelWhoosh(actor uintptr) {
 		return
 	}
 	A_FaceTarget(actor)
-	S_StartSound(actor, int32(sfx_skeswg))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_skeswg))
 }
 
 func A_SkelFist(actor uintptr) {
@@ -23687,7 +23684,7 @@ func A_SkelFist(actor uintptr) {
 	A_FaceTarget(actor)
 	if P_CheckMeleeRange(actor) != 0 {
 		damage = (P_Random()%int32(10) + 1) * 6
-		S_StartSound(actor, int32(sfx_skepch))
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_skepch))
 		P_DamageMobj((*mobj_t)(unsafe.Pointer(actor)).Ftarget, actor, actor, damage)
 	}
 }
@@ -23760,7 +23757,7 @@ func A_VileChase(actor uintptr) {
 					A_FaceTarget(actor)
 					(*mobj_t)(unsafe.Pointer(actor)).Ftarget = temp
 					P_SetMobjState(actor, S_VILE_HEAL1)
-					S_StartSound(corpsehit, int32(sfx_slop))
+					S_StartSound(&((*mobj_t)(unsafe.Pointer(corpsehit)).degenmobj_t), int32(sfx_slop))
 					info = (*mobj_t)(unsafe.Pointer(corpsehit)).Finfo
 					P_SetMobjState(corpsehit, (*mobjinfo_t)(unsafe.Pointer(info)).Fraisestate)
 					*(*fixed_t)(unsafe.Pointer(corpsehit + 108)) <<= 2
@@ -23790,16 +23787,16 @@ func A_VileChase(actor uintptr) {
 //	// A_VileStart
 //	//
 func A_VileStart(actor uintptr) {
-	S_StartSound(actor, int32(sfx_vilatk))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_vilatk))
 }
 
 func A_StartFire(actor uintptr) {
-	S_StartSound(actor, int32(sfx_flamst))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_flamst))
 	A_Fire(actor)
 }
 
 func A_FireCrackle(actor uintptr) {
-	S_StartSound(actor, int32(sfx_flame))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_flame))
 	A_Fire(actor)
 }
 
@@ -23857,7 +23854,7 @@ func A_VileAttack(actor uintptr) {
 	if !(P_CheckSight(actor, (*mobj_t)(unsafe.Pointer(actor)).Ftarget) != 0) {
 		return
 	}
-	S_StartSound(actor, int32(sfx_barexp))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_barexp))
 	P_DamageMobj((*mobj_t)(unsafe.Pointer(actor)).Ftarget, actor, actor, 20)
 	(*mobj_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Ftarget)).Fmomz = 1000 * (1 << FRACBITS) / (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Ftarget)).Finfo)).Fmass
 	an = int32((*mobj_t)(unsafe.Pointer(actor)).Fangle >> int32(ANGLETOFINESHIFT))
@@ -23880,7 +23877,7 @@ func A_VileAttack(actor uintptr) {
 
 func A_FatRaise(actor uintptr) {
 	A_FaceTarget(actor)
-	S_StartSound(actor, int32(sfx_manatk))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_manatk))
 }
 
 func A_FatAttack1(actor uintptr) {
@@ -23944,7 +23941,7 @@ func A_SkullAttack(actor uintptr) {
 	}
 	dest = (*mobj_t)(unsafe.Pointer(actor)).Ftarget
 	*(*int32)(unsafe.Pointer(actor + 160)) |= int32(MF_SKULLFLY)
-	S_StartSound(actor, (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fattacksound)
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fattacksound)
 	A_FaceTarget(actor)
 	an = (*mobj_t)(unsafe.Pointer(actor)).Fangle >> int32(ANGLETOFINESHIFT)
 	(*mobj_t)(unsafe.Pointer(actor)).Fmomx = FixedMul(20*(1<<FRACBITS), finecosine[an])
@@ -24043,19 +24040,19 @@ func A_Scream(actor uintptr) {
 	// Check for bosses.
 	if (*mobj_t)(unsafe.Pointer(actor)).Ftype1 == int32(MT_SPIDER) || (*mobj_t)(unsafe.Pointer(actor)).Ftype1 == int32(MT_CYBORG) {
 		// full volume
-		S_StartSound(uintptr(0), sound)
+		S_StartSound(nil, sound)
 	} else {
-		S_StartSound(actor, sound)
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), sound)
 	}
 }
 
 func A_XScream(actor uintptr) {
-	S_StartSound(actor, int32(sfx_slop))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), int32(sfx_slop))
 }
 
 func A_Pain(actor uintptr) {
 	if (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fpainsound != 0 {
-		S_StartSound(actor, (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fpainsound)
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(actor)).degenmobj_t), (*mobjinfo_t)(unsafe.Pointer((*mobj_t)(unsafe.Pointer(actor)).Finfo)).Fpainsound)
 	}
 }
 
@@ -24205,30 +24202,30 @@ func A_BossDeath(mo uintptr) {
 }
 
 func A_Hoof(mo uintptr) {
-	S_StartSound(mo, int32(sfx_hoof))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), int32(sfx_hoof))
 	A_Chase(mo)
 }
 
 func A_Metal(mo uintptr) {
-	S_StartSound(mo, int32(sfx_metal))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), int32(sfx_metal))
 	A_Chase(mo)
 }
 
 func A_BabyMetal(mo uintptr) {
-	S_StartSound(mo, int32(sfx_bspwlk))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), int32(sfx_bspwlk))
 	A_Chase(mo)
 }
 
 func A_OpenShotgun2(player *player_t, psp *pspdef_t) {
-	S_StartSound(player.Fmo, int32(sfx_dbopn))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_dbopn))
 }
 
 func A_LoadShotgun2(player *player_t, psp *pspdef_t) {
-	S_StartSound(player.Fmo, int32(sfx_dbload))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_dbload))
 }
 
 func A_CloseShotgun2(player *player_t, psp *pspdef_t) {
-	S_StartSound(player.Fmo, int32(sfx_dbcls))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_dbcls))
 	A_ReFire(player, psp)
 }
 
@@ -24257,11 +24254,11 @@ func A_BrainAwake(mo uintptr) {
 		;
 		thinker = thinker.Fnext
 	}
-	S_StartSound(uintptr(0), int32(sfx_bossit))
+	S_StartSound(nil, int32(sfx_bossit))
 }
 
 func A_BrainPain(mo uintptr) {
-	S_StartSound(uintptr(0), int32(sfx_bospn))
+	S_StartSound(nil, int32(sfx_bospn))
 }
 
 func A_BrainScream(mo uintptr) {
@@ -24286,7 +24283,7 @@ func A_BrainScream(mo uintptr) {
 		;
 		x += 1 << FRACBITS * 8
 	}
-	S_StartSound(uintptr(0), int32(sfx_bosdth))
+	S_StartSound(nil, int32(sfx_bosdth))
 }
 
 func A_BrainExplode(mo uintptr) {
@@ -24321,7 +24318,7 @@ func A_BrainSpit(mo uintptr) {
 	newmobj = P_SpawnMissile(mo, targ, int32(MT_SPAWNSHOT))
 	(*mobj_t)(unsafe.Pointer(newmobj)).Ftarget = targ
 	(*mobj_t)(unsafe.Pointer(newmobj)).Freactiontime = ((*mobj_t)(unsafe.Pointer(targ)).Fy - (*mobj_t)(unsafe.Pointer(mo)).Fy) / (*mobj_t)(unsafe.Pointer(newmobj)).Fmomy / (*mobj_t)(unsafe.Pointer(newmobj)).Fstate.Ftics
-	S_StartSound(uintptr(0), int32(sfx_bospit))
+	S_StartSound(nil, int32(sfx_bospit))
 }
 
 var easy int32
@@ -24330,7 +24327,7 @@ var easy int32
 //
 //	// travelling cube sound
 func A_SpawnSound(mo uintptr) {
-	S_StartSound(mo, int32(sfx_boscub))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), int32(sfx_boscub))
 	A_SpawnFly(mo)
 }
 
@@ -24347,7 +24344,7 @@ func A_SpawnFly(mo uintptr) {
 	targ = P_SubstNullMobj((*mobj_t)(unsafe.Pointer(mo)).Ftarget)
 	// First spawn teleport fog.
 	fog = P_SpawnMobj((*mobj_t)(unsafe.Pointer(targ)).Fx, (*mobj_t)(unsafe.Pointer(targ)).Fy, (*mobj_t)(unsafe.Pointer(targ)).Fz, int32(MT_SPAWNFIRE))
-	S_StartSound(fog, int32(sfx_telept))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(fog)).degenmobj_t), int32(sfx_telept))
 	// Randomly select monster to spawn.
 	r = P_Random()
 	// Probability distribution (kind of :),
@@ -24412,7 +24409,7 @@ func A_PlayerScream(mo uintptr) {
 		// LESS THAN -50% WITHOUT GIBBING
 		sound = int32(sfx_pdiehi)
 	}
-	S_StartSound(mo, sound)
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), sound)
 }
 
 const INT_MAX9 = 2147483647
@@ -24584,7 +24581,7 @@ func T_MoveFloor(floor *floormove_t) {
 	var res result_e
 	res = T_MovePlane(floor.Fsector, floor.Fspeed, floor.Ffloordestheight, floor.Fcrush, 0, floor.Fdirection)
 	if !(leveltime&7 != 0) {
-		S_StartSound((uintptr)(unsafe.Pointer(&floor.Fsector.Fsoundorg)), int32(sfx_stnmov))
+		S_StartSound(&floor.Fsector.Fsoundorg, int32(sfx_stnmov))
 	}
 	if res == int32(pastdest) {
 		(*sector_t)(unsafe.Pointer(floor.Fsector)).Fspecialdata = uintptr(0)
@@ -24610,7 +24607,7 @@ func T_MoveFloor(floor *floormove_t) {
 			}
 		}
 		P_RemoveThinker(&floor.Fthinker)
-		S_StartSound((uintptr)(unsafe.Pointer(&floor.Fsector.Fsoundorg)), int32(sfx_pstop))
+		S_StartSound(&floor.Fsector.Fsoundorg, int32(sfx_pstop))
 	}
 }
 
@@ -24995,7 +24992,7 @@ func P_GiveWeapon(player *player_t, weapon weapontype_t, dropped boolean) (r boo
 		}
 		player.Fpendingweapon = weapon
 		if player == &players[consoleplayer] {
-			S_StartSound(uintptr(0), int32(sfx_wpnup))
+			S_StartSound(nil, int32(sfx_wpnup))
 		}
 		return 0
 	}
@@ -25424,7 +25421,7 @@ func P_TouchSpecialThing(special uintptr, toucher uintptr) {
 	P_RemoveMobj(special)
 	player.Fbonuscount += BONUSADD
 	if player == &players[consoleplayer] {
-		S_StartSound(uintptr(0), sound)
+		S_StartSound(nil, sound)
 	}
 }
 
@@ -26797,7 +26794,7 @@ func PTR_UseTraverse(in *intercept_t) (r boolean) {
 	if !(line.Fspecial != 0) {
 		P_LineOpening(line)
 		if openrange <= 0 {
-			S_StartSound(usething, int32(sfx_noway))
+			S_StartSound(&((*mobj_t)(unsafe.Pointer(usething)).degenmobj_t), int32(sfx_noway))
 			// can't use through a wall
 			return 0
 		}
@@ -27836,7 +27833,7 @@ func P_ExplodeMissile(mo uintptr) {
 	}
 	*(*int32)(unsafe.Pointer(mo + 160)) &= ^int32(MF_MISSILE)
 	if (*mobj_t)(unsafe.Pointer(mo)).Finfo.Fdeathsound != 0 {
-		S_StartSound(mo, (*mobj_t)(unsafe.Pointer(mo)).Finfo.Fdeathsound)
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), (*mobj_t)(unsafe.Pointer(mo)).Finfo.Fdeathsound)
 	}
 }
 
@@ -28016,7 +28013,7 @@ func P_ZMovement(mo uintptr) {
 				// after hitting the ground (hard),
 				// and utter appropriate sound.
 				(*mobj_t)(unsafe.Pointer(mo)).Fplayer.Fdeltaviewheight = (*mobj_t)(unsafe.Pointer(mo)).Fmomz >> 3
-				S_StartSound(mo, int32(sfx_oof))
+				S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), int32(sfx_oof))
 			}
 			(*mobj_t)(unsafe.Pointer(mo)).Fmomz = 0
 		}
@@ -28079,11 +28076,11 @@ func P_NightmareRespawn(mobj uintptr) {
 	// because of removal of the body?
 	mo = P_SpawnMobj((*mobj_t)(unsafe.Pointer(mobj)).Fx, (*mobj_t)(unsafe.Pointer(mobj)).Fy, (*sector_t)(unsafe.Pointer(((*mobj_t)(unsafe.Pointer(mobj)).Fsubsector).Fsector)).Ffloorheight, int32(MT_TFOG))
 	// initiate teleport sound
-	S_StartSound(mo, int32(sfx_telept))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), int32(sfx_telept))
 	// spawn a teleport fog at the new spot
 	ss = R_PointInSubsector(x, y)
 	mo = P_SpawnMobj(x, y, (*sector_t)(unsafe.Pointer(ss.Fsector)).Ffloorheight, int32(MT_TFOG))
-	S_StartSound(mo, int32(sfx_telept))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), int32(sfx_telept))
 	// spawn the new monster
 	mthing = &((*mobj_t)(unsafe.Pointer(mobj)).Fspawnpoint)
 	// spawn it
@@ -28219,7 +28216,7 @@ func P_RemoveMobj(mobj uintptr) {
 	// unlink from sector and block lists
 	P_UnsetThingPosition(mobj)
 	// stop any playing sound
-	S_StopSound(mobj)
+	S_StopSound(&((*mobj_t)(unsafe.Pointer(mobj)).degenmobj_t))
 	// free block
 	P_RemoveThinker(&(*mobj_t)(unsafe.Pointer(mobj)).Fthinker)
 }
@@ -28253,7 +28250,7 @@ func P_RespawnSpecials() {
 	// spawn a teleport fog at the new spot
 	ss = R_PointInSubsector(x, y)
 	mo = P_SpawnMobj(x, y, (*sector_t)(unsafe.Pointer(ss.Fsector)).Ffloorheight, int32(MT_IFOG))
-	S_StartSound(mo, int32(sfx_itmbk))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(mo)).degenmobj_t), int32(sfx_itmbk))
 	// find which type to spawn
 	i = 0
 	for {
@@ -28538,7 +28535,7 @@ func P_SpawnMissile(source uintptr, dest uintptr, type1 mobjtype_t) (r uintptr) 
 	var th uintptr
 	th = P_SpawnMobj((*mobj_t)(unsafe.Pointer(source)).Fx, (*mobj_t)(unsafe.Pointer(source)).Fy, (*mobj_t)(unsafe.Pointer(source)).Fz+4*8*(1<<FRACBITS), type1)
 	if (*mobj_t)(unsafe.Pointer(th)).Finfo.Fseesound != 0 {
-		S_StartSound(th, (*mobj_t)(unsafe.Pointer(th)).Finfo.Fseesound)
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(th)).degenmobj_t), (*mobj_t)(unsafe.Pointer(th)).Finfo.Fseesound)
 	}
 	(*mobj_t)(unsafe.Pointer(th)).Ftarget = source // where it came from
 	an = R_PointToAngle2((*mobj_t)(unsafe.Pointer(source)).Fx, (*mobj_t)(unsafe.Pointer(source)).Fy, (*mobj_t)(unsafe.Pointer(dest)).Fx, (*mobj_t)(unsafe.Pointer(dest)).Fy)
@@ -28590,7 +28587,7 @@ func P_SpawnPlayerMissile(source uintptr, type1 mobjtype_t) {
 	z = (*mobj_t)(unsafe.Pointer(source)).Fz + 4*8*(1<<FRACBITS)
 	th = P_SpawnMobj(x, y, z, type1)
 	if (*mobj_t)(unsafe.Pointer(th)).Finfo.Fseesound != 0 {
-		S_StartSound(th, (*mobj_t)(unsafe.Pointer(th)).Finfo.Fseesound)
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(th)).degenmobj_t), (*mobj_t)(unsafe.Pointer(th)).Finfo.Fseesound)
 	}
 	(*mobj_t)(unsafe.Pointer(th)).Ftarget = source
 	(*mobj_t)(unsafe.Pointer(th)).Fangle = an
@@ -28612,18 +28609,18 @@ func T_PlatRaise(plat *plat_t) {
 		res = T_MovePlane(plat.Fsector, plat.Fspeed, plat.Fhigh, plat.Fcrush, 0, 1)
 		if plat.Ftype1 == int32(raiseAndChange) || plat.Ftype1 == int32(raiseToNearestAndChange) {
 			if !(leveltime&7 != 0) {
-				S_StartSound((uintptr)(unsafe.Pointer(&plat.Fsector.Fsoundorg)), int32(sfx_stnmov))
+				S_StartSound(&plat.Fsector.Fsoundorg, int32(sfx_stnmov))
 			}
 		}
 		if res == int32(crushed) && !(plat.Fcrush != 0) {
 			plat.Fcount = plat.Fwait
 			plat.Fstatus = int32(down)
-			S_StartSound((uintptr)(unsafe.Pointer(&plat.Fsector.Fsoundorg)), int32(sfx_pstart))
+			S_StartSound(&plat.Fsector.Fsoundorg, int32(sfx_pstart))
 		} else {
 			if res == int32(pastdest) {
 				plat.Fcount = plat.Fwait
 				plat.Fstatus = int32(waiting)
-				S_StartSound((uintptr)(unsafe.Pointer(&plat.Fsector.Fsoundorg)), int32(sfx_pstop))
+				S_StartSound(&plat.Fsector.Fsoundorg, int32(sfx_pstop))
 				switch plat.Ftype1 {
 				case int32(blazeDWUS):
 					fallthrough
@@ -28643,7 +28640,7 @@ func T_PlatRaise(plat *plat_t) {
 		if res == int32(pastdest) {
 			plat.Fcount = (*plat_t)(unsafe.Pointer(plat)).Fwait
 			plat.Fstatus = int32(waiting)
-			S_StartSound((uintptr)(unsafe.Pointer(&plat.Fsector.Fsoundorg)), int32(sfx_pstop))
+			S_StartSound(&plat.Fsector.Fsoundorg, int32(sfx_pstop))
 		}
 	case int32(waiting):
 		plat.Fcount--
@@ -28653,7 +28650,7 @@ func T_PlatRaise(plat *plat_t) {
 			} else {
 				plat.Fstatus = int32(down)
 			}
-			S_StartSound((uintptr)(unsafe.Pointer(&plat.Fsector.Fsoundorg)), int32(sfx_pstart))
+			S_StartSound(&plat.Fsector.Fsoundorg, int32(sfx_pstart))
 		}
 		fallthrough
 	case int32(in_stasis):
@@ -28710,14 +28707,14 @@ func EV_DoPlat(line *line_t, type1 plattype_e, amount int32) (r int32) {
 			platP.Fstatus = int32(up)
 			// NO MORE DAMAGE, IF APPLICABLE
 			sec.Fspecial = 0
-			S_StartSound((uintptr)(unsafe.Pointer(&sec.Fsoundorg)), int32(sfx_stnmov))
+			S_StartSound(&sec.Fsoundorg, int32(sfx_stnmov))
 		case int32(raiseAndChange):
 			platP.Fspeed = 1 << FRACBITS / 2
 			sec.Ffloorpic = (*sector_t)(unsafe.Pointer((*(*side_t)(unsafe.Pointer(sides + uintptr(line.Fsidenum[0])*24))).Fsector)).Ffloorpic
 			platP.Fhigh = sec.Ffloorheight + amount*(1<<FRACBITS)
 			platP.Fwait = 0
 			platP.Fstatus = int32(up)
-			S_StartSound((uintptr)(unsafe.Pointer(&sec.Fsoundorg)), int32(sfx_stnmov))
+			S_StartSound(&sec.Fsoundorg, int32(sfx_stnmov))
 		case int32(downWaitUpStay):
 			platP.Fspeed = 1 << FRACBITS * 4
 			platP.Flow = P_FindLowestFloorSurrounding(sec)
@@ -28727,7 +28724,7 @@ func EV_DoPlat(line *line_t, type1 plattype_e, amount int32) (r int32) {
 			platP.Fhigh = sec.Ffloorheight
 			platP.Fwait = TICRATE * PLATWAIT
 			platP.Fstatus = int32(down)
-			S_StartSound((uintptr)(unsafe.Pointer(&sec.Fsoundorg)), int32(sfx_pstart))
+			S_StartSound(&sec.Fsoundorg, int32(sfx_pstart))
 		case int32(blazeDWUS):
 			platP.Fspeed = 1 << FRACBITS * 8
 			platP.Flow = P_FindLowestFloorSurrounding(sec)
@@ -28737,7 +28734,7 @@ func EV_DoPlat(line *line_t, type1 plattype_e, amount int32) (r int32) {
 			platP.Fhigh = sec.Ffloorheight
 			platP.Fwait = TICRATE * PLATWAIT
 			platP.Fstatus = int32(down)
-			S_StartSound((uintptr)(unsafe.Pointer(&sec.Fsoundorg)), int32(sfx_pstart))
+			S_StartSound(&sec.Fsoundorg, int32(sfx_pstart))
 		case int32(perpetualRaise):
 			platP.Fspeed = 1 << FRACBITS
 			platP.Flow = P_FindLowestFloorSurrounding(sec)
@@ -28750,7 +28747,7 @@ func EV_DoPlat(line *line_t, type1 plattype_e, amount int32) (r int32) {
 			}
 			platP.Fwait = TICRATE * PLATWAIT
 			platP.Fstatus = P_Random() & 1
-			S_StartSound((uintptr)(unsafe.Pointer(&sec.Fsoundorg)), int32(sfx_pstart))
+			S_StartSound(&sec.Fsoundorg, int32(sfx_pstart))
 			break
 		}
 		P_AddActivePlat(platP)
@@ -28924,7 +28921,7 @@ func P_BringUpWeapon(player *player_t) {
 		player.Fpendingweapon = player.Freadyweapon
 	}
 	if player.Fpendingweapon == wp_chainsaw {
-		S_StartSound(player.Fmo, int32(sfx_sawup))
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_sawup))
 	}
 	newstate = weaponinfo[player.Fpendingweapon].Fupstate
 	player.Fpendingweapon = wp_nochange
@@ -29044,7 +29041,7 @@ func A_WeaponReady(player *player_t, psp *pspdef_t) {
 		P_SetMobjState(player.Fmo, S_PLAY)
 	}
 	if player.Freadyweapon == wp_chainsaw && psp.Fstate == &states[S_SAW] {
-		S_StartSound(player.Fmo, int32(sfx_sawidl))
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_sawidl))
 	}
 	// check for change
 	//  if player is dead, put the weapon away
@@ -29176,7 +29173,7 @@ func A_Punch(player *player_t, psp *pspdef_t) {
 	P_LineAttack(player.Fmo, angle, 64*(1<<FRACBITS), slope, damage)
 	// turn to face target
 	if linetarget != 0 {
-		S_StartSound(player.Fmo, int32(sfx_punch))
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_punch))
 		(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle = R_PointToAngle2((*mobj_t)(unsafe.Pointer(player.Fmo)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy, (*mobj_t)(unsafe.Pointer(linetarget)).Fx, (*mobj_t)(unsafe.Pointer(linetarget)).Fy)
 	}
 }
@@ -29196,10 +29193,10 @@ func A_Saw(player *player_t, psp *pspdef_t) {
 	slope = P_AimLineAttack(player.Fmo, angle, 64*(1<<FRACBITS)+1)
 	P_LineAttack(player.Fmo, angle, 64*(1<<FRACBITS)+1, slope, damage)
 	if !(linetarget != 0) {
-		S_StartSound(player.Fmo, int32(sfx_sawful))
+		S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_sawful))
 		return
 	}
-	S_StartSound(player.Fmo, int32(sfx_sawhit))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_sawhit))
 	// turn to face target
 	angle = R_PointToAngle2((*mobj_t)(unsafe.Pointer(player.Fmo)).Fx, (*mobj_t)(unsafe.Pointer(player.Fmo)).Fy, (*mobj_t)(unsafe.Pointer(linetarget)).Fx, (*mobj_t)(unsafe.Pointer(linetarget)).Fy)
 	if angle-(*mobj_t)(unsafe.Pointer(player.Fmo)).Fangle > uint32(ANG1807) {
@@ -29300,7 +29297,7 @@ func P_GunShot(mo uintptr, accurate boolean) {
 //	// A_FirePistol
 //	//
 func A_FirePistol(player *player_t, psp *pspdef_t) {
-	S_StartSound(player.Fmo, int32(sfx_pistol))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_pistol))
 	P_SetMobjState(player.Fmo, S_PLAY_ATK2)
 	DecreaseAmmo(player, weaponinfo[player.Freadyweapon].Fammo, 1)
 	P_SetPsprite(player, int32(ps_flash), weaponinfo[player.Freadyweapon].Fflashstate)
@@ -29315,7 +29312,7 @@ func A_FirePistol(player *player_t, psp *pspdef_t) {
 //	//
 func A_FireShotgun(player *player_t, psp *pspdef_t) {
 	var i int32
-	S_StartSound(player.Fmo, int32(sfx_shotgn))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_shotgn))
 	P_SetMobjState(player.Fmo, S_PLAY_ATK2)
 	DecreaseAmmo(player, weaponinfo[player.Freadyweapon].Fammo, 1)
 	P_SetPsprite(player, int32(ps_flash), weaponinfo[player.Freadyweapon].Fflashstate)
@@ -29341,7 +29338,7 @@ func A_FireShotgun(player *player_t, psp *pspdef_t) {
 func A_FireShotgun2(player *player_t, psp *pspdef_t) {
 	var angle angle_t
 	var damage, i int32
-	S_StartSound(player.Fmo, int32(sfx_dshtgn))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_dshtgn))
 	P_SetMobjState(player.Fmo, S_PLAY_ATK2)
 	DecreaseAmmo(player, weaponinfo[player.Freadyweapon].Fammo, 2)
 	P_SetPsprite(player, int32(ps_flash), weaponinfo[player.Freadyweapon].Fflashstate)
@@ -29368,7 +29365,7 @@ func A_FireShotgun2(player *player_t, psp *pspdef_t) {
 //	// A_FireCGun
 //	//
 func A_FireCGun(player *player_t, psp *pspdef_t) {
-	S_StartSound(player.Fmo, int32(sfx_pistol))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_pistol))
 	if !(player.Fammo[weaponinfo[player.Freadyweapon].Fammo] != 0) {
 		return
 	}
@@ -29446,7 +29443,7 @@ func A_BFGSpray(mo uintptr) {
 //	// A_BFGsound
 //	//
 func A_BFGsound(player *player_t, psp *pspdef_t) {
-	S_StartSound(player.Fmo, int32(sfx_bfg))
+	S_StartSound(&((*mobj_t)(unsafe.Pointer(player.Fmo)).degenmobj_t), int32(sfx_bfg))
 }
 
 // C documentation
@@ -32969,8 +32966,8 @@ func P_UpdateSpecials() {
 					(*(*side_t)(unsafe.Pointer(sides + uintptr(buttonlist[i].Fline.Fsidenum[0])*24))).Fbottomtexture = int16(buttonlist[i].Fbtexture)
 					break
 				}
-				S_StartSound(uintptr(unsafe.Pointer(&buttonlist))+uintptr(i)*32+24, int32(sfx_swtchn))
-				xmemset(uintptr(unsafe.Pointer(&buttonlist))+uintptr(i)*32, 0, 32)
+				S_StartSound(buttonlist[i].Fsoundorg, int32(sfx_swtchn))
+				buttonlist[i] = button_t{}
 			}
 		}
 		goto _4
@@ -33546,7 +33543,7 @@ func P_StartButton(line *line_t, w bwhere_e, texture int32, time int32) {
 			buttonlist[i].Fwhere = w
 			buttonlist[i].Fbtexture = texture
 			buttonlist[i].Fbtimer = time
-			buttonlist[i].Fsoundorg = (uintptr)(unsafe.Pointer(&line.Ffrontsector.Fsoundorg))
+			buttonlist[i].Fsoundorg = &line.Ffrontsector.Fsoundorg
 			return
 		}
 		goto _2
@@ -34051,11 +34048,11 @@ func EV_Teleport(line *line_t, side int32, thing uintptr) (r int32) {
 				}
 				// spawn teleport fog at source and destination
 				fog = P_SpawnMobj(oldx, oldy, oldz, int32(MT_TFOG))
-				S_StartSound(fog, int32(sfx_telept))
+				S_StartSound(&((*mobj_t)(unsafe.Pointer(fog)).degenmobj_t), int32(sfx_telept))
 				an = (*mobj_t)(unsafe.Pointer(m)).Fangle >> int32(ANGLETOFINESHIFT)
 				fog = P_SpawnMobj((*mobj_t)(unsafe.Pointer(m)).Fx+int32(20)*finecosine[an], (*mobj_t)(unsafe.Pointer(m)).Fy+int32(20)*finesine[an], (*mobj_t)(unsafe.Pointer(thing)).Fz, int32(MT_TFOG))
 				// emit sound, where?
-				S_StartSound(fog, int32(sfx_telept))
+				S_StartSound(&((*mobj_t)(unsafe.Pointer(fog)).degenmobj_t), int32(sfx_telept))
 				// don't move for a bit
 				if (*mobj_t)(unsafe.Pointer(thing)).Fplayer != nil {
 					(*mobj_t)(unsafe.Pointer(thing)).Freactiontime = 18
@@ -39752,7 +39749,7 @@ func STlib_drawNum(n *st_number_t, refresh boolean) {
 	var h, neg, num, numdigits, w, x, v1 int32
 	var v2 bool
 	numdigits = n.Fwidth
-	num = *(*int32)(unsafe.Pointer((*st_number_t)(unsafe.Pointer(n)).Fnum))
+	num = *(*int32)(unsafe.Pointer(n.Fnum))
 	w = int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(n.Fp)))).Fwidth)
 	h = int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(n.Fp)))).Fheight)
 	// [crispy] redraw only if necessary
@@ -41042,7 +41039,7 @@ const NORM_SEP = 128
 
 type channel_t struct {
 	Fsfxinfo *sfxinfo_t
-	Forigin  uintptr
+	Forigin  *degenmobj_t
 	Fhandle  int32
 }
 
@@ -41184,7 +41181,7 @@ func S_Start() {
 	S_ChangeMusic(mnum, 1)
 }
 
-func S_StopSound(origin uintptr) {
+func S_StopSound(origin *degenmobj_t) {
 	var cnum int32
 	cnum = 0
 	for {
@@ -41207,7 +41204,7 @@ func S_StopSound(origin uintptr) {
 //   If none available, return -1.  Otherwise channel #.
 //
 
-func S_GetChannel(origin uintptr, sfxinfo *sfxinfo_t) (r int32) {
+func S_GetChannel(origin *degenmobj_t, sfxinfo *sfxinfo_t) (r int32) {
 	var cnum int32
 	// Find an open channel
 	cnum = 0
@@ -41218,7 +41215,7 @@ func S_GetChannel(origin uintptr, sfxinfo *sfxinfo_t) (r int32) {
 		if !(channels[cnum].Fsfxinfo != nil) {
 			break
 		} else {
-			if origin != 0 && channels[cnum].Forigin == origin {
+			if origin != nil && channels[cnum].Forigin == origin {
 				S_StopChannel(cnum)
 				break
 			}
@@ -41266,7 +41263,7 @@ func S_GetChannel(origin uintptr, sfxinfo *sfxinfo_t) (r int32) {
 // Otherwise, modifies parameters and returns 1.
 //
 
-func S_AdjustSoundParams(listener uintptr, source uintptr, vol uintptr, sep uintptr) (r int32) {
+func S_AdjustSoundParams(listener *degenmobj_t, source *degenmobj_t, vol uintptr, sep uintptr) (r int32) {
 	var adx, ady, approx_dist fixed_t
 	var angle angle_t
 	var v1 int32
@@ -41311,12 +41308,10 @@ func S_AdjustSoundParams(listener uintptr, source uintptr, vol uintptr, sep uint
 	return boolint32(*(*int32)(unsafe.Pointer(vol)) > 0)
 }
 
-func S_StartSound(origin_p uintptr, sfx_id int32) {
+func S_StartSound(origin *degenmobj_t, sfx_id int32) {
 	bp := alloc(32)
 	var cnum, rc int32
-	var origin uintptr
 	var sfx *sfxinfo_t
-	origin = origin_p
 	*(*int32)(unsafe.Pointer(bp + 4)) = snd_SfxVolume
 	// check for bogus sound #
 	if sfx_id < 1 || sfx_id > int32(NUMSFX) {
@@ -41335,8 +41330,8 @@ func S_StartSound(origin_p uintptr, sfx_id int32) {
 	}
 	// Check to see if it is audible,
 	//  and if not, modify the params
-	if origin != 0 && origin != players[consoleplayer].Fmo {
-		rc = S_AdjustSoundParams(players[consoleplayer].Fmo, origin, bp+4, bp)
+	if origin != nil && origin != &((*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).degenmobj_t) {
+		rc = S_AdjustSoundParams(&((*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).degenmobj_t), origin, bp+4, bp)
 		if (*mobj_t)(unsafe.Pointer(origin)).Fx == (*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).Fx && (*mobj_t)(unsafe.Pointer(origin)).Fy == (*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).Fy {
 			*(*int32)(unsafe.Pointer(bp)) = int32(NORM_SEP)
 		}
@@ -41383,7 +41378,7 @@ func S_ResumeSound() {
 // Updates music & sounds
 //
 
-func S_UpdateSounds(listener uintptr) {
+func S_UpdateSounds(listener *degenmobj_t) {
 	bp := alloc(16)
 	var audible, cnum int32
 	var sfx *sfxinfo_t
@@ -41413,7 +41408,7 @@ func S_UpdateSounds(listener uintptr) {
 				}
 				// check non-local sounds for distance clipping
 				//  or modify their params
-				if c.Forigin != 0 && listener != c.Forigin {
+				if c.Forigin != nil && listener != c.Forigin {
 					audible = S_AdjustSoundParams(listener, c.Forigin, bp, bp+4)
 					if !(audible != 0) {
 						S_StopChannel(cnum)
@@ -42932,12 +42927,12 @@ func WI_updateDeathmatchStats() {
 			;
 			i++
 		}
-		S_StartSound(uintptr(0), int32(sfx_barexp))
+		S_StartSound(nil, int32(sfx_barexp))
 		dm_state = 4
 	}
 	if dm_state == 2 {
 		if !(bcnt&3 != 0) {
-			S_StartSound(uintptr(0), int32(sfx_pistol))
+			S_StartSound(nil, int32(sfx_pistol))
 		}
 		stillticking = 0
 		i = 0
@@ -42984,13 +42979,13 @@ func WI_updateDeathmatchStats() {
 			i++
 		}
 		if !(stillticking != 0) {
-			S_StartSound(uintptr(0), int32(sfx_barexp))
+			S_StartSound(nil, int32(sfx_barexp))
 			dm_state++
 		}
 	} else {
 		if dm_state == 4 {
 			if acceleratestage != 0 {
-				S_StartSound(uintptr(0), int32(sfx_slop))
+				S_StartSound(nil, int32(sfx_slop))
 				if gamemode == commercial {
 					WI_initNoState()
 				} else {
@@ -43142,12 +43137,12 @@ func WI_updateNetgameStats() {
 			;
 			i++
 		}
-		S_StartSound(uintptr(0), int32(sfx_barexp))
+		S_StartSound(nil, int32(sfx_barexp))
 		ng_state = 10
 	}
 	if ng_state == 2 {
 		if !(bcnt&3 != 0) {
-			S_StartSound(uintptr(0), int32(sfx_pistol))
+			S_StartSound(nil, int32(sfx_pistol))
 		}
 		stillticking = 0
 		i = 0
@@ -43170,13 +43165,13 @@ func WI_updateNetgameStats() {
 			i++
 		}
 		if !(stillticking != 0) {
-			S_StartSound(uintptr(0), int32(sfx_barexp))
+			S_StartSound(nil, int32(sfx_barexp))
 			ng_state++
 		}
 	} else {
 		if ng_state == 4 {
 			if !(bcnt&3 != 0) {
-				S_StartSound(uintptr(0), int32(sfx_pistol))
+				S_StartSound(nil, int32(sfx_pistol))
 			}
 			stillticking = 0
 			i = 0
@@ -43199,13 +43194,13 @@ func WI_updateNetgameStats() {
 				i++
 			}
 			if !(stillticking != 0) {
-				S_StartSound(uintptr(0), int32(sfx_barexp))
+				S_StartSound(nil, int32(sfx_barexp))
 				ng_state++
 			}
 		} else {
 			if ng_state == 6 {
 				if !(bcnt&3 != 0) {
-					S_StartSound(uintptr(0), int32(sfx_pistol))
+					S_StartSound(nil, int32(sfx_pistol))
 				}
 				stillticking = 0
 				i = 0
@@ -43228,13 +43223,13 @@ func WI_updateNetgameStats() {
 					i++
 				}
 				if !(stillticking != 0) {
-					S_StartSound(uintptr(0), int32(sfx_barexp))
+					S_StartSound(nil, int32(sfx_barexp))
 					ng_state += 1 + 2*boolint32(!(dofrags != 0))
 				}
 			} else {
 				if ng_state == 8 {
 					if !(bcnt&3 != 0) {
-						S_StartSound(uintptr(0), int32(sfx_pistol))
+						S_StartSound(nil, int32(sfx_pistol))
 					}
 					stillticking = 0
 					i = 0
@@ -43259,13 +43254,13 @@ func WI_updateNetgameStats() {
 						i++
 					}
 					if !(stillticking != 0) {
-						S_StartSound(uintptr(0), int32(sfx_pldeth))
+						S_StartSound(nil, int32(sfx_pldeth))
 						ng_state++
 					}
 				} else {
 					if ng_state == 10 {
 						if acceleratestage != 0 {
-							S_StartSound(uintptr(0), int32(sfx_sgcock))
+							S_StartSound(nil, int32(sfx_sgcock))
 							if gamemode == commercial {
 								WI_initNoState()
 							} else {
@@ -43364,45 +43359,45 @@ func WI_updateStats() {
 		cnt_secret[0] = plrs[me].Fssecret * 100 / wbs.Fmaxsecret
 		cnt_time = plrs[me].Fstime / int32(TICRATE)
 		cnt_par = wbs.Fpartime / int32(TICRATE)
-		S_StartSound(uintptr(0), int32(sfx_barexp))
+		S_StartSound(nil, int32(sfx_barexp))
 		sp_state = 10
 	}
 	if sp_state == 2 {
 		*(*int32)(unsafe.Pointer(uintptr(unsafe.Pointer(&cnt_kills)))) += 2
 		if !(bcnt&3 != 0) {
-			S_StartSound(uintptr(0), int32(sfx_pistol))
+			S_StartSound(nil, int32(sfx_pistol))
 		}
 		if cnt_kills[0] >= plrs[me].Fskills*int32(100)/wbs.Fmaxkills {
 			cnt_kills[0] = plrs[me].Fskills * 100 / wbs.Fmaxkills
-			S_StartSound(uintptr(0), int32(sfx_barexp))
+			S_StartSound(nil, int32(sfx_barexp))
 			sp_state++
 		}
 	} else {
 		if sp_state == 4 {
 			*(*int32)(unsafe.Pointer(uintptr(unsafe.Pointer(&cnt_items)))) += 2
 			if !(bcnt&3 != 0) {
-				S_StartSound(uintptr(0), int32(sfx_pistol))
+				S_StartSound(nil, int32(sfx_pistol))
 			}
 			if cnt_items[0] >= plrs[me].Fsitems*int32(100)/wbs.Fmaxitems {
 				cnt_items[0] = plrs[me].Fsitems * 100 / wbs.Fmaxitems
-				S_StartSound(uintptr(0), int32(sfx_barexp))
+				S_StartSound(nil, int32(sfx_barexp))
 				sp_state++
 			}
 		} else {
 			if sp_state == 6 {
 				*(*int32)(unsafe.Pointer(uintptr(unsafe.Pointer(&cnt_secret)))) += 2
 				if !(bcnt&3 != 0) {
-					S_StartSound(uintptr(0), int32(sfx_pistol))
+					S_StartSound(nil, int32(sfx_pistol))
 				}
 				if cnt_secret[0] >= plrs[me].Fssecret*int32(100)/wbs.Fmaxsecret {
 					cnt_secret[0] = plrs[me].Fssecret * 100 / wbs.Fmaxsecret
-					S_StartSound(uintptr(0), int32(sfx_barexp))
+					S_StartSound(nil, int32(sfx_barexp))
 					sp_state++
 				}
 			} else {
 				if sp_state == 8 {
 					if !(bcnt&3 != 0) {
-						S_StartSound(uintptr(0), int32(sfx_pistol))
+						S_StartSound(nil, int32(sfx_pistol))
 					}
 					cnt_time += 3
 					if cnt_time >= plrs[me].Fstime/int32(TICRATE) {
@@ -43412,14 +43407,14 @@ func WI_updateStats() {
 					if cnt_par >= wbs.Fpartime/int32(TICRATE) {
 						cnt_par = wbs.Fpartime / int32(TICRATE)
 						if cnt_time >= plrs[me].Fstime/int32(TICRATE) {
-							S_StartSound(uintptr(0), int32(sfx_barexp))
+							S_StartSound(nil, int32(sfx_barexp))
 							sp_state++
 						}
 					}
 				} else {
 					if sp_state == 10 {
 						if acceleratestage != 0 {
-							S_StartSound(uintptr(0), int32(sfx_sgcock))
+							S_StartSound(nil, int32(sfx_sgcock))
 							if gamemode == commercial {
 								WI_initNoState()
 							} else {
