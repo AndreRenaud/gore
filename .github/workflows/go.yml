@@ -22,10 +22,12 @@ jobs:
         go install golang.org/x/tools/cmd/deadcode@latest
     - id: deadcode
       run: |
-        deadcode ./example/webserver
-    - name: deadcode check
-      run: |
-        if [ -n "${{join(steps.deadcode.outputs.*, '\n')}}" ] ; then echo "Dead code found"; exit 1; fi
+        DEAD=$(deadcode ./example/webserver)
+        if [ -n "$DEAD" ]; then
+          echo "deadcode found the following unused code:"
+          echo "$DEAD"
+          exit 1
+        fi
     - name: Install doom wad
       run: wget https://github.com/Akbar30Bill/DOOM_wads/raw/refs/heads/master/doom1.wad
     - name: test
