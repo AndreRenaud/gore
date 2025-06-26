@@ -28162,6 +28162,7 @@ func P_SpawnMobj(x fixed_t, y fixed_t, z fixed_t, type1 mobjtype_t) (r *mobj_t) 
 	var mobj *mobj_t
 	var info *mobjinfo_t
 	mobj = (*mobj_t)(unsafe.Pointer(Z_Malloc(224, int32(PU_LEVEL), uintptr(0))))
+	*mobj = mobj_t{}
 	info = &mobjinfo[uintptr(type1)]
 	mobj.Ftype1 = type1
 	mobj.Finfo = info
