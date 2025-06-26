@@ -25,7 +25,7 @@ jobs:
         deadcode ./example/webserver
     - name: deadcode check
       run: |
-        if [ -n "${{ steps.deadcode.stepOutput }}" ] ; then echo "Dead code found: ${{ steps.deadcode.stepOutput }}"; exit 1; fi
+        if [ -n "${{ steps.deadcode.outputs.* }}" ] ; then echo "Dead code found"; exit 1; fi
     - name: Install doom wad
       run: wget https://github.com/Akbar30Bill/DOOM_wads/raw/refs/heads/master/doom1.wad
     - name: test
