@@ -47180,15 +47180,7 @@ var yspeed [8]fixed_t
 var zlight [16][128]uintptr
 
 func fprintf_ccgo(output io.Writer, index int, args ...any) {
-	fmtStr, ok := __ccgo_ts_map[index]
-	if !ok {
-		panic(fmt.Sprintf("index %d not found in __ccgo_ts_map", index))
-	}
-	if len(fmtStr) > 0 && fmtStr[len(fmtStr)-1] == 0 {
-		// Remove the null terminator for printing
-		fmtStr = fmtStr[:len(fmtStr)-1]
-	}
-	fmt.Fprintf(output, string(fmtStr), args...)
+	fmt.Fprintf(output, __ccgo_ts_str(index), args...)
 }
 
 func snprintf_ccgo(bp uintptr, maxlen int, index int, args ...any) {

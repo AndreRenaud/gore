@@ -20,6 +20,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends ffmpeg
         go install golang.org/x/tools/cmd/deadcode@latest
+    - name: Install doom wad
+      run: wget https://github.com/Akbar30Bill/DOOM_wads/raw/refs/heads/master/doom1.wad
+    - name: test
+      run: ./run_tests.sh
     - name: deadcode
       run: |
         DEAD=$(deadcode ./example/webserver)
@@ -28,12 +32,8 @@ jobs:
           echo "$DEAD"
           exit 1
         fi
-    - name: Install doom wad
-      run: wget https://github.com/Akbar30Bill/DOOM_wads/raw/refs/heads/master/doom1.wad
-    - name: test
-      run: ./run_tests.sh
     - name: Save the test movie outputs
       uses: actions/upload-artifact@v4
       with:
         name: Test Run Movies
-        path: Test*.mp4
+        path: doom_test_Test*.mp4
