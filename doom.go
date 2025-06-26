@@ -9441,6 +9441,9 @@ func HUlib_delCharFromTextLine(t *hu_textline_t) boolean {
 	}
 }
 
+func wibble() {
+
+}
 func HUlib_drawTextLine(l *hu_textline_t, drawcursor boolean) {
 	var c uint8
 	var i, w, x int32
