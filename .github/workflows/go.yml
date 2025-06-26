@@ -32,3 +32,8 @@ jobs:
       run: wget https://github.com/Akbar30Bill/DOOM_wads/raw/refs/heads/master/doom1.wad
     - name: test
       run: ./run_tests.sh
+    - name: Save the test movie outputs
+      uses: actions/upload-artifact@v4
+      with:
+        name: Test Run Movies
+        path: Test*.mp4

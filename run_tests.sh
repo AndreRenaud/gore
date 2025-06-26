@@ -4,7 +4,18 @@
 
 set -e
 
-if [ -n "$1" ] ; then
+TESTS=$(go test -test.list '.*' | grep '^Test' | sed 's/\n/ /g')
+echo "All tests: $TESTS"
+
+if [ "$1" == "loop" ] ; then
+	# Run the tests forever until they crash
+	while : ; do
+		for f in $TESTS ; do
+			echo "Running $f..."
+			go test -v -count 1 -run "^${f}\$" .
+		done
+	done
+elif [ -n "$1" ] ; then
 	echo "Running tests in $1"
 	COUNT=1
 	if [ -n "$2" ] ; then
@@ -15,10 +26,7 @@ if [ -n "$1" ] ; then
 		go test -v -count 1 -run "^${1}\$" .
 	done
 else
-	TEST=$(go test -test.list '.*' | grep '^Test')
-	echo "All tests: $TEST"
-	set -e
-	for f in $TEST ; do
+	for f in $TESTS ; do
 		echo "Running $f..."
 		go test -v -count 1 -run "^${f}\$" .
 	done
