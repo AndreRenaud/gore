@@ -5034,8 +5034,12 @@ func D_GrabMouseCallback() (r boolean) {
 func doomgeneric_Tick() {
 	// frame syncronous IO operations
 	I_StartFrame()
-	TryRunTics()                                                                         // will run at least one tic
-	S_UpdateSounds(&((*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).degenmobj_t)) // move positional sounds
+	TryRunTics() // will run at least one tic
+	var dmo *degenmobj_t
+	if players[consoleplayer].Fmo != 0 {
+		dmo = &(*mobj_t)(unsafe.Pointer(players[consoleplayer].Fmo)).degenmobj_t // console player
+	}
+	S_UpdateSounds(dmo) // move positional sounds
 	// Update display, next frame, with current state.
 	D_Display()
 }
