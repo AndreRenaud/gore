@@ -22,7 +22,6 @@ type delayedKeyEvent struct {
 }
 
 type doomTestHeadless struct {
-	start         time.Time
 	t             *testing.T
 	keys          []delayedKeyEvent
 	lastEventTick int32
@@ -154,14 +153,14 @@ func (d *doomTestHeadless) InsertKeySequence(keys ...uint8) {
 				Pressed: true,
 				Key:     key,
 			},
-			ticks: 2,
+			ticks: 1,
 		},
 			delayedKeyEvent{
 				event: DoomKeyEvent{
 					Pressed: false,
 					Key:     key,
 				},
-				ticks: 2,
+				ticks: 1,
 			},
 		)
 	}
@@ -171,7 +170,7 @@ func (d *doomTestHeadless) InsertKeySequence(keys ...uint8) {
 		d.lock.Lock()
 		inuse := len(d.keys) > 0
 		d.lock.Unlock()
-		time.Sleep(1 * time.Millisecond) // Wait a bit before checking again
+		time.Sleep(100 * time.Microsecond) // Wait a bit before checking again
 		if !inuse {
 			break
 		}
@@ -204,8 +203,7 @@ func (d *doomTestHeadless) InsertKeyChange(Key uint8, pressed bool) {
 func TestDoomDemo(t *testing.T) {
 	dg_speed_ratio = 100.0 // Run at 50x speed
 	game := &doomTestHeadless{
-		t:     t,
-		start: time.Now(),
+		t: t,
 		keys: []delayedKeyEvent{
 			{DoomKeyEvent{Pressed: true, Key: KEY_ESCAPE}, 60_000},
 			{DoomKeyEvent{Pressed: false, Key: KEY_ESCAPE}, 100},
@@ -252,8 +250,7 @@ func loadPNG(filename string) (image.Image, error) {
 func TestLoadSave(t *testing.T) {
 	dg_speed_ratio = 100.0 // Run at 50x speed
 	game := &doomTestHeadless{
-		t:     t,
-		start: time.Now(),
+		t: t,
 	}
 	go func() {
 		time.Sleep(20 * time.Millisecond) // Let things get settled
@@ -319,9 +316,7 @@ func TestLoadSave(t *testing.T) {
 func TestDoomRandom(t *testing.T) {
 	dg_speed_ratio = 100.0 // Run at 50x speed
 	game := &doomTestHeadless{
-		t:     t,
-		start: time.Now(),
-		keys:  nil,
+		t: t,
 	}
 	defer game.Close()
 	go func() {
@@ -366,9 +361,7 @@ func TestDoomRandom(t *testing.T) {
 func TestDoomLevels(t *testing.T) {
 	dg_speed_ratio = 100.0 // Run at 50x speed
 	game := &doomTestHeadless{
-		t:     t,
-		start: time.Now(),
-		keys:  nil,
+		t: t,
 	}
 	defer game.Close()
 	go func() {
@@ -425,9 +418,7 @@ func TestDoomLevels(t *testing.T) {
 func TestDoomMap(t *testing.T) {
 	dg_speed_ratio = 100.0 // Run at 50x speed
 	game := &doomTestHeadless{
-		t:     t,
-		start: time.Now(),
-		keys:  nil,
+		t: t,
 	}
 	defer game.Close()
 	go func() {
@@ -465,9 +456,7 @@ func TestDoomMap(t *testing.T) {
 func TestWeapons(t *testing.T) {
 	dg_speed_ratio = 100.0 // Run at 50x speed
 	game := &doomTestHeadless{
-		t:     t,
-		start: time.Now(),
-		keys:  nil,
+		t: t,
 	}
 	defer game.Close()
 	go func() {
@@ -499,5 +488,69 @@ func TestWeapons(t *testing.T) {
 		game.InsertKey(KEY_ENTER)    // Confirm quit
 		game.InsertKey('y')          // Confirm exit
 	}()
+	Run(game, []string{"-iwad", "doom1.wad"})
+}
+
+func confirmMenu(t *testing.T, game *doomTestHeadless, name string) {
+	screen := game.GetScreen()
+	if screen == nil {
+		t.Errorf("No screen captured for %s", name)
+		return
+	}
+	// Save the screenshot for debugging
+	//if err := savePNG(fmt.Sprintf("doom_test_menu_%s.png", name), screen); err != nil {
+	//t.Errorf("Error saving menu screenshot: %v", err)
+	//}
+
+	knownGoodMenuImage, err := loadPNG(fmt.Sprintf("testdata/good_doom_test_menu_%s.png", name))
+	if err != nil {
+		t.Errorf("Error loading known good menu image for %s: %v", name, err)
+		return
+	}
+
+	diff, percent, err := diff.CompareImages(screen, knownGoodMenuImage)
+
+	if err != nil {
+		t.Errorf("Error comparing menu screenshot for %s: %v", name, err)
+	}
+	if percent > 2 { // Allow a small margin of error
+		t.Errorf("Menu screenshot for %s does not match known good: %f%% difference", name, percent)
+		// Save the diff image for debugging
+		savePNG(fmt.Sprintf("doom_test_menu_diff_%s.png", name), diff)
+		savePNG(fmt.Sprintf("doom_test_menu_screenshot_%s.png", name), screen)
+	}
+}
+
+// TetsMenus walks through the menus and checks the screenshots
+func TestMenus(t *testing.T) {
+	dg_speed_ratio = 100.0 // Run at 50x speed
+	game := &doomTestHeadless{
+		t: t,
+	}
+	defer game.Close()
+	// We need to do this quickly before the demo kicks in
+	go func() {
+		// Wait for screen wipe
+		time.Sleep(8 * time.Millisecond)
+
+		game.InsertKey(KEY_ESCAPE) // Open menu
+		confirmMenu(t, game, "main")
+
+		// Go to the options menu
+		game.InsertKey(KEY_DOWNARROW1)
+		game.InsertKey(KEY_ENTER)
+		confirmMenu(t, game, "options")
+
+		// Go to the load menu
+		game.InsertKey(KEY_ESCAPE)
+		game.InsertKey(KEY_ESCAPE)
+		game.InsertKey(KEY_DOWNARROW1)
+		game.InsertKey(KEY_ENTER)
+		confirmMenu(t, game, "load")
+
+		// Quit
+		D_Endoom()
+	}()
+
 	Run(game, []string{"-iwad", "doom1.wad"})
 }
