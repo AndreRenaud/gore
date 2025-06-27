@@ -9192,6 +9192,9 @@ func G_BeginRecording() {
 }
 
 func G_DeferedPlayDemo(name string) {
+	if dont_run_demo {
+		return
+	}
 	defdemoname = name
 	gameaction = ga_playdemo
 }
@@ -44988,6 +44991,9 @@ var activeceilings [30]*ceiling_t
 
 var activeplats [30]*plat_t
 
+// Used in the test suite to stop the demo running in the
+// background, as it messes with screenshots
+var dont_run_demo bool
 var advancedemo boolean
 
 var aimslope fixed_t

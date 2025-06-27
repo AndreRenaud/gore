@@ -528,10 +528,12 @@ func TestMenus(t *testing.T) {
 		t: t,
 	}
 	defer game.Close()
-	// We need to do this quickly before the demo kicks in
+	// Disable the demo playback, since it messes with the screenshots
+	dont_run_demo = true
+
 	go func() {
 		// Wait for screen wipe
-		time.Sleep(8 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 
 		game.InsertKey(KEY_ESCAPE) // Open menu
 		confirmMenu(t, game, "main")
@@ -551,6 +553,5 @@ func TestMenus(t *testing.T) {
 		// Quit
 		D_Endoom()
 	}()
-
 	Run(game, []string{"-iwad", "doom1.wad"})
 }
