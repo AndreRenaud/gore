@@ -522,7 +522,7 @@ func confirmMenu(t *testing.T, game *doomTestHeadless, name string) {
 	}
 }
 
-// TetsMenus walks through the menus and checks the screenshots
+// TestMenus walks through the menus and checks the screenshots
 func TestMenus(t *testing.T) {
 	dg_speed_ratio = 100.0 // Run at 50x speed
 	game := &doomTestHeadless{
