@@ -7152,7 +7152,7 @@ func F_Drawer() {
 // C documentation
 //
 //	// when zero, stop the wipe
-var go1 = 0
+var wipe_running = 0
 
 var wipe_scr_start uintptr
 var wipe_scr_end uintptr
@@ -7366,8 +7366,8 @@ func wipe_EndScreen(x int32, y int32, width int32, height int32) (r int32) {
 func wipe_ScreenWipe(wipeno int32, x int32, y int32, width int32, height int32, ticks int32) (r int32) {
 	var rc int32
 	// initial stuff
-	if !(go1 != 0) {
-		go1 = 1
+	if !(wipe_running != 0) {
+		wipe_running = 1
 		// wipe_scr = (byte *) Z_Malloc(width*height, PU_STATIC, 0); // DEBUG
 		wipe_scr = I_VideoBuffer
 		wipes[wipeno*3](width, height, ticks)
@@ -7378,10 +7378,10 @@ func wipe_ScreenWipe(wipeno int32, x int32, y int32, width int32, height int32, 
 	//  V_DrawBlock(x, y, 0, width, height, wipe_scr); // DEBUG
 	// final stuff
 	if rc != 0 {
-		go1 = 0
+		wipe_running = 0
 		wipes[wipeno*3+2](width, height, ticks)
 	}
-	return boolint32(!(go1 != 0))
+	return boolint32(!(wipe_running != 0))
 }
 
 var wipes = [6]func(int32, int32, int32) int32{

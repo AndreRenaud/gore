@@ -492,6 +492,7 @@ func TestWeapons(t *testing.T) {
 }
 
 func confirmMenu(t *testing.T, game *doomTestHeadless, name string) {
+	time.Sleep(1 * time.Millisecond)
 	screen := game.GetScreen()
 	if screen == nil {
 		t.Errorf("No screen captured for %s", name)
@@ -533,7 +534,11 @@ func TestMenus(t *testing.T) {
 
 	go func() {
 		// Wait for screen wipe
-		time.Sleep(20 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
+		for wipe_running != 0 {
+			time.Sleep(1 * time.Millisecond)
+		}
+		time.Sleep(2 * time.Millisecond)
 
 		game.InsertKey(KEY_ESCAPE) // Open menu
 		confirmMenu(t, game, "main")
