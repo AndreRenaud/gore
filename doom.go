@@ -435,6 +435,10 @@ const BTS_SAVEGAME = 2
 const BTS_SAVEMASK = 28
 const BTS_SAVESHIFT = 2
 
+type lumpType interface {
+	*patch_t
+}
+
 type cheatseq_t struct {
 	Fsequence         [25]int8
 	Fsequence_len     uint64
@@ -35322,7 +35326,7 @@ func R_InitSpriteLumps() {
 		if i&63 == 0 {
 			fprintf_ccgo(os.Stdout, 1250)
 		}
-		patch := (*patch_t)(unsafe.Pointer(W_CacheLumpNum(firstspritelump+i, int32(PU_CACHE))))
+		patch := W_CacheLumpNumT[*patch_t](firstspritelump+i, int32(PU_CACHE))
 		spritewidth[i] = int32(patch.Fwidth) << int32(FRACBITS)
 		spriteoffset[i] = int32(patch.Fleftoffset) << int32(FRACBITS)
 		spritetopoffset[i] = int32(patch.Ftopoffset) << int32(FRACBITS)
@@ -44009,6 +44013,15 @@ func W_CacheLumpNum(lumpnum int32, tag int32) (r uintptr) {
 		result = lump.Fcache
 	}
 	return result
+}
+
+func W_CacheLumpNumT[T lumpType](lumpnum int32, tag int32) T {
+	var result uintptr
+	result = W_CacheLumpNum(lumpnum, tag)
+	if result == uintptr(0) {
+		panic("lump failure")
+	}
+	return (T)(unsafe.Pointer(result))
 }
 
 // C documentation
