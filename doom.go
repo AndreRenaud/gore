@@ -1809,7 +1809,7 @@ type patch_t struct {
 	Fheight     int16
 	Fleftoffset int16
 	Ftopoffset  int16
-	Fcolumnofs  [8]int32
+	Fcolumnofs  [320]int32
 }
 
 type column_t struct {
@@ -41498,9 +41498,6 @@ func V_CopyRect(srcx int32, srcy int32, source uintptr, width int32, height int3
 //
 
 func V_DrawPatch(x int32, y int32, patch *patch_t) {
-	if patch == nil {
-		debug.PrintStack()
-	}
 	var col, count, w, v2 int32
 	var column, dest, desttop, source, v3 uintptr
 	y -= int32(patch.Ftopoffset)
