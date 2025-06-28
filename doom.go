@@ -2680,7 +2680,7 @@ var scale_ftom fixed_t
 
 var plr *player_t // the player represented by an arrow
 
-var marknums [10]uintptr    // numbers used for marking by the automap
+var marknums [10]*patch_t   // numbers used for marking by the automap
 var markpoints [10]mpoint_t // where the points are
 var markpointnum int32 = 0  // next point to be assigned
 
@@ -2900,7 +2900,7 @@ func AM_loadPics() {
 			break
 		}
 		snprintf_ccgo(bp, 9, 0, i)
-		marknums[i] = W_CacheLumpName(bp, int32(PU_STATIC))
+		marknums[i] = W_CacheLumpNameT[*patch_t](bp, int32(PU_STATIC))
 		goto _1
 	_1:
 		;
@@ -4944,7 +4944,7 @@ func D_Display() {
 		} else {
 			y = viewwindowy + 4
 		}
-		V_DrawPatchDirect(viewwindowx+(scaledviewwidth-int32(68))/int32(2), y, W_CacheLumpName(__ccgo_ts(1498), int32(PU_CACHE)))
+		V_DrawPatchDirect(viewwindowx+(scaledviewwidth-int32(68))/int32(2), y, W_CacheLumpNameT(__ccgo_ts(1498), int32(PU_CACHE)))
 	}
 	// menus go directly to the screen
 	M_Drawer()  // menu is drawn even on top of everything
@@ -5109,7 +5109,7 @@ func D_PageTicker() {
 //	// D_PageDrawer
 //	//
 func D_PageDrawer() {
-	V_DrawPatch(0, 0, W_CacheLumpName(pagename, int32(PU_CACHE)))
+	V_DrawPatch(0, 0, W_CacheLumpNameT(pagename, int32(PU_CACHE)))
 }
 
 // C documentation
@@ -7015,18 +7015,18 @@ func F_CastPrint(text uintptr) {
 func F_CastDrawer() {
 	var flip boolean
 	var lump int32
-	var patch uintptr
+	var patch *patch_t
 	var sprdef *spritedef_t
 	var sprframe *spriteframe_t
 	// erase the entire screen to a background
-	V_DrawPatch(0, 0, W_CacheLumpName(__ccgo_ts(13631), int32(PU_CACHE)))
+	V_DrawPatch(0, 0, W_CacheLumpNameT(__ccgo_ts(13631), int32(PU_CACHE)))
 	F_CastPrint(castorder[castnum].Fname)
 	// draw the current frame in the middle of the screen
 	sprdef = &sprites[caststate.Fsprite]
 	sprframe = &sprdef.Fspriteframes[caststate.Fframe&int32(FF_FRAMEMASK1)]
 	lump = int32(sprframe.Flump[0])
 	flip = uint32(sprframe.Fflip[0])
-	patch = W_CacheLumpNum(lump+firstspritelump, int32(PU_CACHE))
+	patch = W_CacheLumpNumT(lump+firstspritelump, int32(PU_CACHE))
 	if flip != 0 {
 		V_DrawPatchFlipped(160, 170, patch)
 	} else {
@@ -7102,7 +7102,7 @@ func F_BunnyScroll() {
 		return
 	}
 	if finalecount < 1180 {
-		V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpName(__ccgo_ts(13652), int32(PU_CACHE)))
+		V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpNameT(__ccgo_ts(13652), int32(PU_CACHE)))
 		laststage = 0
 		return
 	}
@@ -7115,7 +7115,7 @@ func F_BunnyScroll() {
 		laststage = stage
 	}
 	snprintf_ccgo(bp, 10, 13657, stage)
-	V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpName(bp, int32(PU_CACHE)))
+	V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpNameT(bp, int32(PU_CACHE)))
 }
 
 var laststage int32
@@ -7140,7 +7140,7 @@ func F_ArtScreenDrawer() {
 			return
 		}
 		lumpname = lumpname
-		V_DrawPatch(0, 0, W_CacheLumpName(lumpname, int32(PU_CACHE)))
+		V_DrawPatch(0, 0, W_CacheLumpNameT(lumpname, int32(PU_CACHE)))
 	}
 }
 
@@ -9402,7 +9402,7 @@ const KEY_BACKSPACE1 = 127
 type hu_textline_t struct {
 	Fx           int32
 	Fy           int32
-	Ff           uintptr
+	Ff           []*patch_t
 	Fsc          int32
 	Fl           [81]int8
 	Flen1        int32
@@ -9430,7 +9430,7 @@ func HUlib_clearTextLine(t *hu_textline_t) {
 	t.Fneedsupdate = 1
 }
 
-func HUlib_initTextLine(t *hu_textline_t, x int32, y int32, f uintptr, sc int32) {
+func HUlib_initTextLine(t *hu_textline_t, x int32, y int32, f []*patch_t, sc int32) {
 	t.Fx = x
 	t.Fy = y
 	t.Ff = f
@@ -9473,11 +9473,11 @@ func HUlib_drawTextLine(l *hu_textline_t, drawcursor boolean) {
 		}
 		c = uint8(xtoupper(int32(l.Fl[i])))
 		if int32(c) != int32(' ') && int32(c) >= l.Fsc && int32(c) <= int32('_') {
-			w = int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(l.Ff + uintptr(int32(c)-l.Fsc)*8)))).Fwidth)
+			w = int32(l.Ff[int32(c)-l.Fsc].Fwidth)
 			if x+w > SCREENWIDTH {
 				break
 			}
-			V_DrawPatchDirect(x, l.Fy, *(*uintptr)(unsafe.Pointer(l.Ff + uintptr(int32(c)-l.Fsc)*8)))
+			V_DrawPatchDirect(x, l.Fy, l.Ff[int32(c)-l.Fsc])
 			x += w
 		} else {
 			x += 4
@@ -9491,8 +9491,8 @@ func HUlib_drawTextLine(l *hu_textline_t, drawcursor boolean) {
 		i++
 	}
 	// draw the cursor if requested
-	if drawcursor != 0 && x+int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(l.Ff + uintptr(int32('_')-l.Fsc)*8)))).Fwidth) <= SCREENWIDTH {
-		V_DrawPatchDirect(x, l.Fy, *(*uintptr)(unsafe.Pointer(l.Ff + uintptr(int32('_')-l.Fsc)*8)))
+	if drawcursor != 0 && x+int32(l.Ff[int32('_')-l.Fsc].Fwidth) <= SCREENWIDTH {
+		V_DrawPatchDirect(x, l.Fy, l.Ff['_'-l.Fsc])
 	}
 }
 
@@ -9505,7 +9505,7 @@ func HUlib_eraseTextLine(l *hu_textline_t) {
 	// and the text must either need updating or refreshing
 	// (because of a recent change back from the automap)
 	if automapactive == 0 && viewwindowx != 0 && l.Fneedsupdate != 0 {
-		lh = int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(l.Ff)))).Fheight) + 1
+		lh = int32(l.Ff[0].Fheight) + 1
 		y = l.Fy
 		yoffset = y * SCREENWIDTH
 		for {
@@ -9531,13 +9531,13 @@ func HUlib_eraseTextLine(l *hu_textline_t) {
 	}
 }
 
-func HUlib_initSText(s *hu_stext_t, x int32, y int32, h int32, font uintptr, startchar int32, on *boolean) {
+func HUlib_initSText(s *hu_stext_t, x int32, y int32, h int32, font []*patch_t, startchar int32, on *boolean) {
 	s.Fh = h
 	s.Fon = on
 	s.Flaston = 1
 	s.Fcl = 0
 	for i := int32(0); i < h; i++ {
-		HUlib_initTextLine(&s.Fl[i], x, y-i*(int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(font)))).Fheight)+int32(1)), font, startchar)
+		HUlib_initTextLine(&s.Fl[i], x, y-i*(int32(font[0].Fheight)+int32(1)), font, startchar)
 	}
 }
 
@@ -9596,7 +9596,7 @@ func HUlib_eraseSText(s *hu_stext_t) {
 	s.Flaston = *s.Fon
 }
 
-func HUlib_initIText(it *hu_itext_t, x int32, y int32, font uintptr, startchar int32, on *boolean) {
+func HUlib_initIText(it *hu_itext_t, x int32, y int32, font []*patch_t, startchar int32, on *boolean) {
 	it.Flm = 0 // default left margin is start of text
 	it.Fon = on
 	it.Flaston = 1
@@ -9861,7 +9861,7 @@ func HU_Init() {
 		v2 = j
 		j++
 		snprintf_ccgo(bp, 9, 17480, v2)
-		hu_font[i] = W_CacheLumpName(bp, int32(PU_STATIC))
+		hu_font[i] = W_CacheLumpNameT(bp, int32(PU_STATIC))
 		goto _1
 	_1:
 		;
@@ -9886,9 +9886,9 @@ func HU_Start() {
 	message_nottobefuckedwith = 0
 	chat_on = 0
 	// create the message widget
-	HUlib_initSText(&w_message, HU_MSGX, HU_MSGY, int32(HU_MSGHEIGHT), uintptr(unsafe.Pointer(&hu_font)), int32('!'), &message_on)
+	HUlib_initSText(&w_message, HU_MSGX, HU_MSGY, int32(HU_MSGHEIGHT), hu_font[:], int32('!'), &message_on)
 	// create the map title widget
-	HUlib_initTextLine(&w_title, HU_TITLEX, 167-int32((*patch_t)(unsafe.Pointer(hu_font[0])).Fheight), uintptr(unsafe.Pointer(&hu_font)), int32('!'))
+	HUlib_initTextLine(&w_title, HU_TITLEX, 167-int32((*patch_t)(unsafe.Pointer(hu_font[0])).Fheight), hu_font[:], int32('!'))
 	if gamemission == pack_chex {
 		v1 = doom
 	} else {
@@ -9924,14 +9924,14 @@ func HU_Start() {
 		HUlib_addCharToTextLine(&w_title, *(*int8)(unsafe.Pointer(v3)))
 	}
 	// create the chat widget
-	HUlib_initIText(&w_chat, HU_MSGX, HU_MSGY+int32(HU_MSGHEIGHT)*(int32((*patch_t)(unsafe.Pointer(hu_font[0])).Fheight)+int32(1)), uintptr(unsafe.Pointer(&hu_font)), int32('!'), &chat_on)
+	HUlib_initIText(&w_chat, HU_MSGX, HU_MSGY+int32(HU_MSGHEIGHT)*(int32((*patch_t)(unsafe.Pointer(hu_font[0])).Fheight)+int32(1)), hu_font[:], int32('!'), &chat_on)
 	// create the inputbuffer widgets
 	i = 0
 	for {
 		if i >= int32(MAXPLAYERS) {
 			break
 		}
-		HUlib_initIText(&w_inputbuffer[i], 0, 0, uintptr(0), 0, &always_off)
+		HUlib_initIText(&w_inputbuffer[i], 0, 0, nil, 0, &always_off)
 		goto _4
 	_4:
 		;
@@ -20395,7 +20395,7 @@ func M_ReadSaveStrings() {
 //	//
 func M_DrawLoad() {
 	var i int32
-	V_DrawPatchDirect(72, 28, W_CacheLumpName(__ccgo_ts(22129), int32(PU_CACHE)))
+	V_DrawPatchDirect(72, 28, W_CacheLumpNameT(__ccgo_ts(22129), int32(PU_CACHE)))
 	i = 0
 	for {
 		if i >= int32(load_end) {
@@ -20417,20 +20417,20 @@ func M_DrawLoad() {
 //	//
 func M_DrawSaveLoadBorder(x int32, y int32) {
 	var i int32
-	V_DrawPatchDirect(x-int32(8), y+int32(7), W_CacheLumpName(__ccgo_ts(22137), int32(PU_CACHE)))
+	V_DrawPatchDirect(x-int32(8), y+int32(7), W_CacheLumpNameT(__ccgo_ts(22137), int32(PU_CACHE)))
 	i = 0
 	for {
 		if i >= 24 {
 			break
 		}
-		V_DrawPatchDirect(x, y+int32(7), W_CacheLumpName(__ccgo_ts(22146), int32(PU_CACHE)))
+		V_DrawPatchDirect(x, y+int32(7), W_CacheLumpNameT(__ccgo_ts(22146), int32(PU_CACHE)))
 		x += 8
 		goto _1
 	_1:
 		;
 		i++
 	}
-	V_DrawPatchDirect(x, y+int32(7), W_CacheLumpName(__ccgo_ts(22155), int32(PU_CACHE)))
+	V_DrawPatchDirect(x, y+int32(7), W_CacheLumpNameT(__ccgo_ts(22155), int32(PU_CACHE)))
 }
 
 // C documentation
@@ -20464,7 +20464,7 @@ func M_LoadGame(choice int32) {
 //	//
 func M_DrawSave() {
 	var i int32
-	V_DrawPatchDirect(72, 28, W_CacheLumpName(__ccgo_ts(22217), int32(PU_CACHE)))
+	V_DrawPatchDirect(72, 28, W_CacheLumpNameT(__ccgo_ts(22217), int32(PU_CACHE)))
 	i = 0
 	for {
 		if i >= int32(load_end) {
@@ -20634,7 +20634,7 @@ func M_DrawReadThis1() {
 		break
 	}
 	lumpname = lumpname
-	V_DrawPatchDirect(0, 0, W_CacheLumpName(lumpname, int32(PU_CACHE)))
+	V_DrawPatchDirect(0, 0, W_CacheLumpNameT(lumpname, int32(PU_CACHE)))
 	ReadDef1.Fx = int16(skullx)
 	ReadDef1.Fy = int16(skully)
 }
@@ -20648,7 +20648,7 @@ func M_DrawReadThis2() {
 	inhelpscreens = 1
 	// We only ever draw the second page if this is
 	// gameversion == exe_doom_1_9 and gamemode == registered
-	V_DrawPatchDirect(0, 0, W_CacheLumpName(__ccgo_ts(22506), int32(PU_CACHE)))
+	V_DrawPatchDirect(0, 0, W_CacheLumpNameT(__ccgo_ts(22506), int32(PU_CACHE)))
 }
 
 // C documentation
@@ -20657,7 +20657,7 @@ func M_DrawReadThis2() {
 //	// Change Sfx & Music volumes
 //	//
 func M_DrawSound() {
-	V_DrawPatchDirect(60, 38, W_CacheLumpName(__ccgo_ts(22535), int32(PU_CACHE)))
+	V_DrawPatchDirect(60, 38, W_CacheLumpNameT(__ccgo_ts(22535), int32(PU_CACHE)))
 	M_DrawThermo(int32(SoundDef.Fx), int32(SoundDef.Fy)+LINEHEIGHT*(int32(sfx_vol)+1), 16, sfxVolume)
 	M_DrawThermo(int32(SoundDef.Fx), int32(SoundDef.Fy)+LINEHEIGHT*(int32(music_vol)+1), 16, musicVolume)
 }
@@ -20702,7 +20702,7 @@ func M_MusicVol(choice int32) {
 //	// M_DrawMainMenu
 //	//
 func M_DrawMainMenu() {
-	V_DrawPatchDirect(94, 2, W_CacheLumpName(__ccgo_ts(22542), int32(PU_CACHE)))
+	V_DrawPatchDirect(94, 2, W_CacheLumpNameT(__ccgo_ts(22542), int32(PU_CACHE)))
 }
 
 // C documentation
@@ -20711,8 +20711,8 @@ func M_DrawMainMenu() {
 //	// M_NewGame
 //	//
 func M_DrawNewGame() {
-	V_DrawPatchDirect(96, 14, W_CacheLumpName(__ccgo_ts(22549), int32(PU_CACHE)))
-	V_DrawPatchDirect(54, 38, W_CacheLumpName(__ccgo_ts(22556), int32(PU_CACHE)))
+	V_DrawPatchDirect(96, 14, W_CacheLumpNameT(__ccgo_ts(22549), int32(PU_CACHE)))
+	V_DrawPatchDirect(54, 38, W_CacheLumpNameT(__ccgo_ts(22556), int32(PU_CACHE)))
 }
 
 func M_NewGame(choice int32) {
@@ -20729,7 +20729,7 @@ func M_NewGame(choice int32) {
 }
 
 func M_DrawEpisode() {
-	V_DrawPatchDirect(54, 38, W_CacheLumpName(__ccgo_ts(22630), int32(PU_CACHE)))
+	V_DrawPatchDirect(54, 38, W_CacheLumpNameT(__ccgo_ts(22630), int32(PU_CACHE)))
 }
 
 func M_VerifyNightmare(key int32) {
@@ -20779,9 +20779,9 @@ var msgNames = [2]uintptr{
 }
 
 func M_DrawOptions() {
-	V_DrawPatchDirect(108, 15, W_CacheLumpName(__ccgo_ts(22883), int32(PU_CACHE)))
-	V_DrawPatchDirect(int32(OptionsDef.Fx)+int32(175), int32(OptionsDef.Fy)+LINEHEIGHT*int32(detail), W_CacheLumpName(detailNames[detailLevel], int32(PU_CACHE)))
-	V_DrawPatchDirect(int32(OptionsDef.Fx)+int32(120), int32(OptionsDef.Fy)+LINEHEIGHT*int32(messages), W_CacheLumpName(msgNames[showMessages], int32(PU_CACHE)))
+	V_DrawPatchDirect(108, 15, W_CacheLumpNameT(__ccgo_ts(22883), int32(PU_CACHE)))
+	V_DrawPatchDirect(int32(OptionsDef.Fx)+int32(175), int32(OptionsDef.Fy)+LINEHEIGHT*int32(detail), W_CacheLumpNameT(detailNames[detailLevel], int32(PU_CACHE)))
+	V_DrawPatchDirect(int32(OptionsDef.Fx)+int32(120), int32(OptionsDef.Fy)+LINEHEIGHT*int32(messages), W_CacheLumpNameT(msgNames[showMessages], int32(PU_CACHE)))
 	M_DrawThermo(int32(OptionsDef.Fx), int32(OptionsDef.Fy)+LINEHEIGHT*(int32(mousesens)+1), 10, mouseSensitivity)
 	M_DrawThermo(int32(OptionsDef.Fx), int32(OptionsDef.Fy)+LINEHEIGHT*(int32(scrnsize)+1), 9, screenSize)
 }
@@ -20972,22 +20972,22 @@ func M_SizeDisplay(choice int32) {
 func M_DrawThermo(x int32, y int32, thermWidth int32, thermDot int32) {
 	var i, xx int32
 	xx = x
-	V_DrawPatchDirect(xx, y, W_CacheLumpName(__ccgo_ts(23063), int32(PU_CACHE)))
+	V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts(23063), int32(PU_CACHE)))
 	xx += 8
 	i = 0
 	for {
 		if i >= thermWidth {
 			break
 		}
-		V_DrawPatchDirect(xx, y, W_CacheLumpName(__ccgo_ts(23072), int32(PU_CACHE)))
+		V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts(23072), int32(PU_CACHE)))
 		xx += 8
 		goto _1
 	_1:
 		;
 		i++
 	}
-	V_DrawPatchDirect(xx, y, W_CacheLumpName(__ccgo_ts(23081), int32(PU_CACHE)))
-	V_DrawPatchDirect(x+int32(8)+thermDot*int32(8), y, W_CacheLumpName(__ccgo_ts(23090), int32(PU_CACHE)))
+	V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts(23081), int32(PU_CACHE)))
+	V_DrawPatchDirect(x+int32(8)+thermDot*int32(8), y, W_CacheLumpNameT(__ccgo_ts(23090), int32(PU_CACHE)))
 }
 
 func M_StartMessage(string1 string, routine func(int32), input boolean) {
@@ -21570,7 +21570,7 @@ func M_Drawer() {
 		}
 		name = uintptr(unsafe.Pointer(&currentMenu.Fmenuitems[i].Fname[0]))
 		if *(*int8)(unsafe.Pointer(name)) != 0 {
-			V_DrawPatchDirect(int32(x), int32(y2), W_CacheLumpName(name, int32(PU_CACHE)))
+			V_DrawPatchDirect(int32(x), int32(y2), W_CacheLumpNameT(name, int32(PU_CACHE)))
 		}
 		y2 = int16(int32(y2) + LINEHEIGHT)
 		goto _2
@@ -21579,7 +21579,7 @@ func M_Drawer() {
 		i++
 	}
 	// DRAW SKULL
-	V_DrawPatchDirect(int32(x)+-int32(32), int32(currentMenu.Fy)-int32(5)+int32(itemOn)*int32(LINEHEIGHT), W_CacheLumpName(skullName[whichSkull], int32(PU_CACHE)))
+	V_DrawPatchDirect(int32(x)+-int32(32), int32(currentMenu.Fy)-int32(5)+int32(itemOn)*int32(LINEHEIGHT), W_CacheLumpNameT(skullName[whichSkull], int32(PU_CACHE)))
 }
 
 var x int16
@@ -36110,7 +36110,8 @@ func R_InitBuffer(width int32, height int32) {
 //	// Also draws a beveled edge.
 //	//
 func R_FillBackScreen() {
-	var dest, name, name1, name2, patch, src uintptr
+	var dest, name, name1, name2, src uintptr
+	var patch *patch_t
 	var x, y int32
 	// DOOM border patch.
 	name1 = __ccgo_ts(26328)
@@ -36164,7 +36165,7 @@ func R_FillBackScreen() {
 	}
 	// Draw screen and bezel; this is done to a separate screen buffer.
 	V_UseBuffer(background_buffer)
-	patch = W_CacheLumpName(__ccgo_ts(26345), int32(PU_CACHE))
+	patch = W_CacheLumpNameT(__ccgo_ts(26345), int32(PU_CACHE))
 	x = 0
 	for {
 		if x >= scaledviewwidth {
@@ -36176,7 +36177,7 @@ func R_FillBackScreen() {
 		;
 		x += 8
 	}
-	patch = W_CacheLumpName(__ccgo_ts(26352), int32(PU_CACHE))
+	patch = W_CacheLumpNameT(__ccgo_ts(26352), int32(PU_CACHE))
 	x = 0
 	for {
 		if x >= scaledviewwidth {
@@ -36188,7 +36189,7 @@ func R_FillBackScreen() {
 		;
 		x += 8
 	}
-	patch = W_CacheLumpName(__ccgo_ts(26359), int32(PU_CACHE))
+	patch = W_CacheLumpNameT(__ccgo_ts(26359), int32(PU_CACHE))
 	y = 0
 	for {
 		if y >= viewheight {
@@ -36200,7 +36201,7 @@ func R_FillBackScreen() {
 		;
 		y += 8
 	}
-	patch = W_CacheLumpName(__ccgo_ts(26366), int32(PU_CACHE))
+	patch = W_CacheLumpNameT(__ccgo_ts(26366), int32(PU_CACHE))
 	y = 0
 	for {
 		if y >= viewheight {
@@ -36213,10 +36214,10 @@ func R_FillBackScreen() {
 		y += 8
 	}
 	// Draw beveled edge.
-	V_DrawPatch(viewwindowx-int32(8), viewwindowy-int32(8), W_CacheLumpName(__ccgo_ts(26373), int32(PU_CACHE)))
-	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy-int32(8), W_CacheLumpName(__ccgo_ts(26381), int32(PU_CACHE)))
-	V_DrawPatch(viewwindowx-int32(8), viewwindowy+viewheight, W_CacheLumpName(__ccgo_ts(26389), int32(PU_CACHE)))
-	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy+viewheight, W_CacheLumpName(__ccgo_ts(26397), int32(PU_CACHE)))
+	V_DrawPatch(viewwindowx-int32(8), viewwindowy-int32(8), W_CacheLumpNameT(__ccgo_ts(26373), int32(PU_CACHE)))
+	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy-int32(8), W_CacheLumpNameT(__ccgo_ts(26381), int32(PU_CACHE)))
+	V_DrawPatch(viewwindowx-int32(8), viewwindowy+viewheight, W_CacheLumpNameT(__ccgo_ts(26389), int32(PU_CACHE)))
+	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy+viewheight, W_CacheLumpNameT(__ccgo_ts(26397), int32(PU_CACHE)))
 	V_RestoreBuffer()
 }
 
@@ -39588,22 +39589,22 @@ type st_number_t struct {
 	Foldnum int32
 	Fnum    uintptr
 	Fon     *boolean
-	Fp      uintptr
+	Fp      []*patch_t
 	Fdata   weapontype_t
 }
 
 type st_percent_t struct {
 	Fn st_number_t
-	Fp uintptr
+	Fp *patch_t
 }
 
 type st_multicon_t struct {
 	Fx       int32
 	Fy       int32
 	Foldinum int32
-	Finum    uintptr
+	Finum    *int32
 	Fon      *boolean
-	Fp       uintptr
+	Fp       []*patch_t
 	Fdata    int32
 }
 
@@ -39611,20 +39612,20 @@ type st_binicon_t struct {
 	Fx      int32
 	Fy      int32
 	Foldval boolean
-	Fval    uintptr
+	Fval    *boolean
 	Fon     *boolean
-	Fp      uintptr
+	Fp      *patch_t
 	Fdata   int32
 }
 
 func STlib_init() {
-	sttminus = W_CacheLumpName(__ccgo_ts(27459), int32(PU_STATIC))
+	sttminus = W_CacheLumpNameT(__ccgo_ts(27459), int32(PU_STATIC))
 }
 
 // C documentation
 //
 //	// ?
-func STlib_initNum(st *st_number_t, x int32, y int32, pl uintptr, num uintptr, on *boolean, width int32) {
+func STlib_initNum(st *st_number_t, x int32, y int32, pl []*patch_t, num uintptr, on *boolean, width int32) {
 	st.Fx = x
 	st.Fy = y
 	st.Foldnum = 0
@@ -39646,8 +39647,8 @@ func STlib_drawNum(n *st_number_t, refresh boolean) {
 	var v2 bool
 	numdigits = n.Fwidth
 	num = *(*int32)(unsafe.Pointer(n.Fnum))
-	w = int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(n.Fp)))).Fwidth)
-	h = int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(n.Fp)))).Fheight)
+	w = int32(n.Fp[0].Fwidth)
+	h = int32(n.Fp[0].Fheight)
 	// [crispy] redraw only if necessary
 	if n.Foldnum == num && refresh == 0 {
 		return
@@ -39677,7 +39678,7 @@ func STlib_drawNum(n *st_number_t, refresh boolean) {
 	x = n.Fx
 	// in the special case of 0, you draw 0
 	if num == 0 {
-		V_DrawPatch(x-w, n.Fy, *(*uintptr)(unsafe.Pointer(n.Fp)))
+		V_DrawPatch(x-w, n.Fy, n.Fp[0])
 	}
 	// draw the new number
 	for {
@@ -39689,7 +39690,7 @@ func STlib_drawNum(n *st_number_t, refresh boolean) {
 			break
 		}
 		x -= w
-		V_DrawPatch(x, n.Fy, *(*uintptr)(unsafe.Pointer(n.Fp + uintptr(num%int32(10))*8)))
+		V_DrawPatch(x, n.Fy, n.Fp[num%10])
 		num /= 10
 	}
 	// draw a minus sign if necessary
@@ -39710,7 +39711,7 @@ func STlib_updateNum(n *st_number_t, refresh boolean) {
 // C documentation
 //
 //	//
-func STlib_initPercent(st *st_percent_t, x int32, y int32, pl uintptr, num uintptr, on *boolean, percent uintptr) {
+func STlib_initPercent(st *st_percent_t, x int32, y int32, pl []*patch_t, num uintptr, on *boolean, percent *patch_t) {
 	STlib_initNum(&st.Fn, x, y, pl, num, on, 3)
 	st.Fp = percent
 }
@@ -39722,7 +39723,7 @@ func STlib_updatePercent(per *st_percent_t, refresh int32) {
 	STlib_updateNum(&per.Fn, uint32(refresh))
 }
 
-func STlib_initMultIcon(st *st_multicon_t, x int32, y int32, il uintptr, inum uintptr, on *boolean) {
+func STlib_initMultIcon(st *st_multicon_t, x int32, y int32, il []*patch_t, inum *int32, on *boolean) {
 	st.Fx = x
 	st.Fy = y
 	st.Foldinum = -1
@@ -39735,21 +39736,21 @@ func STlib_updateMultIcon(mi *st_multicon_t, refresh boolean) {
 	var h, w, x, y int32
 	if *mi.Fon != 0 && (mi.Foldinum != *(*int32)(unsafe.Pointer(mi.Finum)) || refresh != 0) && *(*int32)(unsafe.Pointer(mi.Finum)) != -1 {
 		if mi.Foldinum != -1 {
-			x = mi.Fx - int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer((*st_multicon_t)(unsafe.Pointer(mi)).Fp + uintptr(mi.Foldinum)*8)))).Fleftoffset)
-			y = mi.Fy - int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer((*st_multicon_t)(unsafe.Pointer(mi)).Fp + uintptr(mi.Foldinum)*8)))).Ftopoffset)
-			w = int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(mi.Fp + uintptr(mi.Foldinum)*8)))).Fwidth)
-			h = int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(mi.Fp + uintptr(mi.Foldinum)*8)))).Fheight)
+			x = mi.Fx - int32(mi.Fp[mi.Foldinum].Fleftoffset)
+			y = mi.Fy - int32(mi.Fp[mi.Foldinum].Ftopoffset)
+			w = int32(mi.Fp[mi.Foldinum].Fwidth)
+			h = int32(mi.Fp[mi.Foldinum].Fheight)
 			if y-(SCREENHEIGHT-ST_HEIGHT) < 0 {
 				I_Error(27493, 0)
 			}
 			V_CopyRect(x, y-(SCREENHEIGHT-ST_HEIGHT), st_backing_screen, w, h, x, y)
 		}
-		V_DrawPatch(mi.Fx, mi.Fy, *(*uintptr)(unsafe.Pointer(mi.Fp + uintptr(*(*int32)(unsafe.Pointer(mi.Finum)))*8)))
-		mi.Foldinum = *(*int32)(unsafe.Pointer(mi.Finum))
+		V_DrawPatch(mi.Fx, mi.Fy, mi.Fp[*mi.Finum])
+		mi.Foldinum = *mi.Finum
 	}
 }
 
-func STlib_initBinIcon(st *st_binicon_t, x int32, y int32, i uintptr, val uintptr, on *boolean) {
+func STlib_initBinIcon(st *st_binicon_t, x int32, y int32, i *patch_t, val *boolean, on *boolean) {
 	st.Fx = x
 	st.Fy = y
 	st.Foldval = 0
@@ -39872,47 +39873,47 @@ var st_fragson boolean
 // C documentation
 //
 //	// main bar left
-var sbar uintptr
+var sbar *patch_t
 
 // C documentation
 //
 //	// 0-9, tall numbers
-var tallnum [10]uintptr
+var tallnum [10]*patch_t
 
 // C documentation
 //
 //	// tall % sign
-var tallpercent uintptr
+var tallpercent *patch_t
 
 // C documentation
 //
 //	// 0-9, short, yellow (,different!) numbers
-var shortnum [10]uintptr
+var shortnum [10]*patch_t
 
 // C documentation
 //
 //	// 3 key-cards, 3 skulls
-var keys [6]uintptr
+var keys [6]*patch_t
 
 // C documentation
 //
 //	// face status patches
-var faces [42]uintptr
+var faces [42]*patch_t
 
 // C documentation
 //
 //	// face background
-var faceback uintptr
+var faceback *patch_t
 
 // C documentation
 //
 //	// main bar right
-var armsbg uintptr
+var armsbg *patch_t
 
 // C documentation
 //
 //	// weapon ownership patches
-var arms [6][2]uintptr
+var arms [6][2]*patch_t
 
 // C documentation
 //
@@ -40751,7 +40752,7 @@ func ST_loadUnloadGraphics(callback func(uintptr, uintptr)) {
 		// gray #
 		callback(bp, uintptr(unsafe.Pointer(&arms))+uintptr(i)*16)
 		// yellow #
-		*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(&arms)) + uintptr(i)*16 + 1*8)) = shortnum[i+int32(2)]
+		arms[i][1] = shortnum[i+int32(2)]
 		goto _3
 	_3:
 		;
@@ -40856,37 +40857,37 @@ func ST_initData() {
 
 func ST_createWidgets() {
 	// ready weapon ammo
-	STlib_initNum(&w_ready, ST_AMMOX, ST_AMMOY, uintptr(unsafe.Pointer(&tallnum)), uintptr(unsafe.Pointer(&plyr.Fammo[weaponinfo[plyr.Freadyweapon].Fammo])), &st_statusbaron, ST_AMMOWIDTH)
+	STlib_initNum(&w_ready, ST_AMMOX, ST_AMMOY, tallnum[:], uintptr(unsafe.Pointer(&plyr.Fammo[weaponinfo[plyr.Freadyweapon].Fammo])), &st_statusbaron, ST_AMMOWIDTH)
 	// the last weapon type
 	w_ready.Fdata = plyr.Freadyweapon
 	// health percentage
-	STlib_initPercent(&w_health, ST_HEALTHX, ST_HEALTHY, uintptr(unsafe.Pointer(&tallnum)), uintptr(unsafe.Pointer(&plyr.Fhealth)), &st_statusbaron, tallpercent)
+	STlib_initPercent(&w_health, ST_HEALTHX, ST_HEALTHY, tallnum[:], uintptr(unsafe.Pointer(&plyr.Fhealth)), &st_statusbaron, tallpercent)
 	// arms background
-	STlib_initBinIcon(&w_armsbg, ST_ARMSBGX, ST_ARMSBGY, armsbg, uintptr(unsafe.Pointer(&st_notdeathmatch)), &st_statusbaron)
+	STlib_initBinIcon(&w_armsbg, ST_ARMSBGX, ST_ARMSBGY, armsbg, &st_notdeathmatch, &st_statusbaron)
 	// weapons owned
 	for i := int32(0); i < 6; i++ {
-		STlib_initMultIcon(&w_arms[i], ST_ARMSX+i%3*ST_ARMSXSPACE, ST_ARMSY+i/int32(3)*ST_ARMSYSPACE, uintptr(unsafe.Pointer(&arms))+uintptr(i)*16, uintptr(unsafe.Pointer(&plyr.Fweaponowned[i+1])), &st_armson)
+		STlib_initMultIcon(&w_arms[i], ST_ARMSX+i%3*ST_ARMSXSPACE, ST_ARMSY+i/int32(3)*ST_ARMSYSPACE, arms[i][:], (*int32)(unsafe.Pointer(&plyr.Fweaponowned[i+1])), &st_armson)
 	}
 	// frags sum
-	STlib_initNum(&w_frags, ST_FRAGSX, ST_FRAGSY, uintptr(unsafe.Pointer(&tallnum)), uintptr(unsafe.Pointer(&st_fragscount)), &st_fragson, ST_FRAGSWIDTH)
+	STlib_initNum(&w_frags, ST_FRAGSX, ST_FRAGSY, tallnum[:], uintptr(unsafe.Pointer(&st_fragscount)), &st_fragson, ST_FRAGSWIDTH)
 	// faces
-	STlib_initMultIcon(&w_faces, ST_FACESX, ST_FACESY, uintptr(unsafe.Pointer(&faces)), uintptr(unsafe.Pointer(&st_faceindex)), &st_statusbaron)
+	STlib_initMultIcon(&w_faces, ST_FACESX, ST_FACESY, faces[:], &st_faceindex, &st_statusbaron)
 	// armor percentage - should be colored later
-	STlib_initPercent(&w_armor, ST_ARMORX, ST_ARMORY, uintptr(unsafe.Pointer(&tallnum)), uintptr(unsafe.Pointer(&plyr.Farmorpoints)), &st_statusbaron, tallpercent)
+	STlib_initPercent(&w_armor, ST_ARMORX, ST_ARMORY, tallnum[:], uintptr(unsafe.Pointer(&plyr.Farmorpoints)), &st_statusbaron, tallpercent)
 	// keyboxes 0-2
-	STlib_initMultIcon(&w_keyboxes[0], ST_KEY0X, ST_KEY0Y, uintptr(unsafe.Pointer(&keys)), uintptr(unsafe.Pointer(&keyboxes)), &st_statusbaron)
-	STlib_initMultIcon(&w_keyboxes[1], ST_KEY1X, ST_KEY1Y, uintptr(unsafe.Pointer(&keys)), uintptr(unsafe.Pointer(&keyboxes))+1*4, &st_statusbaron)
-	STlib_initMultIcon(&w_keyboxes[2], ST_KEY2X, ST_KEY2Y, uintptr(unsafe.Pointer(&keys)), uintptr(unsafe.Pointer(&keyboxes))+2*4, &st_statusbaron)
+	STlib_initMultIcon(&w_keyboxes[0], ST_KEY0X, ST_KEY0Y, keys[:], &keyboxes[0], &st_statusbaron)
+	STlib_initMultIcon(&w_keyboxes[1], ST_KEY1X, ST_KEY1Y, keys[:], &keyboxes[1], &st_statusbaron)
+	STlib_initMultIcon(&w_keyboxes[2], ST_KEY2X, ST_KEY2Y, keys[:], &keyboxes[2], &st_statusbaron)
 	// ammo count (all four kinds)
-	STlib_initNum(&w_ammo[0], ST_AMMO0X, ST_AMMO0Y, uintptr(unsafe.Pointer(&shortnum)), uintptr(unsafe.Pointer(&plyr.Fammo[0])), &st_statusbaron, ST_AMMO0WIDTH)
-	STlib_initNum(&w_ammo[1], ST_AMMO1X, ST_AMMO1Y, uintptr(unsafe.Pointer(&shortnum)), uintptr(unsafe.Pointer(&plyr.Fammo[1])), &st_statusbaron, ST_AMMO0WIDTH)
-	STlib_initNum(&w_ammo[2], ST_AMMO2X, ST_AMMO2Y, uintptr(unsafe.Pointer(&shortnum)), uintptr(unsafe.Pointer(&plyr.Fammo[2])), &st_statusbaron, ST_AMMO0WIDTH)
-	STlib_initNum(&w_ammo[3], ST_AMMO3X, ST_AMMO3Y, uintptr(unsafe.Pointer(&shortnum)), uintptr(unsafe.Pointer(&plyr.Fammo[3])), &st_statusbaron, ST_AMMO0WIDTH)
+	STlib_initNum(&w_ammo[0], ST_AMMO0X, ST_AMMO0Y, shortnum[:], uintptr(unsafe.Pointer(&plyr.Fammo[0])), &st_statusbaron, ST_AMMO0WIDTH)
+	STlib_initNum(&w_ammo[1], ST_AMMO1X, ST_AMMO1Y, shortnum[:], uintptr(unsafe.Pointer(&plyr.Fammo[1])), &st_statusbaron, ST_AMMO0WIDTH)
+	STlib_initNum(&w_ammo[2], ST_AMMO2X, ST_AMMO2Y, shortnum[:], uintptr(unsafe.Pointer(&plyr.Fammo[2])), &st_statusbaron, ST_AMMO0WIDTH)
+	STlib_initNum(&w_ammo[3], ST_AMMO3X, ST_AMMO3Y, shortnum[:], uintptr(unsafe.Pointer(&plyr.Fammo[3])), &st_statusbaron, ST_AMMO0WIDTH)
 	// max ammo count (all four kinds)
-	STlib_initNum(&w_maxammo[0], ST_MAXAMMO0X, ST_MAXAMMO0Y, uintptr(unsafe.Pointer(&shortnum)), uintptr(unsafe.Pointer(&plyr.Fmaxammo[0])), &st_statusbaron, ST_MAXAMMO0WIDTH)
-	STlib_initNum(&w_maxammo[1], ST_MAXAMMO1X, ST_MAXAMMO1Y, uintptr(unsafe.Pointer(&shortnum)), uintptr(unsafe.Pointer(&plyr.Fmaxammo[1])), &st_statusbaron, ST_MAXAMMO0WIDTH)
-	STlib_initNum(&w_maxammo[2], ST_MAXAMMO2X, ST_MAXAMMO2Y, uintptr(unsafe.Pointer(&shortnum)), uintptr(unsafe.Pointer(&plyr.Fmaxammo[2])), &st_statusbaron, ST_MAXAMMO0WIDTH)
-	STlib_initNum(&w_maxammo[3], ST_MAXAMMO3X, ST_MAXAMMO3Y, uintptr(unsafe.Pointer(&shortnum)), uintptr(unsafe.Pointer(&plyr.Fmaxammo[3])), &st_statusbaron, ST_MAXAMMO0WIDTH)
+	STlib_initNum(&w_maxammo[0], ST_MAXAMMO0X, ST_MAXAMMO0Y, shortnum[:], uintptr(unsafe.Pointer(&plyr.Fmaxammo[0])), &st_statusbaron, ST_MAXAMMO0WIDTH)
+	STlib_initNum(&w_maxammo[1], ST_MAXAMMO1X, ST_MAXAMMO1Y, shortnum[:], uintptr(unsafe.Pointer(&plyr.Fmaxammo[1])), &st_statusbaron, ST_MAXAMMO0WIDTH)
+	STlib_initNum(&w_maxammo[2], ST_MAXAMMO2X, ST_MAXAMMO2Y, shortnum[:], uintptr(unsafe.Pointer(&plyr.Fmaxammo[2])), &st_statusbaron, ST_MAXAMMO0WIDTH)
+	STlib_initNum(&w_maxammo[3], ST_MAXAMMO3X, ST_MAXAMMO3Y, shortnum[:], uintptr(unsafe.Pointer(&plyr.Fmaxammo[3])), &st_statusbaron, ST_MAXAMMO0WIDTH)
 }
 
 var st_stopped int32 = 1
@@ -41496,23 +41497,26 @@ func V_CopyRect(srcx int32, srcy int32, source uintptr, width int32, height int3
 // Masks a column based masked pic to the screen.
 //
 
-func V_DrawPatch(x int32, y int32, patch uintptr) {
+func V_DrawPatch(x int32, y int32, patch *patch_t) {
+	if patch == nil {
+		debug.PrintStack()
+	}
 	var col, count, w, v2 int32
 	var column, dest, desttop, source, v3 uintptr
-	y -= int32((*patch_t)(unsafe.Pointer(patch)).Ftopoffset)
-	x -= int32((*patch_t)(unsafe.Pointer(patch)).Fleftoffset)
-	if x < 0 || x+int32((*patch_t)(unsafe.Pointer(patch)).Fwidth) > SCREENWIDTH || y < 0 || y+int32((*patch_t)(unsafe.Pointer(patch)).Fheight) > SCREENHEIGHT {
-		I_Error(28103, x, y, int32((*patch_t)(unsafe.Pointer(patch)).Fwidth), int32((*patch_t)(unsafe.Pointer(patch)).Fheight), int32((*patch_t)(unsafe.Pointer(patch)).Ftopoffset), int32((*patch_t)(unsafe.Pointer(patch)).Fleftoffset))
+	y -= int32(patch.Ftopoffset)
+	x -= int32(patch.Fleftoffset)
+	if x < 0 || x+int32(patch.Fwidth) > SCREENWIDTH || y < 0 || y+int32(patch.Fheight) > SCREENHEIGHT {
+		I_Error(28103, x, y, int32(patch.Fwidth), int32(patch.Fheight), int32(patch.Ftopoffset), int32(patch.Fleftoffset))
 	}
-	V_MarkRect(x, y, int32((*patch_t)(unsafe.Pointer(patch)).Fwidth), int32((*patch_t)(unsafe.Pointer(patch)).Fheight))
+	V_MarkRect(x, y, int32(patch.Fwidth), int32(patch.Fheight))
 	col = 0
 	desttop = dest_screen + uintptr(y*SCREENWIDTH) + uintptr(x)
-	w = int32((*patch_t)(unsafe.Pointer(patch)).Fwidth)
+	w = int32(patch.Fwidth)
 	for {
 		if col >= w {
 			break
 		}
-		column = patch + uintptr(*(*int32)(unsafe.Pointer(patch + 8 + uintptr(col)*4)))
+		column = (uintptr)(unsafe.Pointer(patch)) + uintptr(patch.Fcolumnofs[col])
 		// step through the posts in a column
 		for int32((*column_t)(unsafe.Pointer(column)).Ftopdelta) != 0xff {
 			source = column + uintptr(3)
@@ -41545,7 +41549,7 @@ func V_DrawPatch(x int32, y int32, patch uintptr) {
 // Flips horizontally, e.g. to mirror face.
 //
 
-func V_DrawPatchFlipped(x int32, y int32, patch uintptr) {
+func V_DrawPatchFlipped(x int32, y int32, patch *patch_t) {
 	var col, count, w, v2 int32
 	var column, dest, desttop, source, v3 uintptr
 	y -= int32((*patch_t)(unsafe.Pointer(patch)).Ftopoffset)
@@ -41561,7 +41565,7 @@ func V_DrawPatchFlipped(x int32, y int32, patch uintptr) {
 		if col >= w {
 			break
 		}
-		column = patch + uintptr(*(*int32)(unsafe.Pointer(patch + 8 + uintptr(w-1-col)*4)))
+		column = (uintptr)(unsafe.Pointer(patch)) + uintptr(patch.Fcolumnofs[w-1-col])
 		// step through the posts in a column
 		for int32((*column_t)(unsafe.Pointer(column)).Ftopdelta) != 0xff {
 			source = column + uintptr(3)
@@ -41593,7 +41597,7 @@ func V_DrawPatchFlipped(x int32, y int32, patch uintptr) {
 // Draws directly to the screen on the pc.
 //
 
-func V_DrawPatchDirect(x int32, y int32, patch uintptr) {
+func V_DrawPatchDirect(x int32, y int32, patch *patch_t) {
 	V_DrawPatch(x, y, patch)
 }
 
@@ -41839,7 +41843,7 @@ type anim_t1 struct {
 	Floc       point_t
 	Fdata1     int32
 	Fdata2     int32
-	Fp         [3]uintptr
+	Fp         [3]*patch_t
 	Fnexttic   int32
 	Flastdrawn int32
 	Fctr       int32
@@ -42271,91 +42275,91 @@ var NUMCMAPS int32
 // C documentation
 //
 //	// You Are Here graphic
-var yah = [3]uintptr{}
+var yah = [3]*patch_t{}
 
 // C documentation
 //
 //	// splat
-var splat = [2]uintptr{}
+var splat = [2]*patch_t{}
 
 // C documentation
 //
 //	// %, : graphics
-var percent uintptr
-var colon uintptr
+var percent *patch_t
+var colon *patch_t
 
 // C documentation
 //
 //	// 0-9 graphic
-var num [10]uintptr
+var num [10]*patch_t
 
 // C documentation
 //
 //	// minus sign
-var wiminus uintptr
+var wiminus *patch_t
 
 // C documentation
 //
 //	// "Finished!" graphics
-var finished uintptr
+var finished *patch_t
 
 // C documentation
 //
 //	// "Entering" graphic
-var entering uintptr
+var entering *patch_t
 
 // C documentation
 //
 //	// "secret"
-var sp_secret uintptr
+var sp_secret *patch_t
 
 // C documentation
 //
 //	// "Kills", "Scrt", "Items", "Frags"
-var kills uintptr
-var secret uintptr
-var items uintptr
-var frags uintptr
+var kills *patch_t
+var secret *patch_t
+var items *patch_t
+var frags *patch_t
 
 // C documentation
 //
 //	// Time sucks.
-var timepatch uintptr
-var par uintptr
-var sucks uintptr
+var timepatch *patch_t
+var par *patch_t
+var sucks *patch_t
 
 // C documentation
 //
 //	// "killers", "victims"
-var killers uintptr
-var victims uintptr
+var killers *patch_t
+var victims *patch_t
 
 // C documentation
 //
 //	// "Total", your face, your dead face
-var total uintptr
-var star uintptr
-var bstar uintptr
+var total *patch_t
+var star *patch_t
+var bstar *patch_t
 
 // C documentation
 //
 //	// "red P[1..MAXPLAYERS]"
-var p [4]uintptr
+var p [4]*patch_t
 
 // C documentation
 //
 //	// "gray P[1..MAXPLAYERS]"
-var bp [4]uintptr
+var bp [4]*patch_t
 
 // C documentation
 //
 //	// Name graphics of each level (centered)
-var lnames uintptr
+var lnames []*patch_t
 
 // C documentation
 //
 //	// Buffer storing the backdrop
-var background uintptr
+var background *patch_t
 
 //
 // CODE
@@ -42372,14 +42376,13 @@ func WI_slamBackground() {
 //
 //	// Draws "<Levelname> Finished!"
 func WI_drawLF() {
-	bp := alloc(48)
 	var y int32
 	y = int32(WI_TITLEY)
 	if gamemode != commercial || wbs.Flast < NUMCMAPS {
 		// draw <LevelName>
-		V_DrawPatch((SCREENWIDTH-int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(lnames + uintptr(wbs.Flast)*8)))).Fwidth))/int32(2), y, *(*uintptr)(unsafe.Pointer(lnames + uintptr(wbs.Flast)*8)))
+		V_DrawPatch((SCREENWIDTH-int32(lnames[wbs.Flast].Fwidth))/int32(2), y, lnames[wbs.Flast])
 		// draw "Finished!"
-		y += 5 * int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(lnames + uintptr(wbs.Flast)*8)))).Fheight) / 4
+		y += 5 * int32(lnames[wbs.Flast].Fheight) / 4
 		V_DrawPatch((SCREENWIDTH-int32((*patch_t)(unsafe.Pointer(finished)).Fwidth))/int32(2), y, finished)
 	} else {
 		if wbs.Flast == NUMCMAPS {
@@ -42390,13 +42393,13 @@ func WI_drawLF() {
 				// I'm pretty sure that doom2.exe is just reading into random
 				// bits of memory at this point, but let's try to be accurate
 				// anyway.  This deliberately triggers a V_DrawPatch error.
-				*(*patch_t)(unsafe.Pointer(bp)) = patch_t{
+				bp := patch_t{
 					Fwidth:      int16(SCREENWIDTH),
 					Fheight:     int16(SCREENHEIGHT),
 					Fleftoffset: 1,
 					Ftopoffset:  1,
 				}
-				V_DrawPatch(0, y, bp)
+				V_DrawPatch(0, y, &bp)
 			}
 		}
 	}
@@ -42411,20 +42414,20 @@ func WI_drawEL() {
 	// draw "Entering"
 	V_DrawPatch((SCREENWIDTH-int32((*patch_t)(unsafe.Pointer(entering)).Fwidth))/int32(2), y, entering)
 	// draw level
-	y += 5 * int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(lnames + uintptr(wbs.Fnext)*8)))).Fheight) / 4
-	V_DrawPatch((SCREENWIDTH-int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(lnames + uintptr(wbs.Fnext)*8)))).Fwidth))/int32(2), y, *(*uintptr)(unsafe.Pointer(lnames + uintptr(wbs.Fnext)*8)))
+	y += 5 * int32(lnames[wbs.Fnext].Fheight) / 4
+	V_DrawPatch((SCREENWIDTH-int32(lnames[wbs.Fnext].Fwidth))/int32(2), y, lnames[wbs.Fnext])
 }
 
-func WI_drawOnLnode(n int32, c uintptr) {
+func WI_drawOnLnode(n int32, c []*patch_t) {
 	var bottom, i, left, right, top int32
 	var fits boolean
 	fits = 0
 	i = 0
-	for cond := true; cond; cond = fits == 0 && i != 2 && *(*uintptr)(unsafe.Pointer(c + uintptr(i)*8)) != uintptr(0) {
-		left = (*(*point_t)(unsafe.Pointer(uintptr(unsafe.Pointer(&lnodes)) + uintptr(wbs.Fepsd)*72 + uintptr(n)*8))).Fx - int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(c + uintptr(i)*8)))).Fleftoffset)
-		top = (*(*point_t)(unsafe.Pointer(uintptr(unsafe.Pointer(&lnodes)) + uintptr(wbs.Fepsd)*72 + uintptr(n)*8))).Fy - int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(c + uintptr(i)*8)))).Ftopoffset)
-		right = left + int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(c + uintptr(i)*8)))).Fwidth)
-		bottom = top + int32((*patch_t)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(c + uintptr(i)*8)))).Fheight)
+	for cond := true; cond; cond = fits == 0 && i != 2 && c[i] != nil {
+		left = (*(*point_t)(unsafe.Pointer(uintptr(unsafe.Pointer(&lnodes)) + uintptr(wbs.Fepsd)*72 + uintptr(n)*8))).Fx - int32(c[i].Fleftoffset)
+		top = (*(*point_t)(unsafe.Pointer(uintptr(unsafe.Pointer(&lnodes)) + uintptr(wbs.Fepsd)*72 + uintptr(n)*8))).Fy - int32(c[i].Ftopoffset)
+		right = left + int32(c[i].Fwidth)
+		bottom = top + int32(c[i].Fheight)
 		if left >= 0 && right < SCREENWIDTH && top >= 0 && bottom < SCREENHEIGHT {
 			fits = 1
 		} else {
@@ -42432,7 +42435,7 @@ func WI_drawOnLnode(n int32, c uintptr) {
 		}
 	}
 	if fits != 0 && i < 2 {
-		V_DrawPatch((*(*point_t)(unsafe.Pointer(uintptr(unsafe.Pointer(&lnodes)) + uintptr(wbs.Fepsd)*72 + uintptr(n)*8))).Fx, (*(*point_t)(unsafe.Pointer(uintptr(unsafe.Pointer(&lnodes)) + uintptr(wbs.Fepsd)*72 + uintptr(n)*8))).Fy, *(*uintptr)(unsafe.Pointer(c + uintptr(i)*8)))
+		V_DrawPatch((*(*point_t)(unsafe.Pointer(uintptr(unsafe.Pointer(&lnodes)) + uintptr(wbs.Fepsd)*72 + uintptr(n)*8))).Fx, (*(*point_t)(unsafe.Pointer(uintptr(unsafe.Pointer(&lnodes)) + uintptr(wbs.Fepsd)*72 + uintptr(n)*8))).Fy, c[i])
 	} else {
 		// DEBUG
 		fprintf_ccgo(os.Stdout, 28344, n+1)
@@ -42705,7 +42708,7 @@ func WI_drawShowNextLoc() {
 			if !(i <= last) {
 				break
 			}
-			WI_drawOnLnode(i, uintptr(unsafe.Pointer(&splat)))
+			WI_drawOnLnode(i, splat[:])
 			goto _2
 		_2:
 			;
@@ -42713,11 +42716,11 @@ func WI_drawShowNextLoc() {
 		}
 		// splat the secret level?
 		if wbs.Fdidsecret != 0 {
-			WI_drawOnLnode(8, uintptr(unsafe.Pointer(&splat)))
+			WI_drawOnLnode(8, splat[:])
 		}
 		// draw flashing ptr
 		if snl_pointeron != 0 {
-			WI_drawOnLnode(wbs.Fnext, uintptr(unsafe.Pointer(&yah)))
+			WI_drawOnLnode(wbs.Fnext, yah[:])
 		}
 	}
 	// draws which level you are entering..
@@ -43418,7 +43421,7 @@ func WI_Ticker() {
 // Common load/unload function.  Iterates over all the graphics
 // lumps to be loaded/unloaded into memory.
 
-func WI_loadUnloadData(callback func(uintptr, uintptr)) {
+func WI_loadUnloadData(callback func(uintptr, **patch_t)) {
 	bp1 := alloc(48)
 	var a *anim_t1
 	var i, j int32
@@ -43429,7 +43432,7 @@ func WI_loadUnloadData(callback func(uintptr, uintptr)) {
 				break
 			}
 			snprintf_ccgo(bp1, 9, 28378, i)
-			callback(bp1, lnames+uintptr(i)*8)
+			callback(bp1, &lnames[i])
 			goto _1
 		_1:
 			;
@@ -43442,18 +43445,18 @@ func WI_loadUnloadData(callback func(uintptr, uintptr)) {
 				break
 			}
 			snprintf_ccgo(bp1, 9, 28389, wbs.Fepsd, i)
-			callback(bp1, lnames+uintptr(i)*8)
+			callback(bp1, &lnames[i])
 			goto _2
 		_2:
 			;
 			i++
 		}
 		// you are here
-		callback(__ccgo_ts(28398), uintptr(unsafe.Pointer(&yah)))
+		callback(__ccgo_ts(28398), &yah[0])
 		// you are here (alt.)
-		callback(__ccgo_ts(28405), uintptr(unsafe.Pointer(&yah))+1*8)
+		callback(__ccgo_ts(28405), &yah[1])
 		// splat
-		callback(__ccgo_ts(28412), uintptr(unsafe.Pointer(&splat)))
+		callback(__ccgo_ts(28412), &splat[0])
 		if wbs.Fepsd < 3 {
 			j = 0
 			for {
@@ -43470,7 +43473,7 @@ func WI_loadUnloadData(callback func(uintptr, uintptr)) {
 					if wbs.Fepsd != 1 || j != 8 {
 						// animations
 						snprintf_ccgo(bp1, 9, 28420, wbs.Fepsd, j, i)
-						callback(bp1, a.Fp[i])
+						callback(bp1, &a.Fp[i])
 					} else {
 						// HACK ALERT!
 						a.Fp[i] = anims1[int32(1)][4].Fp[i]
@@ -43488,7 +43491,7 @@ func WI_loadUnloadData(callback func(uintptr, uintptr)) {
 		}
 	}
 	// More hacks on minus sign.
-	callback(__ccgo_ts(28434), uintptr(unsafe.Pointer(&wiminus)))
+	callback(__ccgo_ts(28434), &wiminus)
 	i = 0
 	for {
 		if i >= 10 {
@@ -43496,51 +43499,51 @@ func WI_loadUnloadData(callback func(uintptr, uintptr)) {
 		}
 		// numbers 0-9
 		snprintf_ccgo(bp1, 9, 28442, i)
-		callback(bp1, uintptr(unsafe.Pointer(&num))+uintptr(i)*8)
+		callback(bp1, &num[i])
 		goto _5
 	_5:
 		;
 		i++
 	}
 	// percent sign
-	callback(__ccgo_ts(28450), uintptr(unsafe.Pointer(&percent)))
+	callback(__ccgo_ts(28450), &percent)
 	// "finished"
-	callback(__ccgo_ts(28457), uintptr(unsafe.Pointer(&finished)))
+	callback(__ccgo_ts(28457), &finished)
 	// "entering"
-	callback(__ccgo_ts(28461), uintptr(unsafe.Pointer(&entering)))
+	callback(__ccgo_ts(28461), &entering)
 	// "kills"
-	callback(__ccgo_ts(28469), uintptr(unsafe.Pointer(&kills)))
+	callback(__ccgo_ts(28469), &kills)
 	// "scrt"
-	callback(__ccgo_ts(28476), uintptr(unsafe.Pointer(&secret)))
+	callback(__ccgo_ts(28476), &secret)
 	// "secret"
-	callback(__ccgo_ts(28483), uintptr(unsafe.Pointer(&sp_secret)))
+	callback(__ccgo_ts(28483), &sp_secret)
 	// french wad uses WIOBJ (?)
 	if W_CheckNumForName(__ccgo_ts(28491)) >= 0 {
 		// "items"
 		if netgame != 0 && deathmatch == 0 {
-			callback(__ccgo_ts(28491), uintptr(unsafe.Pointer(&items)))
+			callback(__ccgo_ts(28491), &items)
 		} else {
-			callback(__ccgo_ts(28497), uintptr(unsafe.Pointer(&items)))
+			callback(__ccgo_ts(28497), &items)
 		}
 	} else {
-		callback(__ccgo_ts(28497), uintptr(unsafe.Pointer(&items)))
+		callback(__ccgo_ts(28497), &items)
 	}
 	// "frgs"
-	callback(__ccgo_ts(28504), uintptr(unsafe.Pointer(&frags)))
+	callback(__ccgo_ts(28504), &frags)
 	// ":"
-	callback(__ccgo_ts(28511), uintptr(unsafe.Pointer(&colon)))
+	callback(__ccgo_ts(28511), &colon)
 	// "time"
-	callback(__ccgo_ts(28519), uintptr(unsafe.Pointer(&timepatch)))
+	callback(__ccgo_ts(28519), &timepatch)
 	// "sucks"
-	callback(__ccgo_ts(28526), uintptr(unsafe.Pointer(&sucks)))
+	callback(__ccgo_ts(28526), &sucks)
 	// "par"
-	callback(__ccgo_ts(28534), uintptr(unsafe.Pointer(&par)))
+	callback(__ccgo_ts(28534), &par)
 	// "killers" (vertical)
-	callback(__ccgo_ts(28540), uintptr(unsafe.Pointer(&killers)))
+	callback(__ccgo_ts(28540), &killers)
 	// "victims" (horiz)
-	callback(__ccgo_ts(28548), uintptr(unsafe.Pointer(&victims)))
+	callback(__ccgo_ts(28548), &victims)
 	// "total"
-	callback(__ccgo_ts(28556), uintptr(unsafe.Pointer(&total)))
+	callback(__ccgo_ts(28556), &total)
 	i = 0
 	for {
 		if i >= int32(MAXPLAYERS) {
@@ -43548,10 +43551,10 @@ func WI_loadUnloadData(callback func(uintptr, uintptr)) {
 		}
 		// "1,2,3,4"
 		snprintf_ccgo(bp1, 9, 28563, i)
-		callback(bp1, uintptr(unsafe.Pointer(&p))+uintptr(i)*8)
+		callback(bp1, &p[i])
 		// "1,2,3,4"
 		snprintf_ccgo(bp1, 9, 28570, i+int32(1))
-		callback(bp1, uintptr(unsafe.Pointer(&bp))+uintptr(i)*8)
+		callback(bp1, &bp[i])
 		goto _6
 	_6:
 		;
@@ -43568,32 +43571,30 @@ func WI_loadUnloadData(callback func(uintptr, uintptr)) {
 		}
 	}
 	// Draw backdrop and save to a temporary buffer
-	callback(bp1, uintptr(unsafe.Pointer(&background)))
+	callback(bp1, &background)
 }
 
-func WI_loadCallback(name uintptr, variable uintptr) {
-	*(*uintptr)(unsafe.Pointer(variable)) = W_CacheLumpName(name, int32(PU_STATIC))
+func WI_loadCallback(name uintptr, variable **patch_t) {
+	*variable = W_CacheLumpNameT(name, int32(PU_STATIC))
 }
 
 func WI_loadData() {
 	if gamemode == commercial {
 		NUMCMAPS = 32
-		lnames = Z_Malloc(int32(8*uint64(NUMCMAPS)), int32(PU_STATIC), uintptr(0))
-	} else {
-		lnames = Z_Malloc(int32(8*uint64(NUMMAPS)), int32(PU_STATIC), uintptr(0))
 	}
+	lnames = make([]*patch_t, NUMMAPS)
 	WI_loadUnloadData(WI_loadCallback)
 	// These two graphics are special cased because we're sharing
 	// them with the status bar code
 	// your face
-	star = W_CacheLumpName(__ccgo_ts(28585), int32(PU_STATIC))
+	star = W_CacheLumpNameT(__ccgo_ts(28585), int32(PU_STATIC))
 	// dead face
-	bstar = W_CacheLumpName(__ccgo_ts(27974), int32(PU_STATIC))
+	bstar = W_CacheLumpNameT(__ccgo_ts(27974), int32(PU_STATIC))
 }
 
-func WI_unloadCallback(name uintptr, variable uintptr) {
+func WI_unloadCallback(name uintptr, variable **patch_t) {
 	W_ReleaseLumpName(name)
-	*(*uintptr)(unsafe.Pointer(variable)) = uintptr(0)
+	*variable = nil
 }
 
 func WI_unloadData() {
@@ -44031,6 +44032,15 @@ func W_CacheLumpNumT[T lumpType](lumpnum int32, tag int32) T {
 //	//
 func W_CacheLumpName(name uintptr, tag int32) (r uintptr) {
 	return W_CacheLumpNum(W_GetNumForName(name), tag)
+}
+
+func W_CacheLumpNameT[T lumpType](name uintptr, tag int32) T {
+	var result uintptr
+	result = W_CacheLumpName(name, tag)
+	if result == uintptr(0) {
+		panic("lump failure")
+	}
+	return (T)(unsafe.Pointer(result))
 }
 
 //
@@ -45553,7 +45563,7 @@ var gameversion GameVersion_t
 var gammamsg [5]string
 
 // C documentation
-var hu_font [63]uintptr
+var hu_font [63]*patch_t
 
 var inhelpscreens boolean
 
@@ -46738,7 +46748,7 @@ var strace divline_t
 //	// Hack display negative frags.
 //	//  Loads and store the stminus lump.
 //	//
-var sttminus uintptr
+var sttminus *patch_t
 
 var subsectors []subsector_t
 
