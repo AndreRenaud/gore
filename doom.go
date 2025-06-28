@@ -2900,7 +2900,7 @@ func AM_loadPics() {
 			break
 		}
 		snprintf_ccgo(bp, 9, 0, i)
-		marknums[i] = W_CacheLumpNameT[*patch_t](bp, int32(PU_STATIC))
+		marknums[i] = W_CacheLumpNameT(bp, int32(PU_STATIC))
 		goto _1
 	_1:
 		;
@@ -40706,7 +40706,7 @@ func ST_Drawer(fullscreen boolean, refresh boolean) {
 // Iterates through all graphics to be loaded or unloaded, along with
 // the variable they use, invoking the specified callback function.
 
-func ST_loadUnloadGraphics(callback func(uintptr, uintptr)) {
+func ST_loadUnloadGraphics(callback func(uintptr, **patch_t)) {
 	bp := alloc(48)
 	var facenum, i, j int32
 	// Load the numbers, tall and short
@@ -40716,9 +40716,9 @@ func ST_loadUnloadGraphics(callback func(uintptr, uintptr)) {
 			break
 		}
 		snprintf_ccgo(bp, 9, 27843, i)
-		callback(bp, uintptr(unsafe.Pointer(&tallnum))+uintptr(i)*8)
+		callback(bp, &tallnum[i])
 		snprintf_ccgo(bp, 9, 27852, i)
-		callback(bp, uintptr(unsafe.Pointer(&shortnum))+uintptr(i)*8)
+		callback(bp, &shortnum[i])
 		goto _1
 	_1:
 		;
@@ -40726,7 +40726,7 @@ func ST_loadUnloadGraphics(callback func(uintptr, uintptr)) {
 	}
 	// Load percent key.
 	//Note: why not load STMINUS here, too?
-	callback(__ccgo_ts(27862), uintptr(unsafe.Pointer(&tallpercent)))
+	callback(__ccgo_ts(27862), &tallpercent)
 	// key cards
 	i = 0
 	for {
@@ -40734,14 +40734,14 @@ func ST_loadUnloadGraphics(callback func(uintptr, uintptr)) {
 			break
 		}
 		snprintf_ccgo(bp, 9, 27871, i)
-		callback(bp, uintptr(unsafe.Pointer(&keys))+uintptr(i)*8)
+		callback(bp, &keys[i])
 		goto _2
 	_2:
 		;
 		i++
 	}
 	// arms background
-	callback(__ccgo_ts(27880), uintptr(unsafe.Pointer(&armsbg)))
+	callback(__ccgo_ts(27880), &armsbg)
 	// arms ownership widgets
 	i = 0
 	for {
@@ -40750,7 +40750,7 @@ func ST_loadUnloadGraphics(callback func(uintptr, uintptr)) {
 		}
 		snprintf_ccgo(bp, 9, 27887, i+2)
 		// gray #
-		callback(bp, uintptr(unsafe.Pointer(&arms))+uintptr(i)*16)
+		callback(bp, &arms[i][0])
 		// yellow #
 		arms[i][1] = shortnum[i+int32(2)]
 		goto _3
@@ -40760,9 +40760,9 @@ func ST_loadUnloadGraphics(callback func(uintptr, uintptr)) {
 	}
 	// face backgrounds for different color players
 	snprintf_ccgo(bp, 9, 27896, consoleplayer)
-	callback(bp, uintptr(unsafe.Pointer(&faceback)))
+	callback(bp, &faceback)
 	// status bar background bits
-	callback(__ccgo_ts(27903), uintptr(unsafe.Pointer(&sbar)))
+	callback(__ccgo_ts(27903), &sbar)
 	// face states
 	facenum = 0
 	i = 0
@@ -40776,7 +40776,7 @@ func ST_loadUnloadGraphics(callback func(uintptr, uintptr)) {
 				break
 			}
 			snprintf_ccgo(bp, 9, 27909, i, j)
-			callback(bp, uintptr(unsafe.Pointer(&faces))+uintptr(facenum)*8)
+			callback(bp, &faces[facenum])
 			facenum++
 			goto _5
 		_5:
@@ -40784,33 +40784,33 @@ func ST_loadUnloadGraphics(callback func(uintptr, uintptr)) {
 			j++
 		}
 		snprintf_ccgo(bp, 9, 27919, i) // turn right
-		callback(bp, uintptr(unsafe.Pointer(&faces))+uintptr(facenum)*8)
+		callback(bp, &faces[facenum])
 		facenum++
 		snprintf_ccgo(bp, 9, 27928, i) // turn left
-		callback(bp, uintptr(unsafe.Pointer(&faces))+uintptr(facenum)*8)
+		callback(bp, &faces[facenum])
 		facenum++
 		snprintf_ccgo(bp, 9, 27937, i) // ouch!
-		callback(bp, uintptr(unsafe.Pointer(&faces))+uintptr(facenum)*8)
+		callback(bp, &faces[facenum])
 		facenum++
 		snprintf_ccgo(bp, 9, 27947, i) // evil grin ;)
-		callback(bp, uintptr(unsafe.Pointer(&faces))+uintptr(facenum)*8)
+		callback(bp, &faces[facenum])
 		facenum++
 		snprintf_ccgo(bp, 9, 27956, i) // pissed off
-		callback(bp, uintptr(unsafe.Pointer(&faces))+uintptr(facenum)*8)
+		callback(bp, &faces[facenum])
 		facenum++
 		goto _4
 	_4:
 		;
 		i++
 	}
-	callback(__ccgo_ts(27966), uintptr(unsafe.Pointer(&faces))+uintptr(facenum)*8)
+	callback(__ccgo_ts(27966), &faces[facenum])
 	facenum++
-	callback(__ccgo_ts(27974), uintptr(unsafe.Pointer(&faces))+uintptr(facenum)*8)
+	callback(__ccgo_ts(27974), &faces[facenum])
 	facenum++
 }
 
-func ST_loadCallback(lumpname uintptr, variable uintptr) {
-	*(*uintptr)(unsafe.Pointer(variable)) = W_CacheLumpName(lumpname, int32(PU_STATIC))
+func ST_loadCallback(lumpname uintptr, variable **patch_t) {
+	*variable = W_CacheLumpNameT(lumpname, int32(PU_STATIC))
 }
 
 func ST_loadGraphics() {
