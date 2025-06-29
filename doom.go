@@ -34940,7 +34940,7 @@ func R_GenerateComposite(texnum int32) {
 				goto _2
 			}
 			patchcol = (uintptr)(unsafe.Pointer(realpatch)) + uintptr(realpatch.Fcolumnofs[x-x1])
-			R_DrawColumnInCache(patchcol, block+uintptr(colofs[x]), int32((*texpatch_t)(unsafe.Pointer(patch)).Foriginy), int32(texture.Fheight))
+			R_DrawColumnInCache(patchcol, block+uintptr(colofs[x]), int32(patch.Foriginy), int32(texture.Fheight))
 			goto _2
 		_2:
 			;
