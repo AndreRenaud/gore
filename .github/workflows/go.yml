@@ -22,7 +22,7 @@ jobs:
         go install golang.org/x/tools/cmd/deadcode@latest
     - name: Install doom wad
       run: wget https://github.com/Akbar30Bill/DOOM_wads/raw/refs/heads/master/doom1.wad
-    - name: test
+    - name: Run tests (64-bit)
       run: ./run_tests.sh
     - name: Run tests (32-bit)
       run: |
