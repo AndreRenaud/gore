@@ -1809,7 +1809,17 @@ type patch_t struct {
 	Fheight     int16
 	Fleftoffset int16
 	Ftopoffset  int16
-	Fcolumnofs  [320]int32
+	// TODO: This is a bit of a lie, as this array is really of Fwidth in length.
+	// but we don't have a way to express that in Go, as this data is loaded directly
+	// from the lump data
+	Fcolumnofs [320]int32
+}
+
+func (p *patch_t) GetColumn(i int32) uintptr {
+	if i < 0 || i >= int32(p.Fwidth) {
+		panic("GetColumn: index out of bounds")
+	}
+	return (uintptr)(unsafe.Pointer(p)) + uintptr(p.Fcolumnofs[i])
 }
 
 type column_t struct {
@@ -34904,7 +34914,7 @@ func R_DrawColumnInCache(patch uintptr, cache uintptr, originy int32, cacheheigh
 //	//  and each column is cached.
 //	//
 func R_GenerateComposite(texnum int32) {
-	var block, patchcol uintptr
+	var block uintptr
 	var collump []int16
 	var colofs []uint16
 	var i, x, x1, x2 int32
@@ -34931,20 +34941,13 @@ func R_GenerateComposite(texnum int32) {
 		if x2 > int32(texture.Fwidth) {
 			x2 = int32(texture.Fwidth)
 		}
-		for {
-			if x >= x2 {
-				break
-			}
+		for ; x < x2; x++ {
 			// Column does not have multiple patches?
 			if collump[x] >= 0 {
-				goto _2
+				continue
 			}
-			patchcol = (uintptr)(unsafe.Pointer(realpatch)) + uintptr(realpatch.Fcolumnofs[x-x1])
+			patchcol := realpatch.GetColumn(x - x1)
 			R_DrawColumnInCache(patchcol, block+uintptr(colofs[x]), int32(patch.Foriginy), int32(texture.Fheight))
-			goto _2
-		_2:
-			;
-			x++
 		}
 		goto _1
 	_1:
@@ -37974,7 +37977,6 @@ func R_DrawMaskedColumn(column uintptr) {
 //	//  mfloorclip and mceilingclip should also be set.
 //	//
 func R_DrawVisSprite(vis *vissprite_t, x1 int32, x2 int32) {
-	var column uintptr
 	var patch *patch_t
 	var frac fixed_t
 	var texturecolumn int32
@@ -38003,8 +38005,7 @@ func R_DrawVisSprite(vis *vissprite_t, x1 int32, x2 int32) {
 		if texturecolumn < 0 || texturecolumn >= int32(patch.Fwidth) {
 			I_Error(26942, 0)
 		}
-		column = (uintptr)(unsafe.Pointer(patch)) + uintptr(patch.Fcolumnofs[texturecolumn])
-		R_DrawMaskedColumn(column)
+		R_DrawMaskedColumn(patch.GetColumn(texturecolumn))
 		goto _1
 	_1:
 		;
@@ -41498,7 +41499,7 @@ func V_CopyRect(srcx int32, srcy int32, source uintptr, width int32, height int3
 
 func V_DrawPatch(x int32, y int32, patch *patch_t) {
 	var col, count, w, v2 int32
-	var column, dest, desttop, source, v3 uintptr
+	var dest, desttop, source, v3 uintptr
 	y -= int32(patch.Ftopoffset)
 	x -= int32(patch.Fleftoffset)
 	if x < 0 || x+int32(patch.Fwidth) > SCREENWIDTH || y < 0 || y+int32(patch.Fheight) > SCREENHEIGHT {
@@ -41512,7 +41513,7 @@ func V_DrawPatch(x int32, y int32, patch *patch_t) {
 		if col >= w {
 			break
 		}
-		column = (uintptr)(unsafe.Pointer(patch)) + uintptr(patch.Fcolumnofs[col])
+		column := patch.GetColumn(col)
 		// step through the posts in a column
 		for int32((*column_t)(unsafe.Pointer(column)).Ftopdelta) != 0xff {
 			source = column + uintptr(3)
@@ -41547,7 +41548,7 @@ func V_DrawPatch(x int32, y int32, patch *patch_t) {
 
 func V_DrawPatchFlipped(x int32, y int32, patch *patch_t) {
 	var col, count, w, v2 int32
-	var column, dest, desttop, source, v3 uintptr
+	var dest, desttop, source, v3 uintptr
 	y -= int32(patch.Ftopoffset)
 	x -= int32(patch.Fleftoffset)
 	if x < 0 || x+int32(patch.Fwidth) > SCREENWIDTH || y < 0 || y+int32(patch.Fheight) > SCREENHEIGHT {
@@ -41561,7 +41562,7 @@ func V_DrawPatchFlipped(x int32, y int32, patch *patch_t) {
 		if col >= w {
 			break
 		}
-		column = (uintptr)(unsafe.Pointer(patch)) + uintptr(patch.Fcolumnofs[w-1-col])
+		column := patch.GetColumn(w - 1 - col)
 		// step through the posts in a column
 		for int32((*column_t)(unsafe.Pointer(column)).Ftopdelta) != 0xff {
 			source = column + uintptr(3)
