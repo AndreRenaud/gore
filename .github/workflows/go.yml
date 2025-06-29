@@ -24,6 +24,11 @@ jobs:
       run: wget https://github.com/Akbar30Bill/DOOM_wads/raw/refs/heads/master/doom1.wad
     - name: test
       run: ./run_tests.sh
+    - name: Run tests (32-bit)
+      run: |
+        export GOOS=linux
+        export GOARCH=386
+        ./run_tests.sh
     - name: deadcode
       run: |
         DEAD=$(deadcode ./example/webserver)
