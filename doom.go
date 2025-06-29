@@ -34904,7 +34904,7 @@ func R_DrawColumnInCache(patch uintptr, cache uintptr, originy int32, cacheheigh
 //	//  and each column is cached.
 //	//
 func R_GenerateComposite(texnum int32) {
-	var block, patch, patchcol, realpatch uintptr
+	var block, patchcol uintptr
 	var collump []int16
 	var colofs []uint16
 	var i, x, x1, x2 int32
@@ -34914,15 +34914,15 @@ func R_GenerateComposite(texnum int32) {
 	collump = texturecolumnlump[texnum]
 	colofs = texturecolumnofs[texnum]
 	// Composite the columns together.
-	patch = uintptr(unsafe.Pointer(&texture.Fpatches[0]))
 	i = 0
 	for {
 		if i >= int32(texture.Fpatchcount) {
 			break
 		}
-		realpatch = W_CacheLumpNum((*texpatch_t)(unsafe.Pointer(patch)).Fpatch, int32(PU_CACHE))
-		x1 = int32((*texpatch_t)(unsafe.Pointer(patch)).Foriginx)
-		x2 = x1 + int32((*patch_t)(unsafe.Pointer(realpatch)).Fwidth)
+		patch := &texture.Fpatches[i]
+		realpatch := W_CacheLumpNumT(patch.Fpatch, int32(PU_CACHE))
+		x1 = int32(patch.Foriginx)
+		x2 = x1 + int32(realpatch.Fwidth)
 		if x1 < 0 {
 			x = 0
 		} else {
@@ -34939,7 +34939,7 @@ func R_GenerateComposite(texnum int32) {
 			if collump[x] >= 0 {
 				goto _2
 			}
-			patchcol = realpatch + uintptr(*(*int32)(unsafe.Pointer(realpatch + 8 + uintptr(x-x1)*4)))
+			patchcol = (uintptr)(unsafe.Pointer(realpatch)) + uintptr(realpatch.Fcolumnofs[x-x1])
 			R_DrawColumnInCache(patchcol, block+uintptr(colofs[x]), int32((*texpatch_t)(unsafe.Pointer(patch)).Foriginy), int32(texture.Fheight))
 			goto _2
 		_2:
@@ -34950,7 +34950,6 @@ func R_GenerateComposite(texnum int32) {
 	_1:
 		;
 		i++
-		patch += 8
 	}
 	// Now that the texture has been built in column cache,
 	//  it is purgable from zone memory.
@@ -34964,7 +34963,7 @@ func R_GenerateComposite(texnum int32) {
 //	//
 func R_GenerateLookup(texnum int32) {
 	bp := alloc(32)
-	var patch, realpatch uintptr
+	var realpatch *patch_t
 	var colofs []uint16
 	var collump []int16
 	var texture *texture_t
@@ -34982,14 +34981,14 @@ func R_GenerateLookup(texnum int32) {
 	*(*uintptr)(unsafe.Pointer(bp)) = Z_Malloc(int32(texture.Fwidth), int32(PU_STATIC), bp)
 	xmemset(*(*uintptr)(unsafe.Pointer(bp)), 0, uint64(texture.Fwidth))
 	i = 0
-	patch = uintptr(unsafe.Pointer(&texture.Fpatches[0]))
 	for {
 		if i >= int32(texture.Fpatchcount) {
 			break
 		}
-		realpatch = W_CacheLumpNum((*texpatch_t)(unsafe.Pointer(patch)).Fpatch, int32(PU_CACHE))
-		x1 = int32((*texpatch_t)(unsafe.Pointer(patch)).Foriginx)
-		x2 = x1 + int32((*patch_t)(unsafe.Pointer(realpatch)).Fwidth)
+		patch := &texture.Fpatches[i]
+		realpatch = W_CacheLumpNumT(patch.Fpatch, int32(PU_CACHE))
+		x1 = int32(patch.Foriginx)
+		x2 = x1 + int32(realpatch.Fwidth)
 		if x1 < 0 {
 			x = 0
 		} else {
@@ -35003,8 +35002,8 @@ func R_GenerateLookup(texnum int32) {
 				break
 			}
 			*(*uint8)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(bp)) + uintptr(x)))++
-			collump[x] = int16((*texpatch_t)(unsafe.Pointer(patch)).Fpatch)
-			colofs[x] = uint16(*(*int32)(unsafe.Pointer(realpatch + 8 + uintptr(x-x1)*4)) + 3)
+			collump[x] = int16(patch.Fpatch)
+			colofs[x] = uint16(realpatch.Fcolumnofs[x-x1] + 3)
 			goto _2
 		_2:
 			;
@@ -35014,7 +35013,6 @@ func R_GenerateLookup(texnum int32) {
 	_1:
 		;
 		i++
-		patch += 8
 	}
 	x = 0
 	for {
@@ -37976,10 +37974,11 @@ func R_DrawMaskedColumn(column uintptr) {
 //	//  mfloorclip and mceilingclip should also be set.
 //	//
 func R_DrawVisSprite(vis *vissprite_t, x1 int32, x2 int32) {
-	var column, patch uintptr
+	var column uintptr
+	var patch *patch_t
 	var frac fixed_t
 	var texturecolumn int32
-	patch = W_CacheLumpNum(vis.Fpatch+firstspritelump, int32(PU_CACHE))
+	patch = W_CacheLumpNumT(vis.Fpatch+firstspritelump, int32(PU_CACHE))
 	dc_colormap = vis.Fcolormap
 	if dc_colormap == nil {
 		// NULL colormap = shadow draw
@@ -38001,10 +38000,10 @@ func R_DrawVisSprite(vis *vissprite_t, x1 int32, x2 int32) {
 			break
 		}
 		texturecolumn = frac >> int32(FRACBITS)
-		if texturecolumn < 0 || texturecolumn >= int32((*patch_t)(unsafe.Pointer(patch)).Fwidth) {
+		if texturecolumn < 0 || texturecolumn >= int32(patch.Fwidth) {
 			I_Error(26942, 0)
 		}
-		column = patch + uintptr(*(*int32)(unsafe.Pointer(patch + 8 + uintptr(texturecolumn)*4)))
+		column = (uintptr)(unsafe.Pointer(patch)) + uintptr(patch.Fcolumnofs[texturecolumn])
 		R_DrawMaskedColumn(column)
 		goto _1
 	_1:
@@ -41549,15 +41548,15 @@ func V_DrawPatch(x int32, y int32, patch *patch_t) {
 func V_DrawPatchFlipped(x int32, y int32, patch *patch_t) {
 	var col, count, w, v2 int32
 	var column, dest, desttop, source, v3 uintptr
-	y -= int32((*patch_t)(unsafe.Pointer(patch)).Ftopoffset)
-	x -= int32((*patch_t)(unsafe.Pointer(patch)).Fleftoffset)
-	if x < 0 || x+int32((*patch_t)(unsafe.Pointer(patch)).Fwidth) > SCREENWIDTH || y < 0 || y+int32((*patch_t)(unsafe.Pointer(patch)).Fheight) > SCREENHEIGHT {
+	y -= int32(patch.Ftopoffset)
+	x -= int32(patch.Fleftoffset)
+	if x < 0 || x+int32(patch.Fwidth) > SCREENWIDTH || y < 0 || y+int32(patch.Fheight) > SCREENHEIGHT {
 		I_Error(28187, 0)
 	}
-	V_MarkRect(x, y, int32((*patch_t)(unsafe.Pointer(patch)).Fwidth), int32((*patch_t)(unsafe.Pointer(patch)).Fheight))
+	V_MarkRect(x, y, int32(patch.Fwidth), int32(patch.Fheight))
 	col = 0
 	desttop = dest_screen + uintptr(y*SCREENWIDTH) + uintptr(x)
-	w = int32((*patch_t)(unsafe.Pointer(patch)).Fwidth)
+	w = int32(patch.Fwidth)
 	for {
 		if col >= w {
 			break
@@ -42380,7 +42379,7 @@ func WI_drawLF() {
 		V_DrawPatch((SCREENWIDTH-int32(lnames[wbs.Flast].Fwidth))/int32(2), y, lnames[wbs.Flast])
 		// draw "Finished!"
 		y += 5 * int32(lnames[wbs.Flast].Fheight) / 4
-		V_DrawPatch((SCREENWIDTH-int32((*patch_t)(unsafe.Pointer(finished)).Fwidth))/int32(2), y, finished)
+		V_DrawPatch((SCREENWIDTH-int32(finished.Fwidth))/int32(2), y, finished)
 	} else {
 		if wbs.Flast == NUMCMAPS {
 			// MAP33 - nothing is displayed!
@@ -42409,7 +42408,7 @@ func WI_drawEL() {
 	var y int32
 	y = int32(WI_TITLEY)
 	// draw "Entering"
-	V_DrawPatch((SCREENWIDTH-int32((*patch_t)(unsafe.Pointer(entering)).Fwidth))/int32(2), y, entering)
+	V_DrawPatch((SCREENWIDTH-int32(entering.Fwidth))/int32(2), y, entering)
 	// draw level
 	y += 5 * int32(lnames[wbs.Fnext].Fheight) / 4
 	V_DrawPatch((SCREENWIDTH-int32(lnames[wbs.Fnext].Fwidth))/int32(2), y, lnames[wbs.Fnext])
@@ -42624,7 +42623,7 @@ func WI_drawTime(x int32, y int32, t int32) {
 		div = 1
 		for cond := true; cond; cond = t/div != 0 {
 			n = t / div % 60
-			x = WI_drawNum(x, y, n, 2) - int32((*patch_t)(unsafe.Pointer(colon)).Fwidth)
+			x = WI_drawNum(x, y, n, 2) - int32(colon.Fwidth)
 			div *= 60
 			// draw
 			if div == 60 || t/div != 0 {
@@ -42633,7 +42632,7 @@ func WI_drawTime(x int32, y int32, t int32) {
 		}
 	} else {
 		// "sucks"
-		V_DrawPatch(x-int32((*patch_t)(unsafe.Pointer(sucks)).Fwidth), y, sucks)
+		V_DrawPatch(x-int32(sucks.Fwidth), y, sucks)
 	}
 }
 
@@ -42910,7 +42909,7 @@ func WI_drawDeathmatchStats() {
 	WI_drawAnimatedBack()
 	WI_drawLF()
 	// draw stat titles (top line)
-	V_DrawPatch(int32(DM_TOTALSX)-int32((*patch_t)(unsafe.Pointer(total)).Fwidth)/int32(2), DM_MATRIXY-WI_SPACINGY+10, total)
+	V_DrawPatch(int32(DM_TOTALSX)-int32(total.Fwidth)/int32(2), DM_MATRIXY-WI_SPACINGY+10, total)
 	V_DrawPatch(int32(DM_KILLERSX), int32(DM_KILLERSY), killers)
 	V_DrawPatch(int32(DM_VICTIMSX), int32(DM_VICTIMSY), victims)
 	// draw P?
@@ -43183,20 +43182,20 @@ func WI_updateNetgameStats() {
 
 func WI_drawNetgameStats() {
 	var i, pwidth, x, y int32
-	pwidth = int32((*patch_t)(unsafe.Pointer(percent)).Fwidth)
+	pwidth = int32(percent.Fwidth)
 	WI_slamBackground()
 	// draw animated background
 	WI_drawAnimatedBack()
 	WI_drawLF()
 	// draw stat titles (top line)
-	V_DrawPatch(32+int32((*patch_t)(unsafe.Pointer(star)).Fwidth)/int32(2)+int32(32)*boolint32(dofrags == 0)+int32(NG_SPACINGX)-int32((*patch_t)(unsafe.Pointer(kills)).Fwidth), int32(NG_STATSY), kills)
-	V_DrawPatch(32+int32((*patch_t)(unsafe.Pointer(star)).Fwidth)/int32(2)+int32(32)*boolint32(dofrags == 0)+2*NG_SPACINGX-int32((*patch_t)(unsafe.Pointer(items)).Fwidth), int32(NG_STATSY), items)
-	V_DrawPatch(32+int32((*patch_t)(unsafe.Pointer(star)).Fwidth)/int32(2)+int32(32)*boolint32(dofrags == 0)+3*NG_SPACINGX-int32((*patch_t)(unsafe.Pointer(secret)).Fwidth), int32(NG_STATSY), secret)
+	V_DrawPatch(32+int32(star.Fwidth)/int32(2)+int32(32)*boolint32(dofrags == 0)+int32(NG_SPACINGX)-int32(kills.Fwidth), int32(NG_STATSY), kills)
+	V_DrawPatch(32+int32(star.Fwidth)/int32(2)+int32(32)*boolint32(dofrags == 0)+2*NG_SPACINGX-int32(items.Fwidth), int32(NG_STATSY), items)
+	V_DrawPatch(32+int32(star.Fwidth)/int32(2)+int32(32)*boolint32(dofrags == 0)+3*NG_SPACINGX-int32(secret.Fwidth), int32(NG_STATSY), secret)
 	if dofrags != 0 {
-		V_DrawPatch(32+int32((*patch_t)(unsafe.Pointer(star)).Fwidth)/int32(2)+int32(32)*boolint32(dofrags == 0)+4*NG_SPACINGX-int32((*patch_t)(unsafe.Pointer(frags)).Fwidth), int32(NG_STATSY), frags)
+		V_DrawPatch(32+int32(star.Fwidth)/int32(2)+int32(32)*boolint32(dofrags == 0)+4*NG_SPACINGX-int32(frags.Fwidth), int32(NG_STATSY), frags)
 	}
 	// draw stats
-	y = int32(NG_STATSY) + int32((*patch_t)(unsafe.Pointer(kills)).Fheight)
+	y = int32(NG_STATSY) + int32(kills.Fheight)
 	i = 0
 	for {
 		if i >= int32(MAXPLAYERS) {
@@ -43205,7 +43204,7 @@ func WI_drawNetgameStats() {
 		if playeringame[i] == 0 {
 			goto _1
 		}
-		x = 32 + int32((*patch_t)(unsafe.Pointer(star)).Fwidth)/int32(2) + 32*boolint32(dofrags == 0)
+		x = 32 + int32(star.Fwidth)/int32(2) + 32*boolint32(dofrags == 0)
 		V_DrawPatch(x-int32((*patch_t)(unsafe.Pointer(p[i])).Fwidth), y, p[i])
 		if i == me {
 			V_DrawPatch(x-int32((*patch_t)(unsafe.Pointer(p[i])).Fwidth), y, star)
