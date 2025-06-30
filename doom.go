@@ -9483,17 +9483,17 @@ const HU_TITLEX = 0
 const QUEUESIZE = 128
 
 func init() {
-	chat_macros = [10][]byte{
-		0: __ccgo_ts_map[14525],
-		1: __ccgo_ts_map[14528],
-		2: __ccgo_ts_map[14552],
-		3: __ccgo_ts_map[14560],
-		4: __ccgo_ts_map[14586],
-		5: __ccgo_ts_map[14592],
-		6: __ccgo_ts_map[14602],
-		7: __ccgo_ts_map[14624],
-		8: __ccgo_ts_map[14635],
-		9: __ccgo_ts_map[14657],
+	chat_macros = [10]string{
+		0: __ccgo_ts_str(14525),
+		1: __ccgo_ts_str(14528),
+		2: __ccgo_ts_str(14552),
+		3: __ccgo_ts_str(14560),
+		4: __ccgo_ts_str(14586),
+		5: __ccgo_ts_str(14592),
+		6: __ccgo_ts_str(14602),
+		7: __ccgo_ts_str(14624),
+		8: __ccgo_ts_str(14635),
+		9: __ccgo_ts_str(14657),
 	}
 }
 
@@ -9870,7 +9870,7 @@ func HU_Responder(ev *event_t) (r boolean) {
 	var c uint8
 	var eatkey, v2, v4 boolean
 	var i, numplayers int32
-	var macromessage []byte
+	var macromessage string
 	eatkey = 0
 	numplayers = 0
 	i = 0
@@ -9971,7 +9971,7 @@ func HU_Responder(ev *event_t) (r boolean) {
 			HU_queueChatChar(int8(KEY_ENTER))
 			// leave chat mode and notify that it was sent
 			chat_on = 0
-			lastmessage = gostring_bytes(chat_macros[c])
+			lastmessage = chat_macros[c]
 			plr1.Fmessage = lastmessage
 			eatkey = 1
 		} else {
@@ -44785,7 +44785,7 @@ var centeryfrac fixed_t
 // Locally used constants, shortcuts.
 //
 
-var chat_macros [10][]byte
+var chat_macros [10]string
 
 var chat_on boolean
 
