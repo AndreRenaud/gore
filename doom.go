@@ -134,10 +134,6 @@ func xstrncasecmp(s1, s2 uintptr, n uint64) int32 {
 	return 0
 }
 
-func xstrcasecmp(s1, s2 uintptr) int32 {
-	return xstrncasecmp(s1, s2, 0xffff_ffff_ffff_ffff) // max uint64
-}
-
 func xtoupper(c int32) int32 {
 	if c >= 'a' && c <= 'z' {
 		return c - ('a' - 'A')
@@ -46996,44 +46992,6 @@ var zlight [16][128][]lighttable_t
 
 func fprintf_ccgo(output io.Writer, index int, args ...any) {
 	fmt.Fprintf(output, __ccgo_ts_str(index), args...)
-}
-
-func snprintf_ccgo(bp uintptr, maxlen int, index int, args ...any) {
-	if maxlen <= 0 {
-		panic("snprintf_ccgo: negative length")
-	}
-	fmtStr, ok := __ccgo_ts_map[index]
-	if !ok {
-		panic(fmt.Sprintf("index %d not found in __ccgo_ts_map", index))
-	}
-	if len(fmtStr) > 0 && fmtStr[len(fmtStr)-1] == 0 {
-		// Remove the null terminator for printing
-		fmtStr = fmtStr[:len(fmtStr)-1]
-	}
-	n := fmt.Sprintf(string(fmtStr), args...)
-	if len(n) >= maxlen {
-		panic(fmt.Sprintf("snprintf_ccgo: output length %d exceeds buffer size %d", len(n), maxlen))
-	}
-	copyBytes := []byte(n)
-	copyBytes = append(copyBytes, 0) // Add null terminator
-	if len(copyBytes) > maxlen {
-		copyBytes = copyBytes[:maxlen]
-	}
-	output := unsafe.Slice((*uint8)(unsafe.Pointer(bp)), maxlen)
-	copy(output, copyBytes)
-}
-
-func sprintf_ccgo_bytes(index int, args ...any) []byte {
-	fmtStr, ok := __ccgo_ts_map[index]
-	if !ok {
-		panic(fmt.Sprintf("index %d not found in __ccgo_ts_map", index))
-	}
-	if len(fmtStr) > 0 && fmtStr[len(fmtStr)-1] == 0 {
-		// Remove the null terminator for printing
-		fmtStr = fmtStr[:len(fmtStr)-1]
-	}
-	n := fmt.Sprintf(string(fmtStr), args...)
-	return []byte(n)
 }
 
 func __ccgo_ts(index int) uintptr {
