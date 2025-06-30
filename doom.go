@@ -40,12 +40,12 @@ func alloc(size int) uintptr {
 
 // Horrible memory allocation hack to avoid Go GC
 // Once we're done with libc, this should go
-var dg_alloced = make(map[uintptr][]byte)
+var dg_alloced = []byte{}
 
 func xmalloc(n uint64) uintptr {
 	data := make([]byte, n)
 	res := uintptr(unsafe.Pointer(&data[0]))
-	dg_alloced[res] = data
+	dg_alloced = append(dg_alloced, data...)
 	return res
 }
 
@@ -44179,20 +44179,20 @@ func Z_Free(ptr uintptr) {
 	other = block.Fprev
 	if other.Ftag == PU_FREE {
 		// merge with previous free block
-		*(*int32)(unsafe.Pointer(other)) += (*memblock_t)(unsafe.Pointer(block)).Fsize
-		other.Fnext = (*memblock_t)(unsafe.Pointer(block)).Fnext
+		*(*int32)(unsafe.Pointer(other)) += block.Fsize
+		other.Fnext = block.Fnext
 		(*memblock_t)(unsafe.Pointer(other.Fnext)).Fprev = other
 		if block == mainzone.Frover {
 			mainzone.Frover = other
 		}
 		block = other
 	}
-	other = (*memblock_t)(unsafe.Pointer(block)).Fnext
+	other = block.Fnext
 	if other.Ftag == PU_FREE {
 		// merge the next free block onto the end
 		*(*int32)(unsafe.Pointer(block)) += other.Fsize
-		(*memblock_t)(unsafe.Pointer(block)).Fnext = other.Fnext
-		(*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Fprev = block
+		block.Fnext = other.Fnext
+		(*memblock_t)(unsafe.Pointer(block.Fnext)).Fprev = block
 		if other == mainzone.Frover {
 			mainzone.Frover = block
 		}
@@ -44218,61 +44218,61 @@ func Z_Malloc(size int32, tag int32, user uintptr) (r uintptr) {
 	// if there is a free block behind the rover,
 	//  back up over them
 	base = mainzone.Frover
-	if (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(base)).Fprev)).Ftag == PU_FREE {
-		base = (*memblock_t)(unsafe.Pointer(base)).Fprev
+	if (*memblock_t)(unsafe.Pointer(base.Fprev)).Ftag == PU_FREE {
+		base = base.Fprev
 	}
 	rover = base
-	start = (*memblock_t)(unsafe.Pointer(base)).Fprev
-	for cond := true; cond; cond = (*memblock_t)(unsafe.Pointer(base)).Ftag != PU_FREE || (*memblock_t)(unsafe.Pointer(base)).Fsize < size {
+	start = base.Fprev
+	for cond := true; cond; cond = base.Ftag != PU_FREE || base.Fsize < size {
 		if rover == start {
 			// scanned all the way around the list
 			I_Error(29114, size)
 		}
-		if (*memblock_t)(unsafe.Pointer(rover)).Ftag != PU_FREE {
-			if (*memblock_t)(unsafe.Pointer(rover)).Ftag < PU_PURGELEVEL {
+		if rover.Ftag != PU_FREE {
+			if rover.Ftag < PU_PURGELEVEL {
 				// hit a block that can't be purged,
 				// so move base past it
-				v1 = (*memblock_t)(unsafe.Pointer(rover)).Fnext
+				v1 = rover.Fnext
 				rover = v1
 				base = v1
 			} else {
 				// free the rover block (adding the size to base)
 				// the rover can be the base block
-				base = (*memblock_t)(unsafe.Pointer(base)).Fprev
+				base = base.Fprev
 				Z_Free((uintptr)(unsafe.Pointer(rover)) + uintptr(40))
-				base = (*memblock_t)(unsafe.Pointer(base)).Fnext
-				rover = (*memblock_t)(unsafe.Pointer(base)).Fnext
+				base = base.Fnext
+				rover = base.Fnext
 			}
 		} else {
-			rover = (*memblock_t)(unsafe.Pointer(rover)).Fnext
+			rover = rover.Fnext
 		}
 	}
 	// found a block big enough
-	extra = (*memblock_t)(unsafe.Pointer(base)).Fsize - size
+	extra = base.Fsize - size
 	if extra > MINFRAGMENT {
 		// there will be a free fragment after the allocated block
 		newblock = (*memblock_t)(unsafe.Pointer(uintptr(unsafe.Pointer(base)) + uintptr(size)))
-		(*memblock_t)(unsafe.Pointer(newblock)).Fsize = extra
-		(*memblock_t)(unsafe.Pointer(newblock)).Ftag = PU_FREE
-		(*memblock_t)(unsafe.Pointer(newblock)).Fuser = uintptr(0)
-		(*memblock_t)(unsafe.Pointer(newblock)).Fprev = base
-		(*memblock_t)(unsafe.Pointer(newblock)).Fnext = (*memblock_t)(unsafe.Pointer(base)).Fnext
-		(*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(newblock)).Fnext)).Fprev = newblock
-		(*memblock_t)(unsafe.Pointer(base)).Fnext = newblock
-		(*memblock_t)(unsafe.Pointer(base)).Fsize = size
+		newblock.Fsize = extra
+		newblock.Ftag = PU_FREE
+		newblock.Fuser = uintptr(0)
+		newblock.Fprev = base
+		newblock.Fnext = base.Fnext
+		(*memblock_t)(unsafe.Pointer(newblock.Fnext)).Fprev = newblock
+		base.Fnext = newblock
+		base.Fsize = size
 	}
 	if user == uintptr(0) && tag >= PU_PURGELEVEL {
 		I_Error(29157, 0)
 	}
-	(*memblock_t)(unsafe.Pointer(base)).Fuser = user
-	(*memblock_t)(unsafe.Pointer(base)).Ftag = tag
+	base.Fuser = user
+	base.Ftag = tag
 	result = (uintptr)(unsafe.Pointer(base)) + uintptr(40)
-	if (*memblock_t)(unsafe.Pointer(base)).Fuser != 0 {
-		*(*uintptr)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(base)).Fuser)) = result
+	if base.Fuser != 0 {
+		*(*uintptr)(unsafe.Pointer(base.Fuser)) = result
 	}
 	// next allocation will start looking here
-	mainzone.Frover = (*memblock_t)(unsafe.Pointer(base)).Fnext
-	(*memblock_t)(unsafe.Pointer(base)).Fid = ZONEID
+	mainzone.Frover = base.Fnext
+	base.Fid = ZONEID
 	return result
 }
 
@@ -44289,12 +44289,12 @@ func Z_FreeTags(lowtag int32, hightag int32) {
 			break
 		}
 		// get link before freeing
-		next = (*memblock_t)(unsafe.Pointer(block)).Fnext
+		next = block.Fnext
 		// free block?
-		if (*memblock_t)(unsafe.Pointer(block)).Ftag == PU_FREE {
+		if block.Ftag == PU_FREE {
 			goto _1
 		}
-		if (*memblock_t)(unsafe.Pointer(block)).Ftag >= lowtag && (*memblock_t)(unsafe.Pointer(block)).Ftag <= hightag {
+		if block.Ftag >= lowtag && block.Ftag <= hightag {
 			Z_Free((uintptr)(unsafe.Pointer(block)) + uintptr(40))
 		}
 		goto _1
@@ -44313,23 +44313,23 @@ func Z_CheckHeap() {
 	var block *memblock_t
 	block = mainzone.Fblocklist.Fnext
 	for {
-		if (*memblock_t)(unsafe.Pointer(block)).Fnext == &mainzone.Fblocklist {
+		if block.Fnext == &mainzone.Fblocklist {
 			// all blocks have been hit
 			break
 		}
 		if (uintptr)(unsafe.Pointer(block))+uintptr(block.Fsize) != (uintptr)(unsafe.Pointer(block.Fnext)) {
 			I_Error(29436, 0)
 		}
-		if (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Fprev != block {
+		if (*memblock_t)(unsafe.Pointer(block.Fnext)).Fprev != block {
 			I_Error(29491, 0)
 		}
-		if (*memblock_t)(unsafe.Pointer(block)).Ftag == PU_FREE && (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Ftag == PU_FREE {
+		if block.Ftag == PU_FREE && (*memblock_t)(unsafe.Pointer(block.Fnext)).Ftag == PU_FREE {
 			I_Error(29546, 0)
 		}
 		goto _1
 	_1:
 		;
-		block = (*memblock_t)(unsafe.Pointer(block)).Fnext
+		block = block.Fnext
 	}
 }
 
@@ -44339,15 +44339,15 @@ func Z_CheckHeap() {
 //	// Z_ChangeTag
 //	//
 func Z_ChangeTag2(ptr uintptr, tag int32, file uintptr, line int32) {
-	var block uintptr
-	block = ptr - uintptr(40)
-	if (*memblock_t)(unsafe.Pointer(block)).Fid != ZONEID {
+	var block *memblock_t
+	block = (*memblock_t)(unsafe.Pointer(ptr - uintptr(40)))
+	if block.Fid != ZONEID {
 		I_Error(29588, file, line)
 	}
-	if tag >= PU_PURGELEVEL && (*memblock_t)(unsafe.Pointer(block)).Fuser == uintptr(0) {
+	if tag >= PU_PURGELEVEL && block.Fuser == uintptr(0) {
 		I_Error(29632, file, line)
 	}
-	(*memblock_t)(unsafe.Pointer(block)).Ftag = tag
+	block.Ftag = tag
 }
 
 // Read data from the specified position in the file into the
