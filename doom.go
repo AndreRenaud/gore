@@ -2819,7 +2819,7 @@ func AM_loadPics() {
 		if i >= 10 {
 			break
 		}
-		name := fmt.Sprintf(__ccgo_ts_str(0), i)
+		name := fmt.Sprintf("AMMNUM%d", i)
 		marknums[i] = W_CacheLumpNameT(name, PU_STATIC)
 		goto _1
 	_1:
@@ -2835,7 +2835,7 @@ func AM_unloadPics() {
 		if i >= 10 {
 			break
 		}
-		name := fmt.Sprintf(__ccgo_ts_str(0), i)
+		name := fmt.Sprintf("AMMNUM%d", i)
 		W_ReleaseLumpName(name)
 		goto _1
 	_1:
@@ -3014,26 +3014,26 @@ func AM_Responder(ev *event_t) (r boolean) {
 												followplayer = boolint32(followplayer == 0)
 												f_oldloc.Fx = int32(INT_MAX1)
 												if followplayer != 0 {
-													plr.Fmessage = __ccgo_ts_str(9)
+													plr.Fmessage = "Follow Mode ON"
 												} else {
-													plr.Fmessage = __ccgo_ts_str(24)
+													plr.Fmessage = "Follow Mode OFF"
 												}
 											} else {
 												if key == key_map_grid {
 													grid = boolint32(grid == 0)
 													if grid != 0 {
-														plr.Fmessage = __ccgo_ts_str(40)
+														plr.Fmessage = "Grid ON"
 													} else {
-														plr.Fmessage = __ccgo_ts_str(48)
+														plr.Fmessage = "Grid OFF"
 													}
 												} else {
 													if key == key_map_mark {
-														plr.Fmessage = fmt.Sprintf(__ccgo_ts_str(57), __ccgo_ts_str(63), markpointnum)
+														plr.Fmessage = fmt.Sprintf("%s %d", "Marked Spot", markpointnum)
 														AM_addMark()
 													} else {
 														if key == key_map_clearmark {
 															AM_clearMarks()
-															plr.Fmessage = __ccgo_ts_str(75)
+															plr.Fmessage = "All Marks Cleared"
 														} else {
 															rc = 0
 														}
@@ -3345,7 +3345,7 @@ func AM_drawFline(fl *fline_t, color int32) {
 		v1 = fuck
 		fuck++
 
-		fprintf_ccgo(os.Stderr, __ccgo_ts_str(93), v1)
+		fprintf_ccgo(os.Stderr, "fuck %d \r", v1)
 		return
 	}
 	dx = fl.Fb.Fx - fl.Fa.Fx
@@ -3664,24 +3664,24 @@ func init() {
 	gamemode = indetermined
 	gameversion = exe_final2
 	doom1_endmsg = [8]string{
-		0: __ccgo_ts_str(103),
-		1: __ccgo_ts_str(150),
-		2: __ccgo_ts_str(200),
-		3: __ccgo_ts_str(251),
-		4: __ccgo_ts_str(302),
-		5: __ccgo_ts_str(359),
-		6: __ccgo_ts_str(414),
-		7: __ccgo_ts_str(470),
+		0: "are you sure you want to\nquit this great game?",
+		1: "please don't leave, there's more\ndemons to toast!",
+		2: "let's beat it -- this is turning\ninto a bloodbath!",
+		3: "i wouldn't leave if i were you.\ndos is much worse.",
+		4: "you're trying to say you like dos\nbetter than me, right?",
+		5: "don't leave yet -- there's a\ndemon around that corner!",
+		6: "ya know, next time you come in here\ni'm gonna toast ya.",
+		7: "go ahead and leave. see if i care.",
 	}
 	doom2_endmsg = [8]string{
-		0: __ccgo_ts_str(103),
-		1: __ccgo_ts_str(505),
-		2: __ccgo_ts_str(555),
-		3: __ccgo_ts_str(628),
-		4: __ccgo_ts_str(680),
-		5: __ccgo_ts_str(734),
-		6: __ccgo_ts_str(792),
-		7: __ccgo_ts_str(852),
+		0: "are you sure you want to\nquit this great game?",
+		1: "you want to quit?\nthen, thou hast lost an eighth!",
+		2: "don't go now, there's a \ndimensional shambler waiting\nat the dos prompt!",
+		3: "get outta here and go back\nto your boring programs.",
+		4: "if i were your boss, i'd \n deathmatch ya in a minute!",
+		5: "look, bud. you leave now\nand you forfeit your body count!",
+		6: "just leave. when you come\nback, i'll be waiting with a bat.",
+		7: "you're lucky i don't smack\nyou for thinking about leaving.",
 	}
 }
 
@@ -3804,82 +3804,82 @@ type iwad_t struct {
 
 var iwads = [14]iwad_t{
 	0: {
-		Fname:        __ccgo_ts_str(911),
+		Fname:        "doom2.wad",
 		Fmission:     doom2,
 		Fmode:        commercial,
-		Fdescription: __ccgo_ts_str(921),
+		Fdescription: "Doom II",
 	},
 	1: {
-		Fname:        __ccgo_ts_str(929),
+		Fname:        "plutonia.wad",
 		Fmission:     pack_plut,
 		Fmode:        commercial,
-		Fdescription: __ccgo_ts_str(942),
+		Fdescription: "Final Doom: Plutonia Experiment",
 	},
 	2: {
-		Fname:        __ccgo_ts_str(974),
+		Fname:        "tnt.wad",
 		Fmission:     pack_tnt,
 		Fmode:        commercial,
-		Fdescription: __ccgo_ts_str(982),
+		Fdescription: "Final Doom: TNT: Evilution",
 	},
 	3: {
-		Fname:        __ccgo_ts_str(1009),
+		Fname:        "doom.wad",
 		Fmode:        retail,
-		Fdescription: __ccgo_ts_str(1018),
+		Fdescription: "Doom",
 	},
 	4: {
-		Fname:        __ccgo_ts_str(1023),
-		Fdescription: __ccgo_ts_str(1033),
+		Fname:        "doom1.wad",
+		Fdescription: "Doom Shareware",
 	},
 	5: {
-		Fname:        __ccgo_ts_str(1048),
+		Fname:        "chex.wad",
 		Fmission:     pack_chex,
-		Fdescription: __ccgo_ts_str(1057),
+		Fdescription: "Chex Quest",
 	},
 	6: {
-		Fname:        __ccgo_ts_str(1068),
+		Fname:        "hacx.wad",
 		Fmission:     pack_hacx,
 		Fmode:        commercial,
-		Fdescription: __ccgo_ts_str(1077),
+		Fdescription: "Hacx",
 	},
 	7: {
-		Fname:        __ccgo_ts_str(1082),
+		Fname:        "freedm.wad",
 		Fmission:     doom2,
 		Fmode:        commercial,
-		Fdescription: __ccgo_ts_str(1093),
+		Fdescription: "FreeDM",
 	},
 	8: {
-		Fname:        __ccgo_ts_str(1100),
+		Fname:        "freedoom2.wad",
 		Fmission:     doom2,
 		Fmode:        commercial,
-		Fdescription: __ccgo_ts_str(1114),
+		Fdescription: "Freedoom: Phase 2",
 	},
 	9: {
-		Fname:        __ccgo_ts_str(1132),
+		Fname:        "freedoom1.wad",
 		Fmode:        retail,
-		Fdescription: __ccgo_ts_str(1146),
+		Fdescription: "Freedoom: Phase 1",
 	},
 	10: {
-		Fname:        __ccgo_ts_str(1164),
+		Fname:        "heretic.wad",
 		Fmission:     heretic,
 		Fmode:        retail,
-		Fdescription: __ccgo_ts_str(1176),
+		Fdescription: "Heretic",
 	},
 	11: {
-		Fname:        __ccgo_ts_str(1184),
+		Fname:        "heretic1.wad",
 		Fmission:     heretic,
-		Fdescription: __ccgo_ts_str(1197),
+		Fdescription: "Heretic Shareware",
 	},
 	12: {
-		Fname:        __ccgo_ts_str(1215),
+		Fname:        "hexen.wad",
 		Fmission:     hexen,
 		Fmode:        commercial,
-		Fdescription: __ccgo_ts_str(1225),
+		Fdescription: "Hexen",
 	},
 	13: {
-		Fname:        __ccgo_ts_str(1231),
+		Fname:        "strife1.wad",
 		Fmission:     strife,
 		Fmode:        commercial,
-		Fdescription: __ccgo_ts_str(1243),
+		Fdescription: "Strife",
 	},
 }
 
@@ -3925,12 +3925,12 @@ func CheckDirectoryHasIWAD(dir string, iwadname string) string {
 	}
 	// Construct the full path to the IWAD if it is located in
 	// this directory, and check if it exists.
-	if dir == __ccgo_ts_str(1250) {
+	if dir == "." {
 		filename = iwadname
 	} else {
-		filename = dir + __ccgo_ts_str(1252) + iwadname
+		filename = dir + "/" + iwadname
 	}
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1254), filename)
+	fprintf_ccgo(os.Stdout, "Trying IWAD file:%s\n", filename)
 	if M_FileExists(filename) != 0 {
 		return filename
 	}
@@ -3999,7 +3999,7 @@ func IdentifyIWADByName(name string, mask int32) (r GameMission_t) {
 //
 
 func BuildIWADDirList() {
-	AddIWADDir(__ccgo_ts_str(1250))
+	AddIWADDir(".")
 }
 
 //
@@ -4026,7 +4026,7 @@ func D_FindWADByName(name string) string {
 			return iwad_dirs[i]
 		}
 		// Construct a string for the full path
-		path := iwad_dirs[i] + __ccgo_ts_str(1252)
+		path := iwad_dirs[i] + "/"
 		if M_FileExists(path) != 0 {
 			return path
 		}
@@ -4072,18 +4072,18 @@ func D_FindIWAD(mask int32, mission *GameMission_t) string {
 	//
 	// @arg <file>
 	//
-	iwadparm = M_CheckParmWithArgs(__ccgo_ts_str(1275), 1)
+	iwadparm = M_CheckParmWithArgs("-iwad", 1)
 	if iwadparm != 0 {
 		// Search through IWAD dirs for an IWAD with the given name.
 		iwadfile = myargs[iwadparm+1]
 		result = D_FindWADByName(iwadfile)
 		if result == "" {
-			I_Error(__ccgo_ts_str(1281), iwadfile)
+			I_Error("IWAD file '%s' not found!", iwadfile)
 		}
 		*mission = IdentifyIWADByName(result, mask)
 	} else {
 		// Search through the list and look for an IWAD
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(1307))
+		fprintf_ccgo(os.Stdout, "-iwad not specified, trying a few iwad names\n")
 		result = ""
 		BuildIWADDirList()
 		i = 0
@@ -4127,7 +4127,7 @@ func D_SaveGameIWADName(gamemission GameMission_t) string {
 		i++
 	}
 	// Default fallback:
-	return __ccgo_ts_str(1353)
+	return "unknown.wad"
 }
 
 func D_SuggestGameName(mission GameMission_t, mode GameMode_t) string {
@@ -4136,7 +4136,7 @@ func D_SuggestGameName(mission GameMission_t, mode GameMode_t) string {
 			return iwads[i].Fdescription
 		}
 	}
-	return __ccgo_ts_str(1365)
+	return "Unknown game?"
 }
 
 // The complete set of data for a particular tic.
@@ -4486,7 +4486,7 @@ func TryRunTics() {
 		NetUpdate()
 		lowtic = GetLowTic()
 		if lowtic < gametic/ticdup {
-			I_Error(__ccgo_ts_str(1446), 0)
+			I_Error("TryRunTics: lowtic < gametic", 0)
 		}
 		// Don't stay in this loop forever.  The menu is still running,
 		// so return to update the screen
@@ -4515,7 +4515,7 @@ func TryRunTics() {
 				break
 			}
 			if gametic/ticdup > lowtic {
-				I_Error(__ccgo_ts_str(1475), 0)
+				I_Error("gametic>lowtic", 0)
 			}
 			local_playeringame = set.Fingame
 			loop_interface.FRunTic(set.Fcmds[:], set.Fingame[:])
@@ -4829,7 +4829,7 @@ func D_Display() {
 	}
 	// clean up border stuff
 	if gamestate != oldgamestate1 && gamestate != GS_LEVEL {
-		I_SetPalette(W_CacheLumpName(__ccgo_ts_str(1490), PU_CACHE))
+		I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE))
 	}
 	// see if the border needs to be initially drawn
 	if gamestate == GS_LEVEL && oldgamestate1 != GS_LEVEL {
@@ -4863,7 +4863,7 @@ func D_Display() {
 		} else {
 			y = viewwindowy + 4
 		}
-		V_DrawPatchDirect(viewwindowx+(scaledviewwidth-int32(68))/int32(2), y, W_CacheLumpNameT(__ccgo_ts_str(1498), PU_CACHE))
+		V_DrawPatchDirect(viewwindowx+(scaledviewwidth-int32(68))/int32(2), y, W_CacheLumpNameT("M_PAUSE", PU_CACHE))
 	}
 	// menus go directly to the screen
 	M_Drawer()  // menu is drawn even on top of everything
@@ -4921,23 +4921,23 @@ func D_BindVariables() {
 	key_multi_msgplayer[int32(1)] = 'i'
 	key_multi_msgplayer[int32(2)] = 'b'
 	key_multi_msgplayer[int32(3)] = 'r'
-	M_BindVariable(__ccgo_ts_str(1506), &mouseSensitivity)
-	M_BindVariable(__ccgo_ts_str(1524), &sfxVolume)
-	M_BindVariable(__ccgo_ts_str(1535), &musicVolume)
-	M_BindVariable(__ccgo_ts_str(1548), &showMessages)
-	M_BindVariable(__ccgo_ts_str(1562), &screenblocks)
-	M_BindVariable(__ccgo_ts_str(1575), &detailLevel)
-	M_BindVariable(__ccgo_ts_str(1587), &snd_channels)
-	M_BindVariable(__ccgo_ts_str(1600), &vanilla_savegame_limit)
-	M_BindVariable(__ccgo_ts_str(1623), &vanilla_demo_limit)
-	M_BindVariable(__ccgo_ts_str(1642), &show_endoom)
+	M_BindVariable("mouse_sensitivity", &mouseSensitivity)
+	M_BindVariable("sfx_volume", &sfxVolume)
+	M_BindVariable("music_volume", &musicVolume)
+	M_BindVariable("show_messages", &showMessages)
+	M_BindVariable("screenblocks", &screenblocks)
+	M_BindVariable("detaillevel", &detailLevel)
+	M_BindVariable("snd_channels", &snd_channels)
+	M_BindVariable("vanilla_savegame_limit", &vanilla_savegame_limit)
+	M_BindVariable("vanilla_demo_limit", &vanilla_demo_limit)
+	M_BindVariable("show_endoom", &show_endoom)
 	// Multiplayer chat macros
 	i = 0
 	for {
 		if i >= 10 {
 			break
 		}
-		name := fmt.Sprintf(__ccgo_ts_str(1654), i)
+		name := fmt.Sprintf("chatmacro%d", i)
 		M_BindVariable(name, &chat_macros[i])
 		goto _1
 	_1:
@@ -4985,7 +4985,7 @@ func doomgeneric_Tick() {
 //	//
 func D_DoomLoop() {
 	if bfgedition != 0 && (demorecording != 0 || gameaction == ga_playdemo || netgame != 0) {
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(1666))
+		fprintf_ccgo(os.Stdout, " WARNING: You are playing using one of the Doom Classic\n IWAD files shipped with the Doom 3: BFG Edition. These are\n known to be incompatible with the regular IWAD files and\n may cause demos and network games to get out of sync.\n")
 	}
 	if demorecording != 0 {
 		G_BeginRecording()
@@ -5072,47 +5072,47 @@ func D_DoAdvanceDemo() {
 			pagetic = 170
 		}
 		gamestate = GS_DEMOSCREEN
-		pagename = __ccgo_ts_str(1896)
+		pagename = "TITLEPIC"
 		if gamemode == commercial {
 			S_StartMusic(int32(mus_dm2ttl))
 		} else {
 			S_StartMusic(int32(mus_intro))
 		}
 	case 1:
-		G_DeferedPlayDemo(__ccgo_ts_str(1905))
+		G_DeferedPlayDemo("demo1")
 	case 2:
 		pagetic = 200
 		gamestate = GS_DEMOSCREEN
-		pagename = __ccgo_ts_str(1911)
+		pagename = "CREDIT"
 	case 3:
-		G_DeferedPlayDemo(__ccgo_ts_str(1918))
+		G_DeferedPlayDemo("demo2")
 	case 4:
 		gamestate = GS_DEMOSCREEN
 		if gamemode == commercial {
 			pagetic = TICRATE * 11
-			pagename = __ccgo_ts_str(1896)
+			pagename = "TITLEPIC"
 			S_StartMusic(int32(mus_dm2ttl))
 		} else {
 			pagetic = 200
 			if gamemode == retail {
-				pagename = __ccgo_ts_str(1911)
+				pagename = "CREDIT"
 			} else {
-				pagename = __ccgo_ts_str(1924)
+				pagename = "HELP2"
 			}
 		}
 	case 5:
-		G_DeferedPlayDemo(__ccgo_ts_str(1930))
+		G_DeferedPlayDemo("demo3")
 		break
 		// THE DEFINITIVE DOOM Special Edition demo
 		fallthrough
 	case 6:
-		G_DeferedPlayDemo(__ccgo_ts_str(1936))
+		G_DeferedPlayDemo("demo4")
 		break
 	}
 	// The Doom 3: BFG Edition version of doom2.wad does not have a
 	// TITLETPIC lump. Use INTERPIC instead as a workaround.
-	if bfgedition != 0 && strings.EqualFold(pagename, __ccgo_ts_str(1896)) && W_CheckNumForName(__ccgo_ts_str(1942)) < 0 {
-		pagename = __ccgo_ts_str(1951)
+	if bfgedition != 0 && strings.EqualFold(pagename, "TITLEPIC") && W_CheckNumForName("titlepic") < 0 {
+		pagename = "INTERPIC"
 	}
 }
 
@@ -5133,13 +5133,13 @@ func D_StartTitle() {
 // not used in any dehacked patches
 
 var banners = [7]string{
-	0: __ccgo_ts_str(1960),
-	1: __ccgo_ts_str(2041),
-	2: __ccgo_ts_str(2126),
-	3: __ccgo_ts_str(2212),
-	4: __ccgo_ts_str(2291),
-	5: __ccgo_ts_str(2373),
-	6: __ccgo_ts_str(2452),
+	0: "                         DOOM 2: Hell on Earth v%d.%d                           ",
+	1: "                            DOOM Shareware Startup v%d.%d                           ",
+	2: "                            DOOM Registered Startup v%d.%d                           ",
+	3: "                          DOOM System Startup v%d.%d                          ",
+	4: "                         The Ultimate DOOM Startup v%d.%d                        ",
+	5: "                     DOOM 2: TNT - Evilution v%d.%d                           ",
+	6: "                   DOOM 2: Plutonia Experiment v%d.%d                           ",
 }
 
 //
@@ -5214,19 +5214,19 @@ func SetMissionForPackName(pack_name string) {
 		;
 		i++
 	}
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(2552))
+	fprintf_ccgo(os.Stdout, "Valid mission packs are:\n")
 	i = 0
 	for {
 		if uint64(i) >= 48/16 {
 			break
 		}
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(2578), packs[i].Fname)
+		fprintf_ccgo(os.Stdout, "\t%s\n", packs[i].Fname)
 		goto _2
 	_2:
 		;
 		i++
 	}
-	I_Error(__ccgo_ts_str(2583), pack_name)
+	I_Error("Unknown mission pack name: %s", pack_name)
 }
 
 var packs = [3]struct {
@@ -5234,15 +5234,15 @@ var packs = [3]struct {
 	Fmission GameMission_t
 }{
 	0: {
-		Fname:    __ccgo_ts_str(2533),
+		Fname:    "doom2",
 		Fmission: doom2,
 	},
 	1: {
-		Fname:    __ccgo_ts_str(2539),
+		Fname:    "tnt",
 		Fmission: pack_tnt,
 	},
 	2: {
-		Fname:    __ccgo_ts_str(2543),
+		Fname:    "plutonia",
 		Fmission: pack_plut,
 	},
 }
@@ -5266,11 +5266,11 @@ func D_IdentifyVersion() {
 			if i >= numlumps {
 				break
 			}
-			if strings.EqualFold(lumpinfo[i].Name(), __ccgo_ts_str(2613)) {
+			if strings.EqualFold(lumpinfo[i].Name(), "MAP01") {
 				gamemission = doom2
 				break
 			} else {
-				if strings.EqualFold(lumpinfo[i].Name(), __ccgo_ts_str(2619)) {
+				if strings.EqualFold(lumpinfo[i].Name(), "E1M1") {
 					gamemission = doom
 					break
 				}
@@ -5282,7 +5282,7 @@ func D_IdentifyVersion() {
 		}
 		if gamemission == none {
 			// Still no idea.  I don't think this is going to work.
-			I_Error(__ccgo_ts_str(2624), 0)
+			I_Error("Unknown or invalid IWAD file.", 0)
 		}
 	}
 	// Make sure gamemode is set up correctly
@@ -5298,11 +5298,11 @@ func D_IdentifyVersion() {
 	}
 	if v2 == doom {
 		// Doom 1.  But which version?
-		if W_CheckNumForName(__ccgo_ts_str(2654)) > 0 {
+		if W_CheckNumForName("E4M1") > 0 {
 			// Ultimate Doom
 			gamemode = retail
 		} else {
-			if W_CheckNumForName(__ccgo_ts_str(2659)) > 0 {
+			if W_CheckNumForName("E3M1") > 0 {
 				gamemode = registered
 			} else {
 				gamemode = shareware
@@ -5321,7 +5321,7 @@ func D_IdentifyVersion() {
 		// detecting it based on the filename. Valid values are: "doom2",
 		// "tnt" and "plutonia".
 		//
-		p = M_CheckParmWithArgs(__ccgo_ts_str(2664), 1)
+		p = M_CheckParmWithArgs("-pack", 1)
 		if p > 0 {
 			SetMissionForPackName(myargs[p+1])
 		}
@@ -5333,9 +5333,9 @@ func D_IdentifyVersion() {
 func D_SetGameDescription() {
 	var is_freedm, is_freedoom boolean
 	var v7, v5, v3, v1 GameMission_t
-	is_freedoom = booluint32(W_CheckNumForName(__ccgo_ts_str(2670)) >= 0)
-	is_freedm = booluint32(W_CheckNumForName(__ccgo_ts_str(2679)) >= 0)
-	gamedescription = __ccgo_ts_str(2686)
+	is_freedoom = booluint32(W_CheckNumForName("FREEDOOM") >= 0)
+	is_freedm = booluint32(W_CheckNumForName("FREEDM") >= 0)
+	gamedescription = "Unknown"
 	if gamemission == pack_chex {
 		v1 = doom
 	} else {
@@ -5348,17 +5348,17 @@ func D_SetGameDescription() {
 	if v1 == doom {
 		// Doom 1.  But which version?
 		if is_freedoom != 0 {
-			gamedescription = GetGameName(__ccgo_ts_str(1146))
+			gamedescription = GetGameName("Freedoom: Phase 1")
 		} else {
 			if gamemode == retail {
 				// Ultimate Doom
-				gamedescription = GetGameName(__ccgo_ts_str(2694))
+				gamedescription = GetGameName("The Ultimate DOOM")
 			} else {
 				if gamemode == registered {
-					gamedescription = GetGameName(__ccgo_ts_str(2712))
+					gamedescription = GetGameName("DOOM Registered")
 				} else {
 					if gamemode == shareware {
-						gamedescription = GetGameName(__ccgo_ts_str(2728))
+						gamedescription = GetGameName("DOOM Shareware")
 					}
 				}
 			}
@@ -5367,9 +5367,9 @@ func D_SetGameDescription() {
 		// Doom 2 of some kind.  But which mission?
 		if is_freedoom != 0 {
 			if is_freedm != 0 {
-				gamedescription = GetGameName(__ccgo_ts_str(1093))
+				gamedescription = GetGameName("FreeDM")
 			} else {
-				gamedescription = GetGameName(__ccgo_ts_str(1114))
+				gamedescription = GetGameName("Freedoom: Phase 2")
 			}
 		} else {
 			if gamemission == pack_chex {
@@ -5382,7 +5382,7 @@ func D_SetGameDescription() {
 				}
 			}
 			if v3 == doom2 {
-				gamedescription = GetGameName(__ccgo_ts_str(2743))
+				gamedescription = GetGameName("DOOM 2: Hell on Earth")
 			} else {
 				if gamemission == pack_chex {
 					v5 = doom
@@ -5394,7 +5394,7 @@ func D_SetGameDescription() {
 					}
 				}
 				if v5 == pack_plut {
-					gamedescription = GetGameName(__ccgo_ts_str(2765))
+					gamedescription = GetGameName("DOOM 2: Plutonia Experiment")
 				} else {
 					if gamemission == pack_chex {
 						v7 = doom
@@ -5406,7 +5406,7 @@ func D_SetGameDescription() {
 						}
 					}
 					if v7 == pack_tnt {
-						gamedescription = GetGameName(__ccgo_ts_str(2793))
+						gamedescription = GetGameName("DOOM 2: TNT - Evilution")
 					}
 				}
 			}
@@ -5416,7 +5416,7 @@ func D_SetGameDescription() {
 
 func D_AddFile(filename string) (r boolean) {
 	var handle *os.File
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(2817), filename)
+	fprintf_ccgo(os.Stdout, " adding %s\n", filename)
 	handle = W_AddFile(filename)
 	return booluint32(handle != nil)
 }
@@ -5426,9 +5426,9 @@ func D_AddFile(filename string) (r boolean) {
 // replaced by dehacked.
 
 var copyright_banners = [3]string{
-	0: __ccgo_ts_str(2829),
-	1: __ccgo_ts_str(3245),
-	2: __ccgo_ts_str(3521),
+	0: "===========================================================================\nATTENTION:  This version of DOOM has been modified.  If you would like to\nget a copy of the original game, call 1-800-IDGAMES or see the readme file.\n        You will not receive technical support for modified games.\n                      press enter to continue\n===========================================================================\n",
+	1: "===========================================================================\n                 Commercial product - do not distribute!\n         Please report software piracy to the SPA: 1-800-388-PIR8\n===========================================================================\n",
+	2: "===========================================================================\n                                Shareware!\n===========================================================================\n",
 }
 
 // Prints a message only if it has been modified by dehacked.
@@ -5443,7 +5443,7 @@ func PrintDehackedBanners() {
 			if deh_s[len(deh_s)-1] != '\n' {
 				deh_s += "\n"
 			}
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(3717), deh_s)
+			fprintf_ccgo(os.Stdout, "%s", deh_s)
 		}
 	}
 }
@@ -5454,48 +5454,48 @@ var gameversions = [10]struct {
 	Fversion     GameVersion_t
 }{
 	0: {
-		Fdescription: __ccgo_ts_str(3722),
-		Fcmdline:     __ccgo_ts_str(3733),
+		Fdescription: "Doom 1.666",
+		Fcmdline:     "1.666",
 		Fversion:     exe_doom_1_666,
 	},
 	1: {
-		Fdescription: __ccgo_ts_str(3739),
-		Fcmdline:     __ccgo_ts_str(3753),
+		Fdescription: "Doom 1.7/1.7a",
+		Fcmdline:     "1.7",
 		Fversion:     exe_doom_1_7,
 	},
 	2: {
-		Fdescription: __ccgo_ts_str(3757),
-		Fcmdline:     __ccgo_ts_str(3766),
+		Fdescription: "Doom 1.8",
+		Fcmdline:     "1.8",
 		Fversion:     exe_doom_1_8,
 	},
 	3: {
-		Fdescription: __ccgo_ts_str(3770),
-		Fcmdline:     __ccgo_ts_str(3779),
+		Fdescription: "Doom 1.9",
+		Fcmdline:     "1.9",
 		Fversion:     exe_doom_1_9,
 	},
 	4: {
-		Fdescription: __ccgo_ts_str(1077),
-		Fcmdline:     __ccgo_ts_str(3783),
+		Fdescription: "Hacx",
+		Fcmdline:     "hacx",
 		Fversion:     exe_hacx,
 	},
 	5: {
-		Fdescription: __ccgo_ts_str(3788),
-		Fcmdline:     __ccgo_ts_str(3802),
+		Fdescription: "Ultimate Doom",
+		Fcmdline:     "ultimate",
 		Fversion:     exe_ultimate,
 	},
 	6: {
-		Fdescription: __ccgo_ts_str(3811),
-		Fcmdline:     __ccgo_ts_str(3822),
+		Fdescription: "Final Doom",
+		Fcmdline:     "final",
 		Fversion:     exe_final,
 	},
 	7: {
-		Fdescription: __ccgo_ts_str(3828),
-		Fcmdline:     __ccgo_ts_str(3845),
+		Fdescription: "Final Doom (alt)",
+		Fcmdline:     "final2",
 		Fversion:     exe_final2,
 	},
 	8: {
-		Fdescription: __ccgo_ts_str(1057),
-		Fcmdline:     __ccgo_ts_str(3852),
+		Fdescription: "Chex Quest",
+		Fcmdline:     "chex",
 		Fversion:     exe_chex,
 	},
 	9: {},
@@ -5512,7 +5512,7 @@ func InitGameVersion() {
 	// Emulate a specific version of Doom.  Valid values are "1.9",
 	// "ultimate", "final", "final2", "hacx" and "chex".
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts_str(3857), 1)
+	p = M_CheckParmWithArgs("-gameversion", 1)
 	if p != 0 {
 		i = 0
 		for {
@@ -5529,19 +5529,19 @@ func InitGameVersion() {
 			i++
 		}
 		if gameversions[i].Fdescription == "" {
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(3870))
+			fprintf_ccgo(os.Stdout, "Supported game versions:\n")
 			i = 0
 			for {
 				if gameversions[i].Fdescription == "" {
 					break
 				}
-				fprintf_ccgo(os.Stdout, __ccgo_ts_str(3896), gameversions[i].Fcmdline, gameversions[i].Fdescription)
+				fprintf_ccgo(os.Stdout, "\t%s (%s)\n", gameversions[i].Fcmdline, gameversions[i].Fdescription)
 				goto _2
 			_2:
 				;
 				i++
 			}
-			I_Error(__ccgo_ts_str(3906), myargs[p+1])
+			I_Error("Unknown game version '%s'", myargs[p+1])
 		}
 	} else {
 		// Determine automatically
@@ -5596,7 +5596,7 @@ func PrintGameVersion() {
 			break
 		}
 		if gameversions[i].Fversion == gameversion {
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(3932), gameversions[i].Fdescription)
+			fprintf_ccgo(os.Stdout, "Emulating the behavior of the '%s' executable.\n", gameversions[i].Fdescription)
 			break
 		}
 		goto _1
@@ -5613,10 +5613,10 @@ func D_Endoom() {
 	// Don't show ENDOOM if we have it disabled, or we're running
 	// in screensaver or control test mode. Only show it once the
 	// game has actually started.
-	if show_endoom == 0 || main_loop_started == 0 || screensaver_mode != 0 || M_CheckParm(__ccgo_ts_str(3980)) > 0 {
+	if show_endoom == 0 || main_loop_started == 0 || screensaver_mode != 0 || M_CheckParm("-testcontrols") > 0 {
 		return
 	}
-	endoom = W_CacheLumpName(__ccgo_ts_str(3994), PU_STATIC)
+	endoom = W_CacheLumpName("ENDOOM", PU_STATIC)
 	I_Endoom(endoom)
 	log.Printf("Exiting - outstanding memory: %d", len(dg_alloced))
 	dg_exiting = true
@@ -5632,34 +5632,34 @@ func D_DoomMain() {
 	var i, p, v1 int32
 	I_AtExit(D_Endoom, 0)
 	// print banner
-	I_PrintBanner(__ccgo_ts_str(4001))
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(4018))
+	I_PrintBanner("Doom Generic 0.1")
+	fprintf_ccgo(os.Stdout, "Z_Init: Init zone memory allocation daemon. \n")
 	Z_Init()
 	//!
 	// @vanilla
 	//
 	// Disable monsters.
 	//
-	nomonsters = uint32(M_CheckParm(__ccgo_ts_str(4064)))
+	nomonsters = uint32(M_CheckParm("-nomonsters"))
 	//!
 	// @vanilla
 	//
 	// Monsters respawn after being killed.
 	//
-	respawnparm = uint32(M_CheckParm(__ccgo_ts_str(4076)))
+	respawnparm = uint32(M_CheckParm("-respawn"))
 	//!
 	// @vanilla
 	//
 	// Monsters move faster.
 	//
-	fastparm = uint32(M_CheckParm(__ccgo_ts_str(4085)))
+	fastparm = uint32(M_CheckParm("-fast"))
 	//!
 	// @vanilla
 	//
 	// Developer mode.  F1 saves a screenshot in the current working
 	// directory.
 	//
-	devparm = uint32(M_CheckParm(__ccgo_ts_str(4091)))
+	devparm = uint32(M_CheckParm("-devparm"))
 	I_DisplayFPSDots(devparm)
 	//!
 	// @category net
@@ -5667,7 +5667,7 @@ func D_DoomMain() {
 	//
 	// Start a deathmatch game.
 	//
-	if M_CheckParm(__ccgo_ts_str(4100)) != 0 {
+	if M_CheckParm("-deathmatch") != 0 {
 		deathmatch = 1
 	}
 	//!
@@ -5677,11 +5677,11 @@ func D_DoomMain() {
 	// Start a deathmatch 2.0 game.  Weapons do not stay in place and
 	// all items respawn after 30 seconds.
 	//
-	if M_CheckParm(__ccgo_ts_str(4112)) != 0 {
+	if M_CheckParm("-altdeath") != 0 {
 		deathmatch = 2
 	}
 	if devparm != 0 {
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4122))
+		fprintf_ccgo(os.Stdout, "Development mode ON.\n")
 	}
 	// find which dir to use for config files
 	// Auto-detect the configuration dir.
@@ -5693,7 +5693,7 @@ func D_DoomMain() {
 	// Turbo mode.  The player's speed is multiplied by x%.  If unspecified,
 	// x defaults to 200.  Values are rounded up to 10 and down to 400.
 	//
-	v1 = M_CheckParm(__ccgo_ts_str(4144))
+	v1 = M_CheckParm("-turbo")
 	p = v1
 	if v1 != 0 {
 		scale := 200
@@ -5706,18 +5706,18 @@ func D_DoomMain() {
 		if scale > 400 {
 			scale = 400
 		}
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4151), scale)
+		fprintf_ccgo(os.Stdout, "turbo scale: %d%%\n", scale)
 		forwardmove[0] = forwardmove[0] * int32(scale) / 100
 		forwardmove[int32(1)] = forwardmove[int32(1)] * int32(scale) / 100
 		sidemove[0] = sidemove[0] * int32(scale) / 100
 		sidemove[int32(1)] = sidemove[int32(1)] * int32(scale) / 100
 	}
 	// init subsystems
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(4170))
+	fprintf_ccgo(os.Stdout, "V_Init: allocate screens.\n")
 	V_Init()
 	// Load configuration files before initialising other subsystems.
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(4197))
-	M_SetConfigFilenames(__ccgo_ts_str(4236), __ccgo_ts_str(4248))
+	fprintf_ccgo(os.Stdout, "M_LoadDefaults: Load system defaults.\n")
+	M_SetConfigFilenames("default.cfg", "doomgenericdoom.cfg")
 	D_BindVariables()
 	M_LoadDefaults()
 	// Save configuration at exit.
@@ -5726,10 +5726,10 @@ func D_DoomMain() {
 	iwadfile = D_FindIWAD(1<<int32(doom)|1<<int32(doom2)|1<<int32(pack_tnt)|1<<int32(pack_plut)|1<<int32(pack_chex)|1<<int32(pack_hacx), &gamemission)
 	// None found?
 	if iwadfile == "" {
-		I_Error(__ccgo_ts_str(4268), 0)
+		I_Error("Game mode indeterminate.  No IWAD file was found.  Try\nspecifying one with the '-iwad' command line parameter.\n", 0)
 	}
 	modifiedgame = 0
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(4380))
+	fprintf_ccgo(os.Stdout, "W_Init: Init WADfiles.\n")
 	D_AddFile(iwadfile)
 	W_CheckCorrectIWAD(doom)
 	// Now that we've loaded the IWAD, we can figure out what gamemission
@@ -5743,8 +5743,8 @@ func D_DoomMain() {
 	// of doom2.wad is missing the TITLEPIC lump.
 	// We specifically check for DMENUPIC here, before PWADs have been
 	// loaded which could probably include a lump of that name.
-	if W_CheckNumForName(__ccgo_ts_str(4404)) >= 0 {
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4413))
+	if W_CheckNumForName("dmenupic") >= 0 {
+		fprintf_ccgo(os.Stdout, "BFG Edition: Using workarounds as needed.\n")
 		bfgedition = 1
 		// BFG Edition changes the names of the secret levels to
 		// censor the Wolfenstein references. It also has an extra
@@ -5772,7 +5772,7 @@ func D_DoomMain() {
 	//
 	// Play back the demo named demo.lmp.
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts_str(4456), 1)
+	p = M_CheckParmWithArgs("-playdemo", 1)
 	if p == 0 {
 		//!
 		// @arg <demo>
@@ -5782,16 +5782,16 @@ func D_DoomMain() {
 		// Play back the demo named demo.lmp, determining the framerate
 		// of the screen.
 		//
-		p = M_CheckParmWithArgs(__ccgo_ts_str(4466), 1)
+		p = M_CheckParmWithArgs("-timedemo", 1)
 	}
 	if p != 0 {
 		// With Vanilla you have to specify the file without extension,
 		// but make that optional.
 		var name string
-		if strings.HasSuffix(myargs[p+1], __ccgo_ts_str(4476)) {
+		if strings.HasSuffix(myargs[p+1], ".lmp") {
 			name = myargs[p+1]
 		} else {
-			name = fmt.Sprintf(__ccgo_ts_str(4481), myargs[p+1])
+			name = fmt.Sprintf("%s.lmp", myargs[p+1])
 		}
 		if D_AddFile(name) != 0 {
 			argDemoName = lumpinfo[numlumps-1].Name()
@@ -5801,7 +5801,7 @@ func D_DoomMain() {
 			// tricks like "-playdemo demo1" possible.
 			argDemoName = myargs[p+1]
 		}
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4488), name)
+		fprintf_ccgo(os.Stdout, "Playing demo %s.\n", name)
 	}
 	I_AtExit(G_CheckDemoStatus, 1)
 	// Generate the WAD hash table.  Speed things up a bit.
@@ -5842,7 +5842,7 @@ func D_DoomMain() {
 			22: "spida1d1",
 		}
 		if gamemode == shareware {
-			I_Error(__ccgo_ts_str(4506), 0)
+			I_Error("\nYou cannot -file with the shareware version. Register!", 0)
 		}
 		// Check for fake IWAD with right name,
 		// but w/o all the lumps of the registered version.
@@ -5853,7 +5853,7 @@ func D_DoomMain() {
 					break
 				}
 				if W_CheckNumForName(levelLumps[i]) < 0 {
-					I_Error(__ccgo_ts_str(4562), 0)
+					I_Error("\nThis is not the registered version.", 0)
 				}
 				goto _2
 			_2:
@@ -5862,20 +5862,20 @@ func D_DoomMain() {
 			}
 		}
 	}
-	if W_CheckNumForName(__ccgo_ts_str(4599)) >= 0 || W_CheckNumForName(__ccgo_ts_str(4608)) >= 0 {
+	if W_CheckNumForName("SS_START") >= 0 || W_CheckNumForName("FF_END") >= 0 {
 		I_PrintDivider()
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4615))
+		fprintf_ccgo(os.Stdout, " WARNING: The loaded WAD file contains modified sprites or\n floor textures.  You may want to use the '-merge' command\n line option instead of '-file'.\n")
 	}
 	I_PrintStartupBanner(gamedescription)
 	PrintDehackedBanners()
 	// Freedoom's IWADs are Boom-compatible, which means they usually
 	// don't work in Vanilla (though FreeDM is okay). Show a warning
 	// message and give a link to the website.
-	if W_CheckNumForName(__ccgo_ts_str(2670)) >= 0 && W_CheckNumForName(__ccgo_ts_str(2679)) < 0 {
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4767))
+	if W_CheckNumForName("FREEDOOM") >= 0 && W_CheckNumForName("FREEDM") < 0 {
+		fprintf_ccgo(os.Stdout, " WARNING: You are playing using one of the Freedoom IWAD\n files, which might not work in this port. See this page\n for more information on how to play using Freedoom:\n   http://www.chocolate-doom.org/wiki/index.php/Freedoom\n")
 		I_PrintDivider()
 	}
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(4992))
+	fprintf_ccgo(os.Stdout, "I_Init: Setting up machine state.\n")
 	I_CheckIsScreensaver()
 	I_InitSound(1)
 	I_InitMusic()
@@ -5893,7 +5893,7 @@ func D_DoomMain() {
 	// Set the game skill, 1-5 (1: easiest, 5: hardest).  A skill of
 	// 0 disables all monsters.
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts_str(5027), 1)
+	p = M_CheckParmWithArgs("-skill", 1)
 	if p != 0 {
 		startskill = skill_t(myargs[p+1][0] - '1')
 		autostart = 1
@@ -5904,7 +5904,7 @@ func D_DoomMain() {
 	//
 	// Start playing on episode n (1-4)
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts_str(5034), 1)
+	p = M_CheckParmWithArgs("-episode", 1)
 	if p != 0 {
 		startepisode = int32(myargs[p+1][0] - '0')
 		startmap = 1
@@ -5918,7 +5918,7 @@ func D_DoomMain() {
 	//
 	// For multiplayer games: exit each level after n minutes.
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts_str(5043), 1)
+	p = M_CheckParmWithArgs("-timer", 1)
 	if p != 0 {
 		v, _ := strconv.Atoi(myargs[p+1])
 		timelimit = int32(v)
@@ -5929,7 +5929,7 @@ func D_DoomMain() {
 	//
 	// Austin Virtual Gaming: end levels after 20 minutes.
 	//
-	p = M_CheckParm(__ccgo_ts_str(5050))
+	p = M_CheckParm("-avg")
 	if p != 0 {
 		timelimit = 20
 	}
@@ -5940,7 +5940,7 @@ func D_DoomMain() {
 	// Start a game immediately, warping to ExMy (Doom 1) or MAPxy
 	// (Doom 2)
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts_str(5055), 1)
+	p = M_CheckParmWithArgs("-warp", 1)
 	if p != 0 {
 		if gamemode == commercial {
 			v, _ := strconv.Atoi(myargs[p+1])
@@ -5957,7 +5957,7 @@ func D_DoomMain() {
 	}
 	// Undocumented:
 	// Invoked by setup to test the controls.
-	p = M_CheckParm(__ccgo_ts_str(3980))
+	p = M_CheckParm("-testcontrols")
 	if p > 0 {
 		startepisode = 1
 		startmap = 1
@@ -5973,7 +5973,7 @@ func D_DoomMain() {
 	//
 	// Load the game in slot s.
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts_str(5061), 1)
+	p = M_CheckParmWithArgs("-loadgame", 1)
 	if p != 0 {
 		v, _ := strconv.Atoi(myargs[p+1])
 		startloadgame = int32(v)
@@ -5981,30 +5981,30 @@ func D_DoomMain() {
 		// Not loading a game
 		startloadgame = -1
 	}
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5071))
+	fprintf_ccgo(os.Stdout, "M_Init: Init miscellaneous info.\n")
 	M_Init()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5105))
+	fprintf_ccgo(os.Stdout, "R_Init: Init DOOM refresh daemon - ")
 	R_Init()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5141))
+	fprintf_ccgo(os.Stdout, "\nP_Init: Init Playloop state.\n")
 	P_Init()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5172))
+	fprintf_ccgo(os.Stdout, "S_Init: Setting up sound.\n")
 	S_Init(sfxVolume*int32(8), musicVolume*int32(8))
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5199))
+	fprintf_ccgo(os.Stdout, "D_CheckNetGame: Checking network game status.\n")
 	D_CheckNetGame()
 	PrintGameVersion()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5246))
+	fprintf_ccgo(os.Stdout, "HU_Init: Setting up heads up display.\n")
 	HU_Init()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5285))
+	fprintf_ccgo(os.Stdout, "ST_Init: Init status bar.\n")
 	ST_Init()
 	// If Doom II without a MAP01 lump, this is a store demo.
 	// Moved this here so that MAP01 isn't constantly looked up
 	// in the main loop.
-	if gamemode == commercial && W_CheckNumForName(__ccgo_ts_str(5312)) < 0 {
+	if gamemode == commercial && W_CheckNumForName("map01") < 0 {
 		storedemo = 1
 	}
-	if M_CheckParmWithArgs(__ccgo_ts_str(5318), 1) != 0 {
+	if M_CheckParmWithArgs("-statdump", 1) != 0 {
 		I_AtExit(StatDump, 1)
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(5328))
+		fprintf_ccgo(os.Stdout, "External statistics registered.\n")
 	}
 	//!
 	// @arg <x>
@@ -6013,19 +6013,19 @@ func D_DoomMain() {
 	//
 	// Record a demo named x.lmp.
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts_str(5361), 1)
+	p = M_CheckParmWithArgs("-record", 1)
 	if p != 0 {
 		G_RecordDemo(myargs[p+1])
 		autostart = 1
 	}
-	p = M_CheckParmWithArgs(__ccgo_ts_str(4456), 1)
+	p = M_CheckParmWithArgs("-playdemo", 1)
 	if p != 0 {
 		singledemo = 1 // quit after one demo
 		G_DeferedPlayDemo(argDemoName)
 		D_DoomLoop()
 		return
 	}
-	p = M_CheckParmWithArgs(__ccgo_ts_str(4466), 1)
+	p = M_CheckParmWithArgs("-timedemo", 1)
 	if p != 0 {
 		G_TimeDemo(argDemoName)
 		D_DoomLoop()
@@ -6049,25 +6049,25 @@ func D_GameMissionString(mission GameMission_t) string {
 	case none:
 		fallthrough
 	default:
-		return __ccgo_ts_str(5369)
+		return "none"
 	case doom:
-		return __ccgo_ts_str(5374)
+		return "doom"
 	case doom2:
-		return __ccgo_ts_str(2533)
+		return "doom2"
 	case pack_tnt:
-		return __ccgo_ts_str(2539)
+		return "tnt"
 	case pack_plut:
-		return __ccgo_ts_str(2543)
+		return "plutonia"
 	case pack_hacx:
-		return __ccgo_ts_str(3783)
+		return "hacx"
 	case pack_chex:
-		return __ccgo_ts_str(3852)
+		return "chex"
 	case heretic:
-		return __ccgo_ts_str(5379)
+		return "heretic"
 	case hexen:
-		return __ccgo_ts_str(5387)
+		return "hexen"
 	case strife:
-		return __ccgo_ts_str(5393)
+		return "strife"
 	}
 	return ""
 }
@@ -6140,7 +6140,7 @@ func LoadGameSettings(settings *net_gamesettings_t) {
 	timelimit = settings.Ftimelimit
 	consoleplayer = settings.Fconsoleplayer
 	if lowres_turn != 0 {
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(5423))
+		fprintf_ccgo(os.Stdout, "NOTE: Turning resolution is reduced; this is probably because there is a client recording a Vanilla demo.\n")
 	}
 	for i := 0; i < MAXPLAYERS; i++ {
 		playeringame[i] = booluint32(i < int(settings.Fnum_players))
@@ -6163,7 +6163,7 @@ func SaveGameSettings(settings *net_gamesettings_t) {
 	settings.Ffast_monsters = int32(fastparm)
 	settings.Frespawn_monsters = int32(respawnparm)
 	settings.Ftimelimit = timelimit
-	settings.Flowres_turn = boolint32(M_CheckParm(__ccgo_ts_str(5361)) > 0 && M_CheckParm(__ccgo_ts_str(5530)) == 0)
+	settings.Flowres_turn = boolint32(M_CheckParm("-record") > 0 && M_CheckParm("-longtics") == 0)
 }
 
 func InitConnectData(connect_data *net_connect_data_t) {
@@ -6174,7 +6174,7 @@ func InitConnectData(connect_data *net_connect_data_t) {
 	//
 	// Run as the left screen in three screen mode.
 	//
-	if M_CheckParm(__ccgo_ts_str(5540)) > 0 {
+	if M_CheckParm("-left") > 0 {
 		viewangleoffset = ANG901
 		connect_data.Fdrone = 1
 	}
@@ -6183,7 +6183,7 @@ func InitConnectData(connect_data *net_connect_data_t) {
 	//
 	// Run as the right screen in three screen mode.
 	//
-	if M_CheckParm(__ccgo_ts_str(5546)) > 0 {
+	if M_CheckParm("-right") > 0 {
 		viewangleoffset = ANG2701
 		connect_data.Fdrone = 1
 	}
@@ -6194,11 +6194,11 @@ func InitConnectData(connect_data *net_connect_data_t) {
 	connect_data.Fgamemode = gamemode
 	connect_data.Fgamemission = gamemission
 	// Are we recording a demo? Possibly set lowres turn mode
-	connect_data.Flowres_turn = boolint32(M_CheckParm(__ccgo_ts_str(5361)) > 0 && M_CheckParm(__ccgo_ts_str(5530)) == 0)
+	connect_data.Flowres_turn = boolint32(M_CheckParm("-record") > 0 && M_CheckParm("-longtics") == 0)
 	// Read checksums of our WAD directory and dehacked information
 	W_Checksum(&connect_data.Fwad_sha1sum)
 	// Are we playing with the Freedoom IWAD?
-	connect_data.Fis_freedoom = boolint32(W_CheckNumForName(__ccgo_ts_str(2670)) >= 0)
+	connect_data.Fis_freedoom = boolint32(W_CheckNumForName("FREEDOOM") >= 0)
 }
 
 func D_ConnectNetGame() {
@@ -6212,7 +6212,7 @@ func D_ConnectNetGame() {
 	// player.  This can also be used to play back single player netgame
 	// demos.
 	//
-	if M_CheckParm(__ccgo_ts_str(5553)) > 0 {
+	if M_CheckParm("-solo-net") > 0 {
 		netgame = 1
 	}
 }
@@ -6232,19 +6232,19 @@ func D_CheckNetGame() {
 	SaveGameSettings(settings)
 	D_StartNetGame(settings, 0)
 	LoadGameSettings(settings)
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5563), startskill, deathmatch, startmap, startepisode)
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5626), consoleplayer+int32(1), settings.Fnum_players, settings.Fnum_players)
+	fprintf_ccgo(os.Stdout, "startskill %d  deathmatch: %d  startmap: %d  startepisode: %d\n", startskill, deathmatch, startmap, startepisode)
+	fprintf_ccgo(os.Stdout, "player %d of %d (%d nodes)\n", consoleplayer+int32(1), settings.Fnum_players, settings.Fnum_players)
 	// Show players here; the server might have specified a time limit
 	if timelimit > 0 && deathmatch != 0 {
 		// Gross hack to work like Vanilla:
-		if timelimit == 20 && M_CheckParm(__ccgo_ts_str(5050)) != 0 {
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(5654))
+		if timelimit == 20 && M_CheckParm("-avg") != 0 {
+			fprintf_ccgo(os.Stdout, "Austin Virtual Gaming: Levels will end after 20 minutes\n")
 		} else {
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(5711), timelimit)
+			fprintf_ccgo(os.Stdout, "Levels will end after %d minute", timelimit)
 			if timelimit > 1 {
-				fprintf_ccgo(os.Stdout, __ccgo_ts_str(5743))
+				fprintf_ccgo(os.Stdout, "s")
 			}
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(5745))
+			fprintf_ccgo(os.Stdout, ".\n")
 		}
 	}
 }
@@ -6271,152 +6271,152 @@ var textscreens = [22]textscreen_t{
 	0: {
 		Fepisode:    1,
 		Flevel:      8,
-		Fbackground: __ccgo_ts_str(5748),
-		Ftext:       __ccgo_ts_str(5757),
+		Fbackground: "FLOOR4_8",
+		Ftext:       "Once you beat the big badasses and\nclean out the moon base you're supposed\nto win, aren't you? Aren't you? Where's\nyour fat reward and ticket home? What\nthe hell is this? It's not supposed to\nend this way!\n\nIt stinks like rotten meat, but looks\nlike the lost Deimos base.  Looks like\nyou're stuck on The Shores of Hell.\nThe only way out is through.\n\nTo continue the DOOM experience, play\nThe Shores of Hell and its amazing\nsequel, Inferno!\n",
 	},
 	1: {
 		Fepisode:    2,
 		Flevel:      8,
-		Fbackground: __ccgo_ts_str(6198),
-		Ftext:       __ccgo_ts_str(6206),
+		Fbackground: "SFLR6_1",
+		Ftext:       "You've done it! The hideous cyber-\ndemon lord that ruled the lost Deimos\nmoon base has been slain and you\nare triumphant! But ... where are\nyou? You clamber to the edge of the\nmoon and look down to see the awful\ntruth.\n\nDeimos floats above Hell itself!\nYou've never heard of anyone escaping\nfrom Hell, but you'll make the bastards\nsorry they ever heard of you! Quickly,\nyou rappel down to  the surface of\nHell.\n\nNow, it's on to the final chapter of\nDOOM! -- Inferno.",
 	},
 	2: {
 		Fepisode:    3,
 		Flevel:      8,
-		Fbackground: __ccgo_ts_str(6673),
-		Ftext:       __ccgo_ts_str(6681),
+		Fbackground: "MFLR8_4",
+		Ftext:       "The loathsome spiderdemon that\nmasterminded the invasion of the moon\nbases and caused so much death has had\nits ass kicked for all time.\n\nA hidden doorway opens and you enter.\nYou've proven too tough for Hell to\ncontain, and now Hell at last plays\nfair -- for you emerge from the door\nto see the green fields of Earth!\nHome at last.\n\nYou wonder what's been happening on\nEarth while you were battling evil\nunleashed. It's good that no Hell-\nspawn could have come through that\ndoor with you ...",
 	},
 	3: {
 		Fepisode:    4,
 		Flevel:      8,
-		Fbackground: __ccgo_ts_str(7174),
-		Ftext:       __ccgo_ts_str(7182),
+		Fbackground: "MFLR8_3",
+		Ftext:       "the spider mastermind must have sent forth\nits legions of hellspawn before your\nfinal confrontation with that terrible\nbeast from hell.  but you stepped forward\nand brought forth eternal damnation and\nsuffering upon the horde as a true hero\nwould in the face of something so evil.\n\nbesides, someone was gonna pay for what\nhappened to daisy, your pet rabbit.\n\nbut now, you see spread before you more\npotential pain and gibbitude as a nation\nof demons run amok among our cities.\n\nnext stop, hell on earth!",
 	},
 	4: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      6,
-		Fbackground: __ccgo_ts_str(7686),
-		Ftext:       __ccgo_ts_str(7694),
+		Fbackground: "SLIME16",
+		Ftext:       "YOU HAVE ENTERED DEEPLY INTO THE INFESTED\nSTARPORT. BUT SOMETHING IS WRONG. THE\nMONSTERS HAVE BROUGHT THEIR OWN REALITY\nWITH THEM, AND THE STARPORT'S TECHNOLOGY\nIS BEING SUBVERTED BY THEIR PRESENCE.\n\nAHEAD, YOU SEE AN OUTPOST OF HELL, A\nFORTIFIED ZONE. IF YOU CAN GET PAST IT,\nYOU CAN PENETRATE INTO THE HAUNTED HEART\nOF THE STARBASE AND FIND THE CONTROLLING\nSWITCH WHICH HOLDS EARTH'S POPULATION\nHOSTAGE.",
 	},
 	5: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      11,
-		Fbackground: __ccgo_ts_str(8100),
-		Ftext:       __ccgo_ts_str(8108),
+		Fbackground: "RROCK14",
+		Ftext:       "YOU HAVE WON! YOUR VICTORY HAS ENABLED\nHUMANKIND TO EVACUATE EARTH AND ESCAPE\nTHE NIGHTMARE.  NOW YOU ARE THE ONLY\nHUMAN LEFT ON THE FACE OF THE PLANET.\nCANNIBAL MUTATIONS, CARNIVOROUS ALIENS,\nAND EVIL SPIRITS ARE YOUR ONLY NEIGHBORS.\nYOU SIT BACK AND WAIT FOR DEATH, CONTENT\nTHAT YOU HAVE SAVED YOUR SPECIES.\n\nBUT THEN, EARTH CONTROL BEAMS DOWN A\nMESSAGE FROM SPACE: \"SENSORS HAVE LOCATED\nTHE SOURCE OF THE ALIEN INVASION. IF YOU\nGO THERE, YOU MAY BE ABLE TO BLOCK THEIR\nENTRY.  THE ALIEN BASE IS IN THE HEART OF\nYOUR OWN HOME CITY, NOT FAR FROM THE\nSTARPORT.\" SLOWLY AND PAINFULLY YOU GET\nUP AND RETURN TO THE FRAY.",
 	},
 	6: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      20,
-		Fbackground: __ccgo_ts_str(8726),
-		Ftext:       __ccgo_ts_str(8734),
+		Fbackground: "RROCK07",
+		Ftext:       "YOU ARE AT THE CORRUPT HEART OF THE CITY,\nSURROUNDED BY THE CORPSES OF YOUR ENEMIES.\nYOU SEE NO WAY TO DESTROY THE CREATURES'\nENTRYWAY ON THIS SIDE, SO YOU CLENCH YOUR\nTEETH AND PLUNGE THROUGH IT.\n\nTHERE MUST BE A WAY TO CLOSE IT ON THE\nOTHER SIDE. WHAT DO YOU CARE IF YOU'VE\nGOT TO GO THROUGH HELL TO GET TO IT?",
 	},
 	7: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      30,
-		Fbackground: __ccgo_ts_str(9047),
-		Ftext:       __ccgo_ts_str(9055),
+		Fbackground: "RROCK17",
+		Ftext:       "THE HORRENDOUS VISAGE OF THE BIGGEST\nDEMON YOU'VE EVER SEEN CRUMBLES BEFORE\nYOU, AFTER YOU PUMP YOUR ROCKETS INTO\nHIS EXPOSED BRAIN. THE MONSTER SHRIVELS\nUP AND DIES, ITS THRASHING LIMBS\nDEVASTATING UNTOLD MILES OF HELL'S\nSURFACE.\n\nYOU'VE DONE IT. THE INVASION IS OVER.\nEARTH IS SAVED. HELL IS A WRECK. YOU\nWONDER WHERE BAD FOLKS WILL GO WHEN THEY\nDIE, NOW. WIPING THE SWEAT FROM YOUR\nFOREHEAD YOU BEGIN THE LONG TREK BACK\nHOME. REBUILDING EARTH OUGHT TO BE A\nLOT MORE FUN THAN RUINING IT WAS.\n",
 	},
 	8: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      15,
-		Fbackground: __ccgo_ts_str(9550),
-		Ftext:       __ccgo_ts_str(9558),
+		Fbackground: "RROCK13",
+		Ftext:       "CONGRATULATIONS, YOU'VE FOUND THE SECRET\nLEVEL! LOOKS LIKE IT'S BEEN BUILT BY\nHUMANS, RATHER THAN DEMONS. YOU WONDER\nWHO THE INMATES OF THIS CORNER OF HELL\nWILL BE.",
 	},
 	9: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      31,
-		Fbackground: __ccgo_ts_str(9723),
-		Ftext:       __ccgo_ts_str(9731),
+		Fbackground: "RROCK19",
+		Ftext:       "CONGRATULATIONS, YOU'VE FOUND THE\nSUPER SECRET LEVEL!  YOU'D BETTER\nBLAZE THROUGH THIS ONE!\n",
 	},
 	10: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      6,
-		Fbackground: __ccgo_ts_str(7686),
-		Ftext:       __ccgo_ts_str(9824),
+		Fbackground: "SLIME16",
+		Ftext:       "You've fought your way out of the infested\nexperimental labs.   It seems that UAC has\nonce again gulped it down.  With their\nhigh turnover, it must be hard for poor\nold UAC to buy corporate health insurance\nnowadays..\n\nAhead lies the military complex, now\nswarming with diseased horrors hot to get\ntheir teeth into you. With luck, the\ncomplex still has some warlike ordnance\nlaying around.",
 	},
 	11: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      11,
-		Fbackground: __ccgo_ts_str(8100),
-		Ftext:       __ccgo_ts_str(10214),
+		Fbackground: "RROCK14",
+		Ftext:       "You hear the grinding of heavy machinery\nahead.  You sure hope they're not stamping\nout new hellspawn, but you're ready to\nream out a whole herd if you have to.\nThey might be planning a blood feast, but\nyou feel about as mean as two thousand\nmaniacs packed into one mad killer.\n\nYou don't plan to go down easy.",
 	},
 	12: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      20,
-		Fbackground: __ccgo_ts_str(8726),
-		Ftext:       __ccgo_ts_str(10525),
+		Fbackground: "RROCK07",
+		Ftext:       "The vista opening ahead looks real damn\nfamiliar. Smells familiar, too -- like\nfried excrement. You didn't like this\nplace before, and you sure as hell ain't\nplanning to like it now. The more you\nbrood on it, the madder you get.\nHefting your gun, an evil grin trickles\nonto your face. Time to take some names.",
 	},
 	13: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      30,
-		Fbackground: __ccgo_ts_str(9047),
-		Ftext:       __ccgo_ts_str(10835),
+		Fbackground: "RROCK17",
+		Ftext:       "Suddenly, all is silent, from one horizon\nto the other. The agonizing echo of Hell\nfades away, the nightmare sky turns to\nblue, the heaps of monster corpses start \nto evaporate along with the evil stench \nthat filled the air. Jeeze, maybe you've\ndone it. Have you really won?\n\nSomething rumbles in the distance.\nA blue light begins to glow inside the\nruined skull of the demon-spitter.",
 	},
 	14: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      15,
-		Fbackground: __ccgo_ts_str(9550),
-		Ftext:       __ccgo_ts_str(11221),
+		Fbackground: "RROCK13",
+		Ftext:       "What now? Looks totally different. Kind\nof like King Tut's condo. Well,\nwhatever's here can't be any worse\nthan usual. Can it?  Or maybe it's best\nto let sleeping gods lie..",
 	},
 	15: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      31,
-		Fbackground: __ccgo_ts_str(9723),
-		Ftext:       __ccgo_ts_str(11395),
+		Fbackground: "RROCK19",
+		Ftext:       "Time for a vacation. You've burst the\nbowels of hell and by golly you're ready\nfor a break. You mutter to yourself,\nMaybe someone else can kick Hell's ass\nnext time around. Ahead lies a quiet town,\nwith peaceful flowing water, quaint\nbuildings, and presumably no Hellspawn.\n\nAs you step off the transport, you hear\nthe stomp of a cyberdemon's iron shoe.",
 	},
 	16: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      6,
-		Fbackground: __ccgo_ts_str(7686),
-		Ftext:       __ccgo_ts_str(11749),
+		Fbackground: "SLIME16",
+		Ftext:       "You gloat over the steaming carcass of the\nGuardian.  With its death, you've wrested\nthe Accelerator from the stinking claws\nof Hell.  You relax and glance around the\nroom.  Damn!  There was supposed to be at\nleast one working prototype, but you can't\nsee it. The demons must have taken it.\n\nYou must find the prototype, or all your\nstruggles will have been wasted. Keep\nmoving, keep fighting, keep killing.\nOh yes, keep living, too.",
 	},
 	17: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      11,
-		Fbackground: __ccgo_ts_str(8100),
-		Ftext:       __ccgo_ts_str(12183),
+		Fbackground: "RROCK14",
+		Ftext:       "Even the deadly Arch-Vile labyrinth could\nnot stop you, and you've gotten to the\nprototype Accelerator which is soon\nefficiently and permanently deactivated.\n\nYou're good at that kind of thing.",
 	},
 	18: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      20,
-		Fbackground: __ccgo_ts_str(8726),
-		Ftext:       __ccgo_ts_str(12377),
+		Fbackground: "RROCK07",
+		Ftext:       "You've bashed and battered your way into\nthe heart of the devil-hive.  Time for a\nSearch-and-Destroy mission, aimed at the\nGatekeeper, whose foul offspring is\ncascading to Earth.  Yeah, he's bad. But\nyou know who's worse!\n\nGrinning evilly, you check your gear, and\nget ready to give the bastard a little Hell\nof your own making!",
 	},
 	19: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      30,
-		Fbackground: __ccgo_ts_str(9047),
-		Ftext:       __ccgo_ts_str(12706),
+		Fbackground: "RROCK17",
+		Ftext:       "The Gatekeeper's evil face is splattered\nall over the place.  As its tattered corpse\ncollapses, an inverted Gate forms and\nsucks down the shards of the last\nprototype Accelerator, not to mention the\nfew remaining demons.  You're done. Hell\nhas gone back to pounding bad dead folks \ninstead of good live ones.  Remember to\ntell your grandkids to put a rocket\nlauncher in your coffin. If you go to Hell\nwhen you die, you'll need it for some\nfinal cleaning-up ...",
 	},
 	20: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      15,
-		Fbackground: __ccgo_ts_str(9550),
-		Ftext:       __ccgo_ts_str(13167),
+		Fbackground: "RROCK13",
+		Ftext:       "You've found the second-hardest level we\ngot. Hope you have a saved game a level or\ntwo previous.  If not, be prepared to die\naplenty. For master marines only.",
 	},
 	21: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      31,
-		Fbackground: __ccgo_ts_str(9723),
-		Ftext:       __ccgo_ts_str(13327),
+		Fbackground: "RROCK19",
+		Ftext:       "Betcha wondered just what WAS the hardest\nlevel we had ready for ya?  Now you know.\nNo one gets out alive.",
 	},
 }
 
@@ -6639,71 +6639,71 @@ type castinfo_t struct {
 func init() {
 	castorder = [18]castinfo_t{
 		0: {
-			Fname:  __ccgo_ts_str(13434),
+			Fname:  "ZOMBIEMAN",
 			Ftype1: MT_POSSESSED,
 		},
 		1: {
-			Fname:  __ccgo_ts_str(13444),
+			Fname:  "SHOTGUN GUY",
 			Ftype1: MT_SHOTGUY,
 		},
 		2: {
-			Fname:  __ccgo_ts_str(13456),
+			Fname:  "HEAVY WEAPON DUDE",
 			Ftype1: MT_CHAINGUY,
 		},
 		3: {
-			Fname:  __ccgo_ts_str(13474),
+			Fname:  "IMP",
 			Ftype1: MT_TROOP,
 		},
 		4: {
-			Fname:  __ccgo_ts_str(13478),
+			Fname:  "DEMON",
 			Ftype1: MT_SERGEANT,
 		},
 		5: {
-			Fname:  __ccgo_ts_str(13484),
+			Fname:  "LOST SOUL",
 			Ftype1: MT_SKULL,
 		},
 		6: {
-			Fname:  __ccgo_ts_str(13494),
+			Fname:  "CACODEMON",
 			Ftype1: MT_HEAD,
 		},
 		7: {
-			Fname:  __ccgo_ts_str(13504),
+			Fname:  "HELL KNIGHT",
 			Ftype1: MT_KNIGHT,
 		},
 		8: {
-			Fname:  __ccgo_ts_str(13516),
+			Fname:  "BARON OF HELL",
 			Ftype1: MT_BRUISER,
 		},
 		9: {
-			Fname:  __ccgo_ts_str(13530),
+			Fname:  "ARACHNOTRON",
 			Ftype1: MT_BABY,
 		},
 		10: {
-			Fname:  __ccgo_ts_str(13542),
+			Fname:  "PAIN ELEMENTAL",
 			Ftype1: MT_PAIN,
 		},
 		11: {
-			Fname:  __ccgo_ts_str(13557),
+			Fname:  "REVENANT",
 			Ftype1: MT_UNDEAD,
 		},
 		12: {
-			Fname:  __ccgo_ts_str(13566),
+			Fname:  "MANCUBUS",
 			Ftype1: MT_FATSO,
 		},
 		13: {
-			Fname:  __ccgo_ts_str(13575),
+			Fname:  "ARCH-VILE",
 			Ftype1: MT_VILE,
 		},
 		14: {
-			Fname:  __ccgo_ts_str(13585),
+			Fname:  "THE SPIDER MASTERMIND",
 			Ftype1: MT_SPIDER,
 		},
 		15: {
-			Fname:  __ccgo_ts_str(13607),
+			Fname:  "THE CYBERDEMON",
 			Ftype1: MT_CYBORG,
 		},
 		16: {
-			Fname: __ccgo_ts_str(13622),
+			Fname: "OUR HERO",
 		},
 		17: {},
 	}
@@ -6921,7 +6921,7 @@ func F_CastDrawer() {
 	var sprdef *spritedef_t
 	var sprframe *spriteframe_t
 	// erase the entire screen to a background
-	V_DrawPatch(0, 0, W_CacheLumpNameT(__ccgo_ts_str(13631), PU_CACHE))
+	V_DrawPatch(0, 0, W_CacheLumpNameT("BOSSBACK", PU_CACHE))
 	F_CastPrint(castorder[castnum].Fname)
 	// draw the current frame in the middle of the screen
 	sprdef = &sprites[caststate.Fsprite]
@@ -6974,8 +6974,8 @@ func F_DrawPatchCol(x int32, patch uintptr, col int32) {
 func F_BunnyScroll() {
 	var p1, p2 uintptr
 	var scrolled, stage, x int32
-	p1 = W_CacheLumpName(__ccgo_ts_str(13640), PU_LEVEL)
-	p2 = W_CacheLumpName(__ccgo_ts_str(13646), PU_LEVEL)
+	p1 = W_CacheLumpName("PFUB2", PU_LEVEL)
+	p2 = W_CacheLumpName("PFUB1", PU_LEVEL)
 	V_MarkRect(0, 0, SCREENWIDTH, SCREENHEIGHT)
 	scrolled = 320 - (int32(finalecount)-int32(230))/int32(2)
 	if scrolled > 320 {
@@ -7003,7 +7003,7 @@ func F_BunnyScroll() {
 		return
 	}
 	if finalecount < 1180 {
-		V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpNameT(__ccgo_ts_str(13652), PU_CACHE))
+		V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpNameT("END0", PU_CACHE))
 		laststage = 0
 		return
 	}
@@ -7015,7 +7015,7 @@ func F_BunnyScroll() {
 		S_StartSound(nil, int32(sfx_pistol))
 		laststage = stage
 	}
-	name := fmt.Sprintf(__ccgo_ts_str(13657), stage)
+	name := fmt.Sprintf("END%d", stage)
 	V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpNameT(name, PU_CACHE))
 }
 
@@ -7029,14 +7029,14 @@ func F_ArtScreenDrawer() {
 		switch gameepisode {
 		case 1:
 			if gamemode == retail {
-				lumpname = __ccgo_ts_str(1911)
+				lumpname = "CREDIT"
 			} else {
-				lumpname = __ccgo_ts_str(1924)
+				lumpname = "HELP2"
 			}
 		case 2:
-			lumpname = __ccgo_ts_str(13663)
+			lumpname = "VICTORY2"
 		case 4:
-			lumpname = __ccgo_ts_str(13672)
+			lumpname = "ENDPIC"
 		default:
 			return
 		}
@@ -7740,17 +7740,17 @@ func G_DoLoadLevel() {
 	//  a flat. The data is in the WAD only because
 	//  we look for an actual index, instead of simply
 	//  setting one.
-	skyflatnum = R_FlatNumForName(__ccgo_ts_str(13679))
+	skyflatnum = R_FlatNumForName("F_SKY1")
 	// The "Sky never changes in Doom II" bug was fixed in
 	// the id Anthology version of doom2.exe for Final Doom.
 	if gamemode == commercial && (gameversion == exe_final2 || gameversion == exe_chex) {
 		if gamemap < 12 {
-			skytexturename = __ccgo_ts_str(13686)
+			skytexturename = "SKY1"
 		} else {
 			if gamemap < 21 {
-				skytexturename = __ccgo_ts_str(13691)
+				skytexturename = "SKY2"
 			} else {
-				skytexturename = __ccgo_ts_str(13696)
+				skytexturename = "SKY3"
 			}
 		}
 		skytexturename = skytexturename
@@ -7797,7 +7797,7 @@ func G_DoLoadLevel() {
 	clear(mousearray[:])
 	clear(joyarray[:])
 	if testcontrols != 0 {
-		players[consoleplayer].Fmessage = __ccgo_ts_str(13701)
+		players[consoleplayer].Fmessage = "Press escape to quit."
 	}
 }
 
@@ -8023,7 +8023,7 @@ func G_Ticker() {
 			}
 			if netgame != 0 && netdemo == 0 && gametic%ticdup == 0 {
 				if gametic > BACKUPTICS && int32(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))) != int32(cmd.Fconsistancy) {
-					I_Error(__ccgo_ts_str(13760), int32(cmd.Fconsistancy), int32(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))))
+					I_Error("consistency failure (%d should be %d)", int32(cmd.Fconsistancy), int32(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))))
 				}
 				if players[i].Fmo != nil {
 					*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf))) = uint8(players[i].Fmo.Fx)
@@ -8055,7 +8055,7 @@ func G_Ticker() {
 					}
 				case BTS_SAVEGAME:
 					if len(savedescription) == 0 {
-						savedescription = __ccgo_ts_str(13798)
+						savedescription = "NET GAME"
 					}
 					savegameslot = int32(players[i].Fcmd.Fbuttons) & BTS_SAVEMASK >> BTS_SAVESHIFT
 					gameaction = ga_savegame
@@ -8219,7 +8219,7 @@ func G_CheckSpot(playernum int32, mthing *mapthing_t) (r boolean) {
 		xa = finecosine[an]
 		ya = finesine[an]
 	default:
-		I_Error(__ccgo_ts_str(13807), an)
+		I_Error("G_CheckSpot: unexpected angle %d\n", an)
 		v2 = 0
 		ya = v2
 		xa = v2
@@ -8243,7 +8243,7 @@ func G_DeathMatchSpawnPlayer(playernum int32) {
 	var i, j, selections int32
 	selections = int32(deathmatch_pos)
 	if selections < 4 {
-		I_Error(__ccgo_ts_str(13841), selections)
+		I_Error("Only %d deathmatch spots, 4 required", selections)
 	}
 	j = 0
 	for {
@@ -8396,7 +8396,7 @@ func G_ExitLevel() {
 //	// Here's for the german edition.
 func G_SecretExitLevel() {
 	// IF NO WOLF3D LEVELS, NO SECRET EXIT!
-	if gamemode == commercial && W_CheckNumForName(__ccgo_ts_str(13878)) < 0 {
+	if gamemode == commercial && W_CheckNumForName("map31") < 0 {
 		secretexit = 0
 	} else {
 		secretexit = 1
@@ -8639,7 +8639,7 @@ func G_DoLoadGame() {
 	P_UnArchiveThinkers()
 	P_UnArchiveSpecials()
 	if P_ReadSaveGameEOF() == 0 {
-		I_Error(__ccgo_ts_str(13887), 0)
+		I_Error("Bad savegame", 0)
 	}
 	if setsizeneeded != 0 {
 		R_ExecuteSetViewSize()
@@ -8676,11 +8676,11 @@ func G_DoSaveGame() {
 		log.Printf("G_DoSaveGame: error opening savegame file %s: %v\n", temp_savegame_file, err)
 		// Failed to save the game, so we're going to have to abort. But
 		// to be nice, save to somewhere else before we call I_Error().
-		recovery_savegame_file = M_TempFile(__ccgo_ts_str(13903))
+		recovery_savegame_file = M_TempFile("recovery.dsg")
 		save_stream, err = os.OpenFile(recovery_savegame_file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			log.Printf("G_DoSaveGame: error opening recovery savegame file %s: %v\n", recovery_savegame_file, err)
-			I_Error(__ccgo_ts_str(13916), temp_savegame_file, recovery_savegame_file)
+			I_Error("Failed to open either '%s' or '%s' to write savegame.", temp_savegame_file, recovery_savegame_file)
 		}
 	}
 	savegame_error = 0
@@ -8694,7 +8694,7 @@ func G_DoSaveGame() {
 	// except if the vanilla_savegame_limit setting is turned off.
 	pos, err := save_stream.Seek(0, io.SeekCurrent)
 	if vanilla_savegame_limit != 0 && pos > SAVEGAMESIZE {
-		I_Error(__ccgo_ts_str(13970), 0)
+		I_Error("Savegame buffer overrun", 0)
 	}
 	// Finish up, close the savegame file.
 	save_stream.Close()
@@ -8702,15 +8702,15 @@ func G_DoSaveGame() {
 		// We failed to save to the normal location, but we wrote a
 		// recovery file to the temp directory. Now we can bomb out
 		// with an error.
-		I_Error(__ccgo_ts_str(13994), temp_savegame_file, recovery_savegame_file)
+		I_Error("Failed to open savegame file '%s' for writing.\nBut your game has been saved to '%s' for recovery.", temp_savegame_file, recovery_savegame_file)
 	}
 	// Now rename the temporary savegame file to the actual savegame
 	// file, overwriting the old savegame if there was one there.
 	os.Remove(savegame_file) // remove the old savegame file
 	os.Rename(temp_savegame_file, savegame_file)
 	gameaction = ga_nothing
-	savedescription = __ccgo_ts_str(14092)
-	players[consoleplayer].Fmessage = __ccgo_ts_str(14093)
+	savedescription = ""
+	players[consoleplayer].Fmessage = "game saved."
 	// draw the pattern into the back screen
 	R_FillBackScreen()
 }
@@ -8870,12 +8870,12 @@ func G_InitNew(skill skill_t, episode int32, map1 int32) {
 	// source release, but this IS the way Vanilla DOS Doom behaves.
 	if gamemode == commercial {
 		if gamemap < 12 {
-			skytexturename = __ccgo_ts_str(13686)
+			skytexturename = "SKY1"
 		} else {
 			if gamemap < 21 {
-				skytexturename = __ccgo_ts_str(13691)
+				skytexturename = "SKY2"
 			} else {
-				skytexturename = __ccgo_ts_str(13696)
+				skytexturename = "SKY3"
 			}
 		}
 	} else {
@@ -8883,13 +8883,13 @@ func G_InitNew(skill skill_t, episode int32, map1 int32) {
 		default:
 			fallthrough
 		case 1:
-			skytexturename = __ccgo_ts_str(13686)
+			skytexturename = "SKY1"
 		case 2:
-			skytexturename = __ccgo_ts_str(13691)
+			skytexturename = "SKY2"
 		case 3:
-			skytexturename = __ccgo_ts_str(13696)
+			skytexturename = "SKY3"
 		case 4: // Special Edition sky
-			skytexturename = __ccgo_ts_str(14105)
+			skytexturename = "SKY4"
 			break
 		}
 	}
@@ -8961,7 +8961,7 @@ func G_WriteDemoTiccmd(cmd *ticcmd_t) {
 func G_RecordDemo(name string) {
 	var i, maxsize int32
 	usergame = 0
-	demoname = fmt.Sprintf(__ccgo_ts_str(4481), name)
+	demoname = fmt.Sprintf("%s.lmp", name)
 	maxsize = 0x20000
 	//!
 	// @arg <size>
@@ -8970,7 +8970,7 @@ func G_RecordDemo(name string) {
 	//
 	// Specify the demo buffer size (KiB)
 	//
-	i = M_CheckParmWithArgs(__ccgo_ts_str(14110), 1)
+	i = M_CheckParmWithArgs("-maxdemo", 1)
 	if i != 0 {
 		v, _ := strconv.Atoi(myargs[i+1])
 		maxsize = int32(v) * 1024
@@ -8985,7 +8985,7 @@ func G_RecordDemo(name string) {
 func G_VanillaVersionCode() (r int32) {
 	switch gameversion {
 	case exe_doom_1_2:
-		I_Error(__ccgo_ts_str(14119), 0)
+		I_Error("Doom 1.2 does not have a version code!", 0)
 		fallthrough
 	case exe_doom_1_666:
 		return 106
@@ -9008,7 +9008,7 @@ func G_BeginRecording() {
 	//
 	// Record a high resolution "Doom 1.91" demo.
 	//
-	longtics = booluint32(M_CheckParm(__ccgo_ts_str(5530)) != 0)
+	longtics = booluint32(M_CheckParm("-longtics") != 0)
 	// If not recording a longtics demo, record in low res
 	lowres_turn = booluint32(longtics == 0)
 	demo_pos = 0
@@ -9065,26 +9065,26 @@ func G_DeferedPlayDemo(name string) {
 func DemoVersionDescription(version int32) string {
 	switch version {
 	case 104:
-		return __ccgo_ts_str(14158)
+		return "v1.4"
 	case 105:
-		return __ccgo_ts_str(14163)
+		return "v1.5"
 	case 106:
-		return __ccgo_ts_str(14168)
+		return "v1.6/v1.666"
 	case 107:
-		return __ccgo_ts_str(14180)
+		return "v1.7/v1.7a"
 	case 108:
-		return __ccgo_ts_str(14191)
+		return "v1.8"
 	case 109:
-		return __ccgo_ts_str(14196)
+		return "v1.9"
 	default:
 		break
 	}
 	// Unknown version.  Perhaps this is a pre-v1.4 IWAD?  If the version
 	// byte is in the range 0-4 then it can be a v1.0-v1.2 demo.
 	if version >= 0 && version <= 4 {
-		return __ccgo_ts_str(14201)
+		return "v1.0/v1.1/v1.2"
 	} else {
-		return fmt.Sprintf(__ccgo_ts_str(14216), version/100, version%100)
+		return fmt.Sprintf("%d.%d (unknown)", version/100, version%100)
 	}
 }
 
@@ -9108,7 +9108,7 @@ func G_DoPlayDemo() {
 			longtics = 1
 		} else {
 			//I_Error(message, demoversion, G_VanillaVersionCode(),
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(14232), demoversion, G_VanillaVersionCode(), DemoVersionDescription(demoversion))
+			fprintf_ccgo(os.Stdout, "Demo is from a different game version!\n(read %d, should be %d)\n\n*** You may need to upgrade your version of Doom to v1.9. ***\n    See: https://www.doomworld.com/classicdoom/info/patches.php\n    This appears to be %s.", demoversion, G_VanillaVersionCode(), DemoVersionDescription(demoversion))
 		}
 	}
 	skill = skill_t(demobuffer[demo_pos])
@@ -9139,7 +9139,7 @@ func G_DoPlayDemo() {
 		;
 		i++
 	}
-	if playeringame[int32(1)] != 0 || M_CheckParm(__ccgo_ts_str(5553)) > 0 || M_CheckParm(__ccgo_ts_str(14449)) > 0 {
+	if playeringame[int32(1)] != 0 || M_CheckParm("-solo-net") > 0 || M_CheckParm("-netdemo") > 0 {
 		netgame = 1
 		netdemo = 1
 	}
@@ -9163,7 +9163,7 @@ func G_TimeDemo(name string) {
 	//
 	// Disable rendering the screen entirely.
 	//
-	nodrawers = uint32(M_CheckParm(__ccgo_ts_str(14458)))
+	nodrawers = uint32(M_CheckParm("-nodraw"))
 	timingdemo = 1
 	singletics = 1
 	defdemoname = name
@@ -9190,7 +9190,7 @@ func G_CheckDemoStatus() {
 		// Prevent recursive calls
 		timingdemo = 0
 		demoplayback = 0
-		I_Error(__ccgo_ts_str(14466), gametic, realtics, float64(fps))
+		I_Error("timed %d gametics in %d realtics (%f fps)", gametic, realtics, float64(fps))
 	}
 	if demoplayback != 0 {
 		W_ReleaseLumpName(defdemoname)
@@ -9220,7 +9220,7 @@ func G_CheckDemoStatus() {
 		M_WriteFile(demoname, demobuffer[:demo_pos])
 		demobuffer = nil
 		demorecording = 0
-		I_Error(__ccgo_ts_str(14508), demoname)
+		I_Error("Demo %s recorded", demoname)
 	}
 	return
 }
@@ -9484,25 +9484,25 @@ const QUEUESIZE = 128
 
 func init() {
 	chat_macros = [10]string{
-		0: __ccgo_ts_str(14525),
-		1: __ccgo_ts_str(14528),
-		2: __ccgo_ts_str(14552),
-		3: __ccgo_ts_str(14560),
-		4: __ccgo_ts_str(14586),
-		5: __ccgo_ts_str(14592),
-		6: __ccgo_ts_str(14602),
-		7: __ccgo_ts_str(14624),
-		8: __ccgo_ts_str(14635),
-		9: __ccgo_ts_str(14657),
+		0: "No",
+		1: "I'm ready to kick butt!",
+		2: "I'm OK.",
+		3: "I'm not looking too good!",
+		4: "Help!",
+		5: "You suck!",
+		6: "Next time, scumbag...",
+		7: "Come here!",
+		8: "I'll take care of it.",
+		9: "Yes",
 	}
 }
 
 func init() {
 	player_names = [4]string{
-		0: __ccgo_ts_str(14661),
-		1: __ccgo_ts_str(14669),
-		2: __ccgo_ts_str(14678),
-		3: __ccgo_ts_str(14686),
+		0: "Green: ",
+		1: "Indigo: ",
+		2: "Brown: ",
+		3: "Red: ",
 	}
 }
 
@@ -9523,152 +9523,152 @@ var headsupactive = 0
 
 func init() {
 	mapnames = [45]string{
-		0:  __ccgo_ts_str(14692),
-		1:  __ccgo_ts_str(14705),
-		2:  __ccgo_ts_str(14725),
-		3:  __ccgo_ts_str(14746),
-		4:  __ccgo_ts_str(14768),
-		5:  __ccgo_ts_str(14785),
-		6:  __ccgo_ts_str(14810),
-		7:  __ccgo_ts_str(14833),
-		8:  __ccgo_ts_str(14854),
-		9:  __ccgo_ts_str(14874),
-		10: __ccgo_ts_str(14895),
-		11: __ccgo_ts_str(14918),
-		12: __ccgo_ts_str(14933),
-		13: __ccgo_ts_str(14950),
-		14: __ccgo_ts_str(14971),
-		15: __ccgo_ts_str(14997),
-		16: __ccgo_ts_str(15017),
-		17: __ccgo_ts_str(15038),
-		18: __ccgo_ts_str(15064),
-		19: __ccgo_ts_str(15080),
-		20: __ccgo_ts_str(15104),
-		21: __ccgo_ts_str(15122),
-		22: __ccgo_ts_str(15142),
-		23: __ccgo_ts_str(15165),
-		24: __ccgo_ts_str(15182),
-		25: __ccgo_ts_str(15194),
-		26: __ccgo_ts_str(15204),
-		27: __ccgo_ts_str(15218),
-		28: __ccgo_ts_str(15237),
-		29: __ccgo_ts_str(15258),
-		30: __ccgo_ts_str(15281),
-		31: __ccgo_ts_str(15299),
-		32: __ccgo_ts_str(15322),
-		33: __ccgo_ts_str(15350),
-		34: __ccgo_ts_str(15374),
-		35: __ccgo_ts_str(15395),
-		36: __ccgo_ts_str(15406),
-		37: __ccgo_ts_str(15406),
-		38: __ccgo_ts_str(15406),
-		39: __ccgo_ts_str(15406),
-		40: __ccgo_ts_str(15406),
-		41: __ccgo_ts_str(15406),
-		42: __ccgo_ts_str(15406),
-		43: __ccgo_ts_str(15406),
-		44: __ccgo_ts_str(15406),
+		0:  "E1M1: Hangar",
+		1:  "E1M2: Nuclear Plant",
+		2:  "E1M3: Toxin Refinery",
+		3:  "E1M4: Command Control",
+		4:  "E1M5: Phobos Lab",
+		5:  "E1M6: Central Processing",
+		6:  "E1M7: Computer Station",
+		7:  "E1M8: Phobos Anomaly",
+		8:  "E1M9: Military Base",
+		9:  "E2M1: Deimos Anomaly",
+		10: "E2M2: Containment Area",
+		11: "E2M3: Refinery",
+		12: "E2M4: Deimos Lab",
+		13: "E2M5: Command Center",
+		14: "E2M6: Halls of the Damned",
+		15: "E2M7: Spawning Vats",
+		16: "E2M8: Tower of Babel",
+		17: "E2M9: Fortress of Mystery",
+		18: "E3M1: Hell Keep",
+		19: "E3M2: Slough of Despair",
+		20: "E3M3: Pandemonium",
+		21: "E3M4: House of Pain",
+		22: "E3M5: Unholy Cathedral",
+		23: "E3M6: Mt. Erebus",
+		24: "E3M7: Limbo",
+		25: "E3M8: Dis",
+		26: "E3M9: Warrens",
+		27: "E4M1: Hell Beneath",
+		28: "E4M2: Perfect Hatred",
+		29: "E4M3: Sever The Wicked",
+		30: "E4M4: Unruly Evil",
+		31: "E4M5: They Will Repent",
+		32: "E4M6: Against Thee Wickedly",
+		33: "E4M7: And Hell Followed",
+		34: "E4M8: Unto The Cruel",
+		35: "E4M9: Fear",
+		36: "NEWLEVEL",
+		37: "NEWLEVEL",
+		38: "NEWLEVEL",
+		39: "NEWLEVEL",
+		40: "NEWLEVEL",
+		41: "NEWLEVEL",
+		42: "NEWLEVEL",
+		43: "NEWLEVEL",
+		44: "NEWLEVEL",
 	}
 }
 
 func init() {
 	mapnames_commercial = [96]string{
-		0:  __ccgo_ts_str(15415),
-		1:  __ccgo_ts_str(15433),
-		2:  __ccgo_ts_str(15453),
-		3:  __ccgo_ts_str(15474),
-		4:  __ccgo_ts_str(15493),
-		5:  __ccgo_ts_str(15520),
-		6:  __ccgo_ts_str(15541),
-		7:  __ccgo_ts_str(15562),
-		8:  __ccgo_ts_str(15588),
-		9:  __ccgo_ts_str(15605),
-		10: __ccgo_ts_str(15630),
-		11: __ccgo_ts_str(15660),
-		12: __ccgo_ts_str(15682),
-		13: __ccgo_ts_str(15701),
-		14: __ccgo_ts_str(15727),
-		15: __ccgo_ts_str(15753),
-		16: __ccgo_ts_str(15771),
-		17: __ccgo_ts_str(15791),
-		18: __ccgo_ts_str(15815),
-		19: __ccgo_ts_str(15837),
-		20: __ccgo_ts_str(15855),
-		21: __ccgo_ts_str(15873),
-		22: __ccgo_ts_str(15897),
-		23: __ccgo_ts_str(15922),
-		24: __ccgo_ts_str(15942),
-		25: __ccgo_ts_str(15963),
-		26: __ccgo_ts_str(15993),
-		27: __ccgo_ts_str(16017),
-		28: __ccgo_ts_str(16044),
-		29: __ccgo_ts_str(16069),
-		30: __ccgo_ts_str(16091),
-		31: __ccgo_ts_str(16113),
-		32: __ccgo_ts_str(16130),
-		33: __ccgo_ts_str(16145),
-		34: __ccgo_ts_str(16168),
-		35: __ccgo_ts_str(16183),
-		36: __ccgo_ts_str(16198),
-		37: __ccgo_ts_str(16218),
-		38: __ccgo_ts_str(16240),
-		39: __ccgo_ts_str(16260),
-		40: __ccgo_ts_str(16275),
-		41: __ccgo_ts_str(16294),
-		42: __ccgo_ts_str(16314),
-		43: __ccgo_ts_str(16331),
-		44: __ccgo_ts_str(16347),
-		45: __ccgo_ts_str(16367),
-		46: __ccgo_ts_str(16385),
-		47: __ccgo_ts_str(16408),
-		48: __ccgo_ts_str(16427),
-		49: __ccgo_ts_str(16446),
-		50: __ccgo_ts_str(16468),
-		51: __ccgo_ts_str(16482),
-		52: __ccgo_ts_str(16509),
-		53: __ccgo_ts_str(16526),
-		54: __ccgo_ts_str(16555),
-		55: __ccgo_ts_str(16575),
-		56: __ccgo_ts_str(16604),
-		57: __ccgo_ts_str(16637),
-		58: __ccgo_ts_str(16654),
-		59: __ccgo_ts_str(16676),
-		60: __ccgo_ts_str(16697),
-		61: __ccgo_ts_str(16725),
-		62: __ccgo_ts_str(16755),
-		63: __ccgo_ts_str(16774),
-		64: __ccgo_ts_str(16792),
-		65: __ccgo_ts_str(16816),
-		66: __ccgo_ts_str(16835),
-		67: __ccgo_ts_str(16858),
-		68: __ccgo_ts_str(16876),
-		69: __ccgo_ts_str(16892),
-		70: __ccgo_ts_str(16913),
-		71: __ccgo_ts_str(16929),
-		72: __ccgo_ts_str(16944),
-		73: __ccgo_ts_str(16964),
-		74: __ccgo_ts_str(16985),
-		75: __ccgo_ts_str(17012),
-		76: __ccgo_ts_str(17029),
-		77: __ccgo_ts_str(17057),
-		78: __ccgo_ts_str(17079),
-		79: __ccgo_ts_str(17099),
-		80: __ccgo_ts_str(17125),
-		81: __ccgo_ts_str(17151),
-		82: __ccgo_ts_str(17166),
-		83: __ccgo_ts_str(17196),
-		84: __ccgo_ts_str(17225),
-		85: __ccgo_ts_str(17257),
-		86: __ccgo_ts_str(17275),
-		87: __ccgo_ts_str(17306),
-		88: __ccgo_ts_str(17323),
-		89: __ccgo_ts_str(17345),
-		90: __ccgo_ts_str(17365),
-		91: __ccgo_ts_str(17386),
-		92: __ccgo_ts_str(17401),
-		93: __ccgo_ts_str(17422),
-		94: __ccgo_ts_str(17442),
-		95: __ccgo_ts_str(17460),
+		0:  "level 1: entryway",
+		1:  "level 2: underhalls",
+		2:  "level 3: the gantlet",
+		3:  "level 4: the focus",
+		4:  "level 5: the waste tunnels",
+		5:  "level 6: the crusher",
+		6:  "level 7: dead simple",
+		7:  "level 8: tricks and traps",
+		8:  "level 9: the pit",
+		9:  "level 10: refueling base",
+		10: "level 11: 'o' of destruction!",
+		11: "level 12: the factory",
+		12: "level 13: downtown",
+		13: "level 14: the inmost dens",
+		14: "level 15: industrial zone",
+		15: "level 16: suburbs",
+		16: "level 17: tenements",
+		17: "level 18: the courtyard",
+		18: "level 19: the citadel",
+		19: "level 20: gotcha!",
+		20: "level 21: nirvana",
+		21: "level 22: the catacombs",
+		22: "level 23: barrels o' fun",
+		23: "level 24: the chasm",
+		24: "level 25: bloodfalls",
+		25: "level 26: the abandoned mines",
+		26: "level 27: monster condo",
+		27: "level 28: the spirit world",
+		28: "level 29: the living end",
+		29: "level 30: icon of sin",
+		30: "level 31: wolfenstein",
+		31: "level 32: grosse",
+		32: "level 1: congo",
+		33: "level 2: well of souls",
+		34: "level 3: aztec",
+		35: "level 4: caged",
+		36: "level 5: ghost town",
+		37: "level 6: baron's lair",
+		38: "level 7: caughtyard",
+		39: "level 8: realm",
+		40: "level 9: abattoire",
+		41: "level 10: onslaught",
+		42: "level 11: hunted",
+		43: "level 12: speed",
+		44: "level 13: the crypt",
+		45: "level 14: genesis",
+		46: "level 15: the twilight",
+		47: "level 16: the omen",
+		48: "level 17: compound",
+		49: "level 18: neurosphere",
+		50: "level 19: nme",
+		51: "level 20: the death domain",
+		52: "level 21: slayer",
+		53: "level 22: impossible mission",
+		54: "level 23: tombstone",
+		55: "level 24: the final frontier",
+		56: "level 25: the temple of darkness",
+		57: "level 26: bunker",
+		58: "level 27: anti-christ",
+		59: "level 28: the sewers",
+		60: "level 29: odyssey of noises",
+		61: "level 30: the gateway of hell",
+		62: "level 31: cyberden",
+		63: "level 32: go 2 it",
+		64: "level 1: system control",
+		65: "level 2: human bbq",
+		66: "level 3: power control",
+		67: "level 4: wormhole",
+		68: "level 5: hanger",
+		69: "level 6: open season",
+		70: "level 7: prison",
+		71: "level 8: metal",
+		72: "level 9: stronghold",
+		73: "level 10: redemption",
+		74: "level 11: storage facility",
+		75: "level 12: crater",
+		76: "level 13: nukage processing",
+		77: "level 14: steel works",
+		78: "level 15: dead zone",
+		79: "level 16: deepest reaches",
+		80: "level 17: processing area",
+		81: "level 18: mill",
+		82: "level 19: shipping/respawning",
+		83: "level 20: central processing",
+		84: "level 21: administration center",
+		85: "level 22: habitat",
+		86: "level 23: lunar mining project",
+		87: "level 24: quarry",
+		88: "level 25: baron's den",
+		89: "level 26: ballistyx",
+		90: "level 27: mount pain",
+		91: "level 28: heck",
+		92: "level 29: river styx",
+		93: "level 30: last call",
+		94: "level 31: pharaoh",
+		95: "level 32: caribbean",
 	}
 }
 
@@ -9683,7 +9683,7 @@ func HU_Init() {
 		}
 		v2 = j
 		j++
-		name := fmt.Sprintf(__ccgo_ts_str(17480), v2)
+		name := fmt.Sprintf("STCFN%.3d", v2)
 		hu_font[i] = W_CacheLumpNameT(name, PU_STATIC)
 		goto _1
 	_1:
@@ -9731,7 +9731,7 @@ func HU_Start() {
 	case pack_tnt:
 		s = mapnames_commercial[gamemap-1+int32(64)]
 	default:
-		s = __ccgo_ts_str(17490)
+		s = "Unknown level"
 		break
 	}
 	// Chex.exe always uses the episode 1 level title
@@ -9848,7 +9848,7 @@ var tail = 0
 
 func HU_queueChatChar(c int8) {
 	if (head+1)&(QUEUESIZE-1) == tail {
-		plr1.Fmessage = __ccgo_ts_str(17504)
+		plr1.Fmessage = "[Message unsent]"
 	} else {
 		chatchars[head] = c
 		head = (head + 1) & (QUEUESIZE - 1)
@@ -9926,18 +9926,18 @@ func HU_Responder(ev *event_t) (r boolean) {
 								if i == consoleplayer {
 									num_nobrainers++
 									if num_nobrainers < 3 {
-										plr1.Fmessage = __ccgo_ts_str(17521)
+										plr1.Fmessage = "You mumble to yourself"
 									} else {
 										if num_nobrainers < 6 {
-											plr1.Fmessage = __ccgo_ts_str(17544)
+											plr1.Fmessage = "Who's there?"
 										} else {
 											if num_nobrainers < 9 {
-												plr1.Fmessage = __ccgo_ts_str(17557)
+												plr1.Fmessage = "You scare yourself"
 											} else {
 												if num_nobrainers < 32 {
-													plr1.Fmessage = __ccgo_ts_str(17576)
+													plr1.Fmessage = "You start to rave"
 												} else {
-													plr1.Fmessage = __ccgo_ts_str(17594)
+													plr1.Fmessage = "You've lost it..."
 												}
 											}
 										}
@@ -10007,144 +10007,144 @@ var num_nobrainers int32
 
 func init() {
 	sprnames = []string{
-		0:   __ccgo_ts_str(17612),
-		1:   __ccgo_ts_str(17617),
-		2:   __ccgo_ts_str(17622),
-		3:   __ccgo_ts_str(17627),
-		4:   __ccgo_ts_str(17632),
-		5:   __ccgo_ts_str(17637),
-		6:   __ccgo_ts_str(17642),
-		7:   __ccgo_ts_str(17647),
-		8:   __ccgo_ts_str(17652),
-		9:   __ccgo_ts_str(17657),
-		10:  __ccgo_ts_str(17662),
-		11:  __ccgo_ts_str(17667),
-		12:  __ccgo_ts_str(17672),
-		13:  __ccgo_ts_str(17677),
-		14:  __ccgo_ts_str(17682),
-		15:  __ccgo_ts_str(17687),
-		16:  __ccgo_ts_str(17692),
-		17:  __ccgo_ts_str(17697),
-		18:  __ccgo_ts_str(17702),
-		19:  __ccgo_ts_str(17707),
-		20:  __ccgo_ts_str(17712),
-		21:  __ccgo_ts_str(17717),
-		22:  __ccgo_ts_str(17722),
-		23:  __ccgo_ts_str(17727),
-		24:  __ccgo_ts_str(17732),
-		25:  __ccgo_ts_str(17737),
-		26:  __ccgo_ts_str(17742),
-		27:  __ccgo_ts_str(17747),
-		28:  __ccgo_ts_str(17752),
-		29:  __ccgo_ts_str(17757),
-		30:  __ccgo_ts_str(17762),
-		31:  __ccgo_ts_str(17767),
-		32:  __ccgo_ts_str(17772),
-		33:  __ccgo_ts_str(17777),
-		34:  __ccgo_ts_str(17782),
-		35:  __ccgo_ts_str(17787),
-		36:  __ccgo_ts_str(17792),
-		37:  __ccgo_ts_str(17797),
-		38:  __ccgo_ts_str(17802),
-		39:  __ccgo_ts_str(17807),
-		40:  __ccgo_ts_str(17812),
-		41:  __ccgo_ts_str(17817),
-		42:  __ccgo_ts_str(17822),
-		43:  __ccgo_ts_str(17827),
-		44:  __ccgo_ts_str(17832),
-		45:  __ccgo_ts_str(17837),
-		46:  __ccgo_ts_str(17842),
-		47:  __ccgo_ts_str(17847),
-		48:  __ccgo_ts_str(17852),
-		49:  __ccgo_ts_str(17857),
-		50:  __ccgo_ts_str(17862),
-		51:  __ccgo_ts_str(17867),
-		52:  __ccgo_ts_str(17872),
-		53:  __ccgo_ts_str(17877),
-		54:  __ccgo_ts_str(17882),
-		55:  __ccgo_ts_str(17887),
-		56:  __ccgo_ts_str(17892),
-		57:  __ccgo_ts_str(17897),
-		58:  __ccgo_ts_str(17902),
-		59:  __ccgo_ts_str(17907),
-		60:  __ccgo_ts_str(17912),
-		61:  __ccgo_ts_str(17917),
-		62:  __ccgo_ts_str(17922),
-		63:  __ccgo_ts_str(17927),
-		64:  __ccgo_ts_str(17932),
-		65:  __ccgo_ts_str(17937),
-		66:  __ccgo_ts_str(17942),
-		67:  __ccgo_ts_str(17947),
-		68:  __ccgo_ts_str(17952),
-		69:  __ccgo_ts_str(17957),
-		70:  __ccgo_ts_str(17962),
-		71:  __ccgo_ts_str(17967),
-		72:  __ccgo_ts_str(17972),
-		73:  __ccgo_ts_str(17977),
-		74:  __ccgo_ts_str(17982),
-		75:  __ccgo_ts_str(17987),
-		76:  __ccgo_ts_str(17992),
-		77:  __ccgo_ts_str(17997),
-		78:  __ccgo_ts_str(18002),
-		79:  __ccgo_ts_str(18007),
-		80:  __ccgo_ts_str(18012),
-		81:  __ccgo_ts_str(18017),
-		82:  __ccgo_ts_str(18022),
-		83:  __ccgo_ts_str(18027),
-		84:  __ccgo_ts_str(18032),
-		85:  __ccgo_ts_str(18037),
-		86:  __ccgo_ts_str(18042),
-		87:  __ccgo_ts_str(18047),
-		88:  __ccgo_ts_str(18052),
-		89:  __ccgo_ts_str(18057),
-		90:  __ccgo_ts_str(18062),
-		91:  __ccgo_ts_str(18067),
-		92:  __ccgo_ts_str(18072),
-		93:  __ccgo_ts_str(18077),
-		94:  __ccgo_ts_str(18082),
-		95:  __ccgo_ts_str(18087),
-		96:  __ccgo_ts_str(18092),
-		97:  __ccgo_ts_str(18097),
-		98:  __ccgo_ts_str(18102),
-		99:  __ccgo_ts_str(18107),
-		100: __ccgo_ts_str(18112),
-		101: __ccgo_ts_str(18117),
-		102: __ccgo_ts_str(18122),
-		103: __ccgo_ts_str(18127),
-		104: __ccgo_ts_str(18132),
-		105: __ccgo_ts_str(18137),
-		106: __ccgo_ts_str(18142),
-		107: __ccgo_ts_str(18147),
-		108: __ccgo_ts_str(18152),
-		109: __ccgo_ts_str(18157),
-		110: __ccgo_ts_str(18162),
-		111: __ccgo_ts_str(18167),
-		112: __ccgo_ts_str(18172),
-		113: __ccgo_ts_str(18177),
-		114: __ccgo_ts_str(18182),
-		115: __ccgo_ts_str(18187),
-		116: __ccgo_ts_str(18192),
-		117: __ccgo_ts_str(18197),
-		118: __ccgo_ts_str(18202),
-		119: __ccgo_ts_str(18207),
-		120: __ccgo_ts_str(18212),
-		121: __ccgo_ts_str(18217),
-		122: __ccgo_ts_str(18222),
-		123: __ccgo_ts_str(18227),
-		124: __ccgo_ts_str(18232),
-		125: __ccgo_ts_str(18237),
-		126: __ccgo_ts_str(18242),
-		127: __ccgo_ts_str(18247),
-		128: __ccgo_ts_str(18252),
-		129: __ccgo_ts_str(18257),
-		130: __ccgo_ts_str(18262),
-		131: __ccgo_ts_str(18267),
-		132: __ccgo_ts_str(18272),
-		133: __ccgo_ts_str(18277),
-		134: __ccgo_ts_str(18282),
-		135: __ccgo_ts_str(18287),
-		136: __ccgo_ts_str(18292),
-		137: __ccgo_ts_str(18297),
+		0:   "TROO",
+		1:   "SHTG",
+		2:   "PUNG",
+		3:   "PISG",
+		4:   "PISF",
+		5:   "SHTF",
+		6:   "SHT2",
+		7:   "CHGG",
+		8:   "CHGF",
+		9:   "MISG",
+		10:  "MISF",
+		11:  "SAWG",
+		12:  "PLSG",
+		13:  "PLSF",
+		14:  "BFGG",
+		15:  "BFGF",
+		16:  "BLUD",
+		17:  "PUFF",
+		18:  "BAL1",
+		19:  "BAL2",
+		20:  "PLSS",
+		21:  "PLSE",
+		22:  "MISL",
+		23:  "BFS1",
+		24:  "BFE1",
+		25:  "BFE2",
+		26:  "TFOG",
+		27:  "IFOG",
+		28:  "PLAY",
+		29:  "POSS",
+		30:  "SPOS",
+		31:  "VILE",
+		32:  "FIRE",
+		33:  "FATB",
+		34:  "FBXP",
+		35:  "SKEL",
+		36:  "MANF",
+		37:  "FATT",
+		38:  "CPOS",
+		39:  "SARG",
+		40:  "HEAD",
+		41:  "BAL7",
+		42:  "BOSS",
+		43:  "BOS2",
+		44:  "SKUL",
+		45:  "SPID",
+		46:  "BSPI",
+		47:  "APLS",
+		48:  "APBX",
+		49:  "CYBR",
+		50:  "PAIN",
+		51:  "SSWV",
+		52:  "KEEN",
+		53:  "BBRN",
+		54:  "BOSF",
+		55:  "ARM1",
+		56:  "ARM2",
+		57:  "BAR1",
+		58:  "BEXP",
+		59:  "FCAN",
+		60:  "BON1",
+		61:  "BON2",
+		62:  "BKEY",
+		63:  "RKEY",
+		64:  "YKEY",
+		65:  "BSKU",
+		66:  "RSKU",
+		67:  "YSKU",
+		68:  "STIM",
+		69:  "MEDI",
+		70:  "SOUL",
+		71:  "PINV",
+		72:  "PSTR",
+		73:  "PINS",
+		74:  "MEGA",
+		75:  "SUIT",
+		76:  "PMAP",
+		77:  "PVIS",
+		78:  "CLIP",
+		79:  "AMMO",
+		80:  "ROCK",
+		81:  "BROK",
+		82:  "CELL",
+		83:  "CELP",
+		84:  "SHEL",
+		85:  "SBOX",
+		86:  "BPAK",
+		87:  "BFUG",
+		88:  "MGUN",
+		89:  "CSAW",
+		90:  "LAUN",
+		91:  "PLAS",
+		92:  "SHOT",
+		93:  "SGN2",
+		94:  "COLU",
+		95:  "SMT2",
+		96:  "GOR1",
+		97:  "POL2",
+		98:  "POL5",
+		99:  "POL4",
+		100: "POL3",
+		101: "POL1",
+		102: "POL6",
+		103: "GOR2",
+		104: "GOR3",
+		105: "GOR4",
+		106: "GOR5",
+		107: "SMIT",
+		108: "COL1",
+		109: "COL2",
+		110: "COL3",
+		111: "COL4",
+		112: "CAND",
+		113: "CBRA",
+		114: "COL6",
+		115: "TRE1",
+		116: "TRE2",
+		117: "ELEC",
+		118: "CEYE",
+		119: "FSKU",
+		120: "COL5",
+		121: "TBLU",
+		122: "TGRN",
+		123: "TRED",
+		124: "SMBT",
+		125: "SMGT",
+		126: "SMRT",
+		127: "HDB1",
+		128: "HDB2",
+		129: "HDB3",
+		130: "HDB4",
+		131: "HDB5",
+		132: "HDB6",
+		133: "POB1",
+		134: "POB2",
+		135: "BRS1",
+		136: "TLMP",
+		137: "TLP2",
 	}
 }
 
@@ -17811,20 +17811,20 @@ var joystick_physical_buttons = [10]int32{
 
 func I_BindJoystickVariables() {
 	var i int32
-	M_BindVariable(__ccgo_ts_str(18302), &usejoystick)
-	M_BindVariable(__ccgo_ts_str(18315), &joystick_index)
-	M_BindVariable(__ccgo_ts_str(18330), &joystick_x_axis)
-	M_BindVariable(__ccgo_ts_str(18346), &joystick_y_axis)
-	M_BindVariable(__ccgo_ts_str(18362), &joystick_strafe_axis)
-	M_BindVariable(__ccgo_ts_str(18383), &joystick_x_invert)
-	M_BindVariable(__ccgo_ts_str(18401), &joystick_y_invert)
-	M_BindVariable(__ccgo_ts_str(18419), &joystick_strafe_invert)
+	M_BindVariable("use_joystick", &usejoystick)
+	M_BindVariable("joystick_index", &joystick_index)
+	M_BindVariable("joystick_x_axis", &joystick_x_axis)
+	M_BindVariable("joystick_y_axis", &joystick_y_axis)
+	M_BindVariable("joystick_strafe_axis", &joystick_strafe_axis)
+	M_BindVariable("joystick_x_invert", &joystick_x_invert)
+	M_BindVariable("joystick_y_invert", &joystick_y_invert)
+	M_BindVariable("joystick_strafe_invert", &joystick_strafe_invert)
 	i = 0
 	for {
 		if i >= NUM_VIRTUAL_BUTTONS {
 			break
 		}
-		name := fmt.Sprintf(__ccgo_ts_str(18442), i)
+		name := fmt.Sprintf("joystick_physical_button%d", i)
 		M_BindVariable(name, &joystick_physical_buttons[i])
 		goto _1
 	_1:
@@ -17849,7 +17849,7 @@ func init() {
 }
 
 func init() {
-	snd_musiccmd = __ccgo_ts_str(14092)
+	snd_musiccmd = ""
 }
 
 // Low-level sound and music modules we are using
@@ -17934,19 +17934,19 @@ func I_InitSound(use_sfx_prefix boolean) {
 	//
 	// Disable all sound output.
 	//
-	nosound = booluint32(M_CheckParm(__ccgo_ts_str(18674)) > 0)
+	nosound = booluint32(M_CheckParm("-nosound") > 0)
 	//!
 	// @vanilla
 	//
 	// Disable sound effects.
 	//
-	nosfx = booluint32(M_CheckParm(__ccgo_ts_str(18683)) > 0)
+	nosfx = booluint32(M_CheckParm("-nosfx") > 0)
 	//!
 	// @vanilla
 	//
 	// Disable music.
 	//
-	nomusic = booluint32(M_CheckParm(__ccgo_ts_str(18690)) > 0)
+	nomusic = booluint32(M_CheckParm("-nomusic") > 0)
 	// Initialize the sound and music subsystems.
 	if nosound == 0 && screensaver_mode == 0 {
 		// This is kind of a hack. If native MIDI is enabled, set up
@@ -18096,16 +18096,16 @@ func I_StopSong() {
 }
 
 func I_BindSoundVariables() {
-	M_BindVariable(__ccgo_ts_str(18699), &snd_musicdevice)
-	M_BindVariable(__ccgo_ts_str(18715), &snd_sfxdevice)
-	M_BindVariable(__ccgo_ts_str(18729), &snd_sbport)
-	M_BindVariable(__ccgo_ts_str(18740), &snd_sbirq)
-	M_BindVariable(__ccgo_ts_str(18750), &snd_sbdma)
-	M_BindVariable(__ccgo_ts_str(18760), &snd_mport)
-	M_BindVariable(__ccgo_ts_str(18770), &snd_maxslicetime_ms)
-	M_BindVariable(__ccgo_ts_str(18790), &snd_musiccmd)
-	M_BindVariable(__ccgo_ts_str(18803), &snd_samplerate)
-	M_BindVariable(__ccgo_ts_str(18818), &snd_cachesize)
+	M_BindVariable("snd_musicdevice", &snd_musicdevice)
+	M_BindVariable("snd_sfxdevice", &snd_sfxdevice)
+	M_BindVariable("snd_sbport", &snd_sbport)
+	M_BindVariable("snd_sbirq", &snd_sbirq)
+	M_BindVariable("snd_sbdma", &snd_sbdma)
+	M_BindVariable("snd_mport", &snd_mport)
+	M_BindVariable("snd_maxslicetime_ms", &snd_maxslicetime_ms)
+	M_BindVariable("snd_musiccmd", &snd_musiccmd)
+	M_BindVariable("snd_samplerate", &snd_samplerate)
+	M_BindVariable("snd_cachesize", &snd_cachesize)
 	// Before SDL_mixer version 1.2.11, MIDI music caused the game
 	// to crash when it looped.  If this is an old SDL_mixer version,
 	// disable MIDI.
@@ -18153,7 +18153,7 @@ func AutoAllocMemory(size *int32, default_ram int32, min_ram int32) (r uintptr) 
 	for zonemem == 0 {
 		// We need a reasonable minimum amount of RAM to start.
 		if default_ram < min_ram {
-			I_Error(__ccgo_ts_str(18832), default_ram)
+			I_Error("Unable to allocate %d MiB of RAM for zone", default_ram)
 		}
 		// Try to allocate the zone memory.
 		*size = default_ram * 1024 * 1024
@@ -18175,7 +18175,7 @@ func I_ZoneBase(size *int32) (r uintptr) {
 	//
 	// Specify the heap size, in MiB (default 16).
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts_str(18874), 1)
+	p = M_CheckParmWithArgs("-mb", 1)
 	if p > 0 {
 		v, _ := strconv.Atoi(myargs[p+1])
 		default_ram = int32(v)
@@ -18185,7 +18185,7 @@ func I_ZoneBase(size *int32) (r uintptr) {
 		min_ram = MIN_RAM
 	}
 	zonemem = AutoAllocMemory(size, default_ram, min_ram)
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(18878), zonemem, size)
+	fprintf_ccgo(os.Stdout, "zone memory: %p, %x allocated for zone\n", zonemem, size)
 	return zonemem
 }
 
@@ -18217,7 +18217,7 @@ func I_PrintStartupBanner(gamedescription string) {
 	I_PrintDivider()
 	I_PrintBanner(gamedescription)
 	I_PrintDivider()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(18918))
+	fprintf_ccgo(os.Stdout, " Doom Generic is free software, covered by the GNU General Public\n License.  There is NO warranty; not even for MERCHANTABILITY or FITNESS\n FOR A PARTICULAR PURPOSE. You are welcome to change and distribute\n copies under certain conditions. See the source for more information.\n")
 	I_PrintDivider()
 }
 
@@ -18252,12 +18252,12 @@ var already_quitting = 0
 func I_Error(errStr string, args ...any) {
 	var exit_gui_popup boolean
 	if already_quitting != 0 {
-		fprintf_ccgo(os.Stderr, __ccgo_ts_str(19278))
+		fprintf_ccgo(os.Stderr, "Warning: recursive call to I_Error detected.\n")
 	} else {
 		already_quitting = 1
 	}
 	fmt.Fprintf(os.Stderr, errStr, args...)
-	fprintf_ccgo(os.Stderr, __ccgo_ts_str(19324))
+	fprintf_ccgo(os.Stderr, "\n\n")
 
 	debug.PrintStack()
 
@@ -18269,7 +18269,7 @@ func I_Error(errStr string, args ...any) {
 			exit_funcs[i].Ffunc()
 		}
 	}
-	exit_gui_popup = booluint32(M_ParmExists(__ccgo_ts_str(19327)) == 0)
+	exit_gui_popup = booluint32(M_ParmExists("-nogui") == 0)
 	// Pop up a GUI dialog box to show the error message, if the
 	// game was not run from the console (and the user will
 	// therefore be unable to otherwise see the message).
@@ -18319,15 +18319,15 @@ func I_GetMemoryValue(offset uint32, value uintptr, size int32) (r boolean) {
 		// emulation.  Supported versions are: dos622, dos71, dosbox.
 		// The default is to emulate DOS 7.1 (Windows 98).
 		//
-		p = M_CheckParmWithArgs(__ccgo_ts_str(19334), 1)
+		p = M_CheckParmWithArgs("-setmem", 1)
 		if p > 0 {
-			if strings.EqualFold(myargs[p+1], __ccgo_ts_str(19342)) {
+			if strings.EqualFold(myargs[p+1], "dos622") {
 				dos_mem_dump = mem_dump_dos622[:]
 			}
-			if strings.EqualFold(myargs[p+1], __ccgo_ts_str(19349)) {
+			if strings.EqualFold(myargs[p+1], "dos71") {
 				dos_mem_dump = mem_dump_win98[:]
 			} else {
-				if strings.EqualFold(myargs[p+1], __ccgo_ts_str(19355)) {
+				if strings.EqualFold(myargs[p+1], "dosbox") {
 					dos_mem_dump = mem_dump_dosbox[:]
 				} else {
 					i = 0
@@ -18581,278 +18581,278 @@ type default_collection_t struct {
 
 var doom_defaults_list = [76]default_t{
 	0: {
-		Fname: __ccgo_ts_str(1506),
+		Fname: "mouse_sensitivity",
 	},
 	1: {
-		Fname: __ccgo_ts_str(1524),
+		Fname: "sfx_volume",
 	},
 	2: {
-		Fname: __ccgo_ts_str(1535),
+		Fname: "music_volume",
 	},
 	3: {
-		Fname: __ccgo_ts_str(19402),
+		Fname: "show_talk",
 	},
 	4: {
-		Fname: __ccgo_ts_str(19412),
+		Fname: "voice_volume",
 	},
 	5: {
-		Fname: __ccgo_ts_str(1548),
+		Fname: "show_messages",
 	},
 	6: {
-		Fname:  __ccgo_ts_str(19425),
+		Fname:  "key_right",
 		Ftype1: DEFAULT_KEY,
 	},
 	7: {
-		Fname:  __ccgo_ts_str(19435),
+		Fname:  "key_left",
 		Ftype1: DEFAULT_KEY,
 	},
 	8: {
-		Fname:  __ccgo_ts_str(19444),
+		Fname:  "key_up",
 		Ftype1: DEFAULT_KEY,
 	},
 	9: {
-		Fname:  __ccgo_ts_str(19451),
+		Fname:  "key_down",
 		Ftype1: DEFAULT_KEY,
 	},
 	10: {
-		Fname:  __ccgo_ts_str(19460),
+		Fname:  "key_strafeleft",
 		Ftype1: DEFAULT_KEY,
 	},
 	11: {
-		Fname:  __ccgo_ts_str(19475),
+		Fname:  "key_straferight",
 		Ftype1: DEFAULT_KEY,
 	},
 	12: {
-		Fname:  __ccgo_ts_str(19491),
+		Fname:  "key_useHealth",
 		Ftype1: DEFAULT_KEY,
 	},
 	13: {
-		Fname:  __ccgo_ts_str(19505),
+		Fname:  "key_jump",
 		Ftype1: DEFAULT_KEY,
 	},
 	14: {
-		Fname:  __ccgo_ts_str(19514),
+		Fname:  "key_flyup",
 		Ftype1: DEFAULT_KEY,
 	},
 	15: {
-		Fname:  __ccgo_ts_str(19524),
+		Fname:  "key_flydown",
 		Ftype1: DEFAULT_KEY,
 	},
 	16: {
-		Fname:  __ccgo_ts_str(19536),
+		Fname:  "key_flycenter",
 		Ftype1: DEFAULT_KEY,
 	},
 	17: {
-		Fname:  __ccgo_ts_str(19550),
+		Fname:  "key_lookup",
 		Ftype1: DEFAULT_KEY,
 	},
 	18: {
-		Fname:  __ccgo_ts_str(19561),
+		Fname:  "key_lookdown",
 		Ftype1: DEFAULT_KEY,
 	},
 	19: {
-		Fname:  __ccgo_ts_str(19574),
+		Fname:  "key_lookcenter",
 		Ftype1: DEFAULT_KEY,
 	},
 	20: {
-		Fname:  __ccgo_ts_str(19589),
+		Fname:  "key_invquery",
 		Ftype1: DEFAULT_KEY,
 	},
 	21: {
-		Fname:  __ccgo_ts_str(19602),
+		Fname:  "key_mission",
 		Ftype1: DEFAULT_KEY,
 	},
 	22: {
-		Fname:  __ccgo_ts_str(19614),
+		Fname:  "key_invPop",
 		Ftype1: DEFAULT_KEY,
 	},
 	23: {
-		Fname:  __ccgo_ts_str(19625),
+		Fname:  "key_invKey",
 		Ftype1: DEFAULT_KEY,
 	},
 	24: {
-		Fname:  __ccgo_ts_str(19636),
+		Fname:  "key_invHome",
 		Ftype1: DEFAULT_KEY,
 	},
 	25: {
-		Fname:  __ccgo_ts_str(19648),
+		Fname:  "key_invEnd",
 		Ftype1: DEFAULT_KEY,
 	},
 	26: {
-		Fname:  __ccgo_ts_str(19659),
+		Fname:  "key_invleft",
 		Ftype1: DEFAULT_KEY,
 	},
 	27: {
-		Fname:  __ccgo_ts_str(19671),
+		Fname:  "key_invright",
 		Ftype1: DEFAULT_KEY,
 	},
 	28: {
-		Fname:  __ccgo_ts_str(19684),
+		Fname:  "key_invLeft",
 		Ftype1: DEFAULT_KEY,
 	},
 	29: {
-		Fname:  __ccgo_ts_str(19696),
+		Fname:  "key_invRight",
 		Ftype1: DEFAULT_KEY,
 	},
 	30: {
-		Fname:  __ccgo_ts_str(19709),
+		Fname:  "key_useartifact",
 		Ftype1: DEFAULT_KEY,
 	},
 	31: {
-		Fname:  __ccgo_ts_str(19725),
+		Fname:  "key_invUse",
 		Ftype1: DEFAULT_KEY,
 	},
 	32: {
-		Fname:  __ccgo_ts_str(19736),
+		Fname:  "key_invDrop",
 		Ftype1: DEFAULT_KEY,
 	},
 	33: {
-		Fname:  __ccgo_ts_str(19748),
+		Fname:  "key_lookUp",
 		Ftype1: DEFAULT_KEY,
 	},
 	34: {
-		Fname:  __ccgo_ts_str(19759),
+		Fname:  "key_lookDown",
 		Ftype1: DEFAULT_KEY,
 	},
 	35: {
-		Fname:  __ccgo_ts_str(19772),
+		Fname:  "key_fire",
 		Ftype1: DEFAULT_KEY,
 	},
 	36: {
-		Fname:  __ccgo_ts_str(19781),
+		Fname:  "key_use",
 		Ftype1: DEFAULT_KEY,
 	},
 	37: {
-		Fname:  __ccgo_ts_str(19789),
+		Fname:  "key_strafe",
 		Ftype1: DEFAULT_KEY,
 	},
 	38: {
-		Fname:  __ccgo_ts_str(19800),
+		Fname:  "key_speed",
 		Ftype1: DEFAULT_KEY,
 	},
 	39: {
-		Fname: __ccgo_ts_str(19810),
+		Fname: "use_mouse",
 	},
 	40: {
-		Fname: __ccgo_ts_str(19820),
+		Fname: "mouseb_fire",
 	},
 	41: {
-		Fname: __ccgo_ts_str(19832),
+		Fname: "mouseb_strafe",
 	},
 	42: {
-		Fname: __ccgo_ts_str(19846),
+		Fname: "mouseb_forward",
 	},
 	43: {
-		Fname: __ccgo_ts_str(19861),
+		Fname: "mouseb_jump",
 	},
 	44: {
-		Fname: __ccgo_ts_str(18302),
+		Fname: "use_joystick",
 	},
 	45: {
-		Fname: __ccgo_ts_str(19873),
+		Fname: "joyb_fire",
 	},
 	46: {
-		Fname: __ccgo_ts_str(19883),
+		Fname: "joyb_strafe",
 	},
 	47: {
-		Fname: __ccgo_ts_str(19895),
+		Fname: "joyb_use",
 	},
 	48: {
-		Fname: __ccgo_ts_str(19904),
+		Fname: "joyb_speed",
 	},
 	49: {
-		Fname: __ccgo_ts_str(19915),
+		Fname: "joyb_jump",
 	},
 	50: {
-		Fname: __ccgo_ts_str(1562),
+		Fname: "screenblocks",
 	},
 	51: {
-		Fname: __ccgo_ts_str(19925),
+		Fname: "screensize",
 	},
 	52: {
-		Fname: __ccgo_ts_str(1575),
+		Fname: "detaillevel",
 	},
 	53: {
-		Fname: __ccgo_ts_str(1587),
+		Fname: "snd_channels",
 	},
 	54: {
-		Fname: __ccgo_ts_str(18699),
+		Fname: "snd_musicdevice",
 	},
 	55: {
-		Fname: __ccgo_ts_str(18715),
+		Fname: "snd_sfxdevice",
 	},
 	56: {
-		Fname: __ccgo_ts_str(18729),
+		Fname: "snd_sbport",
 	},
 	57: {
-		Fname: __ccgo_ts_str(18740),
+		Fname: "snd_sbirq",
 	},
 	58: {
-		Fname: __ccgo_ts_str(18750),
+		Fname: "snd_sbdma",
 	},
 	59: {
-		Fname: __ccgo_ts_str(18760),
+		Fname: "snd_mport",
 	},
 	60: {
-		Fname: __ccgo_ts_str(19936),
+		Fname: "usegamma",
 	},
 	61: {
-		Fname:  __ccgo_ts_str(19945),
+		Fname:  "savedir",
 		Ftype1: DEFAULT_STRING,
 	},
 	62: {
-		Fname: __ccgo_ts_str(19953),
+		Fname: "messageson",
 	},
 	63: {
-		Fname:  __ccgo_ts_str(19964),
+		Fname:  "back_flat",
 		Ftype1: DEFAULT_STRING,
 	},
 	64: {
-		Fname:  __ccgo_ts_str(19974),
+		Fname:  "nickname",
 		Ftype1: DEFAULT_STRING,
 	},
 	65: {
-		Fname:  __ccgo_ts_str(19983),
+		Fname:  "chatmacro0",
 		Ftype1: DEFAULT_STRING,
 	},
 	66: {
-		Fname:  __ccgo_ts_str(19994),
+		Fname:  "chatmacro1",
 		Ftype1: DEFAULT_STRING,
 	},
 	67: {
-		Fname:  __ccgo_ts_str(20005),
+		Fname:  "chatmacro2",
 		Ftype1: DEFAULT_STRING,
 	},
 	68: {
-		Fname:  __ccgo_ts_str(20016),
+		Fname:  "chatmacro3",
 		Ftype1: DEFAULT_STRING,
 	},
 	69: {
-		Fname:  __ccgo_ts_str(20027),
+		Fname:  "chatmacro4",
 		Ftype1: DEFAULT_STRING,
 	},
 	70: {
-		Fname:  __ccgo_ts_str(20038),
+		Fname:  "chatmacro5",
 		Ftype1: DEFAULT_STRING,
 	},
 	71: {
-		Fname:  __ccgo_ts_str(20049),
+		Fname:  "chatmacro6",
 		Ftype1: DEFAULT_STRING,
 	},
 	72: {
-		Fname:  __ccgo_ts_str(20060),
+		Fname:  "chatmacro7",
 		Ftype1: DEFAULT_STRING,
 	},
 	73: {
-		Fname:  __ccgo_ts_str(20071),
+		Fname:  "chatmacro8",
 		Ftype1: DEFAULT_STRING,
 	},
 	74: {
-		Fname:  __ccgo_ts_str(20082),
+		Fname:  "chatmacro9",
 		Ftype1: DEFAULT_STRING,
 	},
 	75: {
-		Fname: __ccgo_ts_str(20093),
+		Fname: "comport",
 	},
 }
 
@@ -18865,431 +18865,431 @@ var doom_defaults = default_collection_t{
 
 var extra_defaults_list = [119]default_t{
 	0: {
-		Fname: __ccgo_ts_str(20101),
+		Fname: "graphical_startup",
 	},
 	1: {
-		Fname: __ccgo_ts_str(20119),
+		Fname: "autoadjust_video_settings",
 	},
 	2: {
-		Fname: __ccgo_ts_str(20145),
+		Fname: "fullscreen",
 	},
 	3: {
-		Fname: __ccgo_ts_str(20156),
+		Fname: "aspect_ratio_correct",
 	},
 	4: {
-		Fname: __ccgo_ts_str(20177),
+		Fname: "startup_delay",
 	},
 	5: {
-		Fname: __ccgo_ts_str(20191),
+		Fname: "screen_width",
 	},
 	6: {
-		Fname: __ccgo_ts_str(20204),
+		Fname: "screen_height",
 	},
 	7: {
-		Fname: __ccgo_ts_str(20218),
+		Fname: "screen_bpp",
 	},
 	8: {
-		Fname: __ccgo_ts_str(20229),
+		Fname: "grabmouse",
 	},
 	9: {
-		Fname: __ccgo_ts_str(20239),
+		Fname: "novert",
 	},
 	10: {
-		Fname:  __ccgo_ts_str(20246),
+		Fname:  "mouse_acceleration",
 		Ftype1: DEFAULT_FLOAT,
 	},
 	11: {
-		Fname: __ccgo_ts_str(20265),
+		Fname: "mouse_threshold",
 	},
 	12: {
-		Fname: __ccgo_ts_str(18803),
+		Fname: "snd_samplerate",
 	},
 	13: {
-		Fname: __ccgo_ts_str(18818),
+		Fname: "snd_cachesize",
 	},
 	14: {
-		Fname: __ccgo_ts_str(18770),
+		Fname: "snd_maxslicetime_ms",
 	},
 	15: {
-		Fname:  __ccgo_ts_str(18790),
+		Fname:  "snd_musiccmd",
 		Ftype1: DEFAULT_STRING,
 	},
 	16: {
-		Fname:  __ccgo_ts_str(20281),
+		Fname:  "opl_io_port",
 		Ftype1: DEFAULT_INT_HEX,
 	},
 	17: {
-		Fname: __ccgo_ts_str(1642),
+		Fname: "show_endoom",
 	},
 	18: {
-		Fname: __ccgo_ts_str(20293),
+		Fname: "png_screenshots",
 	},
 	19: {
-		Fname: __ccgo_ts_str(1600),
+		Fname: "vanilla_savegame_limit",
 	},
 	20: {
-		Fname: __ccgo_ts_str(1623),
+		Fname: "vanilla_demo_limit",
 	},
 	21: {
-		Fname: __ccgo_ts_str(20309),
+		Fname: "vanilla_keyboard_mapping",
 	},
 	22: {
-		Fname:  __ccgo_ts_str(20334),
+		Fname:  "video_driver",
 		Ftype1: DEFAULT_STRING,
 	},
 	23: {
-		Fname:  __ccgo_ts_str(20347),
+		Fname:  "window_position",
 		Ftype1: DEFAULT_STRING,
 	},
 	24: {
-		Fname: __ccgo_ts_str(18315),
+		Fname: "joystick_index",
 	},
 	25: {
-		Fname: __ccgo_ts_str(18330),
+		Fname: "joystick_x_axis",
 	},
 	26: {
-		Fname: __ccgo_ts_str(18383),
+		Fname: "joystick_x_invert",
 	},
 	27: {
-		Fname: __ccgo_ts_str(18346),
+		Fname: "joystick_y_axis",
 	},
 	28: {
-		Fname: __ccgo_ts_str(18401),
+		Fname: "joystick_y_invert",
 	},
 	29: {
-		Fname: __ccgo_ts_str(18362),
+		Fname: "joystick_strafe_axis",
 	},
 	30: {
-		Fname: __ccgo_ts_str(18419),
+		Fname: "joystick_strafe_invert",
 	},
 	31: {
-		Fname: __ccgo_ts_str(20363),
+		Fname: "joystick_physical_button0",
 	},
 	32: {
-		Fname: __ccgo_ts_str(20389),
+		Fname: "joystick_physical_button1",
 	},
 	33: {
-		Fname: __ccgo_ts_str(20415),
+		Fname: "joystick_physical_button2",
 	},
 	34: {
-		Fname: __ccgo_ts_str(20441),
+		Fname: "joystick_physical_button3",
 	},
 	35: {
-		Fname: __ccgo_ts_str(20467),
+		Fname: "joystick_physical_button4",
 	},
 	36: {
-		Fname: __ccgo_ts_str(20493),
+		Fname: "joystick_physical_button5",
 	},
 	37: {
-		Fname: __ccgo_ts_str(20519),
+		Fname: "joystick_physical_button6",
 	},
 	38: {
-		Fname: __ccgo_ts_str(20545),
+		Fname: "joystick_physical_button7",
 	},
 	39: {
-		Fname: __ccgo_ts_str(20571),
+		Fname: "joystick_physical_button8",
 	},
 	40: {
-		Fname: __ccgo_ts_str(20597),
+		Fname: "joystick_physical_button9",
 	},
 	41: {
-		Fname: __ccgo_ts_str(20623),
+		Fname: "joyb_strafeleft",
 	},
 	42: {
-		Fname: __ccgo_ts_str(20639),
+		Fname: "joyb_straferight",
 	},
 	43: {
-		Fname: __ccgo_ts_str(20656),
+		Fname: "joyb_menu_activate",
 	},
 	44: {
-		Fname: __ccgo_ts_str(20675),
+		Fname: "joyb_prevweapon",
 	},
 	45: {
-		Fname: __ccgo_ts_str(20691),
+		Fname: "joyb_nextweapon",
 	},
 	46: {
-		Fname: __ccgo_ts_str(20707),
+		Fname: "mouseb_strafeleft",
 	},
 	47: {
-		Fname: __ccgo_ts_str(20725),
+		Fname: "mouseb_straferight",
 	},
 	48: {
-		Fname: __ccgo_ts_str(20744),
+		Fname: "mouseb_use",
 	},
 	49: {
-		Fname: __ccgo_ts_str(20755),
+		Fname: "mouseb_backward",
 	},
 	50: {
-		Fname: __ccgo_ts_str(20771),
+		Fname: "mouseb_prevweapon",
 	},
 	51: {
-		Fname: __ccgo_ts_str(20789),
+		Fname: "mouseb_nextweapon",
 	},
 	52: {
-		Fname: __ccgo_ts_str(20807),
+		Fname: "dclick_use",
 	},
 	53: {
-		Fname:  __ccgo_ts_str(20818),
+		Fname:  "key_pause",
 		Ftype1: DEFAULT_KEY,
 	},
 	54: {
-		Fname:  __ccgo_ts_str(20828),
+		Fname:  "key_menu_activate",
 		Ftype1: DEFAULT_KEY,
 	},
 	55: {
-		Fname:  __ccgo_ts_str(20846),
+		Fname:  "key_menu_up",
 		Ftype1: DEFAULT_KEY,
 	},
 	56: {
-		Fname:  __ccgo_ts_str(20858),
+		Fname:  "key_menu_down",
 		Ftype1: DEFAULT_KEY,
 	},
 	57: {
-		Fname:  __ccgo_ts_str(20872),
+		Fname:  "key_menu_left",
 		Ftype1: DEFAULT_KEY,
 	},
 	58: {
-		Fname:  __ccgo_ts_str(20886),
+		Fname:  "key_menu_right",
 		Ftype1: DEFAULT_KEY,
 	},
 	59: {
-		Fname:  __ccgo_ts_str(20901),
+		Fname:  "key_menu_back",
 		Ftype1: DEFAULT_KEY,
 	},
 	60: {
-		Fname:  __ccgo_ts_str(20915),
+		Fname:  "key_menu_forward",
 		Ftype1: DEFAULT_KEY,
 	},
 	61: {
-		Fname:  __ccgo_ts_str(20932),
+		Fname:  "key_menu_confirm",
 		Ftype1: DEFAULT_KEY,
 	},
 	62: {
-		Fname:  __ccgo_ts_str(20949),
+		Fname:  "key_menu_abort",
 		Ftype1: DEFAULT_KEY,
 	},
 	63: {
-		Fname:  __ccgo_ts_str(20964),
+		Fname:  "key_menu_help",
 		Ftype1: DEFAULT_KEY,
 	},
 	64: {
-		Fname:  __ccgo_ts_str(20978),
+		Fname:  "key_menu_save",
 		Ftype1: DEFAULT_KEY,
 	},
 	65: {
-		Fname:  __ccgo_ts_str(20992),
+		Fname:  "key_menu_load",
 		Ftype1: DEFAULT_KEY,
 	},
 	66: {
-		Fname:  __ccgo_ts_str(21006),
+		Fname:  "key_menu_volume",
 		Ftype1: DEFAULT_KEY,
 	},
 	67: {
-		Fname:  __ccgo_ts_str(21022),
+		Fname:  "key_menu_detail",
 		Ftype1: DEFAULT_KEY,
 	},
 	68: {
-		Fname:  __ccgo_ts_str(21038),
+		Fname:  "key_menu_qsave",
 		Ftype1: DEFAULT_KEY,
 	},
 	69: {
-		Fname:  __ccgo_ts_str(21053),
+		Fname:  "key_menu_endgame",
 		Ftype1: DEFAULT_KEY,
 	},
 	70: {
-		Fname:  __ccgo_ts_str(21070),
+		Fname:  "key_menu_messages",
 		Ftype1: DEFAULT_KEY,
 	},
 	71: {
-		Fname:  __ccgo_ts_str(21088),
+		Fname:  "key_menu_qload",
 		Ftype1: DEFAULT_KEY,
 	},
 	72: {
-		Fname:  __ccgo_ts_str(21103),
+		Fname:  "key_menu_quit",
 		Ftype1: DEFAULT_KEY,
 	},
 	73: {
-		Fname:  __ccgo_ts_str(21117),
+		Fname:  "key_menu_gamma",
 		Ftype1: DEFAULT_KEY,
 	},
 	74: {
-		Fname:  __ccgo_ts_str(21132),
+		Fname:  "key_spy",
 		Ftype1: DEFAULT_KEY,
 	},
 	75: {
-		Fname:  __ccgo_ts_str(21140),
+		Fname:  "key_menu_incscreen",
 		Ftype1: DEFAULT_KEY,
 	},
 	76: {
-		Fname:  __ccgo_ts_str(21159),
+		Fname:  "key_menu_decscreen",
 		Ftype1: DEFAULT_KEY,
 	},
 	77: {
-		Fname:  __ccgo_ts_str(21178),
+		Fname:  "key_menu_screenshot",
 		Ftype1: DEFAULT_KEY,
 	},
 	78: {
-		Fname:  __ccgo_ts_str(21198),
+		Fname:  "key_map_toggle",
 		Ftype1: DEFAULT_KEY,
 	},
 	79: {
-		Fname:  __ccgo_ts_str(21213),
+		Fname:  "key_map_north",
 		Ftype1: DEFAULT_KEY,
 	},
 	80: {
-		Fname:  __ccgo_ts_str(21227),
+		Fname:  "key_map_south",
 		Ftype1: DEFAULT_KEY,
 	},
 	81: {
-		Fname:  __ccgo_ts_str(21241),
+		Fname:  "key_map_east",
 		Ftype1: DEFAULT_KEY,
 	},
 	82: {
-		Fname:  __ccgo_ts_str(21254),
+		Fname:  "key_map_west",
 		Ftype1: DEFAULT_KEY,
 	},
 	83: {
-		Fname:  __ccgo_ts_str(21267),
+		Fname:  "key_map_zoomin",
 		Ftype1: DEFAULT_KEY,
 	},
 	84: {
-		Fname:  __ccgo_ts_str(21282),
+		Fname:  "key_map_zoomout",
 		Ftype1: DEFAULT_KEY,
 	},
 	85: {
-		Fname:  __ccgo_ts_str(21298),
+		Fname:  "key_map_maxzoom",
 		Ftype1: DEFAULT_KEY,
 	},
 	86: {
-		Fname:  __ccgo_ts_str(21314),
+		Fname:  "key_map_follow",
 		Ftype1: DEFAULT_KEY,
 	},
 	87: {
-		Fname:  __ccgo_ts_str(21329),
+		Fname:  "key_map_grid",
 		Ftype1: DEFAULT_KEY,
 	},
 	88: {
-		Fname:  __ccgo_ts_str(21342),
+		Fname:  "key_map_mark",
 		Ftype1: DEFAULT_KEY,
 	},
 	89: {
-		Fname:  __ccgo_ts_str(21355),
+		Fname:  "key_map_clearmark",
 		Ftype1: DEFAULT_KEY,
 	},
 	90: {
-		Fname:  __ccgo_ts_str(21373),
+		Fname:  "key_weapon1",
 		Ftype1: DEFAULT_KEY,
 	},
 	91: {
-		Fname:  __ccgo_ts_str(21385),
+		Fname:  "key_weapon2",
 		Ftype1: DEFAULT_KEY,
 	},
 	92: {
-		Fname:  __ccgo_ts_str(21397),
+		Fname:  "key_weapon3",
 		Ftype1: DEFAULT_KEY,
 	},
 	93: {
-		Fname:  __ccgo_ts_str(21409),
+		Fname:  "key_weapon4",
 		Ftype1: DEFAULT_KEY,
 	},
 	94: {
-		Fname:  __ccgo_ts_str(21421),
+		Fname:  "key_weapon5",
 		Ftype1: DEFAULT_KEY,
 	},
 	95: {
-		Fname:  __ccgo_ts_str(21433),
+		Fname:  "key_weapon6",
 		Ftype1: DEFAULT_KEY,
 	},
 	96: {
-		Fname:  __ccgo_ts_str(21445),
+		Fname:  "key_weapon7",
 		Ftype1: DEFAULT_KEY,
 	},
 	97: {
-		Fname:  __ccgo_ts_str(21457),
+		Fname:  "key_weapon8",
 		Ftype1: DEFAULT_KEY,
 	},
 	98: {
-		Fname:  __ccgo_ts_str(21469),
+		Fname:  "key_prevweapon",
 		Ftype1: DEFAULT_KEY,
 	},
 	99: {
-		Fname:  __ccgo_ts_str(21484),
+		Fname:  "key_nextweapon",
 		Ftype1: DEFAULT_KEY,
 	},
 	100: {
-		Fname:  __ccgo_ts_str(21499),
+		Fname:  "key_arti_all",
 		Ftype1: DEFAULT_KEY,
 	},
 	101: {
-		Fname:  __ccgo_ts_str(21512),
+		Fname:  "key_arti_health",
 		Ftype1: DEFAULT_KEY,
 	},
 	102: {
-		Fname:  __ccgo_ts_str(21528),
+		Fname:  "key_arti_poisonbag",
 		Ftype1: DEFAULT_KEY,
 	},
 	103: {
-		Fname:  __ccgo_ts_str(21547),
+		Fname:  "key_arti_blastradius",
 		Ftype1: DEFAULT_KEY,
 	},
 	104: {
-		Fname:  __ccgo_ts_str(21568),
+		Fname:  "key_arti_teleport",
 		Ftype1: DEFAULT_KEY,
 	},
 	105: {
-		Fname:  __ccgo_ts_str(21586),
+		Fname:  "key_arti_teleportother",
 		Ftype1: DEFAULT_KEY,
 	},
 	106: {
-		Fname:  __ccgo_ts_str(21609),
+		Fname:  "key_arti_egg",
 		Ftype1: DEFAULT_KEY,
 	},
 	107: {
-		Fname:  __ccgo_ts_str(21622),
+		Fname:  "key_arti_invulnerability",
 		Ftype1: DEFAULT_KEY,
 	},
 	108: {
-		Fname:  __ccgo_ts_str(21647),
+		Fname:  "key_message_refresh",
 		Ftype1: DEFAULT_KEY,
 	},
 	109: {
-		Fname:  __ccgo_ts_str(21667),
+		Fname:  "key_demo_quit",
 		Ftype1: DEFAULT_KEY,
 	},
 	110: {
-		Fname:  __ccgo_ts_str(21681),
+		Fname:  "key_multi_msg",
 		Ftype1: DEFAULT_KEY,
 	},
 	111: {
-		Fname:  __ccgo_ts_str(21695),
+		Fname:  "key_multi_msgplayer1",
 		Ftype1: DEFAULT_KEY,
 	},
 	112: {
-		Fname:  __ccgo_ts_str(21716),
+		Fname:  "key_multi_msgplayer2",
 		Ftype1: DEFAULT_KEY,
 	},
 	113: {
-		Fname:  __ccgo_ts_str(21737),
+		Fname:  "key_multi_msgplayer3",
 		Ftype1: DEFAULT_KEY,
 	},
 	114: {
-		Fname:  __ccgo_ts_str(21758),
+		Fname:  "key_multi_msgplayer4",
 		Ftype1: DEFAULT_KEY,
 	},
 	115: {
-		Fname:  __ccgo_ts_str(21779),
+		Fname:  "key_multi_msgplayer5",
 		Ftype1: DEFAULT_KEY,
 	},
 	116: {
-		Fname:  __ccgo_ts_str(21800),
+		Fname:  "key_multi_msgplayer6",
 		Ftype1: DEFAULT_KEY,
 	},
 	117: {
-		Fname:  __ccgo_ts_str(21821),
+		Fname:  "key_multi_msgplayer7",
 		Ftype1: DEFAULT_KEY,
 	},
 	118: {
-		Fname:  __ccgo_ts_str(21842),
+		Fname:  "key_multi_msgplayer8",
 		Ftype1: DEFAULT_KEY,
 	},
 }
@@ -19355,24 +19355,24 @@ func M_LoadDefaults() {
 	// Load main configuration from the specified file, instead of the
 	// default.
 	//
-	i = M_CheckParmWithArgs(__ccgo_ts_str(21869), 1)
+	i = M_CheckParmWithArgs("-config", 1)
 	if i != 0 {
 		doom_defaults.Ffilename = myargs[i+1]
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(21877), doom_defaults.Ffilename)
+		fprintf_ccgo(os.Stdout, "\tdefault file: %s\n", doom_defaults.Ffilename)
 	} else {
 		doom_defaults.Ffilename = configdir + default_main_config
 	}
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(21896), doom_defaults.Ffilename)
+	fprintf_ccgo(os.Stdout, "saving config in %s\n", doom_defaults.Ffilename)
 	//!
 	// @arg <file>
 	//
 	// Load additional configuration from the specified file, instead of
 	// the default.
 	//
-	i = M_CheckParmWithArgs(__ccgo_ts_str(21917), 1)
+	i = M_CheckParmWithArgs("-extraconfig", 1)
 	if i != 0 {
 		extra_defaults.Ffilename = myargs[i+1]
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(21930), extra_defaults.Ffilename)
+		fprintf_ccgo(os.Stdout, "        extra configuration file: %s\n", extra_defaults.Ffilename)
 	} else {
 		extra_defaults.Ffilename = configdir + default_extra_config
 	}
@@ -19391,7 +19391,7 @@ func GetDefaultForName(name string) *default_t {
 	}
 	// Not found? Internal error.
 	if result == nil {
-		I_Error(__ccgo_ts_str(21968), name)
+		I_Error("Unknown configuration variable: '%s'", name)
 	}
 	return result
 }
@@ -19429,7 +19429,7 @@ func M_SetConfigDir(dir string) {
 		configdir = GetDefaultConfigDir()
 
 		if configdir == "" {
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(22005), configdir)
+			fprintf_ccgo(os.Stdout, "Using %s for configuration and saves\n", configdir)
 		}
 	}
 	// Make the directory if it doesn't already exist:
@@ -19448,9 +19448,9 @@ func M_GetSaveGameDir(iwadname string) string {
 	if configdir == "" {
 		savegamedir = ""
 	} else {
-		savegamedir = configdir + __ccgo_ts_str(1252) + __ccgo_ts_str(22043)
+		savegamedir = configdir + "/" + ".savegame/"
 		M_MakeDirectory(savegamedir)
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(22054), savegamedir)
+		fprintf_ccgo(os.Stdout, "Using %s for savegames\n", savegamedir)
 	}
 	return savegamedir
 }
@@ -19572,105 +19572,105 @@ func init() {
 //
 
 func M_BindBaseControls() {
-	M_BindVariable(__ccgo_ts_str(19425), &key_right)
-	M_BindVariable(__ccgo_ts_str(19435), &key_left)
-	M_BindVariable(__ccgo_ts_str(19444), &key_up)
-	M_BindVariable(__ccgo_ts_str(19451), &key_down)
-	M_BindVariable(__ccgo_ts_str(19460), &key_strafeleft)
-	M_BindVariable(__ccgo_ts_str(19475), &key_straferight)
-	M_BindVariable(__ccgo_ts_str(19772), &key_fire)
-	M_BindVariable(__ccgo_ts_str(19781), &key_use)
-	M_BindVariable(__ccgo_ts_str(19789), &key_strafe)
-	M_BindVariable(__ccgo_ts_str(19800), &key_speed)
-	M_BindVariable(__ccgo_ts_str(19820), &mousebfire)
-	M_BindVariable(__ccgo_ts_str(19832), &mousebstrafe)
-	M_BindVariable(__ccgo_ts_str(19846), &mousebforward)
-	M_BindVariable(__ccgo_ts_str(19873), &joybfire)
-	M_BindVariable(__ccgo_ts_str(19883), &joybstrafe)
-	M_BindVariable(__ccgo_ts_str(19895), &joybuse)
-	M_BindVariable(__ccgo_ts_str(19904), &joybspeed)
-	M_BindVariable(__ccgo_ts_str(20656), &joybmenu)
+	M_BindVariable("key_right", &key_right)
+	M_BindVariable("key_left", &key_left)
+	M_BindVariable("key_up", &key_up)
+	M_BindVariable("key_down", &key_down)
+	M_BindVariable("key_strafeleft", &key_strafeleft)
+	M_BindVariable("key_straferight", &key_straferight)
+	M_BindVariable("key_fire", &key_fire)
+	M_BindVariable("key_use", &key_use)
+	M_BindVariable("key_strafe", &key_strafe)
+	M_BindVariable("key_speed", &key_speed)
+	M_BindVariable("mouseb_fire", &mousebfire)
+	M_BindVariable("mouseb_strafe", &mousebstrafe)
+	M_BindVariable("mouseb_forward", &mousebforward)
+	M_BindVariable("joyb_fire", &joybfire)
+	M_BindVariable("joyb_strafe", &joybstrafe)
+	M_BindVariable("joyb_use", &joybuse)
+	M_BindVariable("joyb_speed", &joybspeed)
+	M_BindVariable("joyb_menu_activate", &joybmenu)
 	// Extra controls that are not in the Vanilla versions:
-	M_BindVariable(__ccgo_ts_str(20623), &joybstrafeleft)
-	M_BindVariable(__ccgo_ts_str(20639), &joybstraferight)
-	M_BindVariable(__ccgo_ts_str(20707), &mousebstrafeleft)
-	M_BindVariable(__ccgo_ts_str(20725), &mousebstraferight)
-	M_BindVariable(__ccgo_ts_str(20744), &mousebuse)
-	M_BindVariable(__ccgo_ts_str(20755), &mousebbackward)
-	M_BindVariable(__ccgo_ts_str(20807), &dclick_use)
-	M_BindVariable(__ccgo_ts_str(20818), &key_pause)
-	M_BindVariable(__ccgo_ts_str(21647), &key_message_refresh)
+	M_BindVariable("joyb_strafeleft", &joybstrafeleft)
+	M_BindVariable("joyb_straferight", &joybstraferight)
+	M_BindVariable("mouseb_strafeleft", &mousebstrafeleft)
+	M_BindVariable("mouseb_straferight", &mousebstraferight)
+	M_BindVariable("mouseb_use", &mousebuse)
+	M_BindVariable("mouseb_backward", &mousebbackward)
+	M_BindVariable("dclick_use", &dclick_use)
+	M_BindVariable("key_pause", &key_pause)
+	M_BindVariable("key_message_refresh", &key_message_refresh)
 }
 
 func M_BindWeaponControls() {
-	M_BindVariable(__ccgo_ts_str(21373), &key_weapon1)
-	M_BindVariable(__ccgo_ts_str(21385), &key_weapon2)
-	M_BindVariable(__ccgo_ts_str(21397), &key_weapon3)
-	M_BindVariable(__ccgo_ts_str(21409), &key_weapon4)
-	M_BindVariable(__ccgo_ts_str(21421), &key_weapon5)
-	M_BindVariable(__ccgo_ts_str(21433), &key_weapon6)
-	M_BindVariable(__ccgo_ts_str(21445), &key_weapon7)
-	M_BindVariable(__ccgo_ts_str(21457), &key_weapon8)
-	M_BindVariable(__ccgo_ts_str(21469), &key_prevweapon)
-	M_BindVariable(__ccgo_ts_str(21484), &key_nextweapon)
-	M_BindVariable(__ccgo_ts_str(20675), &joybprevweapon)
-	M_BindVariable(__ccgo_ts_str(20691), &joybnextweapon)
-	M_BindVariable(__ccgo_ts_str(20771), &mousebprevweapon)
-	M_BindVariable(__ccgo_ts_str(20789), &mousebnextweapon)
+	M_BindVariable("key_weapon1", &key_weapon1)
+	M_BindVariable("key_weapon2", &key_weapon2)
+	M_BindVariable("key_weapon3", &key_weapon3)
+	M_BindVariable("key_weapon4", &key_weapon4)
+	M_BindVariable("key_weapon5", &key_weapon5)
+	M_BindVariable("key_weapon6", &key_weapon6)
+	M_BindVariable("key_weapon7", &key_weapon7)
+	M_BindVariable("key_weapon8", &key_weapon8)
+	M_BindVariable("key_prevweapon", &key_prevweapon)
+	M_BindVariable("key_nextweapon", &key_nextweapon)
+	M_BindVariable("joyb_prevweapon", &joybprevweapon)
+	M_BindVariable("joyb_nextweapon", &joybnextweapon)
+	M_BindVariable("mouseb_prevweapon", &mousebprevweapon)
+	M_BindVariable("mouseb_nextweapon", &mousebnextweapon)
 }
 
 func M_BindMapControls() {
-	M_BindVariable(__ccgo_ts_str(21213), &key_map_north)
-	M_BindVariable(__ccgo_ts_str(21227), &key_map_south)
-	M_BindVariable(__ccgo_ts_str(21241), &key_map_east)
-	M_BindVariable(__ccgo_ts_str(21254), &key_map_west)
-	M_BindVariable(__ccgo_ts_str(21267), &key_map_zoomin)
-	M_BindVariable(__ccgo_ts_str(21282), &key_map_zoomout)
-	M_BindVariable(__ccgo_ts_str(21198), &key_map_toggle)
-	M_BindVariable(__ccgo_ts_str(21298), &key_map_maxzoom)
-	M_BindVariable(__ccgo_ts_str(21314), &key_map_follow)
-	M_BindVariable(__ccgo_ts_str(21329), &key_map_grid)
-	M_BindVariable(__ccgo_ts_str(21342), &key_map_mark)
-	M_BindVariable(__ccgo_ts_str(21355), &key_map_clearmark)
+	M_BindVariable("key_map_north", &key_map_north)
+	M_BindVariable("key_map_south", &key_map_south)
+	M_BindVariable("key_map_east", &key_map_east)
+	M_BindVariable("key_map_west", &key_map_west)
+	M_BindVariable("key_map_zoomin", &key_map_zoomin)
+	M_BindVariable("key_map_zoomout", &key_map_zoomout)
+	M_BindVariable("key_map_toggle", &key_map_toggle)
+	M_BindVariable("key_map_maxzoom", &key_map_maxzoom)
+	M_BindVariable("key_map_follow", &key_map_follow)
+	M_BindVariable("key_map_grid", &key_map_grid)
+	M_BindVariable("key_map_mark", &key_map_mark)
+	M_BindVariable("key_map_clearmark", &key_map_clearmark)
 }
 
 func M_BindMenuControls() {
-	M_BindVariable(__ccgo_ts_str(20828), &key_menu_activate)
-	M_BindVariable(__ccgo_ts_str(20846), &key_menu_up)
-	M_BindVariable(__ccgo_ts_str(20858), &key_menu_down)
-	M_BindVariable(__ccgo_ts_str(20872), &key_menu_left)
-	M_BindVariable(__ccgo_ts_str(20886), &key_menu_right)
-	M_BindVariable(__ccgo_ts_str(20901), &key_menu_back)
-	M_BindVariable(__ccgo_ts_str(20915), &key_menu_forward)
-	M_BindVariable(__ccgo_ts_str(20932), &key_menu_confirm)
-	M_BindVariable(__ccgo_ts_str(20949), &key_menu_abort)
-	M_BindVariable(__ccgo_ts_str(20964), &key_menu_help)
-	M_BindVariable(__ccgo_ts_str(20978), &key_menu_save)
-	M_BindVariable(__ccgo_ts_str(20992), &key_menu_load)
-	M_BindVariable(__ccgo_ts_str(21006), &key_menu_volume)
-	M_BindVariable(__ccgo_ts_str(21022), &key_menu_detail)
-	M_BindVariable(__ccgo_ts_str(21038), &key_menu_qsave)
-	M_BindVariable(__ccgo_ts_str(21053), &key_menu_endgame)
-	M_BindVariable(__ccgo_ts_str(21070), &key_menu_messages)
-	M_BindVariable(__ccgo_ts_str(21088), &key_menu_qload)
-	M_BindVariable(__ccgo_ts_str(21103), &key_menu_quit)
-	M_BindVariable(__ccgo_ts_str(21117), &key_menu_gamma)
-	M_BindVariable(__ccgo_ts_str(21140), &key_menu_incscreen)
-	M_BindVariable(__ccgo_ts_str(21159), &key_menu_decscreen)
-	M_BindVariable(__ccgo_ts_str(21178), &key_menu_screenshot)
-	M_BindVariable(__ccgo_ts_str(21667), &key_demo_quit)
-	M_BindVariable(__ccgo_ts_str(21132), &key_spy)
+	M_BindVariable("key_menu_activate", &key_menu_activate)
+	M_BindVariable("key_menu_up", &key_menu_up)
+	M_BindVariable("key_menu_down", &key_menu_down)
+	M_BindVariable("key_menu_left", &key_menu_left)
+	M_BindVariable("key_menu_right", &key_menu_right)
+	M_BindVariable("key_menu_back", &key_menu_back)
+	M_BindVariable("key_menu_forward", &key_menu_forward)
+	M_BindVariable("key_menu_confirm", &key_menu_confirm)
+	M_BindVariable("key_menu_abort", &key_menu_abort)
+	M_BindVariable("key_menu_help", &key_menu_help)
+	M_BindVariable("key_menu_save", &key_menu_save)
+	M_BindVariable("key_menu_load", &key_menu_load)
+	M_BindVariable("key_menu_volume", &key_menu_volume)
+	M_BindVariable("key_menu_detail", &key_menu_detail)
+	M_BindVariable("key_menu_qsave", &key_menu_qsave)
+	M_BindVariable("key_menu_endgame", &key_menu_endgame)
+	M_BindVariable("key_menu_messages", &key_menu_messages)
+	M_BindVariable("key_menu_qload", &key_menu_qload)
+	M_BindVariable("key_menu_quit", &key_menu_quit)
+	M_BindVariable("key_menu_gamma", &key_menu_gamma)
+	M_BindVariable("key_menu_incscreen", &key_menu_incscreen)
+	M_BindVariable("key_menu_decscreen", &key_menu_decscreen)
+	M_BindVariable("key_menu_screenshot", &key_menu_screenshot)
+	M_BindVariable("key_demo_quit", &key_demo_quit)
+	M_BindVariable("key_spy", &key_spy)
 }
 
 func M_BindChatControls(num_players uint32) {
 	var i uint32
-	M_BindVariable(__ccgo_ts_str(21681), &key_multi_msg)
+	M_BindVariable("key_multi_msg", &key_multi_msg)
 	i = 0
 	for {
 		if i >= num_players {
 			break
 		}
-		name := fmt.Sprintf(__ccgo_ts_str(22078), i+1)
+		name := fmt.Sprintf("key_multi_msgplayer%d", i+1)
 		M_BindVariable(name, &key_multi_msgplayer[i])
 		goto _1
 	_1:
@@ -19758,8 +19758,8 @@ type menu_t struct {
 
 func init() {
 	skullName = [2]string{
-		0: __ccgo_ts_str(22100),
-		1: __ccgo_ts_str(22109),
+		0: "M_SKULL1",
+		1: "M_SKULL2",
 	}
 }
 
@@ -20171,7 +20171,7 @@ func M_ReadSaveStrings() {
 		var err error
 		handle, err := os.Open(P_SaveGameFile(i))
 		if err != nil {
-			savegamestrings[i] = __ccgo_ts_str(22118)
+			savegamestrings[i] = "empty slot"
 			LoadMenu[i].Fstatus = 0
 			goto _1
 		}
@@ -20194,7 +20194,7 @@ func M_ReadSaveStrings() {
 //	//
 func M_DrawLoad() {
 	var i int32
-	V_DrawPatchDirect(72, 28, W_CacheLumpNameT(__ccgo_ts_str(22129), PU_CACHE))
+	V_DrawPatchDirect(72, 28, W_CacheLumpNameT("M_LOADG", PU_CACHE))
 	i = 0
 	for {
 		if i >= int32(load_end) {
@@ -20216,20 +20216,20 @@ func M_DrawLoad() {
 //	//
 func M_DrawSaveLoadBorder(x int32, y int32) {
 	var i int32
-	V_DrawPatchDirect(x-int32(8), y+int32(7), W_CacheLumpNameT(__ccgo_ts_str(22137), PU_CACHE))
+	V_DrawPatchDirect(x-int32(8), y+int32(7), W_CacheLumpNameT("M_LSLEFT", PU_CACHE))
 	i = 0
 	for {
 		if i >= 24 {
 			break
 		}
-		V_DrawPatchDirect(x, y+int32(7), W_CacheLumpNameT(__ccgo_ts_str(22146), PU_CACHE))
+		V_DrawPatchDirect(x, y+int32(7), W_CacheLumpNameT("M_LSCNTR", PU_CACHE))
 		x += 8
 		goto _1
 	_1:
 		;
 		i++
 	}
-	V_DrawPatchDirect(x, y+int32(7), W_CacheLumpNameT(__ccgo_ts_str(22155), PU_CACHE))
+	V_DrawPatchDirect(x, y+int32(7), W_CacheLumpNameT("M_LSRGHT", PU_CACHE))
 }
 
 // C documentation
@@ -20249,7 +20249,7 @@ func M_LoadSelect(choice int32) {
 //	//
 func M_LoadGame(choice int32) {
 	if netgame != 0 {
-		M_StartMessage(__ccgo_ts_str(22164), nil, 0)
+		M_StartMessage("you can't do load while in a net game!\n\npress a key.", nil, 0)
 		return
 	}
 	M_SetupNextMenu(&LoadDef)
@@ -20263,7 +20263,7 @@ func M_LoadGame(choice int32) {
 //	//
 func M_DrawSave() {
 	var i int32
-	V_DrawPatchDirect(72, 28, W_CacheLumpNameT(__ccgo_ts_str(22217), PU_CACHE))
+	V_DrawPatchDirect(72, 28, W_CacheLumpNameT("M_SAVEG", PU_CACHE))
 	i = 0
 	for {
 		if i >= int32(load_end) {
@@ -20278,7 +20278,7 @@ func M_DrawSave() {
 	}
 	if saveStringEnter != 0 {
 		i = M_StringWidth(savegamestrings[saveSlot])
-		M_WriteText(int32(LoadDef.Fx)+i, int32(LoadDef.Fy)+LINEHEIGHT*saveSlot, __ccgo_ts_str(22225))
+		M_WriteText(int32(LoadDef.Fx)+i, int32(LoadDef.Fy)+LINEHEIGHT*saveSlot, "_")
 	}
 }
 
@@ -20306,7 +20306,7 @@ func M_SaveSelect(choice int32) {
 	saveStringEnter = 1
 	saveSlot = choice
 	saveOldString = savegamestrings[choice]
-	if strings.EqualFold(savegamestrings[choice], __ccgo_ts_str(22118)) {
+	if strings.EqualFold(savegamestrings[choice], "empty slot") {
 		savegamestrings[choice] = ""
 	}
 	saveCharIndex = len(savegamestrings[choice])
@@ -20319,7 +20319,7 @@ func M_SaveSelect(choice int32) {
 //	//
 func M_SaveGame(choice int32) {
 	if usergame == 0 {
-		M_StartMessage(__ccgo_ts_str(22227), nil, 0)
+		M_StartMessage("you can't save if you aren't playing!\n\npress a key.", nil, 0)
 		return
 	}
 	if gamestate != GS_LEVEL {
@@ -20351,7 +20351,7 @@ func M_QuickSave() {
 		quickSaveSlot = -int32(2) // means to pick a slot now
 		return
 	}
-	tempstring := fmt.Sprintf(__ccgo_ts_str(22279), savegamestrings[quickSaveSlot])
+	tempstring := fmt.Sprintf("quicksave over your game named\n\n'%s'?\n\npress y or n.", savegamestrings[quickSaveSlot])
 	M_StartMessage(tempstring, M_QuickSaveResponse, 1)
 }
 
@@ -20369,14 +20369,14 @@ func M_QuickLoadResponse(key int32) {
 
 func M_QuickLoad() {
 	if netgame != 0 {
-		M_StartMessage(__ccgo_ts_str(22332), nil, 0)
+		M_StartMessage("you can't quickload during a netgame!\n\npress a key.", nil, 0)
 		return
 	}
 	if quickSaveSlot < 0 {
-		M_StartMessage(__ccgo_ts_str(22384), nil, 0)
+		M_StartMessage("you haven't picked a quicksave slot yet!\n\npress a key.", nil, 0)
 		return
 	}
-	tempstring := fmt.Sprintf(__ccgo_ts_str(22439), savegamestrings[quickSaveSlot])
+	tempstring := fmt.Sprintf("do you want to quickload the game named\n\n'%s'?\n\npress y or n.", savegamestrings[quickSaveSlot])
 	M_StartMessage(tempstring, M_QuickLoadResponse, 1)
 }
 
@@ -20389,7 +20389,7 @@ func M_QuickLoad() {
 func M_DrawReadThis1() {
 	var lumpname string
 	var skullx, skully int32
-	lumpname = __ccgo_ts_str(1911)
+	lumpname = "CREDIT"
 	skullx = 330
 	skully = 175
 	inhelpscreens = 1
@@ -20406,13 +20406,13 @@ func M_DrawReadThis1() {
 	case exe_hacx:
 		if gamemode == commercial {
 			// Doom 2
-			lumpname = __ccgo_ts_str(22501)
+			lumpname = "HELP"
 			skullx = 330
 			skully = 165
 		} else {
 			// Doom 1
 			// HELP2 is the first screen shown in Doom 1
-			lumpname = __ccgo_ts_str(1924)
+			lumpname = "HELP2"
 			skullx = 280
 			skully = 185
 		}
@@ -20422,14 +20422,14 @@ func M_DrawReadThis1() {
 		// Ultimate Doom always displays "HELP1".
 		// Chex Quest version also uses "HELP1", even though it is based
 		// on Final Doom.
-		lumpname = __ccgo_ts_str(22506)
+		lumpname = "HELP1"
 	case exe_final:
 		fallthrough
 	case exe_final2:
 		// Final Doom always displays "HELP".
-		lumpname = __ccgo_ts_str(22501)
+		lumpname = "HELP"
 	default:
-		I_Error(__ccgo_ts_str(22512), 0)
+		I_Error("Unhandled game version", 0)
 		break
 	}
 	V_DrawPatchDirect(0, 0, W_CacheLumpNameT(lumpname, PU_CACHE))
@@ -20446,7 +20446,7 @@ func M_DrawReadThis2() {
 	inhelpscreens = 1
 	// We only ever draw the second page if this is
 	// gameversion == exe_doom_1_9 and gamemode == registered
-	V_DrawPatchDirect(0, 0, W_CacheLumpNameT(__ccgo_ts_str(22506), PU_CACHE))
+	V_DrawPatchDirect(0, 0, W_CacheLumpNameT("HELP1", PU_CACHE))
 }
 
 // C documentation
@@ -20455,7 +20455,7 @@ func M_DrawReadThis2() {
 //	// Change Sfx & Music volumes
 //	//
 func M_DrawSound() {
-	V_DrawPatchDirect(60, 38, W_CacheLumpNameT(__ccgo_ts_str(22535), PU_CACHE))
+	V_DrawPatchDirect(60, 38, W_CacheLumpNameT("M_SVOL", PU_CACHE))
 	M_DrawThermo(int32(SoundDef.Fx), int32(SoundDef.Fy)+LINEHEIGHT*(int32(sfx_vol)+1), 16, sfxVolume)
 	M_DrawThermo(int32(SoundDef.Fx), int32(SoundDef.Fy)+LINEHEIGHT*(int32(music_vol)+1), 16, musicVolume)
 }
@@ -20500,7 +20500,7 @@ func M_MusicVol(choice int32) {
 //	// M_DrawMainMenu
 //	//
 func M_DrawMainMenu() {
-	V_DrawPatchDirect(94, 2, W_CacheLumpNameT(__ccgo_ts_str(22542), PU_CACHE))
+	V_DrawPatchDirect(94, 2, W_CacheLumpNameT("M_DOOM", PU_CACHE))
 }
 
 // C documentation
@@ -20509,13 +20509,13 @@ func M_DrawMainMenu() {
 //	// M_NewGame
 //	//
 func M_DrawNewGame() {
-	V_DrawPatchDirect(96, 14, W_CacheLumpNameT(__ccgo_ts_str(22549), PU_CACHE))
-	V_DrawPatchDirect(54, 38, W_CacheLumpNameT(__ccgo_ts_str(22556), PU_CACHE))
+	V_DrawPatchDirect(96, 14, W_CacheLumpNameT("M_NEWG", PU_CACHE))
+	V_DrawPatchDirect(54, 38, W_CacheLumpNameT("M_SKILL", PU_CACHE))
 }
 
 func M_NewGame(choice int32) {
 	if netgame != 0 && demoplayback == 0 {
-		M_StartMessage(__ccgo_ts_str(22564), nil, 0)
+		M_StartMessage("you can't start a new game\nwhile in a network game.\n\npress a key.", nil, 0)
 		return
 	}
 	// Chex Quest disabled the episode select screen, as did Doom II.
@@ -20527,7 +20527,7 @@ func M_NewGame(choice int32) {
 }
 
 func M_DrawEpisode() {
-	V_DrawPatchDirect(54, 38, W_CacheLumpNameT(__ccgo_ts_str(22630), PU_CACHE))
+	V_DrawPatchDirect(54, 38, W_CacheLumpNameT("M_EPISOD", PU_CACHE))
 }
 
 func M_VerifyNightmare(key int32) {
@@ -20540,7 +20540,7 @@ func M_VerifyNightmare(key int32) {
 
 func M_ChooseSkill(choice int32) {
 	if skill_t(choice) == sk_nightmare {
-		M_StartMessage(__ccgo_ts_str(22639), M_VerifyNightmare, 1)
+		M_StartMessage("are you sure? this skill level\nisn't even remotely fair.\n\npress y or n.", M_VerifyNightmare, 1)
 		return
 	}
 	G_DeferedInitNew(skill_t(choice), epi+int32(1), 1)
@@ -20549,13 +20549,13 @@ func M_ChooseSkill(choice int32) {
 
 func M_Episode(choice int32) {
 	if gamemode == shareware && choice != 0 {
-		M_StartMessage(__ccgo_ts_str(22711), nil, 0)
+		M_StartMessage("this is the shareware version of doom.\n\nyou need to order the entire trilogy.\n\npress a key.", nil, 0)
 		M_SetupNextMenu(&ReadDef1)
 		return
 	}
 	// Yet another hack...
 	if gamemode == registered && choice > 2 {
-		fprintf_ccgo(os.Stderr, __ccgo_ts_str(22803))
+		fprintf_ccgo(os.Stderr, "M_Episode: 4th episode requires UltimateDOOM\n")
 		choice = 0
 	}
 	epi = choice
@@ -20568,16 +20568,16 @@ func M_Episode(choice int32) {
 //	// M_Options
 //	//
 var detailNames = [2]string{
-	0: __ccgo_ts_str(22849),
-	1: __ccgo_ts_str(22858),
+	0: "M_GDHIGH",
+	1: "M_GDLOW",
 }
 var msgNames = [2]string{
-	0: __ccgo_ts_str(22866),
-	1: __ccgo_ts_str(22875),
+	0: "M_MSGOFF",
+	1: "M_MSGON",
 }
 
 func M_DrawOptions() {
-	V_DrawPatchDirect(108, 15, W_CacheLumpNameT(__ccgo_ts_str(22883), PU_CACHE))
+	V_DrawPatchDirect(108, 15, W_CacheLumpNameT("M_OPTTTL", PU_CACHE))
 	V_DrawPatchDirect(int32(OptionsDef.Fx)+int32(175), int32(OptionsDef.Fy)+LINEHEIGHT*int32(detail), W_CacheLumpNameT(detailNames[detailLevel], PU_CACHE))
 	V_DrawPatchDirect(int32(OptionsDef.Fx)+int32(120), int32(OptionsDef.Fy)+LINEHEIGHT*int32(messages), W_CacheLumpNameT(msgNames[showMessages], PU_CACHE))
 	M_DrawThermo(int32(OptionsDef.Fx), int32(OptionsDef.Fy)+LINEHEIGHT*(int32(mousesens)+1), 10, mouseSensitivity)
@@ -20596,9 +20596,9 @@ func M_Options(choice int32) {
 func M_ChangeMessages(choice int32) {
 	showMessages = 1 - showMessages
 	if showMessages == 0 {
-		players[consoleplayer].Fmessage = __ccgo_ts_str(22892)
+		players[consoleplayer].Fmessage = "Messages OFF"
 	} else {
-		players[consoleplayer].Fmessage = __ccgo_ts_str(22905)
+		players[consoleplayer].Fmessage = "Messages ON"
 	}
 	message_dontfuckwithme = 1
 }
@@ -20623,10 +20623,10 @@ func M_EndGame(choice int32) {
 		return
 	}
 	if netgame != 0 {
-		M_StartMessage(__ccgo_ts_str(22917), nil, 0)
+		M_StartMessage("you can't end a netgame!\n\npress a key.", nil, 0)
 		return
 	}
-	M_StartMessage(__ccgo_ts_str(22956), M_EndGameResponse, 1)
+	M_StartMessage("are you sure you want to end the game?\n\npress y or n.", M_EndGameResponse, 1)
 }
 
 // C documentation
@@ -20716,7 +20716,7 @@ func M_SelectEndMessage() string {
 }
 
 func M_QuitDOOM(choice int32) {
-	endstring = fmt.Sprintf(__ccgo_ts_str(23010), M_SelectEndMessage())
+	endstring = fmt.Sprintf("%s\n\n(press y to quit to dos.)", M_SelectEndMessage())
 	M_StartMessage(endstring, M_QuitResponse, 1)
 }
 
@@ -20739,9 +20739,9 @@ func M_ChangeDetail(choice int32) {
 	detailLevel = 1 - detailLevel
 	R_SetViewSize(screenblocks, detailLevel)
 	if detailLevel == 0 {
-		players[consoleplayer].Fmessage = __ccgo_ts_str(23040)
+		players[consoleplayer].Fmessage = "High detail"
 	} else {
-		players[consoleplayer].Fmessage = __ccgo_ts_str(23052)
+		players[consoleplayer].Fmessage = "Low detail"
 	}
 }
 
@@ -20770,22 +20770,22 @@ func M_SizeDisplay(choice int32) {
 func M_DrawThermo(x int32, y int32, thermWidth int32, thermDot int32) {
 	var i, xx int32
 	xx = x
-	V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts_str(23063), PU_CACHE))
+	V_DrawPatchDirect(xx, y, W_CacheLumpNameT("M_THERML", PU_CACHE))
 	xx += 8
 	i = 0
 	for {
 		if i >= thermWidth {
 			break
 		}
-		V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts_str(23072), PU_CACHE))
+		V_DrawPatchDirect(xx, y, W_CacheLumpNameT("M_THERMM", PU_CACHE))
 		xx += 8
 		goto _1
 	_1:
 		;
 		i++
 	}
-	V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts_str(23081), PU_CACHE))
-	V_DrawPatchDirect(x+int32(8)+thermDot*int32(8), y, W_CacheLumpNameT(__ccgo_ts_str(23090), PU_CACHE))
+	V_DrawPatchDirect(xx, y, W_CacheLumpNameT("M_THERMR", PU_CACHE))
+	V_DrawPatchDirect(x+int32(8)+thermDot*int32(8), y, W_CacheLumpNameT("M_THERMO", PU_CACHE))
 }
 
 func M_StartMessage(string1 string, routine func(int32), input boolean) {
@@ -21130,7 +21130,7 @@ func M_Responder(ev *event_t) (r boolean) {
 																usegamma = 0
 															}
 															players[consoleplayer].Fmessage = gammamsg[usegamma]
-															I_SetPalette(W_CacheLumpName(__ccgo_ts_str(1490), PU_CACHE))
+															I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE))
 															return 1
 														}
 													}
@@ -21501,7 +21501,7 @@ func M_WriteFile(name string, source []byte) (r boolean) {
 // The returned value must be freed with Z_Free after use.
 
 func M_TempFile(s string) string {
-	return __ccgo_ts_str(23139) + __ccgo_ts_str(1252) + s
+	return "/tmp" + "/" + s
 }
 
 func M_ExtractFileBase(path string, dest []byte) {
@@ -22201,7 +22201,7 @@ func EV_DoLockedDoor(line *line_t, type1 vldoor_e, thing *mobj_t) (r int32) {
 			return 0
 		}
 		if p.Fcards[it_bluecard] == 0 && p.Fcards[it_blueskull] == 0 {
-			p.Fmessage = __ccgo_ts_str(23343)
+			p.Fmessage = "You need a blue key to activate this object"
 			S_StartSound(nil, int32(sfx_oof))
 			return 0
 		}
@@ -22212,7 +22212,7 @@ func EV_DoLockedDoor(line *line_t, type1 vldoor_e, thing *mobj_t) (r int32) {
 			return 0
 		}
 		if p.Fcards[it_redcard] == 0 && p.Fcards[it_redskull] == 0 {
-			p.Fmessage = __ccgo_ts_str(23387)
+			p.Fmessage = "You need a red key to activate this object"
 			S_StartSound(nil, int32(sfx_oof))
 			return 0
 		}
@@ -22223,7 +22223,7 @@ func EV_DoLockedDoor(line *line_t, type1 vldoor_e, thing *mobj_t) (r int32) {
 			return 0
 		}
 		if p.Fcards[it_yellowcard] == 0 && p.Fcards[it_yellowskull] == 0 {
-			p.Fmessage = __ccgo_ts_str(23430)
+			p.Fmessage = "You need a yellow key to activate this object"
 			S_StartSound(nil, int32(sfx_oof))
 			return 0
 		}
@@ -22318,7 +22318,7 @@ func EV_VerticalDoor(line *line_t, thing *mobj_t) {
 			return
 		}
 		if player.Fcards[it_bluecard] == 0 && player.Fcards[it_blueskull] == 0 {
-			player.Fmessage = __ccgo_ts_str(23476)
+			player.Fmessage = "You need a blue key to open this door"
 			S_StartSound(nil, int32(sfx_oof))
 			return
 		}
@@ -22329,7 +22329,7 @@ func EV_VerticalDoor(line *line_t, thing *mobj_t) {
 			return
 		}
 		if player.Fcards[it_yellowcard] == 0 && player.Fcards[it_yellowskull] == 0 {
-			player.Fmessage = __ccgo_ts_str(23514)
+			player.Fmessage = "You need a yellow key to open this door"
 			S_StartSound(nil, int32(sfx_oof))
 			return
 		}
@@ -22340,7 +22340,7 @@ func EV_VerticalDoor(line *line_t, thing *mobj_t) {
 			return
 		}
 		if player.Fcards[it_redcard] == 0 && player.Fcards[it_redskull] == 0 {
-			player.Fmessage = __ccgo_ts_str(23554)
+			player.Fmessage = "You need a red key to open this door"
 			S_StartSound(nil, int32(sfx_oof))
 			return
 		}
@@ -22377,7 +22377,7 @@ func EV_VerticalDoor(line *line_t, thing *mobj_t) {
 						platP.Fwait = -1
 					} else {
 						// This isn't a door OR a plat.  Now we're in trouble.
-						fprintf_ccgo(os.Stderr, __ccgo_ts_str(23591))
+						fprintf_ccgo(os.Stderr, "EV_VerticalDoor: Tried to close something that wasn't a door.\n")
 						// Try closing it anyway. At least it will work on 32-bit
 						// machines.
 						doorP.Fdirection = -1
@@ -22716,7 +22716,7 @@ func P_Move(actor *mobj_t) (r boolean) {
 		return 0
 	}
 	if uint32(actor.Fmovedir) >= 8 {
-		I_Error(__ccgo_ts_str(23654), 0)
+		I_Error("Weird actor->movedir!", 0)
 	}
 	tryx = actor.Fx + actor.Finfo.Fspeed*xspeed[actor.Fmovedir]
 	tryy = actor.Fy + actor.Finfo.Fspeed*yspeed[actor.Fmovedir]
@@ -22789,7 +22789,7 @@ func P_NewChaseDir(actor *mobj_t) {
 	var olddir, turnaround dirtype_t
 	var tdir int32
 	if actor.Ftarget == nil {
-		I_Error(__ccgo_ts_str(23676), 0)
+		I_Error("P_NewChaseDir: called with no target", 0)
 	}
 	olddir = actor.Fmovedir
 	turnaround = opposite[olddir]
@@ -24614,7 +24614,7 @@ func P_GiveAmmo(player *player_t, ammo ammotype_t, num int32) (r boolean) {
 		return 0
 	}
 	if ammo > NUMAMMO {
-		I_Error(__ccgo_ts_str(23713), ammo)
+		I_Error("P_GiveAmmo: bad type %d", ammo)
 	}
 	if player.Fammo[ammo] == player.Fmaxammo[ammo] {
 		return 0
@@ -24836,12 +24836,12 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		if P_GiveArmor(player, DEH_DEFAULT_GREEN_ARMOR_CLASS) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(23737)
+		player.Fmessage = "Picked up the armor."
 	case SPR_ARM2:
 		if P_GiveArmor(player, DEH_DEFAULT_BLUE_ARMOR_CLASS) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(23758)
+		player.Fmessage = "Picked up the MegaArmor!"
 		break
 		// bonus items
 		fallthrough
@@ -24851,7 +24851,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 			player.Fhealth = DEH_DEFAULT_MAX_HEALTH
 		}
 		player.Fmo.Fhealth = player.Fhealth
-		player.Fmessage = __ccgo_ts_str(23783)
+		player.Fmessage = "Picked up a health bonus."
 	case SPR_BON2:
 		player.Farmorpoints++ // can go over 100%
 		if player.Farmorpoints > DEH_DEFAULT_MAX_ARMOR {
@@ -24862,14 +24862,14 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		if player.Farmortype == 0 {
 			player.Farmortype = 1
 		}
-		player.Fmessage = __ccgo_ts_str(23809)
+		player.Fmessage = "Picked up an armor bonus."
 	case SPR_SOUL:
 		player.Fhealth += DEH_DEFAULT_SOULSPHERE_HEALTH
 		if player.Fhealth > DEH_DEFAULT_MAX_SOULSPHERE {
 			player.Fhealth = DEH_DEFAULT_MAX_SOULSPHERE
 		}
 		player.Fmo.Fhealth = player.Fhealth
-		player.Fmessage = __ccgo_ts_str(23835)
+		player.Fmessage = "Supercharge!"
 		sound = int32(sfx_getpow)
 	case SPR_MEGA:
 		if gamemode != commercial {
@@ -24880,7 +24880,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		// We always give armor type 2 for the megasphere; dehacked only
 		// affects the MegaArmor.
 		P_GiveArmor(player, 2)
-		player.Fmessage = __ccgo_ts_str(23848)
+		player.Fmessage = "MegaSphere!"
 		sound = int32(sfx_getpow)
 		break
 		// cards
@@ -24888,7 +24888,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		fallthrough
 	case SPR_BKEY:
 		if player.Fcards[it_bluecard] == 0 {
-			player.Fmessage = __ccgo_ts_str(23860)
+			player.Fmessage = "Picked up a blue keycard."
 		}
 		P_GiveCard(player, it_bluecard)
 		if netgame == 0 {
@@ -24897,7 +24897,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		return
 	case SPR_YKEY:
 		if player.Fcards[it_yellowcard] == 0 {
-			player.Fmessage = __ccgo_ts_str(23886)
+			player.Fmessage = "Picked up a yellow keycard."
 		}
 		P_GiveCard(player, it_yellowcard)
 		if netgame == 0 {
@@ -24906,7 +24906,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		return
 	case SPR_RKEY:
 		if player.Fcards[it_redcard] == 0 {
-			player.Fmessage = __ccgo_ts_str(23914)
+			player.Fmessage = "Picked up a red keycard."
 		}
 		P_GiveCard(player, it_redcard)
 		if netgame == 0 {
@@ -24915,7 +24915,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		return
 	case SPR_BSKU:
 		if player.Fcards[it_blueskull] == 0 {
-			player.Fmessage = __ccgo_ts_str(23939)
+			player.Fmessage = "Picked up a blue skull key."
 		}
 		P_GiveCard(player, it_blueskull)
 		if netgame == 0 {
@@ -24924,7 +24924,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		return
 	case SPR_YSKU:
 		if player.Fcards[it_yellowskull] == 0 {
-			player.Fmessage = __ccgo_ts_str(23967)
+			player.Fmessage = "Picked up a yellow skull key."
 		}
 		P_GiveCard(player, it_yellowskull)
 		if netgame == 0 {
@@ -24933,7 +24933,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		return
 	case SPR_RSKU:
 		if player.Fcards[it_redskull] == 0 {
-			player.Fmessage = __ccgo_ts_str(23997)
+			player.Fmessage = "Picked up a red skull key."
 		}
 		P_GiveCard(player, it_redskull)
 		if netgame == 0 {
@@ -24946,15 +24946,15 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		if P_GiveBody(player, 10) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24024)
+		player.Fmessage = "Picked up a stimpack."
 	case SPR_MEDI:
 		if P_GiveBody(player, 25) == 0 {
 			return
 		}
 		if player.Fhealth < 25 {
-			player.Fmessage = __ccgo_ts_str(24046)
+			player.Fmessage = "Picked up a medikit that you REALLY need!"
 		} else {
-			player.Fmessage = __ccgo_ts_str(24088)
+			player.Fmessage = "Picked up a medikit."
 		}
 		break
 		// power ups
@@ -24963,13 +24963,13 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		if P_GivePower(player, int32(pw_invulnerability)) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24109)
+		player.Fmessage = "Invulnerability!"
 		sound = int32(sfx_getpow)
 	case SPR_PSTR:
 		if P_GivePower(player, int32(pw_strength)) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24126)
+		player.Fmessage = "Berserk!"
 		if player.Freadyweapon != wp_fist {
 			player.Fpendingweapon = wp_fist
 		}
@@ -24978,25 +24978,25 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		if P_GivePower(player, int32(pw_invisibility)) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24135)
+		player.Fmessage = "Partial Invisibility"
 		sound = int32(sfx_getpow)
 	case SPR_SUIT:
 		if P_GivePower(player, int32(pw_ironfeet)) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24156)
+		player.Fmessage = "Radiation Shielding Suit"
 		sound = int32(sfx_getpow)
 	case SPR_PMAP:
 		if P_GivePower(player, int32(pw_allmap)) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24181)
+		player.Fmessage = "Computer Area Map"
 		sound = int32(sfx_getpow)
 	case SPR_PVIS:
 		if P_GivePower(player, int32(pw_infrared)) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24199)
+		player.Fmessage = "Light Amplification Visor"
 		sound = int32(sfx_getpow)
 		break
 		// ammo
@@ -25011,42 +25011,42 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 				return
 			}
 		}
-		player.Fmessage = __ccgo_ts_str(24225)
+		player.Fmessage = "Picked up a clip."
 	case SPR_AMMO:
 		if P_GiveAmmo(player, am_clip, 5) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24243)
+		player.Fmessage = "Picked up a box of bullets."
 	case SPR_ROCK:
 		if P_GiveAmmo(player, am_misl, 1) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24271)
+		player.Fmessage = "Picked up a rocket."
 	case SPR_BROK:
 		if P_GiveAmmo(player, am_misl, 5) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24291)
+		player.Fmessage = "Picked up a box of rockets."
 	case SPR_CELL:
 		if P_GiveAmmo(player, am_cell, 1) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24319)
+		player.Fmessage = "Picked up an energy cell."
 	case SPR_CELP:
 		if P_GiveAmmo(player, am_cell, 5) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24345)
+		player.Fmessage = "Picked up an energy cell pack."
 	case SPR_SHEL:
 		if P_GiveAmmo(player, am_shell, 1) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24376)
+		player.Fmessage = "Picked up 4 shotgun shells."
 	case SPR_SBOX:
 		if P_GiveAmmo(player, am_shell, 5) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24404)
+		player.Fmessage = "Picked up a box of shotgun shells."
 	case SPR_BPAK:
 		if player.Fbackpack == 0 {
 			i = 0
@@ -25073,7 +25073,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 			;
 			i++
 		}
-		player.Fmessage = __ccgo_ts_str(24439)
+		player.Fmessage = "Picked up a backpack full of ammo!"
 		break
 		// weapons
 		fallthrough
@@ -25081,46 +25081,46 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		if P_GiveWeapon(player, wp_bfg, 0) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24474)
+		player.Fmessage = "You got the BFG9000!  Oh, yes."
 		sound = int32(sfx_wpnup)
 	case SPR_MGUN:
 		if P_GiveWeapon(player, wp_chaingun, booluint32(special.Fflags&MF_DROPPED != 0)) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24505)
+		player.Fmessage = "You got the chaingun!"
 		sound = int32(sfx_wpnup)
 	case SPR_CSAW:
 		if P_GiveWeapon(player, wp_chainsaw, 0) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24527)
+		player.Fmessage = "A chainsaw!  Find some meat!"
 		sound = int32(sfx_wpnup)
 	case SPR_LAUN:
 		if P_GiveWeapon(player, wp_missile, 0) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24556)
+		player.Fmessage = "You got the rocket launcher!"
 		sound = int32(sfx_wpnup)
 	case SPR_PLAS:
 		if P_GiveWeapon(player, wp_plasma, 0) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24585)
+		player.Fmessage = "You got the plasma gun!"
 		sound = int32(sfx_wpnup)
 	case SPR_SHOT:
 		if P_GiveWeapon(player, wp_shotgun, booluint32(special.Fflags&MF_DROPPED != 0)) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24609)
+		player.Fmessage = "You got the shotgun!"
 		sound = int32(sfx_wpnup)
 	case SPR_SGN2:
 		if P_GiveWeapon(player, wp_supershotgun, booluint32(special.Fflags&MF_DROPPED != 0)) == 0 {
 			return
 		}
-		player.Fmessage = __ccgo_ts_str(24630)
+		player.Fmessage = "You got the super shotgun!"
 		sound = int32(sfx_wpnup)
 	default:
-		I_Error(__ccgo_ts_str(24657), 0)
+		I_Error("P_SpecialThing: Unknown gettable thing", 0)
 	}
 	if special.Fflags&MF_COUNTITEM != 0 {
 		player.Fitemcount++
@@ -26135,7 +26135,7 @@ func P_HitSlideLine(ld *line_t) {
 func PTR_SlideTraverse(in *intercept_t) (r boolean) {
 	var li *line_t
 	if in.Fisaline == 0 {
-		I_Error(__ccgo_ts_str(24696), 0)
+		I_Error("PTR_SlideTraverse: not a line?", 0)
 	}
 	li = in.Fd.Fthing.(*line_t)
 	if int32(li.Fflags)&ML_TWOSIDED == 0 {
@@ -26693,7 +26693,7 @@ func SpechitOverrun(ld *line_t) {
 		//
 		// Use the specified magic value when emulating spechit overruns.
 		//
-		p = M_CheckParmWithArgs(__ccgo_ts_str(24727), 1)
+		p = M_CheckParmWithArgs("-spechit", 1)
 		if p > 0 {
 			v, _ := strconv.Atoi(myargs[p+1])
 			baseaddr = int32(v)
@@ -26717,7 +26717,7 @@ func SpechitOverrun(ld *line_t) {
 	case 14:
 		nofit = boolean(addr)
 	default:
-		fprintf_ccgo(os.Stderr, __ccgo_ts_str(24736), numspechit)
+		fprintf_ccgo(os.Stderr, "SpechitOverrun: Warning: unable to emulatean overrun where numspechit=%d\n", numspechit)
 		break
 	}
 }
@@ -28086,7 +28086,7 @@ func P_SpawnMapThing(mthing *mapthing_t) {
 		i++
 	}
 	if i == NUMMOBJTYPES {
-		I_Error(__ccgo_ts_str(24810), int32(mthing.Ftype1), int32(mthing.Fx), int32(mthing.Fy))
+		I_Error("P_SpawnMapThing: Unknown type %d at (%d, %d)", int32(mthing.Ftype1), int32(mthing.Fx), int32(mthing.Fy))
 	}
 	// don't spawn keycards and players in deathmatch
 	if deathmatch != 0 && mobjinfo[i].Fflags&MF_NOTDMATCH != 0 {
@@ -28482,7 +28482,7 @@ func P_AddActivePlat(plat *plat_t) {
 		;
 		i++
 	}
-	I_Error(__ccgo_ts_str(24855), 0)
+	I_Error("P_AddActivePlat: no more plats!", 0)
 }
 
 func P_RemoveActivePlat(plat *plat_t) {
@@ -28503,7 +28503,7 @@ func P_RemoveActivePlat(plat *plat_t) {
 		;
 		i++
 	}
-	I_Error(__ccgo_ts_str(24887), 0)
+	I_Error("P_RemoveActivePlat: can't find plat!", 0)
 }
 
 const ANG1807 = 2147483648
@@ -29189,7 +29189,7 @@ const SAVEGAME_EOF = 29
 
 func P_TempSaveGameFile() string {
 	if filename == "" {
-		filename = savegamedir + __ccgo_ts_str(24924)
+		filename = savegamedir + "temp.dsg"
 	}
 	return filename
 }
@@ -29208,7 +29208,7 @@ func saveg_read8() (r uint8) {
 	var val [1]byte
 	if _, err := save_stream.Read(val[:]); err != nil {
 		if savegame_error == 0 {
-			fprintf_ccgo(os.Stderr, __ccgo_ts_str(24952))
+			fprintf_ccgo(os.Stderr, "saveg_read8: Unexpected end of file while reading save game\n")
 			savegame_error = 1
 		}
 	}
@@ -29219,7 +29219,7 @@ func saveg_write8(_value uint8) {
 	val := [1]byte{_value}
 	if _, err := save_stream.Write(val[:]); err != nil {
 		if savegame_error == 0 {
-			fprintf_ccgo(os.Stderr, __ccgo_ts_str(25013))
+			fprintf_ccgo(os.Stderr, "saveg_write8: Error while writing save game\n")
 			savegame_error = 1
 		}
 	}
@@ -30178,7 +30178,7 @@ func P_WriteSaveGameHeader(description string) {
 			saveg_write8(0)
 		}
 	}
-	bp := fmt.Sprintf(__ccgo_ts_str(25058), G_VanillaVersionCode())
+	bp := fmt.Sprintf("version %d", G_VanillaVersionCode())
 	i = 0
 	for {
 		if i >= VERSIONSIZE {
@@ -30238,7 +30238,7 @@ func P_ReadSaveGameHeader() (r boolean) {
 		bp[i] = saveg_read8()
 		i++
 	}
-	vanilla := fmt.Sprintf(__ccgo_ts_str(25058), G_VanillaVersionCode())
+	vanilla := fmt.Sprintf("version %d", G_VanillaVersionCode())
 	if vanilla != gostring_bytes(bp[:]) {
 		return 0
 	} // bad version
@@ -30475,7 +30475,7 @@ func P_UnArchiveThinkers() {
 			mobj.Fthinker.Ffunction.Facv = __ccgo_fp(P_MobjThinker)
 			P_AddThinker(&mobj.Fthinker)
 		default:
-			I_Error(__ccgo_ts_str(25069), tclass)
+			I_Error("Unknown tclass %d in savegame", tclass)
 		}
 	}
 }
@@ -30649,7 +30649,7 @@ func P_UnArchiveSpecials() {
 			glowP.Fthinker.Ffunction.Facv = __ccgo_fp(T_Glow)
 			P_AddThinker(&glowP.Fthinker)
 		default:
-			I_Error(__ccgo_ts_str(25099), tclass)
+			I_Error("P_UnarchiveSpecials:Unknown tclass %d in savegame", tclass)
 		}
 	}
 }
@@ -31155,9 +31155,9 @@ func PadRejectArray(array uintptr, len1 uint32) {
 	// We only have a limited pad size.  Print a warning if the
 	// REJECT lump is too small.
 	if uint64(len1) > 16 {
-		fprintf_ccgo(os.Stderr, __ccgo_ts_str(25149), len1, 16)
+		fprintf_ccgo(os.Stderr, "PadRejectArray: REJECT lump too short to pad! (%d > %d)\n", len1, 16)
 		// Pad remaining space with 0 (or 0xff, if specified on command line).
-		if M_CheckParm(__ccgo_ts_str(25206)) != 0 {
+		if M_CheckParm("-reject_pad_with_ff") != 0 {
 			padvalue = 0xff
 		} else {
 			padvalue = 0x00
@@ -31225,9 +31225,9 @@ func P_SetupLevel(episode int32, map1 int32, playermask int32, skill skill_t) {
 	var bp string
 	if gamemode == commercial {
 		if map1 < 10 {
-			bp = fmt.Sprintf(__ccgo_ts_str(25226), map1)
+			bp = fmt.Sprintf("map0%d", map1)
 		} else {
-			bp = fmt.Sprintf(__ccgo_ts_str(25233), map1)
+			bp = fmt.Sprintf("map%d", map1)
 		}
 	} else {
 		bp = string([]byte{'E', '0' + byte(episode), 'M', '0' + byte(map1)})
@@ -31367,7 +31367,7 @@ func P_CrossSubsector(num int32) (r boolean) {
 	var count, s1, s2 int32
 	var frac, openbottom, opentop, slope fixed_t
 	if num >= numsubsectors {
-		I_Error(__ccgo_ts_str(25239), num, numsubsectors)
+		I_Error("P_CrossSubsector: ss %d with numss = %d", num, numsubsectors)
 	}
 	sub := &subsectors[num]
 	// check lines
@@ -31765,7 +31765,7 @@ func P_InitPicAnims() {
 		lastanim.Fistexture = uint32(animdefs[i].Fistexture)
 		lastanim.Fnumpics = lastanim.Fpicnum - lastanim.Fbasepic + 1
 		if lastanim.Fnumpics < 2 {
-			I_Error(__ccgo_ts_str(25279), startname, endname)
+			I_Error("P_InitPicAnims: bad cycle from %s to %s", startname, endname)
 		}
 		lastanim.Fspeed = animdefs[i].Fspeed
 		animPos++
@@ -31933,7 +31933,7 @@ func P_FindNextHighestFloor(sec *sector_t, currentheight int32) (r fixed_t) {
 			} else {
 				if h == MAX_ADJOINING_SECTORS+2 {
 					// Fatal overflow: game crashes at 22 textures
-					I_Error(__ccgo_ts_str(25319), 0)
+					I_Error("Sector with more than 22 adjoining sectors. Vanilla will crash here", 0)
 				}
 			}
 			v2 = h
@@ -32507,7 +32507,7 @@ func P_PlayerInSpecialSector(player *player_t) {
 			G_ExitLevel()
 		}
 	default:
-		I_Error(__ccgo_ts_str(25387), int32(sector.Fspecial))
+		I_Error("P_PlayerInSpecialSector: unknown special %d", int32(sector.Fspecial))
 		break
 	}
 }
@@ -32613,7 +32613,7 @@ func DonutOverrun(s3_floorheight uintptr, s3_floorpic uintptr, line *line_t, pil
 		// In Vanilla Doom this can differ depending on the operating
 		// system.  The default (if this option is not specified) is to
 		// emulate the behavior when running under Windows 98.
-		p = M_CheckParmWithArgs(__ccgo_ts_str(25431), 2)
+		p = M_CheckParmWithArgs("-donut", 2)
 		if p > 0 {
 			// Dump of needed memory: (fixed_t)0000:0000 and (short)0000:0008
 			//
@@ -32633,7 +32633,7 @@ func DonutOverrun(s3_floorheight uintptr, s3_floorpic uintptr, line *line_t, pil
 			v, _ = strconv.Atoi(myargs[p+2])
 			tmp_s3_floorpic = int32(v)
 			if tmp_s3_floorpic >= numflats {
-				fprintf_ccgo(os.Stderr, __ccgo_ts_str(25438), numflats, DONUT_FLOORPIC_DEFAULT)
+				fprintf_ccgo(os.Stderr, "DonutOverrun: The second parameter for \"-donut\" switch should be greater than 0 and less than number of flats (%d). Using default value (%d) instead. \n", numflats, DONUT_FLOORPIC_DEFAULT)
 				tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT
 			}
 		}
@@ -32688,7 +32688,7 @@ func EV_DoDonut(line *line_t) (r int32) {
 		// isn't something that should be done, anyway.
 		// Just print a warning and return.
 		if s2 == nil {
-			fprintf_ccgo(os.Stderr, __ccgo_ts_str(25590))
+			fprintf_ccgo(os.Stderr, "EV_DoDonut: linedef had no second sidedef! Unexpected behavior may occur in Vanilla Doom. \n")
 			break
 		}
 		for i := int32(0); i < s2.Flinecount; i++ {
@@ -32702,7 +32702,7 @@ func EV_DoDonut(line *line_t) (r int32) {
 				// s3->floorheight is an int at 0000:0000
 				// s3->floorpic is a short at 0000:0008
 				// Trying to emulate
-				fprintf_ccgo(os.Stderr, __ccgo_ts_str(25682))
+				fprintf_ccgo(os.Stderr, "EV_DoDonut: WARNING: emulating buffer overrun due to NULL back sector. Unexpected behavior may occur in Vanilla Doom.\n")
 				DonutOverrun(bp, bp+4, line, s1)
 			} else {
 				*(*fixed_t)(unsafe.Pointer(bp)) = s3.Ffloorheight
@@ -32811,7 +32811,7 @@ func P_SpawnSpecials() {
 		switch int32(lines[i].Fspecial) {
 		case 48:
 			if int32(numlinespecials) >= MAXLINEANIMS {
-				I_Error(__ccgo_ts_str(25801), 0)
+				I_Error("Too many scrolling wall linedefs! (Vanilla limit is 64)", 0)
 			}
 			// EFFECT FIRSTCOL SCROLL+
 			linespeciallist[numlinespecials] = &lines[i]
@@ -33120,7 +33120,7 @@ func P_StartButton(line *line_t, w bwhere_e, texture int32, time int32) {
 		;
 		i++
 	}
-	I_Error(__ccgo_ts_str(25857), 0)
+	I_Error("P_StartButton: no button slots left!", 0)
 }
 
 // C documentation
@@ -34378,7 +34378,7 @@ func R_CheckBBox(bspcoord *box_t) (r boolean) {
 func R_Subsector(num int32) {
 	var count, v1 int32
 	if num >= numsubsectors {
-		I_Error(__ccgo_ts_str(25894), num, numsubsectors)
+		I_Error("R_Subsector: ss %d with numss = %d", num, numsubsectors)
 	}
 	sub := &subsectors[num]
 	frontsector = sub.Fsector
@@ -34613,7 +34613,7 @@ func R_GenerateComposite(texnum int32) {
 	}
 	// Now that the texture has been built in column cache,
 	//  it is purgable from zone memory.
-	Z_ChangeTag2(block, PU_CACHE, __ccgo_ts_str(25929), 286)
+	Z_ChangeTag2(block, PU_CACHE, "r_data.c", 286)
 }
 
 // C documentation
@@ -34678,7 +34678,7 @@ func R_GenerateLookup(texnum int32) {
 			break
 		}
 		if widths[x] == 0 {
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(25938), texture)
+			fprintf_ccgo(os.Stdout, "R_GenerateLookup: column without a patch (%s)\n", texture)
 			return
 		}
 		// I_Error ("R_GenerateLookup: column without a patch");
@@ -34687,7 +34687,7 @@ func R_GenerateLookup(texnum int32) {
 			collump[x] = -1
 			colofs[x] = uint16(texturecompositesize[texnum])
 			if texturecompositesize[texnum] > 0x10000-int32(texture.Fheight) {
-				I_Error(__ccgo_ts_str(25985), texnum)
+				I_Error("R_GenerateLookup: texture %d is >64k", texnum)
 			}
 			texturecompositesize[texnum] += int32(texture.Fheight)
 		}
@@ -34760,7 +34760,7 @@ func R_InitTextures() {
 	var directory, maptex, maptex2, mpatch, name_p, names, v2 uintptr
 	var i, j, maxoff, maxoff2, nummappatches, numtextures1, numtextures2, offset, temp1, temp2, temp3, totalwidth int32
 	// Load the patch names from pnames.lmp.
-	names = W_CacheLumpName(__ccgo_ts_str(26022), PU_STATIC)
+	names = W_CacheLumpName("PNAMES", PU_STATIC)
 	nummappatches = *(*int32)(unsafe.Pointer(names))
 	name_p = names + uintptr(4)
 	patchlookup := make([]int32, nummappatches)
@@ -34775,19 +34775,19 @@ func R_InitTextures() {
 		;
 		i++
 	}
-	W_ReleaseLumpName(__ccgo_ts_str(26022))
+	W_ReleaseLumpName("PNAMES")
 	// Load the map texture definitions from textures.lmp.
 	// The data is contained in one or two lumps,
 	//  TEXTURE1 for shareware, plus TEXTURE2 for commercial.
-	v2 = W_CacheLumpName(__ccgo_ts_str(26029), PU_STATIC)
+	v2 = W_CacheLumpName("TEXTURE1", PU_STATIC)
 	maptex = v2
 	numtextures1 = *(*int32)(unsafe.Pointer(maptex))
-	maxoff = W_LumpLength(uint32(W_GetNumForName(__ccgo_ts_str(26029))))
+	maxoff = W_LumpLength(uint32(W_GetNumForName("TEXTURE1")))
 	directory = maptex + uintptr(1)*4
-	if W_CheckNumForName(__ccgo_ts_str(26038)) != -1 {
-		maptex2 = W_CacheLumpName(__ccgo_ts_str(26038), PU_STATIC)
+	if W_CheckNumForName("TEXTURE2") != -1 {
+		maptex2 = W_CacheLumpName("TEXTURE2", PU_STATIC)
 		numtextures2 = *(*int32)(unsafe.Pointer(maptex2))
-		maxoff2 = W_LumpLength(uint32(W_GetNumForName(__ccgo_ts_str(26038))))
+		maxoff2 = W_LumpLength(uint32(W_GetNumForName("TEXTURE2")))
 	} else {
 		maptex2 = 0
 		numtextures2 = 0
@@ -34803,32 +34803,32 @@ func R_InitTextures() {
 	textureheight = make([]fixed_t, numtextures)
 	totalwidth = 0
 	//	Really complex printing shit...
-	temp1 = W_GetNumForName(__ccgo_ts_str(26047)) // P_???????
-	temp2 = W_GetNumForName(__ccgo_ts_str(26055)) - 1
+	temp1 = W_GetNumForName("S_START") // P_???????
+	temp2 = W_GetNumForName("S_END") - 1
 	temp3 = (temp2-temp1+int32(63))/int32(64) + (numtextures+int32(63))/int32(64)
 	// If stdout is a real console, use the classic vanilla "filling
 	// up the box" effect, which uses backspace to "step back" inside
 	// the box.  If stdout is a file, don't draw the box.
 	if I_ConsoleStdout() != 0 {
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(26061))
+		fprintf_ccgo(os.Stdout, "[")
 		i = 0
 		for {
 			if i >= temp3+9 {
 				break
 			}
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(26063))
+			fprintf_ccgo(os.Stdout, " ")
 			goto _3
 		_3:
 			;
 			i++
 		}
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(26065))
+		fprintf_ccgo(os.Stdout, "]")
 		i = 0
 		for {
 			if i >= temp3+int32(10) {
 				break
 			}
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(26067))
+			fprintf_ccgo(os.Stdout, "\x08")
 			goto _4
 		_4:
 			;
@@ -34841,7 +34841,7 @@ func R_InitTextures() {
 			break
 		}
 		if i&63 == 0 {
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+			fprintf_ccgo(os.Stdout, ".")
 		}
 		if i == numtextures1 {
 			// Start looking in second texture file.
@@ -34851,7 +34851,7 @@ func R_InitTextures() {
 		}
 		offset = *(*int32)(unsafe.Pointer(directory))
 		if offset > maxoff {
-			I_Error(__ccgo_ts_str(26069), 0)
+			I_Error("R_InitTextures: bad texture directory", 0)
 		}
 		mtexture := (*maptexture_t)(unsafe.Pointer(maptex + uintptr(offset)))
 		texture := &texture_t{
@@ -34873,7 +34873,7 @@ func R_InitTextures() {
 			patch.Foriginy = (*mappatch_t)(unsafe.Pointer(mpatch)).Foriginy
 			patch.Fpatch = patchlookup[(*mappatch_t)(unsafe.Pointer(mpatch)).Fpatch]
 			if patch.Fpatch == -1 {
-				I_Error(__ccgo_ts_str(26107), texture)
+				I_Error("R_InitTextures: Missing patch in texture %s", texture)
 			}
 			goto _7
 		_7:
@@ -34896,9 +34896,9 @@ func R_InitTextures() {
 		i++
 		directory += 4
 	}
-	W_ReleaseLumpName(__ccgo_ts_str(26029))
+	W_ReleaseLumpName("TEXTURE1")
 	if maptex2 != 0 {
-		W_ReleaseLumpName(__ccgo_ts_str(26038))
+		W_ReleaseLumpName("TEXTURE2")
 	}
 	// Precalculate whatever possible.
 	i = 0
@@ -34935,8 +34935,8 @@ func R_InitTextures() {
 //	//
 func R_InitFlats() {
 	var i int32
-	firstflat = W_GetNumForName(__ccgo_ts_str(26151)) + 1
-	lastflat = W_GetNumForName(__ccgo_ts_str(26159)) - 1
+	firstflat = W_GetNumForName("F_START") + 1
+	lastflat = W_GetNumForName("F_END") - 1
 	numflats = lastflat - firstflat + 1
 	// Create translation table for global animation.
 	flattranslation = make([]int32, numflats+1)
@@ -34963,8 +34963,8 @@ func R_InitFlats() {
 //	//
 func R_InitSpriteLumps() {
 	var i int32
-	firstspritelump = W_GetNumForName(__ccgo_ts_str(26047)) + 1
-	lastspritelump = W_GetNumForName(__ccgo_ts_str(26055)) - 1
+	firstspritelump = W_GetNumForName("S_START") + 1
+	lastspritelump = W_GetNumForName("S_END") - 1
 	numspritelumps = lastspritelump - firstspritelump + 1
 	spritewidth = make([]fixed_t, numspritelumps)
 	spriteoffset = make([]fixed_t, numspritelumps)
@@ -34975,7 +34975,7 @@ func R_InitSpriteLumps() {
 			break
 		}
 		if i&63 == 0 {
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+			fprintf_ccgo(os.Stdout, ".")
 		}
 		patch := W_CacheLumpNumT[*patch_t](firstspritelump+i, PU_CACHE)
 		spritewidth[i] = int32(patch.Fwidth) << FRACBITS
@@ -34999,7 +34999,7 @@ func R_InitColormaps() {
 	var data uintptr
 	// Load in the light tables,
 	//  256 byte align tables.
-	lump = W_GetNumForName(__ccgo_ts_str(26165))
+	lump = W_GetNumForName("COLORMAP")
 	size = W_LumpLength(uint32(lump))
 	data = W_CacheLumpNum(lump, PU_STATIC)
 	colormaps = unsafe.Slice((*lighttable_t)(unsafe.Pointer(data)), size)
@@ -35015,11 +35015,11 @@ func R_InitColormaps() {
 //	//
 func R_InitData() {
 	R_InitTextures()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+	fprintf_ccgo(os.Stdout, ".")
 	R_InitFlats()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+	fprintf_ccgo(os.Stdout, ".")
 	R_InitSpriteLumps()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+	fprintf_ccgo(os.Stdout, ".")
 	R_InitColormaps()
 }
 
@@ -35033,7 +35033,7 @@ func R_FlatNumForName(name string) (r int32) {
 	var i int32
 	i = W_CheckNumForName(name)
 	if i == -1 {
-		I_Error(__ccgo_ts_str(26174), name)
+		I_Error("R_FlatNumForName: %s not found", name)
 	}
 	return i - firstflat
 }
@@ -35074,7 +35074,7 @@ func R_TextureNumForName(name string) (r int32) {
 	var i int32
 	i = R_CheckTextureNumForName(name)
 	if i == -1 {
-		I_Error(__ccgo_ts_str(26205), name)
+		I_Error("R_TextureNumForName: %s not found", name)
 	}
 	return i
 }
@@ -35244,7 +35244,7 @@ func R_DrawColumn() {
 		return
 	}
 	if uint32(dc_x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(26239), dc_yl, dc_yh, dc_x)
+		I_Error("R_DrawColumn: %d to %d at %d", dc_yl, dc_yh, dc_x)
 	}
 	// Framebuffer destination address.
 	// Use ylookup LUT to avoid multiply with ScreenWidth.
@@ -35288,7 +35288,7 @@ func R_DrawColumnLow() {
 		return
 	}
 	if uint32(dc_x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(26239), dc_yl, dc_yh, dc_x)
+		I_Error("R_DrawColumn: %d to %d at %d", dc_yl, dc_yh, dc_x)
 	}
 	//	dccount++;
 	// Blocky mode, need to multiply by 2.
@@ -35399,7 +35399,7 @@ func R_DrawFuzzColumn() {
 		return
 	}
 	if uint32(dc_x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(26268), dc_yl, dc_yh, dc_x)
+		I_Error("R_DrawFuzzColumn: %d to %d at %d", dc_yl, dc_yh, dc_x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[dc_x])
 	// Looks familiar.
@@ -35454,7 +35454,7 @@ func R_DrawFuzzColumnLow() {
 	// low detail mode, need to multiply by 2
 	x = dc_x << 1
 	if uint32(x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(26268), dc_yl, dc_yh, dc_x)
+		I_Error("R_DrawFuzzColumn: %d to %d at %d", dc_yl, dc_yh, dc_x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[x])
 	dest2 = ylookup[dc_yl] + uintptr(columnofs[x+int32(1)])
@@ -35500,7 +35500,7 @@ func R_DrawTranslatedColumn() {
 		return
 	}
 	if uint32(dc_x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(26239), dc_yl, dc_yh, dc_x)
+		I_Error("R_DrawColumn: %d to %d at %d", dc_yl, dc_yh, dc_x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[dc_x])
 	// Looks familiar.
@@ -35538,7 +35538,7 @@ func R_DrawTranslatedColumnLow() {
 	// low detail, need to scale by 2
 	x = dc_x << 1
 	if uint32(x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(26239), dc_yl, dc_yh, x)
+		I_Error("R_DrawColumn: %d to %d at %d", dc_yl, dc_yh, x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[x])
 	dest2 = ylookup[dc_yl] + uintptr(columnofs[x+int32(1)])
@@ -35613,7 +35613,7 @@ func R_DrawSpan() {
 	var dest, v3 uintptr
 	var position, step, xtemp, ytemp uint32
 	if ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= SCREENWIDTH || uint32(ds_y) > SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(26301), ds_x1, ds_x2, ds_y)
+		I_Error("R_DrawSpan: %d to %d at %d", ds_x1, ds_x2, ds_y)
 	}
 	//	dscount++;
 	// Pack position and step variables into a single 32-bit integer,
@@ -35660,7 +35660,7 @@ func R_DrawSpanLow() {
 	var dest, v3, v4 uintptr
 	var position, step, xtemp, ytemp uint32
 	if ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= SCREENWIDTH || uint32(ds_y) > SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(26301), ds_x1, ds_x2, ds_y)
+		I_Error("R_DrawSpan: %d to %d at %d", ds_x1, ds_x2, ds_y)
 	}
 	//	dscount++;
 	position = uint32(ds_xfrac<<10)&0xffff0000 | uint32(ds_yfrac>>6&0x0000ffff)
@@ -35756,9 +35756,9 @@ func R_FillBackScreen() {
 	var patch *patch_t
 	var x, y int32
 	// DOOM border patch.
-	name1 = __ccgo_ts_str(26328)
+	name1 = "FLOOR7_2"
 	// DOOM II border patch.
-	name2 = __ccgo_ts_str(26337)
+	name2 = "GRNROCK"
 	// If we are running full screen, there is no need to do any of this,
 	// and the background buffer can be freed if it was previously in use.
 	if scaledviewwidth == SCREENWIDTH {
@@ -35807,7 +35807,7 @@ func R_FillBackScreen() {
 	}
 	// Draw screen and bezel; this is done to a separate screen buffer.
 	V_UseBuffer(background_buffer)
-	patch = W_CacheLumpNameT(__ccgo_ts_str(26345), PU_CACHE)
+	patch = W_CacheLumpNameT("brdr_t", PU_CACHE)
 	x = 0
 	for {
 		if x >= scaledviewwidth {
@@ -35819,7 +35819,7 @@ func R_FillBackScreen() {
 		;
 		x += 8
 	}
-	patch = W_CacheLumpNameT(__ccgo_ts_str(26352), PU_CACHE)
+	patch = W_CacheLumpNameT("brdr_b", PU_CACHE)
 	x = 0
 	for {
 		if x >= scaledviewwidth {
@@ -35831,7 +35831,7 @@ func R_FillBackScreen() {
 		;
 		x += 8
 	}
-	patch = W_CacheLumpNameT(__ccgo_ts_str(26359), PU_CACHE)
+	patch = W_CacheLumpNameT("brdr_l", PU_CACHE)
 	y = 0
 	for {
 		if y >= viewheight {
@@ -35843,7 +35843,7 @@ func R_FillBackScreen() {
 		;
 		y += 8
 	}
-	patch = W_CacheLumpNameT(__ccgo_ts_str(26366), PU_CACHE)
+	patch = W_CacheLumpNameT("brdr_r", PU_CACHE)
 	y = 0
 	for {
 		if y >= viewheight {
@@ -35856,10 +35856,10 @@ func R_FillBackScreen() {
 		y += 8
 	}
 	// Draw beveled edge.
-	V_DrawPatch(viewwindowx-int32(8), viewwindowy-int32(8), W_CacheLumpNameT(__ccgo_ts_str(26373), PU_CACHE))
-	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy-int32(8), W_CacheLumpNameT(__ccgo_ts_str(26381), PU_CACHE))
-	V_DrawPatch(viewwindowx-int32(8), viewwindowy+viewheight, W_CacheLumpNameT(__ccgo_ts_str(26389), PU_CACHE))
-	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy+viewheight, W_CacheLumpNameT(__ccgo_ts_str(26397), PU_CACHE))
+	V_DrawPatch(viewwindowx-int32(8), viewwindowy-int32(8), W_CacheLumpNameT("brdr_tl", PU_CACHE))
+	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy-int32(8), W_CacheLumpNameT("brdr_tr", PU_CACHE))
+	V_DrawPatch(viewwindowx-int32(8), viewwindowy+viewheight, W_CacheLumpNameT("brdr_bl", PU_CACHE))
+	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy+viewheight, W_CacheLumpNameT("brdr_br", PU_CACHE))
 	V_RestoreBuffer()
 }
 
@@ -36407,20 +36407,20 @@ func R_ExecuteSetViewSize() {
 
 func R_Init() {
 	R_InitData()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+	fprintf_ccgo(os.Stdout, ".")
 	R_InitPointToAngle()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+	fprintf_ccgo(os.Stdout, ".")
 	R_InitTables()
 	// viewwidth / viewheight / detailLevel are set by the defaults
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+	fprintf_ccgo(os.Stdout, ".")
 	R_SetViewSize(screenblocks, detailLevel)
 	R_InitPlanes()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+	fprintf_ccgo(os.Stdout, ".")
 	R_InitLightTables()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+	fprintf_ccgo(os.Stdout, ".")
 	R_InitSkyMap()
 	R_InitTranslationTables()
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
+	fprintf_ccgo(os.Stdout, ".")
 }
 
 // C documentation
@@ -36534,7 +36534,7 @@ func R_MapPlane(y int32, x1 int32, x2 int32) {
 	var distance, length, v1, v2, v3 fixed_t
 	var index uint32
 	if x2 < x1 || x1 < 0 || x2 >= viewwidth || y > viewheight {
-		I_Error(__ccgo_ts_str(26405), x1, x2, y)
+		I_Error("R_MapPlane: %d, %d at %d", x1, x2, y)
 	}
 	if planeheight != cachedheight[y] {
 		cachedheight[y] = planeheight
@@ -36622,7 +36622,7 @@ func R_FindPlane(height fixed_t, picnum int32, lightlevel int32) *visplane_t {
 		}
 	}
 	if lastvisplane_index >= len(visplanes)-1 {
-		I_Error(__ccgo_ts_str(26430), 0)
+		I_Error("R_FindPlane: no more visplanes", 0)
 	}
 	check := &visplanes[lastvisplane_index]
 	check.Fheight = height
@@ -36700,13 +36700,13 @@ func R_CheckPlane(pl *visplane_t, start int32, stop int32) *visplane_t {
 func R_DrawPlanes() {
 	var angle, b1, b2, light, lumpnum, stop, t1, t2, x int32
 	if ds_index >= len(drawsegs) {
-		I_Error(__ccgo_ts_str(26461), ds_index)
+		I_Error("R_DrawPlanes: drawsegs overflow (%d)", ds_index)
 	}
 	if lastvisplane_index >= len(visplanes)-1 {
-		I_Error(__ccgo_ts_str(26498), lastvisplane_index)
+		I_Error("R_DrawPlanes: visplane overflow (%d)", lastvisplane_index)
 	}
 	if (int64(lastopening)-int64(uintptr(unsafe.Pointer(&openings))))/2 > int64(SCREENWIDTH*64) {
-		I_Error(__ccgo_ts_str(26535), (int64(lastopening)-int64(uintptr(unsafe.Pointer(&openings))))/2)
+		I_Error("R_DrawPlanes: opening overflow (%d)", (int64(lastopening)-int64(uintptr(unsafe.Pointer(&openings))))/2)
 	}
 	for i := 0; i < lastvisplane_index; i++ {
 		pl := &visplanes[i]
@@ -37070,7 +37070,7 @@ func R_StoreWallRange(start int32, stop int32) {
 		return
 	}
 	if start >= viewwidth || start > stop {
-		I_Error(__ccgo_ts_str(26571), start, stop)
+		I_Error("Bad R_RenderWallRange: %d to %d", start, stop)
 	}
 	sidedef = curline.Fsidedef
 	linedef = curline.Flinedef
@@ -37360,7 +37360,7 @@ const INT_MAX17 = 2147483647
 func R_InstallSpriteLump(spritename string, lump int32, frame uint32, rotation uint32, flipped boolean) {
 	var r int32
 	if frame >= 29 || rotation > 8 {
-		I_Error(__ccgo_ts_str(26603), lump)
+		I_Error("R_InstallSpriteLump: Bad frame characters in lump %d", lump)
 	}
 	if int32(frame) > maxframe {
 		maxframe = int32(frame)
@@ -37368,10 +37368,10 @@ func R_InstallSpriteLump(spritename string, lump int32, frame uint32, rotation u
 	if rotation == 0 {
 		// the lump should be used for all rotations
 		if sprtemp[frame].Frotate == 0 {
-			I_Error(__ccgo_ts_str(26656), spritename, 'A'+frame)
+			I_Error("R_InitSprites: Sprite %s frame %c has multip rot=0 lump", spritename, 'A'+frame)
 		}
 		if sprtemp[frame].Frotate == 1 {
-			I_Error(__ccgo_ts_str(26712), spritename, 'A'+frame)
+			I_Error("R_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump", spritename, 'A'+frame)
 		}
 		sprtemp[frame].Frotate = 0
 		r = 0
@@ -37391,13 +37391,13 @@ func R_InstallSpriteLump(spritename string, lump int32, frame uint32, rotation u
 	}
 	// the lump is only used for one rotation
 	if sprtemp[frame].Frotate == 0 {
-		I_Error(__ccgo_ts_str(26712), spritename, 'A'+frame)
+		I_Error("R_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump", spritename, 'A'+frame)
 	}
 	sprtemp[frame].Frotate = 1
 	// make 0 based
 	rotation--
 	if int32(sprtemp[frame].Flump[rotation]) != -1 {
-		I_Error(__ccgo_ts_str(26777), spritename, 'A'+frame, '1'+rotation)
+		I_Error("R_InitSprites: Sprite %s : %c : %c has two lumps mapped to it", spritename, 'A'+frame, '1'+rotation)
 	}
 	sprtemp[frame].Flump[rotation] = int16(lump - firstspritelump)
 	sprtemp[frame].Fflip[rotation] = uint8(flipped)
@@ -37490,7 +37490,7 @@ func R_InitSpriteDefs(namelist []string) {
 		_4:
 			;
 			// no rotations were found for that frame at all
-			I_Error(__ccgo_ts_str(26839), spritename, frame+'A')
+			I_Error("R_InitSprites: No patches found for %s frame %c", spritename, frame+'A')
 			goto _7
 		_5:
 			;
@@ -37506,7 +37506,7 @@ func R_InitSpriteDefs(namelist []string) {
 				goto _8
 			}
 			if int32(sprtemp[frame].Flump[rotation]) == -1 {
-				I_Error(__ccgo_ts_str(26887), spritename, frame+'A')
+				I_Error("R_InitSprites: Sprite %s frame %c is missing rotations", spritename, frame+'A')
 			}
 			goto _9
 		_9:
@@ -37643,7 +37643,7 @@ func R_DrawVisSprite(vis *vissprite_t, x1 int32, x2 int32) {
 		}
 		texturecolumn = frac >> FRACBITS
 		if texturecolumn < 0 || texturecolumn >= int32(patch.Fwidth) {
-			I_Error(__ccgo_ts_str(26942), 0)
+			I_Error("R_DrawSpriteRange: bad texturecolumn", 0)
 		}
 		R_DrawMaskedColumn(patch.GetColumn(texturecolumn))
 		goto _1
@@ -37691,11 +37691,11 @@ func R_ProjectSprite(thing *mobj_t) {
 	}
 	// decide which patch to use for sprite relative to player
 	if uint32(thing.Fsprite) >= uint32(numsprites) {
-		I_Error(__ccgo_ts_str(26979), thing.Fsprite)
+		I_Error("R_ProjectSprite: invalid sprite number %d ", thing.Fsprite)
 	}
 	sprdef = &sprites[thing.Fsprite]
 	if thing.Fframe&int32(FF_FRAMEMASK3) >= sprdef.Fnumframes {
-		I_Error(__ccgo_ts_str(27022), thing.Fsprite, thing.Fframe)
+		I_Error("R_ProjectSprite: invalid sprite frame %d : %d ", thing.Fsprite, thing.Fframe)
 	}
 	sprframe = &sprdef.Fspriteframes[thing.Fframe&int32(FF_FRAMEMASK3)]
 	if sprframe.Frotate != 0 {
@@ -37836,11 +37836,11 @@ func R_DrawPSprite(psp *pspdef_t) {
 	var tx fixed_t
 	// decide which patch to use
 	if uint32(psp.Fstate.Fsprite) >= uint32(numsprites) {
-		I_Error(__ccgo_ts_str(26979), psp.Fstate.Fsprite)
+		I_Error("R_ProjectSprite: invalid sprite number %d ", psp.Fstate.Fsprite)
 	}
 	sprdef = &sprites[psp.Fstate.Fsprite]
 	if psp.Fstate.Fframe&int32(FF_FRAMEMASK3) >= sprdef.Fnumframes {
-		I_Error(__ccgo_ts_str(27022), psp.Fstate.Fsprite, psp.Fstate.Fframe)
+		I_Error("R_ProjectSprite: invalid sprite frame %d : %d ", psp.Fstate.Fsprite, psp.Fstate.Fframe)
 	}
 	sprframe = &sprdef.Fspriteframes[psp.Fstate.Fframe&int32(FF_FRAMEMASK3)]
 	lump = int32(sprframe.Flump[0])
@@ -38235,205 +38235,205 @@ func init() {
 	S_music = [68]musicinfo_t{
 		0: {},
 		1: {
-			Fname: __ccgo_ts_str(27069),
+			Fname: "e1m1",
 		},
 		2: {
-			Fname: __ccgo_ts_str(27074),
+			Fname: "e1m2",
 		},
 		3: {
-			Fname: __ccgo_ts_str(27079),
+			Fname: "e1m3",
 		},
 		4: {
-			Fname: __ccgo_ts_str(27084),
+			Fname: "e1m4",
 		},
 		5: {
-			Fname: __ccgo_ts_str(27089),
+			Fname: "e1m5",
 		},
 		6: {
-			Fname: __ccgo_ts_str(27094),
+			Fname: "e1m6",
 		},
 		7: {
-			Fname: __ccgo_ts_str(27099),
+			Fname: "e1m7",
 		},
 		8: {
-			Fname: __ccgo_ts_str(27104),
+			Fname: "e1m8",
 		},
 		9: {
-			Fname: __ccgo_ts_str(27109),
+			Fname: "e1m9",
 		},
 		10: {
-			Fname: __ccgo_ts_str(27114),
+			Fname: "e2m1",
 		},
 		11: {
-			Fname: __ccgo_ts_str(27119),
+			Fname: "e2m2",
 		},
 		12: {
-			Fname: __ccgo_ts_str(27124),
+			Fname: "e2m3",
 		},
 		13: {
-			Fname: __ccgo_ts_str(27129),
+			Fname: "e2m4",
 		},
 		14: {
-			Fname: __ccgo_ts_str(27134),
+			Fname: "e2m5",
 		},
 		15: {
-			Fname: __ccgo_ts_str(27139),
+			Fname: "e2m6",
 		},
 		16: {
-			Fname: __ccgo_ts_str(27144),
+			Fname: "e2m7",
 		},
 		17: {
-			Fname: __ccgo_ts_str(27149),
+			Fname: "e2m8",
 		},
 		18: {
-			Fname: __ccgo_ts_str(27154),
+			Fname: "e2m9",
 		},
 		19: {
-			Fname: __ccgo_ts_str(27159),
+			Fname: "e3m1",
 		},
 		20: {
-			Fname: __ccgo_ts_str(27164),
+			Fname: "e3m2",
 		},
 		21: {
-			Fname: __ccgo_ts_str(27169),
+			Fname: "e3m3",
 		},
 		22: {
-			Fname: __ccgo_ts_str(27174),
+			Fname: "e3m4",
 		},
 		23: {
-			Fname: __ccgo_ts_str(27179),
+			Fname: "e3m5",
 		},
 		24: {
-			Fname: __ccgo_ts_str(27184),
+			Fname: "e3m6",
 		},
 		25: {
-			Fname: __ccgo_ts_str(27189),
+			Fname: "e3m7",
 		},
 		26: {
-			Fname: __ccgo_ts_str(27194),
+			Fname: "e3m8",
 		},
 		27: {
-			Fname: __ccgo_ts_str(27199),
+			Fname: "e3m9",
 		},
 		28: {
-			Fname: __ccgo_ts_str(27204),
+			Fname: "inter",
 		},
 		29: {
-			Fname: __ccgo_ts_str(27210),
+			Fname: "intro",
 		},
 		30: {
-			Fname: __ccgo_ts_str(27216),
+			Fname: "bunny",
 		},
 		31: {
-			Fname: __ccgo_ts_str(27222),
+			Fname: "victor",
 		},
 		32: {
-			Fname: __ccgo_ts_str(27229),
+			Fname: "introa",
 		},
 		33: {
-			Fname: __ccgo_ts_str(27236),
+			Fname: "runnin",
 		},
 		34: {
-			Fname: __ccgo_ts_str(27243),
+			Fname: "stalks",
 		},
 		35: {
-			Fname: __ccgo_ts_str(27250),
+			Fname: "countd",
 		},
 		36: {
-			Fname: __ccgo_ts_str(27257),
+			Fname: "betwee",
 		},
 		37: {
-			Fname: __ccgo_ts_str(5374),
+			Fname: "doom",
 		},
 		38: {
-			Fname: __ccgo_ts_str(27264),
+			Fname: "the_da",
 		},
 		39: {
-			Fname: __ccgo_ts_str(27271),
+			Fname: "shawn",
 		},
 		40: {
-			Fname: __ccgo_ts_str(27277),
+			Fname: "ddtblu",
 		},
 		41: {
-			Fname: __ccgo_ts_str(27284),
+			Fname: "in_cit",
 		},
 		42: {
-			Fname: __ccgo_ts_str(27291),
+			Fname: "dead",
 		},
 		43: {
-			Fname: __ccgo_ts_str(27296),
+			Fname: "stlks2",
 		},
 		44: {
-			Fname: __ccgo_ts_str(27303),
+			Fname: "theda2",
 		},
 		45: {
-			Fname: __ccgo_ts_str(2533),
+			Fname: "doom2",
 		},
 		46: {
-			Fname: __ccgo_ts_str(27310),
+			Fname: "ddtbl2",
 		},
 		47: {
-			Fname: __ccgo_ts_str(27317),
+			Fname: "runni2",
 		},
 		48: {
-			Fname: __ccgo_ts_str(27324),
+			Fname: "dead2",
 		},
 		49: {
-			Fname: __ccgo_ts_str(27330),
+			Fname: "stlks3",
 		},
 		50: {
-			Fname: __ccgo_ts_str(27337),
+			Fname: "romero",
 		},
 		51: {
-			Fname: __ccgo_ts_str(27344),
+			Fname: "shawn2",
 		},
 		52: {
-			Fname: __ccgo_ts_str(27351),
+			Fname: "messag",
 		},
 		53: {
-			Fname: __ccgo_ts_str(27358),
+			Fname: "count2",
 		},
 		54: {
-			Fname: __ccgo_ts_str(27365),
+			Fname: "ddtbl3",
 		},
 		55: {
-			Fname: __ccgo_ts_str(27372),
+			Fname: "ampie",
 		},
 		56: {
-			Fname: __ccgo_ts_str(27378),
+			Fname: "theda3",
 		},
 		57: {
-			Fname: __ccgo_ts_str(27385),
+			Fname: "adrian",
 		},
 		58: {
-			Fname: __ccgo_ts_str(27392),
+			Fname: "messg2",
 		},
 		59: {
-			Fname: __ccgo_ts_str(27399),
+			Fname: "romer2",
 		},
 		60: {
-			Fname: __ccgo_ts_str(27406),
+			Fname: "tense",
 		},
 		61: {
-			Fname: __ccgo_ts_str(27412),
+			Fname: "shawn3",
 		},
 		62: {
-			Fname: __ccgo_ts_str(27419),
+			Fname: "openin",
 		},
 		63: {
-			Fname: __ccgo_ts_str(27426),
+			Fname: "evil",
 		},
 		64: {
-			Fname: __ccgo_ts_str(27431),
+			Fname: "ultima",
 		},
 		65: {
-			Fname: __ccgo_ts_str(27438),
+			Fname: "read_m",
 		},
 		66: {
-			Fname: __ccgo_ts_str(27445),
+			Fname: "dm2ttl",
 		},
 		67: {
-			Fname: __ccgo_ts_str(27452),
+			Fname: "dm2int",
 		},
 	}
 }
@@ -39213,7 +39213,7 @@ var captured_stats [32]wbstartstruct_t
 var num_captured_stats int32 = 0
 
 func StatCopy(stats *wbstartstruct_t) {
-	if M_ParmExists(__ccgo_ts_str(5318)) != 0 && num_captured_stats < MAX_CAPTURES {
+	if M_ParmExists("-statdump") != 0 && num_captured_stats < MAX_CAPTURES {
 		captured_stats[num_captured_stats] = *stats
 		num_captured_stats++
 	}
@@ -39259,7 +39259,7 @@ type st_binicon_t struct {
 }
 
 func STlib_init() {
-	sttminus = W_CacheLumpNameT(__ccgo_ts_str(27459), PU_STATIC)
+	sttminus = W_CacheLumpNameT("STTMINUS", PU_STATIC)
 }
 
 // C documentation
@@ -39308,7 +39308,7 @@ func STlib_drawNum(n *st_number_t, refresh boolean) {
 	// clear the area
 	x = n.Fx - numdigits*w
 	if n.Fy-(SCREENHEIGHT-ST_HEIGHT) < 0 {
-		I_Error(__ccgo_ts_str(27468), 0)
+		I_Error("drawNum: n->y - ST_Y < 0", 0)
 	}
 	V_CopyRect(x, n.Fy-(SCREENHEIGHT-ST_HEIGHT), st_backing_screen, w*numdigits, h, x, n.Fy)
 	// if non-number, do not draw it
@@ -39381,7 +39381,7 @@ func STlib_updateMultIcon(mi *st_multicon_t, refresh boolean) {
 			w = int32(mi.Fp[mi.Foldinum].Fwidth)
 			h = int32(mi.Fp[mi.Foldinum].Fheight)
 			if y-(SCREENHEIGHT-ST_HEIGHT) < 0 {
-				I_Error(__ccgo_ts_str(27493), 0)
+				I_Error("updateMultIcon: y - ST_Y < 0", 0)
 			}
 			V_CopyRect(x, y-(SCREENHEIGHT-ST_HEIGHT), st_backing_screen, w, h, x, y)
 		}
@@ -39407,7 +39407,7 @@ func STlib_updateBinIcon(bi *st_binicon_t, refresh boolean) {
 		w = int32(bi.Fp.Fwidth)
 		h = int32(bi.Fp.Fheight)
 		if y-(SCREENHEIGHT-ST_HEIGHT) < 0 {
-			I_Error(__ccgo_ts_str(27522), 0)
+			I_Error("updateBinIcon: y - ST_Y < 0", 0)
 		}
 		if *(*boolean)(unsafe.Pointer(bi.Fval)) != 0 {
 			V_DrawPatch(bi.Fx, bi.Fy, bi.Fp)
@@ -39794,9 +39794,9 @@ func ST_Responder(ev *event_t) (r boolean) {
 							plyr.Fmo.Fhealth = 100
 						}
 						plyr.Fhealth = DEH_DEFAULT_GOD_MODE_HEALTH
-						plyr.Fmessage = __ccgo_ts_str(27550)
+						plyr.Fmessage = "Degreelessness Mode On"
 					} else {
-						plyr.Fmessage = __ccgo_ts_str(27573)
+						plyr.Fmessage = "Degreelessness Mode Off"
 					}
 				} else {
 					if cht_CheckCheat(&cheat_ammonokey, int8(ev.Fdata2)) != 0 {
@@ -39824,7 +39824,7 @@ func ST_Responder(ev *event_t) (r boolean) {
 							;
 							i++
 						}
-						plyr.Fmessage = __ccgo_ts_str(27597)
+						plyr.Fmessage = "Ammo (no keys) Added"
 					} else {
 						if cht_CheckCheat(&cheat_ammo, int8(ev.Fdata2)) != 0 {
 							plyr.Farmorpoints = DEH_DEFAULT_IDKFA_ARMOR
@@ -39862,10 +39862,10 @@ func ST_Responder(ev *event_t) (r boolean) {
 								;
 								i++
 							}
-							plyr.Fmessage = __ccgo_ts_str(27618)
+							plyr.Fmessage = "Very Happy Ammo Added"
 						} else {
 							if cht_CheckCheat(&cheat_mus, int8(ev.Fdata2)) != 0 {
-								plyr.Fmessage = __ccgo_ts_str(27640)
+								plyr.Fmessage = "Music Change"
 								var param [5]byte
 								cht_GetParam(&cheat_mus, param[:])
 								// Note: The original v1.9 had a bug that tried to play back
@@ -39875,14 +39875,14 @@ func ST_Responder(ev *event_t) (r boolean) {
 								if gamemode == commercial || gameversion < exe_ultimate {
 									musnum = int32(mus_runnin) + (int32((param[0]))-'0')*int32(10) + int32(param[int32(1)]) - '0' - 1
 									if (int32(param[0])-'0')*int32(10)+int32(param[int32(1)])-'0' > 35 {
-										plyr.Fmessage = __ccgo_ts_str(27653)
+										plyr.Fmessage = "IMPOSSIBLE SELECTION"
 									} else {
 										S_ChangeMusic(musnum, 1)
 									}
 								} else {
 									musnum = int32(mus_e1m1) + (int32(param[0])-'1')*9 + (int32(param[int32(1)]) - '1')
 									if (int32(param[0])-'1')*9+int32(param[int32(1)])-'1' > 31 {
-										plyr.Fmessage = __ccgo_ts_str(27653)
+										plyr.Fmessage = "IMPOSSIBLE SELECTION"
 									} else {
 										S_ChangeMusic(musnum, 1)
 									}
@@ -39914,9 +39914,9 @@ func ST_Responder(ev *event_t) (r boolean) {
 									// idclip
 									plyr.Fcheats ^= CF_NOCLIP
 									if plyr.Fcheats&CF_NOCLIP != 0 {
-										plyr.Fmessage = __ccgo_ts_str(27674)
+										plyr.Fmessage = "No Clipping Mode ON"
 									} else {
-										plyr.Fmessage = __ccgo_ts_str(27694)
+										plyr.Fmessage = "No Clipping Mode OFF"
 									}
 								}
 							}
@@ -39939,7 +39939,7 @@ func ST_Responder(ev *event_t) (r boolean) {
 								plyr.Fpowers[i] = 0
 							}
 						}
-						plyr.Fmessage = __ccgo_ts_str(27715)
+						plyr.Fmessage = "Power-up Toggled"
 					}
 					goto _11
 				_11:
@@ -39948,15 +39948,15 @@ func ST_Responder(ev *event_t) (r boolean) {
 				}
 				// 'behold' power-up menu
 				if cht_CheckCheat(&cheat_powerup[6], int8(ev.Fdata2)) != 0 {
-					plyr.Fmessage = __ccgo_ts_str(27732)
+					plyr.Fmessage = "inVuln, Str, Inviso, Rad, Allmap, or Lite-amp"
 				} else {
 					if cht_CheckCheat(&cheat_choppers, int8(ev.Fdata2)) != 0 {
 						plyr.Fweaponowned[wp_chainsaw] = 1
 						plyr.Fpowers[pw_invulnerability] = 1
-						plyr.Fmessage = __ccgo_ts_str(27778)
+						plyr.Fmessage = "... doesn't suck - GM"
 					} else {
 						if cht_CheckCheat(&cheat_mypos, int8(ev.Fdata2)) != 0 {
-							plyr.Fmessage = fmt.Sprintf(__ccgo_ts_str(27800), players[consoleplayer].Fmo.Fangle, players[consoleplayer].Fmo.Fx, players[consoleplayer].Fmo.Fy)
+							plyr.Fmessage = fmt.Sprintf("ang=0x%x;x,y=(0x%x,0x%x)", players[consoleplayer].Fmo.Fangle, players[consoleplayer].Fmo.Fx, players[consoleplayer].Fmo.Fy)
 						}
 					}
 				}
@@ -39999,7 +39999,7 @@ func ST_Responder(ev *event_t) (r boolean) {
 					return 0
 				}
 				// So be it.
-				plyr.Fmessage = __ccgo_ts_str(27825)
+				plyr.Fmessage = "Changing Level..."
 				G_DeferedInitNew(gameskill, epsd, map1)
 			}
 		}
@@ -40355,9 +40355,9 @@ func ST_loadUnloadGraphics(callback func(string, **patch_t)) {
 		if i >= 10 {
 			break
 		}
-		bp := fmt.Sprintf(__ccgo_ts_str(27843), i)
+		bp := fmt.Sprintf("STTNUM%d", i)
 		callback(bp, &tallnum[i])
-		bp = fmt.Sprintf(__ccgo_ts_str(27852), i)
+		bp = fmt.Sprintf("STYSNUM%d", i)
 		callback(bp, &shortnum[i])
 		goto _1
 	_1:
@@ -40366,14 +40366,14 @@ func ST_loadUnloadGraphics(callback func(string, **patch_t)) {
 	}
 	// Load percent key.
 	//Note: why not load STMINUS here, too?
-	callback(__ccgo_ts_str(27862), &tallpercent)
+	callback("STTPRCNT", &tallpercent)
 	// key cards
 	i = 0
 	for {
 		if i >= NUMCARDS {
 			break
 		}
-		name := fmt.Sprintf(__ccgo_ts_str(27871), i)
+		name := fmt.Sprintf("STKEYS%d", i)
 		callback(name, &keys[i])
 		goto _2
 	_2:
@@ -40381,14 +40381,14 @@ func ST_loadUnloadGraphics(callback func(string, **patch_t)) {
 		i++
 	}
 	// arms background
-	callback(__ccgo_ts_str(27880), &armsbg)
+	callback("STARMS", &armsbg)
 	// arms ownership widgets
 	i = 0
 	for {
 		if i >= 6 {
 			break
 		}
-		name := fmt.Sprintf(__ccgo_ts_str(27887), i+2)
+		name := fmt.Sprintf("STGNUM%d", i+2)
 		// gray #
 		callback(name, &arms[i][0])
 		// yellow #
@@ -40399,10 +40399,10 @@ func ST_loadUnloadGraphics(callback func(string, **patch_t)) {
 		i++
 	}
 	// face backgrounds for different color players
-	name := fmt.Sprintf(__ccgo_ts_str(27896), consoleplayer)
+	name := fmt.Sprintf("STFB%d", consoleplayer)
 	callback(name, &faceback)
 	// status bar background bits
-	callback(__ccgo_ts_str(27903), &sbar)
+	callback("STBAR", &sbar)
 	// face states
 	facenum = 0
 	i = 0
@@ -40415,7 +40415,7 @@ func ST_loadUnloadGraphics(callback func(string, **patch_t)) {
 			if j >= ST_NUMSTRAIGHTFACES {
 				break
 			}
-			name := fmt.Sprintf(__ccgo_ts_str(27909), i, j)
+			name := fmt.Sprintf("STFST%d%d", i, j)
 			callback(name, &faces[facenum])
 			facenum++
 			goto _5
@@ -40423,19 +40423,19 @@ func ST_loadUnloadGraphics(callback func(string, **patch_t)) {
 			;
 			j++
 		}
-		name := fmt.Sprintf(__ccgo_ts_str(27919), i) // turn right
+		name := fmt.Sprintf("STFTR%d0", i) // turn right
 		callback(name, &faces[facenum])
 		facenum++
-		name = fmt.Sprintf(__ccgo_ts_str(27928), i) // turn left
+		name = fmt.Sprintf("STFTL%d0", i) // turn left
 		callback(name, &faces[facenum])
 		facenum++
-		name = fmt.Sprintf(__ccgo_ts_str(27937), i) // ouch!
+		name = fmt.Sprintf("STFOUCH%d", i) // ouch!
 		callback(name, &faces[facenum])
 		facenum++
-		name = fmt.Sprintf(__ccgo_ts_str(27947), i) // evil grin ;)
+		name = fmt.Sprintf("STFEVL%d", i) // evil grin ;)
 		callback(name, &faces[facenum])
 		facenum++
-		name = fmt.Sprintf(__ccgo_ts_str(27956), i) // pissed off
+		name = fmt.Sprintf("STFKILL%d", i) // pissed off
 		callback(name, &faces[facenum])
 		facenum++
 		goto _4
@@ -40443,9 +40443,9 @@ func ST_loadUnloadGraphics(callback func(string, **patch_t)) {
 		;
 		i++
 	}
-	callback(__ccgo_ts_str(27966), &faces[facenum])
+	callback("STFGOD0", &faces[facenum])
 	facenum++
-	callback(__ccgo_ts_str(27974), &faces[facenum])
+	callback("STFDEAD0", &faces[facenum])
 	facenum++
 }
 
@@ -40458,7 +40458,7 @@ func ST_loadGraphics() {
 }
 
 func ST_loadData() {
-	lu_palette = W_GetNumForName(__ccgo_ts_str(1490))
+	lu_palette = W_GetNumForName("PLAYPAL")
 	ST_loadGraphics()
 }
 
@@ -40854,7 +40854,7 @@ func S_StartSound(origin *degenmobj_t, sfx_id int32) {
 	*(*int32)(unsafe.Pointer(bp + 4)) = snd_SfxVolume
 	// check for bogus sound #
 	if sfx_id < 1 || sfx_id > NUMSFX {
-		I_Error(__ccgo_ts_str(27983), sfx_id)
+		I_Error("Bad sfx #: %d", sfx_id)
 	}
 	sfx = &S_sfx[sfx_id]
 	// Initialize sound parameters
@@ -40970,14 +40970,14 @@ func S_UpdateSounds(listener *degenmobj_t) {
 
 func S_SetMusicVolume(volume int32) {
 	if volume < 0 || volume > 127 {
-		I_Error(__ccgo_ts_str(27997), volume)
+		I_Error("Attempt to set music volume at %d", volume)
 	}
 	I_SetMusicVolume(volume)
 }
 
 func S_SetSfxVolume(volume int32) {
 	if volume < 0 || volume > 127 {
-		I_Error(__ccgo_ts_str(28031), volume)
+		I_Error("Attempt to set sfx volume at %d", volume)
 	}
 	snd_SfxVolume = volume
 }
@@ -40999,7 +40999,7 @@ func S_ChangeMusic(musicnum int32, looping int32) {
 		musicnum = int32(mus_introa)
 	}
 	if musicnum <= int32(mus_None) || musicnum >= NUMMUSIC {
-		I_Error(__ccgo_ts_str(28063), musicnum)
+		I_Error("Bad music number %d", musicnum)
 	} else {
 		music = &S_music[musicnum]
 	}
@@ -41010,7 +41010,7 @@ func S_ChangeMusic(musicnum int32, looping int32) {
 	S_StopMusic()
 	// get lumpnum if neccessary
 	if music.Flumpnum == 0 {
-		bp := fmt.Sprintf(__ccgo_ts_str(28083), music.Fname)
+		bp := fmt.Sprintf("d_%s", music.Fname)
 		music.Flumpnum = W_GetNumForName(bp)
 	}
 	music.Fdata = W_CacheLumpNum(music.Flumpnum, PU_STATIC)
@@ -41112,7 +41112,7 @@ func V_MarkRect(x int32, y int32, width int32, height int32) {
 func V_CopyRect(srcx int32, srcy int32, source uintptr, width int32, height int32, destx int32, desty int32) {
 	var dest, src uintptr
 	if srcx < 0 || srcx+width > SCREENWIDTH || srcy < 0 || srcy+height > SCREENHEIGHT || destx < 0 || destx+width > SCREENWIDTH || desty < 0 || desty+height > SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(28088), 0)
+		I_Error("Bad V_CopyRect", 0)
 	}
 	V_MarkRect(destx, desty, width, height)
 	src = source + uintptr(SCREENWIDTH*srcy) + uintptr(srcx)
@@ -41142,7 +41142,7 @@ func V_DrawPatch(x int32, y int32, patch *patch_t) {
 	y -= int32(patch.Ftopoffset)
 	x -= int32(patch.Fleftoffset)
 	if x < 0 || x+int32(patch.Fwidth) > SCREENWIDTH || y < 0 || y+int32(patch.Fheight) > SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(28103), x, y, int32(patch.Fwidth), int32(patch.Fheight), int32(patch.Ftopoffset), int32(patch.Fleftoffset))
+		I_Error("Bad V_DrawPatch x=%d y=%d patch.width=%d patch.height=%d topoffset=%d leftoffset=%d", x, y, int32(patch.Fwidth), int32(patch.Fheight), int32(patch.Ftopoffset), int32(patch.Fleftoffset))
 	}
 	V_MarkRect(x, y, int32(patch.Fwidth), int32(patch.Fheight))
 	col = 0
@@ -41191,7 +41191,7 @@ func V_DrawPatchFlipped(x int32, y int32, patch *patch_t) {
 	y -= int32(patch.Ftopoffset)
 	x -= int32(patch.Fleftoffset)
 	if x < 0 || x+int32(patch.Fwidth) > SCREENWIDTH || y < 0 || y+int32(patch.Fheight) > SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(28187), 0)
+		I_Error("Bad V_DrawPatchFlipped", 0)
 	}
 	V_MarkRect(x, y, int32(patch.Fwidth), int32(patch.Fheight))
 	col = 0
@@ -41246,7 +41246,7 @@ func V_DrawBlock(x int32, y int32, width int32, height int32, src uintptr) {
 	var dest uintptr
 	var v1 int32
 	if x < 0 || x+width > SCREENWIDTH || y < 0 || y+height > SCREENHEIGHT {
-		I_Error(__ccgo_ts_str(28288), 0)
+		I_Error("Bad V_DrawBlock", 0)
 	}
 	V_MarkRect(x, y, width, height)
 	dest = dest_screen + uintptr(y*SCREENWIDTH) + uintptr(x)
@@ -42074,7 +42074,7 @@ func WI_drawOnLnode(n int32, c []*patch_t) {
 		V_DrawPatch(lnodes[wbs.Fepsd][n].Fx, lnodes[wbs.Fepsd][n].Fy, c[i])
 	} else {
 		// DEBUG
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(28344), n+1)
+		fprintf_ccgo(os.Stdout, "Could not place patch on level %d", n+1)
 	}
 }
 
@@ -43066,7 +43066,7 @@ func WI_loadUnloadData(callback func(string, **patch_t)) {
 			if i >= NUMCMAPS {
 				break
 			}
-			bp1 := fmt.Sprintf(__ccgo_ts_str(28378), i)
+			bp1 := fmt.Sprintf("CWILV%2.2d", i)
 			callback(bp1, &lnames[i])
 			goto _1
 		_1:
@@ -43079,7 +43079,7 @@ func WI_loadUnloadData(callback func(string, **patch_t)) {
 			if i >= NUMMAPS {
 				break
 			}
-			bp1 := fmt.Sprintf(__ccgo_ts_str(28389), wbs.Fepsd, i)
+			bp1 := fmt.Sprintf("WILV%d%d", wbs.Fepsd, i)
 			callback(bp1, &lnames[i])
 			goto _2
 		_2:
@@ -43087,11 +43087,11 @@ func WI_loadUnloadData(callback func(string, **patch_t)) {
 			i++
 		}
 		// you are here
-		callback(__ccgo_ts_str(28398), &yah[0])
+		callback("WIURH0", &yah[0])
 		// you are here (alt.)
-		callback(__ccgo_ts_str(28405), &yah[1])
+		callback("WIURH1", &yah[1])
 		// splat
-		callback(__ccgo_ts_str(28412), &splat[0])
+		callback("WISPLAT", &splat[0])
 		if wbs.Fepsd < 3 {
 			j = 0
 			for {
@@ -43107,7 +43107,7 @@ func WI_loadUnloadData(callback func(string, **patch_t)) {
 					// MONDO HACK!
 					if wbs.Fepsd != 1 || j != 8 {
 						// animations
-						bp1 := fmt.Sprintf(__ccgo_ts_str(28420), wbs.Fepsd, j, i)
+						bp1 := fmt.Sprintf("WIA%d%.2d%.2d", wbs.Fepsd, j, i)
 						callback(bp1, &a.Fp[i])
 					} else {
 						// HACK ALERT!
@@ -43126,14 +43126,14 @@ func WI_loadUnloadData(callback func(string, **patch_t)) {
 		}
 	}
 	// More hacks on minus sign.
-	callback(__ccgo_ts_str(28434), &wiminus)
+	callback("WIMINUS", &wiminus)
 	i = 0
 	for {
 		if i >= 10 {
 			break
 		}
 		// numbers 0-9
-		bp1 := fmt.Sprintf(__ccgo_ts_str(28442), i)
+		bp1 := fmt.Sprintf("WINUM%d", i)
 		callback(bp1, &num[i])
 		goto _5
 	_5:
@@ -43141,54 +43141,54 @@ func WI_loadUnloadData(callback func(string, **patch_t)) {
 		i++
 	}
 	// percent sign
-	callback(__ccgo_ts_str(28450), &percent)
+	callback("WIPCNT", &percent)
 	// "finished"
-	callback(__ccgo_ts_str(28457), &finished)
+	callback("WIF", &finished)
 	// "entering"
-	callback(__ccgo_ts_str(28461), &entering)
+	callback("WIENTER", &entering)
 	// "kills"
-	callback(__ccgo_ts_str(28469), &kills)
+	callback("WIOSTK", &kills)
 	// "scrt"
-	callback(__ccgo_ts_str(28476), &secret)
+	callback("WIOSTS", &secret)
 	// "secret"
-	callback(__ccgo_ts_str(28483), &sp_secret)
+	callback("WISCRT2", &sp_secret)
 	// french wad uses WIOBJ (?)
-	if W_CheckNumForName(__ccgo_ts_str(28491)) >= 0 {
+	if W_CheckNumForName("WIOBJ") >= 0 {
 		// "items"
 		if netgame != 0 && deathmatch == 0 {
-			callback(__ccgo_ts_str(28491), &items)
+			callback("WIOBJ", &items)
 		} else {
-			callback(__ccgo_ts_str(28497), &items)
+			callback("WIOSTI", &items)
 		}
 	} else {
-		callback(__ccgo_ts_str(28497), &items)
+		callback("WIOSTI", &items)
 	}
 	// "frgs"
-	callback(__ccgo_ts_str(28504), &frags)
+	callback("WIFRGS", &frags)
 	// ":"
-	callback(__ccgo_ts_str(28511), &colon)
+	callback("WICOLON", &colon)
 	// "time"
-	callback(__ccgo_ts_str(28519), &timepatch)
+	callback("WITIME", &timepatch)
 	// "sucks"
-	callback(__ccgo_ts_str(28526), &sucks)
+	callback("WISUCKS", &sucks)
 	// "par"
-	callback(__ccgo_ts_str(28534), &par)
+	callback("WIPAR", &par)
 	// "killers" (vertical)
-	callback(__ccgo_ts_str(28540), &killers)
+	callback("WIKILRS", &killers)
 	// "victims" (horiz)
-	callback(__ccgo_ts_str(28548), &victims)
+	callback("WIVCTMS", &victims)
 	// "total"
-	callback(__ccgo_ts_str(28556), &total)
+	callback("WIMSTT", &total)
 	i = 0
 	for {
 		if i >= MAXPLAYERS {
 			break
 		}
 		// "1,2,3,4"
-		bp1 := fmt.Sprintf(__ccgo_ts_str(28563), i)
+		bp1 := fmt.Sprintf("STPB%d", i)
 		callback(bp1, &p[i])
 		// "1,2,3,4"
-		bp1 = fmt.Sprintf(__ccgo_ts_str(28570), i+1)
+		bp1 = fmt.Sprintf("WIBP%d", i+1)
 		callback(bp1, &bp[i])
 		goto _6
 	_6:
@@ -43198,12 +43198,12 @@ func WI_loadUnloadData(callback func(string, **patch_t)) {
 	// Background image
 	var bp1 string
 	if gamemode == commercial {
-		bp1 = __ccgo_ts_str(1951)
+		bp1 = "INTERPIC"
 	} else {
 		if gamemode == retail && wbs.Fepsd == 3 {
-			bp1 = __ccgo_ts_str(1951)
+			bp1 = "INTERPIC"
 		} else {
-			bp1 = fmt.Sprintf(__ccgo_ts_str(28577), wbs.Fepsd)
+			bp1 = fmt.Sprintf("WIMAP%d", wbs.Fepsd)
 		}
 	}
 	// Draw backdrop and save to a temporary buffer
@@ -43223,9 +43223,9 @@ func WI_loadData() {
 	// These two graphics are special cased because we're sharing
 	// them with the status bar code
 	// your face
-	star = W_CacheLumpNameT(__ccgo_ts_str(28585), PU_STATIC)
+	star = W_CacheLumpNameT("STFST01", PU_STATIC)
 	// dead face
-	bstar = W_CacheLumpNameT(__ccgo_ts_str(27974), PU_STATIC)
+	bstar = W_CacheLumpNameT("STFDEAD0", PU_STATIC)
 }
 
 func WI_unloadCallback(name string, variable **patch_t) {
@@ -43378,7 +43378,7 @@ func W_ParseCommandLine() (r boolean) {
 	//
 	// Load the specified PWAD files.
 	//
-	p = M_CheckParmWithArgs(__ccgo_ts_str(28599), 1)
+	p = M_CheckParmWithArgs("-file", 1)
 	if p != 0 {
 		// the parms after p are wadfile/lump names,
 		// until end of parms or another - preceded parm
@@ -43390,7 +43390,7 @@ func W_ParseCommandLine() (r boolean) {
 				break
 			}
 			filename = D_TryFindWADByName(myargs[p])
-			fprintf_ccgo(os.Stdout, __ccgo_ts_str(2817), filename)
+			fprintf_ccgo(os.Stdout, " adding %s\n", filename)
 			W_AddFile(filename)
 		}
 	}
@@ -43465,7 +43465,7 @@ func W_AddFile(filename string) *os.File {
 	}
 	wad_file = W_OpenFile(filename)
 	if wad_file == nil {
-		fprintf_ccgo(os.Stdout, __ccgo_ts_str(28631), filename)
+		fprintf_ccgo(os.Stdout, " couldn't open %s\n", filename)
 		return nil
 	}
 	newnumlumps = int32(numlumps)
@@ -43486,10 +43486,10 @@ func W_AddFile(filename string) *os.File {
 		var wadinfo wadinfo_t
 		// WAD file
 		W_Read(wad_file, 0, (uintptr)(unsafe.Pointer(&wadinfo)), 12)
-		if gostring_bytes(wadinfo.Fidentification[:]) != __ccgo_ts_str(28654) {
+		if gostring_bytes(wadinfo.Fidentification[:]) != "IWAD" {
 			// Homebrew levels?
-			if gostring_bytes(wadinfo.Fidentification[:]) != __ccgo_ts_str(28659) {
-				I_Error(__ccgo_ts_str(28664), filename)
+			if gostring_bytes(wadinfo.Fidentification[:]) != "PWAD" {
+				I_Error("Wad file %s doesn't have IWAD or PWAD id\n", filename)
 			}
 			// ???modifiedgame = true;
 		}
@@ -43555,7 +43555,7 @@ func W_GetNumForName(name string) (r int32) {
 	var i int32
 	i = W_CheckNumForName(name)
 	if i < 0 {
-		I_Error(__ccgo_ts_str(28706), name)
+		I_Error("W_GetNumForName: %s not found!", name)
 	}
 	return i
 }
@@ -43568,7 +43568,7 @@ func W_GetNumForName(name string) (r int32) {
 //	//
 func W_LumpLength(lump uint32) (r int32) {
 	if lump >= numlumps {
-		I_Error(__ccgo_ts_str(28737), lump)
+		I_Error("W_LumpLength: %d >= numlumps", lump)
 	}
 	return lumpinfo[lump].Fsize
 }
@@ -43583,13 +43583,13 @@ func W_LumpLength(lump uint32) (r int32) {
 func W_ReadLump(lump uint32, dest uintptr) {
 	var c int32
 	if lump >= numlumps {
-		I_Error(__ccgo_ts_str(28766), lump)
+		I_Error("W_ReadLump: %d >= numlumps", lump)
 	}
 	l := &lumpinfo[lump]
 	I_BeginRead()
 	c = int32(W_Read(l.Fwad_file, uint32(l.Fposition), dest, uint64(l.Fsize)))
 	if c < l.Fsize {
-		I_Error(__ccgo_ts_str(28793), c, l.Fsize, lump)
+		I_Error("W_ReadLump: only read %d of %d on lump %d", c, l.Fsize, lump)
 	}
 	I_EndRead()
 }
@@ -43609,7 +43609,7 @@ func W_ReadLump(lump uint32, dest uintptr) {
 func W_CacheLumpNum(lumpnum int32, tag int32) (r uintptr) {
 	var result uintptr
 	if uint32(lumpnum) >= numlumps {
-		I_Error(__ccgo_ts_str(28835), lumpnum)
+		I_Error("W_CacheLumpNum: %d >= numlumps", lumpnum)
 	}
 	lump := &lumpinfo[lumpnum]
 	// Get the pointer to return.  If the lump is in a memory-mapped
@@ -43619,7 +43619,7 @@ func W_CacheLumpNum(lumpnum int32, tag int32) (r uintptr) {
 	if lump.Fcache != 0 {
 		// Already cached, so just switch the zone tag.
 		result = lump.Fcache
-		Z_ChangeTag2(lump.Fcache, tag, __ccgo_ts_str(28866), 410)
+		Z_ChangeTag2(lump.Fcache, tag, "w_wad.c", 410)
 	} else {
 		// Not yet loaded, so load it now
 		lump.Fcache = Z_Malloc(W_LumpLength(uint32(lumpnum)), tag, uintptr(unsafe.Pointer(&lump.Fcache)))
@@ -43668,10 +43668,10 @@ func W_CacheLumpNameT[T lumpType](name string, tag int32) T {
 
 func W_ReleaseLumpNum(lumpnum int32) {
 	if uint32(lumpnum) >= numlumps {
-		I_Error(__ccgo_ts_str(28874), lumpnum)
+		I_Error("W_ReleaseLumpNum: %d >= numlumps", lumpnum)
 	}
 	lump := &lumpinfo[lumpnum]
-	Z_ChangeTag2(lump.Fcache, PU_CACHE, __ccgo_ts_str(28866), 461)
+	Z_ChangeTag2(lump.Fcache, PU_CACHE, "w_wad.c", 461)
 }
 
 func W_ReleaseLumpName(name string) {
@@ -43715,19 +43715,19 @@ var unique_lumps = [4]struct {
 	Flumpname string
 }{
 	0: {
-		Flumpname: __ccgo_ts_str(28907),
+		Flumpname: "POSSA1",
 	},
 	1: {
 		Fmission:  heretic,
-		Flumpname: __ccgo_ts_str(28914),
+		Flumpname: "IMPXA1",
 	},
 	2: {
 		Fmission:  hexen,
-		Flumpname: __ccgo_ts_str(28921),
+		Flumpname: "ETTNA1",
 	},
 	3: {
 		Fmission:  strife,
-		Flumpname: __ccgo_ts_str(28928),
+		Flumpname: "AGRDA1",
 	},
 }
 
@@ -43741,7 +43741,7 @@ func W_CheckCorrectIWAD(mission GameMission_t) {
 		if mission != unique_lumps[i].Fmission {
 			lumpnum = W_CheckNumForName(unique_lumps[i].Flumpname)
 			if lumpnum >= 0 {
-				I_Error(__ccgo_ts_str(28935), D_SuggestGameName(unique_lumps[i].Fmission, indetermined), __ccgo_ts_str(29063), D_GameMissionString(mission), __ccgo_ts_str(29063), D_GameMissionString(unique_lumps[i].Fmission))
+				I_Error("\nYou are trying to use a %s IWAD file with the %s%s binary.\nThis isn't going to work.\nYou probably want to use the %s%s binary.", D_SuggestGameName(unique_lumps[i].Fmission, indetermined), "doomgeneric", D_GameMissionString(mission), "doomgeneric", D_GameMissionString(unique_lumps[i].Fmission))
 			}
 		}
 		goto _1
@@ -43865,7 +43865,7 @@ func Z_Free(ptr uintptr) {
 	var block, other uintptr
 	block = ptr - uintptr(40)
 	if (*memblock_t)(unsafe.Pointer(block)).Fid != ZONEID {
-		I_Error(__ccgo_ts_str(29075), 0)
+		I_Error("Z_Free: freed a pointer without ZONEID", 0)
 	}
 	if (*memblock_t)(unsafe.Pointer(block)).Ftag != PU_FREE && (*memblock_t)(unsafe.Pointer(block)).Fuser != 0 {
 		// clear the user's mark
@@ -43924,7 +43924,7 @@ func Z_Malloc(size int32, tag int32, user uintptr) (r uintptr) {
 	for cond := true; cond; cond = (*memblock_t)(unsafe.Pointer(base)).Ftag != PU_FREE || (*memblock_t)(unsafe.Pointer(base)).Fsize < size {
 		if rover == start {
 			// scanned all the way around the list
-			I_Error(__ccgo_ts_str(29114), size)
+			I_Error("Z_Malloc: failed on allocation of %d bytes", size)
 		}
 		if (*memblock_t)(unsafe.Pointer(rover)).Ftag != PU_FREE {
 			if (*memblock_t)(unsafe.Pointer(rover)).Ftag < PU_PURGELEVEL {
@@ -43960,7 +43960,7 @@ func Z_Malloc(size int32, tag int32, user uintptr) (r uintptr) {
 		(*memblock_t)(unsafe.Pointer(base)).Fsize = size
 	}
 	if user == 0 && tag >= PU_PURGELEVEL {
-		I_Error(__ccgo_ts_str(29157), 0)
+		I_Error("Z_Malloc: an owner is required for purgable blocks", 0)
 	}
 	(*memblock_t)(unsafe.Pointer(base)).Fuser = user
 	(*memblock_t)(unsafe.Pointer(base)).Ftag = tag
@@ -44016,13 +44016,13 @@ func Z_CheckHeap() {
 			break
 		}
 		if block+uintptr((*memblock_t)(unsafe.Pointer(block)).Fsize) != (*memblock_t)(unsafe.Pointer(block)).Fnext {
-			I_Error(__ccgo_ts_str(29436), 0)
+			I_Error("Z_CheckHeap: block size does not touch the next block\n", 0)
 		}
 		if (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Fprev != block {
-			I_Error(__ccgo_ts_str(29491), 0)
+			I_Error("Z_CheckHeap: next block doesn't have proper back link\n", 0)
 		}
 		if (*memblock_t)(unsafe.Pointer(block)).Ftag == PU_FREE && (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Ftag == PU_FREE {
-			I_Error(__ccgo_ts_str(29546), 0)
+			I_Error("Z_CheckHeap: two consecutive free blocks\n", 0)
 		}
 		goto _1
 	_1:
@@ -44040,10 +44040,10 @@ func Z_ChangeTag2(ptr uintptr, tag int32, file string, line int32) {
 	var block uintptr
 	block = ptr - uintptr(40)
 	if (*memblock_t)(unsafe.Pointer(block)).Fid != ZONEID {
-		I_Error(__ccgo_ts_str(29588), file, line)
+		I_Error("%s:%d: Z_ChangeTag: block without a ZONEID!", file, line)
 	}
 	if tag >= PU_PURGELEVEL && (*memblock_t)(unsafe.Pointer(block)).Fuser == 0 {
-		I_Error(__ccgo_ts_str(29632), file, line)
+		I_Error("%s:%d: Z_ChangeTag: an owner is required for purgable blocks", file, line)
 	}
 	(*memblock_t)(unsafe.Pointer(block)).Ftag = tag
 }
@@ -44345,7 +44345,7 @@ func I_SetPalette(palette uintptr) {
 
 func I_GetPaletteIndex(r int32, g int32, b int32) (r1 int32) {
 	var best, best_diff, diff int32
-	fprintf_ccgo(os.Stdout, __ccgo_ts_str(30076))
+	fprintf_ccgo(os.Stdout, "I_GetPaletteIndex\n")
 	best = 0
 	best_diff = int32(INT_MAX19)
 	for i := int32(0); i < 256; i++ {
