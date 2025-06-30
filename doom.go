@@ -502,9 +502,9 @@ type mapvertex_t struct {
 type mapsidedef_t struct {
 	Ftextureoffset int16
 	Frowoffset     int16
-	Ftoptexture    [8]int8
-	Fbottomtexture [8]int8
-	Fmidtexture    [8]int8
+	Ftoptexture    [8]byte
+	Fbottomtexture [8]byte
+	Fmidtexture    [8]byte
 	Fsector        int16
 }
 
@@ -520,8 +520,8 @@ type maplinedef_t struct {
 type mapsector_t struct {
 	Ffloorheight   int16
 	Fceilingheight int16
-	Ffloorpic      [8]int8
-	Fceilingpic    [8]int8
+	Ffloorpic      [8]byte
+	Fceilingpic    [8]byte
 	Flightlevel    int16
 	Fspecial       int16
 	Ftag           int16
@@ -2173,8 +2173,8 @@ type glow_t struct {
 }
 
 type switchlist_t struct {
-	Fname1   [9]int8
-	Fname2   [9]int8
+	Fname1   string
+	Fname2   string
 	Fepisode int16
 }
 
@@ -2306,7 +2306,7 @@ const crushed = 1
 const pastdest = 2
 
 type lumpinfo_t struct {
-	Fname     [8]int8
+	Fname     [8]byte
 	Fwad_file *os.File
 	Fposition int32
 	Fsize     int32
@@ -2316,6 +2316,15 @@ type lumpinfo_t struct {
 
 func (l *lumpinfo_t) NamePtr() uintptr {
 	return uintptr(unsafe.Pointer(&l.Fname[0]))
+}
+
+func (l *lumpinfo_t) Name() string {
+	for i := 0; i < len(l.Fname); i++ {
+		if l.Fname[i] == 0 {
+			return string(l.Fname[:i])
+		}
+	}
+	return string(l.Fname[:])
 }
 
 type netgame_startup_callback_t = uintptr
@@ -2912,8 +2921,8 @@ func AM_loadPics() {
 		if i >= 10 {
 			break
 		}
-		name := sprintf_ccgo_bytes(0, i)
-		marknums[i] = W_CacheLumpNameT(byteptr(name), PU_STATIC)
+		name := fmt.Sprintf(__ccgo_ts_str(0), i)
+		marknums[i] = W_CacheLumpNameT(name, PU_STATIC)
 		goto _1
 	_1:
 		;
@@ -2928,8 +2937,8 @@ func AM_unloadPics() {
 		if i >= 10 {
 			break
 		}
-		name := sprintf_ccgo_bytes(0, i)
-		W_ReleaseLumpName(byteptr(name))
+		name := fmt.Sprintf(__ccgo_ts_str(0), i)
+		W_ReleaseLumpName(name)
 		goto _1
 	_1:
 		;
@@ -4922,7 +4931,7 @@ func D_Display() {
 	}
 	// clean up border stuff
 	if gamestate != oldgamestate1 && gamestate != GS_LEVEL {
-		I_SetPalette(W_CacheLumpName(__ccgo_ts(1490), PU_CACHE))
+		I_SetPalette(W_CacheLumpName(__ccgo_ts_str(1490), PU_CACHE))
 	}
 	// see if the border needs to be initially drawn
 	if gamestate == GS_LEVEL && oldgamestate1 != GS_LEVEL {
@@ -4956,7 +4965,7 @@ func D_Display() {
 		} else {
 			y = viewwindowy + 4
 		}
-		V_DrawPatchDirect(viewwindowx+(scaledviewwidth-int32(68))/int32(2), y, W_CacheLumpNameT(__ccgo_ts(1498), PU_CACHE))
+		V_DrawPatchDirect(viewwindowx+(scaledviewwidth-int32(68))/int32(2), y, W_CacheLumpNameT(__ccgo_ts_str(1498), PU_CACHE))
 	}
 	// menus go directly to the screen
 	M_Drawer()  // menu is drawn even on top of everything
@@ -5165,7 +5174,7 @@ func D_DoAdvanceDemo() {
 			pagetic = 170
 		}
 		gamestate = GS_DEMOSCREEN
-		pagename = __ccgo_ts(1896)
+		pagename = __ccgo_ts_str(1896)
 		if gamemode == commercial {
 			S_StartMusic(int32(mus_dm2ttl))
 		} else {
@@ -5176,21 +5185,21 @@ func D_DoAdvanceDemo() {
 	case 2:
 		pagetic = 200
 		gamestate = GS_DEMOSCREEN
-		pagename = __ccgo_ts(1911)
+		pagename = __ccgo_ts_str(1911)
 	case 3:
 		G_DeferedPlayDemo(__ccgo_ts_str(1918))
 	case 4:
 		gamestate = GS_DEMOSCREEN
 		if gamemode == commercial {
 			pagetic = TICRATE * 11
-			pagename = __ccgo_ts(1896)
+			pagename = __ccgo_ts_str(1896)
 			S_StartMusic(int32(mus_dm2ttl))
 		} else {
 			pagetic = 200
 			if gamemode == retail {
-				pagename = __ccgo_ts(1911)
+				pagename = __ccgo_ts_str(1911)
 			} else {
-				pagename = __ccgo_ts(1924)
+				pagename = __ccgo_ts_str(1924)
 			}
 		}
 	case 5:
@@ -5204,8 +5213,8 @@ func D_DoAdvanceDemo() {
 	}
 	// The Doom 3: BFG Edition version of doom2.wad does not have a
 	// TITLETPIC lump. Use INTERPIC instead as a workaround.
-	if bfgedition != 0 && xstrcasecmp(pagename, __ccgo_ts(1896)) == 0 && W_CheckNumForName(__ccgo_ts(1942)) < 0 {
-		pagename = __ccgo_ts(1951)
+	if bfgedition != 0 && strings.EqualFold(pagename, __ccgo_ts_str(1896)) && W_CheckNumForName(__ccgo_ts_str(1942)) < 0 {
+		pagename = __ccgo_ts_str(1951)
 	}
 }
 
@@ -5391,11 +5400,11 @@ func D_IdentifyVersion() {
 	}
 	if v2 == doom {
 		// Doom 1.  But which version?
-		if W_CheckNumForName(__ccgo_ts(2654)) > 0 {
+		if W_CheckNumForName(__ccgo_ts_str(2654)) > 0 {
 			// Ultimate Doom
 			gamemode = retail
 		} else {
-			if W_CheckNumForName(__ccgo_ts(2659)) > 0 {
+			if W_CheckNumForName(__ccgo_ts_str(2659)) > 0 {
 				gamemode = registered
 			} else {
 				gamemode = shareware
@@ -5426,8 +5435,8 @@ func D_IdentifyVersion() {
 func D_SetGameDescription() {
 	var is_freedm, is_freedoom boolean
 	var v7, v5, v3, v1 GameMission_t
-	is_freedoom = booluint32(W_CheckNumForName(__ccgo_ts(2670)) >= 0)
-	is_freedm = booluint32(W_CheckNumForName(__ccgo_ts(2679)) >= 0)
+	is_freedoom = booluint32(W_CheckNumForName(__ccgo_ts_str(2670)) >= 0)
+	is_freedm = booluint32(W_CheckNumForName(__ccgo_ts_str(2679)) >= 0)
 	gamedescription = __ccgo_ts_str(2686)
 	if gamemission == pack_chex {
 		v1 = doom
@@ -5709,7 +5718,7 @@ func D_Endoom() {
 	if show_endoom == 0 || main_loop_started == 0 || screensaver_mode != 0 || M_CheckParm(__ccgo_ts_str(3980)) > 0 {
 		return
 	}
-	endoom = W_CacheLumpName(__ccgo_ts(3994), PU_STATIC)
+	endoom = W_CacheLumpName(__ccgo_ts_str(3994), PU_STATIC)
 	I_Endoom(endoom)
 	log.Printf("Exiting - outstanding memory: %d", len(dg_alloced))
 	dg_exiting = true
@@ -5836,7 +5845,7 @@ func D_DoomMain() {
 	// of doom2.wad is missing the TITLEPIC lump.
 	// We specifically check for DMENUPIC here, before PWADs have been
 	// loaded which could probably include a lump of that name.
-	if W_CheckNumForName(__ccgo_ts(4404)) >= 0 {
+	if W_CheckNumForName(__ccgo_ts_str(4404)) >= 0 {
 		fprintf_ccgo(os.Stdout, 4413)
 		bfgedition = 1
 		// BFG Edition changes the names of the secret levels to
@@ -5909,30 +5918,30 @@ func D_DoomMain() {
 	if modifiedgame != 0 {
 		// These are the lumps that will be checked in IWAD,
 		// if any one is not present, execution will be aborted.
-		levelLumps := [23][8]int8{
-			0:  {'e', '2', 'm', '1'},
-			1:  {'e', '2', 'm', '2'},
-			2:  {'e', '2', 'm', '3'},
-			3:  {'e', '2', 'm', '4'},
-			4:  {'e', '2', 'm', '5'},
-			5:  {'e', '2', 'm', '6'},
-			6:  {'e', '2', 'm', '7'},
-			7:  {'e', '2', 'm', '8'},
-			8:  {'e', '2', 'm', '9'},
-			9:  {'e', '3', 'm', '1'},
-			10: {'e', '3', 'm', '3'},
-			11: {'e', '3', 'm', '3'},
-			12: {'e', '3', 'm', '4'},
-			13: {'e', '3', 'm', '5'},
-			14: {'e', '3', 'm', '6'},
-			15: {'e', '3', 'm', '7'},
-			16: {'e', '3', 'm', '8'},
-			17: {'e', '3', 'm', '9'},
-			18: {'d', 'p', 'h', 'o', 'o', 'f'},
-			19: {'b', 'f', 'g', 'g', 'a', '0'},
-			20: {'h', 'e', 'a', 'd', 'a', '1'},
-			21: {'c', 'y', 'b', 'r', 'a', '1'},
-			22: {'s', 'p', 'i', 'd', 'a', '1', 'd', '1'},
+		levelLumps := [23]string{
+			0:  "e2m1",
+			1:  "e2m2",
+			2:  "e2m3",
+			3:  "e2m4",
+			4:  "e2m5",
+			5:  "e2m6",
+			6:  "e2m7",
+			7:  "e2m8",
+			8:  "e2m9",
+			9:  "e3m1",
+			10: "e3m2",
+			11: "e3m3",
+			12: "e3m4",
+			13: "e3m5",
+			14: "e3m6",
+			15: "e3m7",
+			16: "e3m8",
+			17: "e3m9",
+			18: "dphoof",
+			19: "bfgga0",
+			20: "heada1",
+			21: "cyrba1",
+			22: "spida1d1",
 		}
 		if gamemode == shareware {
 			I_Error(4506, 0)
@@ -5945,7 +5954,7 @@ func D_DoomMain() {
 				if i >= 23 {
 					break
 				}
-				if W_CheckNumForName(uintptr(unsafe.Pointer(&levelLumps[i][0]))) < 0 {
+				if W_CheckNumForName(levelLumps[i]) < 0 {
 					I_Error(4562, 0)
 				}
 				goto _2
@@ -5955,7 +5964,7 @@ func D_DoomMain() {
 			}
 		}
 	}
-	if W_CheckNumForName(__ccgo_ts(4599)) >= 0 || W_CheckNumForName(__ccgo_ts(4608)) >= 0 {
+	if W_CheckNumForName(__ccgo_ts_str(4599)) >= 0 || W_CheckNumForName(__ccgo_ts_str(4608)) >= 0 {
 		I_PrintDivider()
 		fprintf_ccgo(os.Stdout, 4615)
 	}
@@ -5964,7 +5973,7 @@ func D_DoomMain() {
 	// Freedoom's IWADs are Boom-compatible, which means they usually
 	// don't work in Vanilla (though FreeDM is okay). Show a warning
 	// message and give a link to the website.
-	if W_CheckNumForName(__ccgo_ts(2670)) >= 0 && W_CheckNumForName(__ccgo_ts(2679)) < 0 {
+	if W_CheckNumForName(__ccgo_ts_str(2670)) >= 0 && W_CheckNumForName(__ccgo_ts_str(2679)) < 0 {
 		fprintf_ccgo(os.Stdout, 4767)
 		I_PrintDivider()
 	}
@@ -6092,7 +6101,7 @@ func D_DoomMain() {
 	// If Doom II without a MAP01 lump, this is a store demo.
 	// Moved this here so that MAP01 isn't constantly looked up
 	// in the main loop.
-	if gamemode == commercial && W_CheckNumForName(__ccgo_ts(5312)) < 0 {
+	if gamemode == commercial && W_CheckNumForName(__ccgo_ts_str(5312)) < 0 {
 		storedemo = 1
 	}
 	if M_CheckParmWithArgs(__ccgo_ts_str(5318), 1) != 0 {
@@ -6291,7 +6300,7 @@ func InitConnectData(connect_data *net_connect_data_t) {
 	// Read checksums of our WAD directory and dehacked information
 	W_Checksum(&connect_data.Fwad_sha1sum)
 	// Are we playing with the Freedoom IWAD?
-	connect_data.Fis_freedoom = boolint32(W_CheckNumForName(__ccgo_ts(2670)) >= 0)
+	connect_data.Fis_freedoom = boolint32(W_CheckNumForName(__ccgo_ts_str(2670)) >= 0)
 }
 
 func D_ConnectNetGame() {
@@ -6356,7 +6365,7 @@ type textscreen_t struct {
 	Fmission    GameMission_t
 	Fepisode    int32
 	Flevel      int32
-	Fbackground uintptr
+	Fbackground string
 	Ftext       uintptr
 }
 
@@ -6364,151 +6373,151 @@ var textscreens = [22]textscreen_t{
 	0: {
 		Fepisode:    1,
 		Flevel:      8,
-		Fbackground: __ccgo_ts(5748),
+		Fbackground: __ccgo_ts_str(5748),
 		Ftext:       __ccgo_ts(5757),
 	},
 	1: {
 		Fepisode:    2,
 		Flevel:      8,
-		Fbackground: __ccgo_ts(6198),
+		Fbackground: __ccgo_ts_str(6198),
 		Ftext:       __ccgo_ts(6206),
 	},
 	2: {
 		Fepisode:    3,
 		Flevel:      8,
-		Fbackground: __ccgo_ts(6673),
+		Fbackground: __ccgo_ts_str(6673),
 		Ftext:       __ccgo_ts(6681),
 	},
 	3: {
 		Fepisode:    4,
 		Flevel:      8,
-		Fbackground: __ccgo_ts(7174),
+		Fbackground: __ccgo_ts_str(7174),
 		Ftext:       __ccgo_ts(7182),
 	},
 	4: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      6,
-		Fbackground: __ccgo_ts(7686),
+		Fbackground: __ccgo_ts_str(7686),
 		Ftext:       __ccgo_ts(7694),
 	},
 	5: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      11,
-		Fbackground: __ccgo_ts(8100),
+		Fbackground: __ccgo_ts_str(8100),
 		Ftext:       __ccgo_ts(8108),
 	},
 	6: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      20,
-		Fbackground: __ccgo_ts(8726),
+		Fbackground: __ccgo_ts_str(8726),
 		Ftext:       __ccgo_ts(8734),
 	},
 	7: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      30,
-		Fbackground: __ccgo_ts(9047),
+		Fbackground: __ccgo_ts_str(9047),
 		Ftext:       __ccgo_ts(9055),
 	},
 	8: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      15,
-		Fbackground: __ccgo_ts(9550),
+		Fbackground: __ccgo_ts_str(9550),
 		Ftext:       __ccgo_ts(9558),
 	},
 	9: {
 		Fmission:    doom2,
 		Fepisode:    1,
 		Flevel:      31,
-		Fbackground: __ccgo_ts(9723),
+		Fbackground: __ccgo_ts_str(9723),
 		Ftext:       __ccgo_ts(9731),
 	},
 	10: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      6,
-		Fbackground: __ccgo_ts(7686),
+		Fbackground: __ccgo_ts_str(7686),
 		Ftext:       __ccgo_ts(9824),
 	},
 	11: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      11,
-		Fbackground: __ccgo_ts(8100),
+		Fbackground: __ccgo_ts_str(8100),
 		Ftext:       __ccgo_ts(10214),
 	},
 	12: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      20,
-		Fbackground: __ccgo_ts(8726),
+		Fbackground: __ccgo_ts_str(8726),
 		Ftext:       __ccgo_ts(10525),
 	},
 	13: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      30,
-		Fbackground: __ccgo_ts(9047),
+		Fbackground: __ccgo_ts_str(9047),
 		Ftext:       __ccgo_ts(10835),
 	},
 	14: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      15,
-		Fbackground: __ccgo_ts(9550),
+		Fbackground: __ccgo_ts_str(9550),
 		Ftext:       __ccgo_ts(11221),
 	},
 	15: {
 		Fmission:    pack_tnt,
 		Fepisode:    1,
 		Flevel:      31,
-		Fbackground: __ccgo_ts(9723),
+		Fbackground: __ccgo_ts_str(9723),
 		Ftext:       __ccgo_ts(11395),
 	},
 	16: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      6,
-		Fbackground: __ccgo_ts(7686),
+		Fbackground: __ccgo_ts_str(7686),
 		Ftext:       __ccgo_ts(11749),
 	},
 	17: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      11,
-		Fbackground: __ccgo_ts(8100),
+		Fbackground: __ccgo_ts_str(8100),
 		Ftext:       __ccgo_ts(12183),
 	},
 	18: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      20,
-		Fbackground: __ccgo_ts(8726),
+		Fbackground: __ccgo_ts_str(8726),
 		Ftext:       __ccgo_ts(12377),
 	},
 	19: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      30,
-		Fbackground: __ccgo_ts(9047),
+		Fbackground: __ccgo_ts_str(9047),
 		Ftext:       __ccgo_ts(12706),
 	},
 	20: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      15,
-		Fbackground: __ccgo_ts(9550),
+		Fbackground: __ccgo_ts_str(9550),
 		Ftext:       __ccgo_ts(13167),
 	},
 	21: {
 		Fmission:    pack_plut,
 		Fepisode:    1,
 		Flevel:      31,
-		Fbackground: __ccgo_ts(9723),
+		Fbackground: __ccgo_ts_str(9723),
 		Ftext:       __ccgo_ts(13327),
 	},
 }
@@ -7029,7 +7038,7 @@ func F_CastDrawer() {
 	var sprdef *spritedef_t
 	var sprframe *spriteframe_t
 	// erase the entire screen to a background
-	V_DrawPatch(0, 0, W_CacheLumpNameT(__ccgo_ts(13631), PU_CACHE))
+	V_DrawPatch(0, 0, W_CacheLumpNameT(__ccgo_ts_str(13631), PU_CACHE))
 	F_CastPrint(castorder[castnum].Fname)
 	// draw the current frame in the middle of the screen
 	sprdef = &sprites[caststate.Fsprite]
@@ -7082,8 +7091,8 @@ func F_DrawPatchCol(x int32, patch uintptr, col int32) {
 func F_BunnyScroll() {
 	var p1, p2 uintptr
 	var scrolled, stage, x int32
-	p1 = W_CacheLumpName(__ccgo_ts(13640), PU_LEVEL)
-	p2 = W_CacheLumpName(__ccgo_ts(13646), PU_LEVEL)
+	p1 = W_CacheLumpName(__ccgo_ts_str(13640), PU_LEVEL)
+	p2 = W_CacheLumpName(__ccgo_ts_str(13646), PU_LEVEL)
 	V_MarkRect(0, 0, SCREENWIDTH, SCREENHEIGHT)
 	scrolled = 320 - (int32(finalecount)-int32(230))/int32(2)
 	if scrolled > 320 {
@@ -7111,7 +7120,7 @@ func F_BunnyScroll() {
 		return
 	}
 	if finalecount < 1180 {
-		V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpNameT(__ccgo_ts(13652), PU_CACHE))
+		V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpNameT(__ccgo_ts_str(13652), PU_CACHE))
 		laststage = 0
 		return
 	}
@@ -7123,32 +7132,31 @@ func F_BunnyScroll() {
 		S_StartSound(nil, int32(sfx_pistol))
 		laststage = stage
 	}
-	name := sprintf_ccgo_bytes(13657, stage)
-	V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpNameT(byteptr(name), PU_CACHE))
+	name := fmt.Sprintf(__ccgo_ts_str(13657), stage)
+	V_DrawPatch((SCREENWIDTH-13*8)/2, (SCREENHEIGHT-8*8)/2, W_CacheLumpNameT(name, PU_CACHE))
 }
 
 var laststage int32
 
 func F_ArtScreenDrawer() {
-	var lumpname uintptr
+	var lumpname string
 	if gameepisode == 3 {
 		F_BunnyScroll()
 	} else {
 		switch gameepisode {
 		case 1:
 			if gamemode == retail {
-				lumpname = __ccgo_ts(1911)
+				lumpname = __ccgo_ts_str(1911)
 			} else {
-				lumpname = __ccgo_ts(1924)
+				lumpname = __ccgo_ts_str(1924)
 			}
 		case 2:
-			lumpname = __ccgo_ts(13663)
+			lumpname = __ccgo_ts_str(13663)
 		case 4:
-			lumpname = __ccgo_ts(13672)
+			lumpname = __ccgo_ts_str(13672)
 		default:
 			return
 		}
-		lumpname = lumpname
 		V_DrawPatch(0, 0, W_CacheLumpNameT(lumpname, PU_CACHE))
 	}
 }
@@ -7842,24 +7850,24 @@ var carry int16
 //	//
 func G_DoLoadLevel() {
 	var i, v2, v3, v4 int32
-	var skytexturename uintptr
+	var skytexturename string
 	var v5, v6 boolean
 	// Set the sky map.
 	// First thing, we have a dummy sky texture name,
 	//  a flat. The data is in the WAD only because
 	//  we look for an actual index, instead of simply
 	//  setting one.
-	skyflatnum = R_FlatNumForName(__ccgo_ts(13679))
+	skyflatnum = R_FlatNumForName(__ccgo_ts_str(13679))
 	// The "Sky never changes in Doom II" bug was fixed in
 	// the id Anthology version of doom2.exe for Final Doom.
 	if gamemode == commercial && (gameversion == exe_final2 || gameversion == exe_chex) {
 		if gamemap < 12 {
-			skytexturename = __ccgo_ts(13686)
+			skytexturename = __ccgo_ts_str(13686)
 		} else {
 			if gamemap < 21 {
-				skytexturename = __ccgo_ts(13691)
+				skytexturename = __ccgo_ts_str(13691)
 			} else {
-				skytexturename = __ccgo_ts(13696)
+				skytexturename = __ccgo_ts_str(13696)
 			}
 		}
 		skytexturename = skytexturename
@@ -8505,7 +8513,7 @@ func G_ExitLevel() {
 //	// Here's for the german edition.
 func G_SecretExitLevel() {
 	// IF NO WOLF3D LEVELS, NO SECRET EXIT!
-	if gamemode == commercial && W_CheckNumForName(__ccgo_ts(13878)) < 0 {
+	if gamemode == commercial && W_CheckNumForName(__ccgo_ts_str(13878)) < 0 {
 		secretexit = 0
 	} else {
 		secretexit = 1
@@ -8852,7 +8860,7 @@ func G_DoNewGame() {
 
 func G_InitNew(skill skill_t, episode int32, map1 int32) {
 	var i int32
-	var skytexturename uintptr
+	var skytexturename string
 	if paused != 0 {
 		paused = 0
 		S_ResumeSound()
@@ -8979,12 +8987,12 @@ func G_InitNew(skill skill_t, episode int32, map1 int32) {
 	// source release, but this IS the way Vanilla DOS Doom behaves.
 	if gamemode == commercial {
 		if gamemap < 12 {
-			skytexturename = __ccgo_ts(13686)
+			skytexturename = __ccgo_ts_str(13686)
 		} else {
 			if gamemap < 21 {
-				skytexturename = __ccgo_ts(13691)
+				skytexturename = __ccgo_ts_str(13691)
 			} else {
-				skytexturename = __ccgo_ts(13696)
+				skytexturename = __ccgo_ts_str(13696)
 			}
 		}
 	} else {
@@ -8992,17 +9000,16 @@ func G_InitNew(skill skill_t, episode int32, map1 int32) {
 		default:
 			fallthrough
 		case 1:
-			skytexturename = __ccgo_ts(13686)
+			skytexturename = __ccgo_ts_str(13686)
 		case 2:
-			skytexturename = __ccgo_ts(13691)
+			skytexturename = __ccgo_ts_str(13691)
 		case 3:
-			skytexturename = __ccgo_ts(13696)
+			skytexturename = __ccgo_ts_str(13696)
 		case 4: // Special Edition sky
-			skytexturename = __ccgo_ts(14105)
+			skytexturename = __ccgo_ts_str(14105)
 			break
 		}
 	}
-	skytexturename = skytexturename
 	skytexture = R_TextureNumForName(skytexturename)
 	G_DoLoadLevel()
 }
@@ -9261,8 +9268,7 @@ func G_DoPlayDemo() {
 	var v1, v10, v12, v2, v3, v4, v5, v6, v7, v8, v9 uintptr
 	var skill skill_t
 	gameaction = ga_nothing
-	cName := bytestring(defdemoname)
-	v1 = W_CacheLumpName(uintptr(unsafe.Pointer(&cName[0])), PU_STATIC)
+	v1 = W_CacheLumpName(defdemoname, PU_STATIC)
 	demo_p = v1
 	demobuffer = v1
 	v2 = demo_p
@@ -9371,8 +9377,7 @@ func G_CheckDemoStatus() {
 		I_Error(14466, gametic, realtics, float64(fps))
 	}
 	if demoplayback != 0 {
-		cName := []byte(defdemoname)
-		W_ReleaseLumpName(uintptr(unsafe.Pointer(&cName[0])))
+		W_ReleaseLumpName(defdemoname)
 		demoplayback = 0
 		netdemo = 0
 		netgame = 0
@@ -9863,8 +9868,8 @@ func HU_Init() {
 		}
 		v2 = j
 		j++
-		name := sprintf_ccgo_bytes(17480, v2)
-		hu_font[i] = W_CacheLumpNameT(byteptr(name), PU_STATIC)
+		name := fmt.Sprintf(__ccgo_ts_str(17480), v2)
+		hu_font[i] = W_CacheLumpNameT(name, PU_STATIC)
 		goto _1
 	_1:
 		;
@@ -19922,7 +19927,7 @@ func init() {
 //	//
 type menuitem_t struct {
 	Fstatus   int16
-	Fname     [10]int8
+	Fname     string
 	Froutine  func(choice int32)
 	FalphaKey int8
 }
@@ -19938,9 +19943,9 @@ type menu_t struct {
 }
 
 func init() {
-	skullName = [2]uintptr{
-		0: __ccgo_ts(22100),
-		1: __ccgo_ts(22109),
+	skullName = [2]string{
+		0: __ccgo_ts_str(22100),
+		1: __ccgo_ts_str(22109),
 	}
 }
 
@@ -19952,37 +19957,37 @@ func init() {
 	MainMenu = [6]menuitem_t{
 		0: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'N', 'G', 'A', 'M', 'E'},
+			Fname:     "M_NGAME",
 			FalphaKey: int8('n'),
 			Froutine:  M_NewGame,
 		},
 		1: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'O', 'P', 'T', 'I', 'O', 'N'},
+			Fname:     "M_OPTION",
 			FalphaKey: int8('o'),
 			Froutine:  M_Options,
 		},
 		2: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'L', 'O', 'A', 'D', 'G'},
+			Fname:     "M_LOADG",
 			FalphaKey: int8('l'),
 			Froutine:  M_LoadGame,
 		},
 		3: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'S', 'A', 'V', 'E', 'G'},
+			Fname:     "M_SAVEG",
 			FalphaKey: int8('s'),
 			Froutine:  M_SaveGame,
 		},
 		4: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'R', 'D', 'T', 'H', 'I', 'S'},
+			Fname:     "M_RDTHIS",
 			FalphaKey: int8('r'),
 			Froutine:  M_ReadThis,
 		},
 		5: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'Q', 'U', 'I', 'T', 'G'},
+			Fname:     "M_QUITG",
 			FalphaKey: int8('q'),
 			Froutine:  M_QuitDOOM,
 		},
@@ -20005,25 +20010,25 @@ func init() {
 	EpisodeMenu = [4]menuitem_t{
 		0: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'E', 'P', 'I', '1'},
+			Fname:     "M_EPI1",
 			FalphaKey: int8('k'),
 			Froutine:  M_Episode,
 		},
 		1: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'E', 'P', 'I', '2'},
+			Fname:     "M_EPI2",
 			FalphaKey: int8('t'),
 			Froutine:  M_Episode,
 		},
 		2: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'E', 'P', 'I', '3'},
+			Fname:     "M_EPI3",
 			FalphaKey: int8('i'),
 			Froutine:  M_Episode,
 		},
 		3: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'E', 'P', 'I', '4'},
+			Fname:     "M_EPI4",
 			FalphaKey: int8('t'),
 			Froutine:  M_Episode,
 		},
@@ -20050,31 +20055,31 @@ func init() {
 	NewGameMenu = [5]menuitem_t{
 		0: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'J', 'K', 'I', 'L', 'L'},
+			Fname:     "M_JKILL",
 			FalphaKey: int8('i'),
 			Froutine:  M_ChooseSkill,
 		},
 		1: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'R', 'O', 'U', 'G', 'H'},
+			Fname:     "M_ROUGH",
 			FalphaKey: int8('h'),
 			Froutine:  M_ChooseSkill,
 		},
 		2: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'H', 'U', 'R', 'T'},
+			Fname:     "M_HURT",
 			FalphaKey: int8('h'),
 			Froutine:  M_ChooseSkill,
 		},
 		3: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'U', 'L', 'T', 'R', 'A'},
+			Fname:     "M_ULTRA",
 			FalphaKey: int8('u'),
 			Froutine:  M_ChooseSkill,
 		},
 		4: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'N', 'M', 'A', 'R', 'E'},
+			Fname:     "M_NMARE",
 			FalphaKey: int8('n'),
 			Froutine:  M_ChooseSkill,
 		},
@@ -20103,45 +20108,45 @@ func init() {
 	OptionsMenu = [8]menuitem_t{
 		0: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'E', 'N', 'D', 'G', 'A', 'M'},
+			Fname:     "M_ENDGAM",
 			FalphaKey: int8('e'),
 			Froutine:  M_EndGame,
 		},
 		1: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'M', 'E', 'S', 'S', 'G'},
+			Fname:     "M_MESSG",
 			FalphaKey: int8('m'),
 			Froutine:  M_ChangeMessages,
 		},
 		2: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'D', 'E', 'T', 'A', 'I', 'L'},
+			Fname:     "M_DETAIL",
 			FalphaKey: int8('g'),
 			Froutine:  M_ChangeDetail,
 		},
 		3: {
 			Fstatus:   2,
-			Fname:     [10]int8{'M', '_', 'S', 'C', 'R', 'N', 'S', 'Z'},
+			Fname:     "M_SCRNSZ",
 			FalphaKey: int8('s'),
 			Froutine:  M_SizeDisplay,
 		},
 		4: {
 			Fstatus: int16(-1),
-			Fname:   [10]int8{},
+			Fname:   "",
 		},
 		5: {
 			Fstatus:   2,
-			Fname:     [10]int8{'M', '_', 'M', 'S', 'E', 'N', 'S'},
+			Fname:     "M_MSENS",
 			FalphaKey: int8('m'),
 			Froutine:  M_ChangeSensitivity,
 		},
 		6: {
 			Fstatus: int16(-1),
-			Fname:   [10]int8{},
+			Fname:   "",
 		},
 		7: {
 			Fstatus:   1,
-			Fname:     [10]int8{'M', '_', 'S', 'V', 'O', 'L'},
+			Fname:     "M_SVOL",
 			FalphaKey: int8('s'),
 			Froutine:  M_Sound,
 		},
@@ -20165,7 +20170,6 @@ func init() {
 	ReadMenu1 = [1]menuitem_t{
 		0: {
 			Fstatus:  1,
-			Fname:    [10]int8{},
 			Froutine: M_ReadThis2,
 		},
 	}
@@ -20188,7 +20192,6 @@ func init() {
 	ReadMenu2 = [1]menuitem_t{
 		0: {
 			Fstatus:  1,
-			Fname:    [10]int8{},
 			Froutine: M_FinishReadThis,
 		},
 	}
@@ -20213,23 +20216,21 @@ func init() {
 	SoundMenu = [4]menuitem_t{
 		0: {
 			Fstatus:   2,
-			Fname:     [10]int8{'M', '_', 'S', 'F', 'X', 'V', 'O', 'L'},
+			Fname:     "M_SFXVOL",
 			FalphaKey: int8('s'),
 			Froutine:  M_SfxVol,
 		},
 		1: {
 			Fstatus: int16(-1),
-			Fname:   [10]int8{},
 		},
 		2: {
 			Fstatus:   2,
-			Fname:     [10]int8{'M', '_', 'M', 'U', 'S', 'V', 'O', 'L'},
+			Fname:     "M_MUSVOL",
 			FalphaKey: int8('m'),
 			Froutine:  M_MusicVol,
 		},
 		3: {
 			Fstatus: int16(-1),
-			Fname:   [10]int8{},
 		},
 	}
 }
@@ -20251,37 +20252,31 @@ func init() {
 	LoadMenu = [6]menuitem_t{
 		0: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('1'),
 			Froutine:  M_LoadSelect,
 		},
 		1: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('2'),
 			Froutine:  M_LoadSelect,
 		},
 		2: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('3'),
 			Froutine:  M_LoadSelect,
 		},
 		3: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('4'),
 			Froutine:  M_LoadSelect,
 		},
 		4: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('5'),
 			Froutine:  M_LoadSelect,
 		},
 		5: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('6'),
 			Froutine:  M_LoadSelect,
 		},
@@ -20303,37 +20298,31 @@ func init() {
 	SaveMenu = [6]menuitem_t{
 		0: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('1'),
 			Froutine:  M_SaveSelect,
 		},
 		1: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('2'),
 			Froutine:  M_SaveSelect,
 		},
 		2: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('3'),
 			Froutine:  M_SaveSelect,
 		},
 		3: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('4'),
 			Froutine:  M_SaveSelect,
 		},
 		4: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('5'),
 			Froutine:  M_SaveSelect,
 		},
 		5: {
 			Fstatus:   1,
-			Fname:     [10]int8{},
 			FalphaKey: int8('6'),
 			Froutine:  M_SaveSelect,
 		},
@@ -20391,7 +20380,7 @@ func M_ReadSaveStrings() {
 //	//
 func M_DrawLoad() {
 	var i int32
-	V_DrawPatchDirect(72, 28, W_CacheLumpNameT(__ccgo_ts(22129), PU_CACHE))
+	V_DrawPatchDirect(72, 28, W_CacheLumpNameT(__ccgo_ts_str(22129), PU_CACHE))
 	i = 0
 	for {
 		if i >= int32(load_end) {
@@ -20413,20 +20402,20 @@ func M_DrawLoad() {
 //	//
 func M_DrawSaveLoadBorder(x int32, y int32) {
 	var i int32
-	V_DrawPatchDirect(x-int32(8), y+int32(7), W_CacheLumpNameT(__ccgo_ts(22137), PU_CACHE))
+	V_DrawPatchDirect(x-int32(8), y+int32(7), W_CacheLumpNameT(__ccgo_ts_str(22137), PU_CACHE))
 	i = 0
 	for {
 		if i >= 24 {
 			break
 		}
-		V_DrawPatchDirect(x, y+int32(7), W_CacheLumpNameT(__ccgo_ts(22146), PU_CACHE))
+		V_DrawPatchDirect(x, y+int32(7), W_CacheLumpNameT(__ccgo_ts_str(22146), PU_CACHE))
 		x += 8
 		goto _1
 	_1:
 		;
 		i++
 	}
-	V_DrawPatchDirect(x, y+int32(7), W_CacheLumpNameT(__ccgo_ts(22155), PU_CACHE))
+	V_DrawPatchDirect(x, y+int32(7), W_CacheLumpNameT(__ccgo_ts_str(22155), PU_CACHE))
 }
 
 // C documentation
@@ -20460,7 +20449,7 @@ func M_LoadGame(choice int32) {
 //	//
 func M_DrawSave() {
 	var i int32
-	V_DrawPatchDirect(72, 28, W_CacheLumpNameT(__ccgo_ts(22217), PU_CACHE))
+	V_DrawPatchDirect(72, 28, W_CacheLumpNameT(__ccgo_ts_str(22217), PU_CACHE))
 	i = 0
 	for {
 		if i >= int32(load_end) {
@@ -20584,9 +20573,9 @@ func M_QuickLoad() {
 //	// Had a "quick hack to fix romero bug"
 //	//
 func M_DrawReadThis1() {
-	var lumpname uintptr
+	var lumpname string
 	var skullx, skully int32
-	lumpname = __ccgo_ts(1911)
+	lumpname = __ccgo_ts_str(1911)
 	skullx = 330
 	skully = 175
 	inhelpscreens = 1
@@ -20603,13 +20592,13 @@ func M_DrawReadThis1() {
 	case exe_hacx:
 		if gamemode == commercial {
 			// Doom 2
-			lumpname = __ccgo_ts(22501)
+			lumpname = __ccgo_ts_str(22501)
 			skullx = 330
 			skully = 165
 		} else {
 			// Doom 1
 			// HELP2 is the first screen shown in Doom 1
-			lumpname = __ccgo_ts(1924)
+			lumpname = __ccgo_ts_str(1924)
 			skullx = 280
 			skully = 185
 		}
@@ -20619,17 +20608,16 @@ func M_DrawReadThis1() {
 		// Ultimate Doom always displays "HELP1".
 		// Chex Quest version also uses "HELP1", even though it is based
 		// on Final Doom.
-		lumpname = __ccgo_ts(22506)
+		lumpname = __ccgo_ts_str(22506)
 	case exe_final:
 		fallthrough
 	case exe_final2:
 		// Final Doom always displays "HELP".
-		lumpname = __ccgo_ts(22501)
+		lumpname = __ccgo_ts_str(22501)
 	default:
 		I_Error(22512, 0)
 		break
 	}
-	lumpname = lumpname
 	V_DrawPatchDirect(0, 0, W_CacheLumpNameT(lumpname, PU_CACHE))
 	ReadDef1.Fx = int16(skullx)
 	ReadDef1.Fy = int16(skully)
@@ -20644,7 +20632,7 @@ func M_DrawReadThis2() {
 	inhelpscreens = 1
 	// We only ever draw the second page if this is
 	// gameversion == exe_doom_1_9 and gamemode == registered
-	V_DrawPatchDirect(0, 0, W_CacheLumpNameT(__ccgo_ts(22506), PU_CACHE))
+	V_DrawPatchDirect(0, 0, W_CacheLumpNameT(__ccgo_ts_str(22506), PU_CACHE))
 }
 
 // C documentation
@@ -20653,7 +20641,7 @@ func M_DrawReadThis2() {
 //	// Change Sfx & Music volumes
 //	//
 func M_DrawSound() {
-	V_DrawPatchDirect(60, 38, W_CacheLumpNameT(__ccgo_ts(22535), PU_CACHE))
+	V_DrawPatchDirect(60, 38, W_CacheLumpNameT(__ccgo_ts_str(22535), PU_CACHE))
 	M_DrawThermo(int32(SoundDef.Fx), int32(SoundDef.Fy)+LINEHEIGHT*(int32(sfx_vol)+1), 16, sfxVolume)
 	M_DrawThermo(int32(SoundDef.Fx), int32(SoundDef.Fy)+LINEHEIGHT*(int32(music_vol)+1), 16, musicVolume)
 }
@@ -20698,7 +20686,7 @@ func M_MusicVol(choice int32) {
 //	// M_DrawMainMenu
 //	//
 func M_DrawMainMenu() {
-	V_DrawPatchDirect(94, 2, W_CacheLumpNameT(__ccgo_ts(22542), PU_CACHE))
+	V_DrawPatchDirect(94, 2, W_CacheLumpNameT(__ccgo_ts_str(22542), PU_CACHE))
 }
 
 // C documentation
@@ -20707,8 +20695,8 @@ func M_DrawMainMenu() {
 //	// M_NewGame
 //	//
 func M_DrawNewGame() {
-	V_DrawPatchDirect(96, 14, W_CacheLumpNameT(__ccgo_ts(22549), PU_CACHE))
-	V_DrawPatchDirect(54, 38, W_CacheLumpNameT(__ccgo_ts(22556), PU_CACHE))
+	V_DrawPatchDirect(96, 14, W_CacheLumpNameT(__ccgo_ts_str(22549), PU_CACHE))
+	V_DrawPatchDirect(54, 38, W_CacheLumpNameT(__ccgo_ts_str(22556), PU_CACHE))
 }
 
 func M_NewGame(choice int32) {
@@ -20725,7 +20713,7 @@ func M_NewGame(choice int32) {
 }
 
 func M_DrawEpisode() {
-	V_DrawPatchDirect(54, 38, W_CacheLumpNameT(__ccgo_ts(22630), PU_CACHE))
+	V_DrawPatchDirect(54, 38, W_CacheLumpNameT(__ccgo_ts_str(22630), PU_CACHE))
 }
 
 func M_VerifyNightmare(key int32) {
@@ -20765,17 +20753,17 @@ func M_Episode(choice int32) {
 //	//
 //	// M_Options
 //	//
-var detailNames = [2]uintptr{
-	0: __ccgo_ts(22849),
-	1: __ccgo_ts(22858),
+var detailNames = [2]string{
+	0: __ccgo_ts_str(22849),
+	1: __ccgo_ts_str(22858),
 }
-var msgNames = [2]uintptr{
-	0: __ccgo_ts(22866),
-	1: __ccgo_ts(22875),
+var msgNames = [2]string{
+	0: __ccgo_ts_str(22866),
+	1: __ccgo_ts_str(22875),
 }
 
 func M_DrawOptions() {
-	V_DrawPatchDirect(108, 15, W_CacheLumpNameT(__ccgo_ts(22883), PU_CACHE))
+	V_DrawPatchDirect(108, 15, W_CacheLumpNameT(__ccgo_ts_str(22883), PU_CACHE))
 	V_DrawPatchDirect(int32(OptionsDef.Fx)+int32(175), int32(OptionsDef.Fy)+LINEHEIGHT*int32(detail), W_CacheLumpNameT(detailNames[detailLevel], PU_CACHE))
 	V_DrawPatchDirect(int32(OptionsDef.Fx)+int32(120), int32(OptionsDef.Fy)+LINEHEIGHT*int32(messages), W_CacheLumpNameT(msgNames[showMessages], PU_CACHE))
 	M_DrawThermo(int32(OptionsDef.Fx), int32(OptionsDef.Fy)+LINEHEIGHT*(int32(mousesens)+1), 10, mouseSensitivity)
@@ -20968,22 +20956,22 @@ func M_SizeDisplay(choice int32) {
 func M_DrawThermo(x int32, y int32, thermWidth int32, thermDot int32) {
 	var i, xx int32
 	xx = x
-	V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts(23063), PU_CACHE))
+	V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts_str(23063), PU_CACHE))
 	xx += 8
 	i = 0
 	for {
 		if i >= thermWidth {
 			break
 		}
-		V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts(23072), PU_CACHE))
+		V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts_str(23072), PU_CACHE))
 		xx += 8
 		goto _1
 	_1:
 		;
 		i++
 	}
-	V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts(23081), PU_CACHE))
-	V_DrawPatchDirect(x+int32(8)+thermDot*int32(8), y, W_CacheLumpNameT(__ccgo_ts(23090), PU_CACHE))
+	V_DrawPatchDirect(xx, y, W_CacheLumpNameT(__ccgo_ts_str(23081), PU_CACHE))
+	V_DrawPatchDirect(x+int32(8)+thermDot*int32(8), y, W_CacheLumpNameT(__ccgo_ts_str(23090), PU_CACHE))
 }
 
 func M_StartMessage(string1 string, routine func(int32), input boolean) {
@@ -21336,7 +21324,7 @@ func M_Responder(ev *event_t) (r boolean) {
 																usegamma = 0
 															}
 															players[consoleplayer].Fmessage = gammamsg[usegamma]
-															I_SetPalette(W_CacheLumpName(__ccgo_ts(1490), PU_CACHE))
+															I_SetPalette(W_CacheLumpName(__ccgo_ts_str(1490), PU_CACHE))
 															return 1
 														}
 													}
@@ -21515,7 +21503,6 @@ func M_Drawer() {
 	var bp string
 	var foundnewline, start int32
 	var i, max uint32
-	var name uintptr
 	inhelpscreens = 0
 	// Horiz. & Vertically center string and print it.
 	if messageToPrint != 0 {
@@ -21568,8 +21555,8 @@ func M_Drawer() {
 		if i >= max {
 			break
 		}
-		name = uintptr(unsafe.Pointer(&currentMenu.Fmenuitems[i].Fname[0]))
-		if *(*int8)(unsafe.Pointer(name)) != 0 {
+		name := currentMenu.Fmenuitems[i].Fname[:]
+		if name != "" {
 			V_DrawPatchDirect(int32(x), int32(y2), W_CacheLumpNameT(name, PU_CACHE))
 		}
 		y2 = int16(int32(y2) + LINEHEIGHT)
@@ -31060,8 +31047,8 @@ func P_LoadSectors(lump int32) {
 		ss := &sectors[i]
 		ss.Ffloorheight = int32(ms.Ffloorheight) << FRACBITS
 		ss.Fceilingheight = int32(ms.Fceilingheight) << FRACBITS
-		ss.Ffloorpic = int16(R_FlatNumForName(uintptr(unsafe.Pointer(&ms.Ffloorpic))))
-		ss.Fceilingpic = int16(R_FlatNumForName(uintptr(unsafe.Pointer(&ms.Fceilingpic))))
+		ss.Ffloorpic = int16(R_FlatNumForName(gostring_bytes(ms.Ffloorpic[:])))
+		ss.Fceilingpic = int16(R_FlatNumForName(gostring_bytes(ms.Fceilingpic[:])))
 		ss.Flightlevel = ms.Flightlevel
 		ss.Fspecial = ms.Fspecial
 		ss.Ftag = ms.Ftag
@@ -31232,20 +31219,19 @@ func P_LoadLineDefs(lump int32) {
 //	// P_LoadSideDefs
 //	//
 func P_LoadSideDefs(lump int32) {
-	var data, msd uintptr
+	var data uintptr
 	numsides = int32(uint64(W_LumpLength(uint32(lump))) / 30)
 	sides = make([]side_t, numsides)
 	data = W_CacheLumpNum(lump, PU_STATIC)
-	msd = data
+	msd := unsafe.Slice((*mapsidedef_t)(unsafe.Pointer(data)), numsides)
 	for i := int32(0); i < numsides; i++ {
 		sd := &sides[i]
-		sd.Ftextureoffset = int32((*mapsidedef_t)(unsafe.Pointer(msd)).Ftextureoffset) << FRACBITS
-		sd.Frowoffset = int32((*mapsidedef_t)(unsafe.Pointer(msd)).Frowoffset) << FRACBITS
-		sd.Ftoptexture = int16(R_TextureNumForName(msd + 4))
-		sd.Fbottomtexture = int16(R_TextureNumForName(msd + 12))
-		sd.Fmidtexture = int16(R_TextureNumForName(msd + 20))
-		sd.Fsector = &sectors[(*mapsidedef_t)(unsafe.Pointer(msd)).Fsector]
-		msd += 30
+		sd.Ftextureoffset = int32(msd[i].Ftextureoffset) << FRACBITS
+		sd.Frowoffset = int32(msd[i].Frowoffset) << FRACBITS
+		sd.Ftoptexture = int16(R_TextureNumForName(gostring_bytes(msd[i].Ftoptexture[:])))
+		sd.Fbottomtexture = int16(R_TextureNumForName(gostring_bytes(msd[i].Fbottomtexture[:])))
+		sd.Fmidtexture = int16(R_TextureNumForName(gostring_bytes(msd[i].Fmidtexture[:])))
+		sd.Fsector = &sectors[msd[i].Fsector]
 	}
 	W_ReleaseLumpNum(lump)
 }
@@ -31503,17 +31489,17 @@ func P_SetupLevel(episode int32, map1 int32, playermask int32, skill skill_t) {
 	// UNUSED W_Profile ();
 	P_InitThinkers()
 	// find map name
-	var bp []byte
+	var bp string
 	if gamemode == commercial {
 		if map1 < 10 {
-			bp = sprintf_ccgo_bytes(25226, map1)
+			bp = fmt.Sprintf(__ccgo_ts_str(25226), map1)
 		} else {
-			bp = sprintf_ccgo_bytes(25233, map1)
+			bp = fmt.Sprintf(__ccgo_ts_str(25233), map1)
 		}
 	} else {
-		bp = []byte{'E', '0' + byte(episode), 'M', '0' + byte(map1), 0}
+		bp = string([]byte{'E', '0' + byte(episode), 'M', '0' + byte(map1)})
 	}
-	lumpnum = W_GetNumForName(byteptr(bp))
+	lumpnum = W_GetNumForName(bp)
 	leveltime = 0
 	// note: most of this ordering is important
 	P_LoadBlockMap(lumpnum + ML_BLOCKMAP)
@@ -31882,146 +31868,144 @@ type anim_t struct {
 //	//
 type animdef_t struct {
 	Fistexture int32
-	Fendname   [9]int8
-	Fstartname [9]int8
+	Fendname   string
+	Fstartname string
 	Fspeed     int32
 }
 
 func init() {
 	animdefs = [23]animdef_t{
 		0: {
-			Fendname:   [9]int8{'N', 'U', 'K', 'A', 'G', 'E', '3'},
-			Fstartname: [9]int8{'N', 'U', 'K', 'A', 'G', 'E', '1'},
+			Fendname:   "NUKAGE3",
+			Fstartname: "NUKAGE1",
 			Fspeed:     8,
 		},
 		1: {
-			Fendname:   [9]int8{'F', 'W', 'A', 'T', 'E', 'R', '4'},
-			Fstartname: [9]int8{'F', 'W', 'A', 'T', 'E', 'R', '1'},
+			Fendname:   "FWATER4",
+			Fstartname: "FWATER1",
 			Fspeed:     8,
 		},
 		2: {
-			Fendname:   [9]int8{'S', 'W', 'A', 'T', 'E', 'R', '4'},
-			Fstartname: [9]int8{'S', 'W', 'A', 'T', 'E', 'R', '1'},
+			Fendname:   "SWATER4",
+			Fstartname: "SWATER1",
 			Fspeed:     8,
 		},
 		3: {
-			Fendname:   [9]int8{'L', 'A', 'V', 'A', '4'},
-			Fstartname: [9]int8{'L', 'A', 'V', 'A', '1'},
+			Fendname:   "LAVA4",
+			Fstartname: "LAVA1",
 			Fspeed:     8,
 		},
 		4: {
-			Fendname:   [9]int8{'B', 'L', 'O', 'O', 'D', '3'},
-			Fstartname: [9]int8{'B', 'L', 'O', 'O', 'D', '1'},
+			Fendname:   "BLOOD3",
+			Fstartname: "BLOOD1",
 			Fspeed:     8,
 		},
 		5: {
-			Fendname:   [9]int8{'R', 'R', 'O', 'C', 'K', '0', '8'},
-			Fstartname: [9]int8{'R', 'R', 'O', 'C', 'K', '0', '5'},
+			Fendname:   "RROCK08",
+			Fstartname: "RROCK05",
 			Fspeed:     8,
 		},
 		6: {
-			Fendname:   [9]int8{'S', 'L', 'I', 'M', 'E', '0', '4'},
-			Fstartname: [9]int8{'S', 'L', 'I', 'M', 'E', '0', '1'},
+			Fendname:   "SLIME04",
+			Fstartname: "SLIME01",
 			Fspeed:     8,
 		},
 		7: {
-			Fendname:   [9]int8{'S', 'L', 'I', 'M', 'E', '0', '8'},
-			Fstartname: [9]int8{'S', 'L', 'I', 'M', 'E', '0', '5'},
+			Fendname:   "SLIME08",
+			Fstartname: "SLIME05",
 			Fspeed:     8,
 		},
 		8: {
-			Fendname:   [9]int8{'S', 'L', 'I', 'M', 'E', '1', '2'},
-			Fstartname: [9]int8{'S', 'L', 'I', 'M', 'E', '0', '9'},
+			Fendname:   "SLIME12",
+			Fstartname: "SLIME09",
 			Fspeed:     8,
 		},
 		9: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'B', 'L', 'O', 'D', 'G', 'R', '4'},
-			Fstartname: [9]int8{'B', 'L', 'O', 'D', 'G', 'R', '1'},
+			Fendname:   "BLODGR4",
+			Fstartname: "BLODGR1",
 			Fspeed:     8,
 		},
 		10: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'S', 'L', 'A', 'D', 'R', 'I', 'P', '3'},
-			Fstartname: [9]int8{'S', 'L', 'A', 'D', 'R', 'I', 'P', '1'},
+			Fendname:   "SLADRIP3",
+			Fstartname: "SLADRIP1",
 			Fspeed:     8,
 		},
 		11: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'B', 'L', 'O', 'D', 'R', 'I', 'P', '4'},
-			Fstartname: [9]int8{'B', 'L', 'O', 'D', 'R', 'I', 'P', '1'},
+			Fendname:   "BLODRIP4",
+			Fstartname: "BLODRIP1",
 			Fspeed:     8,
 		},
 		12: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'F', 'I', 'R', 'E', 'W', 'A', 'L', 'L'},
-			Fstartname: [9]int8{'F', 'I', 'R', 'E', 'W', 'A', 'L', 'A'},
+			Fendname:   "FIREWALL",
+			Fstartname: "FIREWALA",
 			Fspeed:     8,
 		},
 		13: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'G', 'S', 'T', 'F', 'O', 'N', 'T', '3'},
-			Fstartname: [9]int8{'G', 'S', 'T', 'F', 'O', 'N', 'T', '1'},
+			Fendname:   "GSTFONT3",
+			Fstartname: "GSTFONT1",
 			Fspeed:     8,
 		},
 		14: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'F', 'I', 'R', 'E', 'L', 'A', 'V', 'A'},
-			Fstartname: [9]int8{'F', 'I', 'R', 'E', 'L', 'A', 'V', '3'},
+			Fendname:   "FIRELAVA",
+			Fstartname: "FIRELAV3",
 			Fspeed:     8,
 		},
 		15: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'F', 'I', 'R', 'E', 'M', 'A', 'G', '3'},
-			Fstartname: [9]int8{'F', 'I', 'R', 'E', 'M', 'A', 'G', '1'},
+			Fendname:   "FIREMAG3",
+			Fstartname: "FIREMAG1",
 			Fspeed:     8,
 		},
 		16: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'F', 'I', 'R', 'E', 'B', 'L', 'U', '2'},
-			Fstartname: [9]int8{'F', 'I', 'R', 'E', 'B', 'L', 'U', '1'},
+			Fendname:   "FIREBLU2",
+			Fstartname: "FIREBLU1",
 			Fspeed:     8,
 		},
 		17: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'R', 'O', 'C', 'K', 'R', 'E', 'D', '3'},
-			Fstartname: [9]int8{'R', 'O', 'C', 'K', 'R', 'E', 'D', '1'},
+			Fendname:   "ROCKRED3",
+			Fstartname: "ROCKRED1",
 			Fspeed:     8,
 		},
 		18: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'B', 'F', 'A', 'L', 'L', '4'},
-			Fstartname: [9]int8{'B', 'F', 'A', 'L', 'L', '1'},
+			Fendname:   "BFALL4",
+			Fstartname: "BFALL1",
 			Fspeed:     8,
 		},
 		19: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'S', 'F', 'A', 'L', 'L', '4'},
-			Fstartname: [9]int8{'S', 'F', 'A', 'L', 'L', '1'},
+			Fendname:   "SFALL4",
+			Fstartname: "SFALL1",
 			Fspeed:     8,
 		},
 		20: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'W', 'F', 'A', 'L', 'L', '4'},
-			Fstartname: [9]int8{'W', 'F', 'A', 'L', 'L', '1'},
+			Fendname:   "WFALL4",
+			Fstartname: "WFALL1",
 			Fspeed:     8,
 		},
 		21: {
 			Fistexture: 1,
-			Fendname:   [9]int8{'D', 'B', 'R', 'A', 'I', 'N', '4'},
-			Fstartname: [9]int8{'D', 'B', 'R', 'A', 'I', 'N', '1'},
+			Fendname:   "DBRAIN4",
+			Fstartname: "DBRAIN1",
 			Fspeed:     8,
 		},
 		22: {
 			Fistexture: -1,
-			Fendname:   [9]int8{},
-			Fstartname: [9]int8{},
 		},
 	}
 }
 
 func P_InitPicAnims() {
-	var endname, startname uintptr
+	var endname, startname string
 	//	Init animation
 	lastanim = &anims[0]
 	animPos := 0
@@ -32029,8 +32013,8 @@ func P_InitPicAnims() {
 		if animdefs[i].Fistexture == -1 {
 			break
 		}
-		startname = uintptr(unsafe.Pointer(&animdefs)) + uintptr(i)*28 + 13
-		endname = uintptr(unsafe.Pointer(&animdefs)) + uintptr(i)*28 + 4
+		startname = animdefs[i].Fstartname
+		endname = animdefs[i].Fendname
 		if animdefs[i].Fistexture != 0 {
 			// different episode ?
 			if R_CheckTextureNumForName(startname) == -1 {
@@ -33128,208 +33112,208 @@ func P_SpawnSpecials() {
 func init() {
 	alphSwitchList = [41]switchlist_t{
 		0: {
-			Fname1:   [9]int8{'S', 'W', '1', 'B', 'R', 'C', 'O', 'M'},
-			Fname2:   [9]int8{'S', 'W', '2', 'B', 'R', 'C', 'O', 'M'},
+			Fname1:   "SW1BRCOM",
+			Fname2:   "SW2BRCOM",
 			Fepisode: 1,
 		},
 		1: {
-			Fname1:   [9]int8{'S', 'W', '1', 'B', 'R', 'N', '1'},
-			Fname2:   [9]int8{'S', 'W', '2', 'B', 'R', 'N', '1'},
+			Fname1:   "SW1BRN1",
+			Fname2:   "SW2BRN1",
 			Fepisode: 1,
 		},
 		2: {
-			Fname1:   [9]int8{'S', 'W', '1', 'B', 'R', 'N', '2'},
-			Fname2:   [9]int8{'S', 'W', '2', 'B', 'R', 'N', '2'},
+			Fname1:   "SW1BRN2",
+			Fname2:   "SW2BRN2",
 			Fepisode: 1,
 		},
 		3: {
-			Fname1:   [9]int8{'S', 'W', '1', 'B', 'R', 'N', 'G', 'N'},
-			Fname2:   [9]int8{'S', 'W', '2', 'B', 'R', 'N', 'G', 'N'},
+			Fname1:   "SW1BRNGN",
+			Fname2:   "SW2BRNGN",
 			Fepisode: 1,
 		},
 		4: {
-			Fname1:   [9]int8{'S', 'W', '1', 'B', 'R', 'O', 'W', 'N'},
-			Fname2:   [9]int8{'S', 'W', '2', 'B', 'R', 'O', 'W', 'N'},
+			Fname1:   "SW1BROWN",
+			Fname2:   "SW2BROWN",
 			Fepisode: 1,
 		},
 		5: {
-			Fname1:   [9]int8{'S', 'W', '1', 'C', 'O', 'M', 'M'},
-			Fname2:   [9]int8{'S', 'W', '2', 'C', 'O', 'M', 'M'},
+			Fname1:   "SW1COMM",
+			Fname2:   "SW2COMM",
 			Fepisode: 1,
 		},
 		6: {
-			Fname1:   [9]int8{'S', 'W', '1', 'C', 'O', 'M', 'P'},
-			Fname2:   [9]int8{'S', 'W', '2', 'C', 'O', 'M', 'P'},
+			Fname1:   "SW1COMP",
+			Fname2:   "SW2COMP",
 			Fepisode: 1,
 		},
 		7: {
-			Fname1:   [9]int8{'S', 'W', '1', 'D', 'I', 'R', 'T'},
-			Fname2:   [9]int8{'S', 'W', '2', 'D', 'I', 'R', 'T'},
+			Fname1:   "SW1DIRT",
+			Fname2:   "SW2DIRT",
 			Fepisode: 1,
 		},
 		8: {
-			Fname1:   [9]int8{'S', 'W', '1', 'E', 'X', 'I', 'T'},
-			Fname2:   [9]int8{'S', 'W', '2', 'E', 'X', 'I', 'T'},
+			Fname1:   "SW1EXIT",
+			Fname2:   "SW2EXIT",
 			Fepisode: 1,
 		},
 		9: {
-			Fname1:   [9]int8{'S', 'W', '1', 'G', 'R', 'A', 'Y'},
-			Fname2:   [9]int8{'S', 'W', '2', 'G', 'R', 'A', 'Y'},
+			Fname1:   "SW1GRAY",
+			Fname2:   "SW2GRAY",
 			Fepisode: 1,
 		},
 		10: {
-			Fname1:   [9]int8{'S', 'W', '1', 'G', 'R', 'A', 'Y', '1'},
-			Fname2:   [9]int8{'S', 'W', '2', 'G', 'R', 'A', 'Y', '1'},
+			Fname1:   "SW1GRAY1",
+			Fname2:   "SW2GRAY1",
 			Fepisode: 1,
 		},
 		11: {
-			Fname1:   [9]int8{'S', 'W', '1', 'M', 'E', 'T', 'A', 'L'},
-			Fname2:   [9]int8{'S', 'W', '2', 'M', 'E', 'T', 'A', 'L'},
+			Fname1:   "SW1METAL",
+			Fname2:   "SW2METAL",
 			Fepisode: 1,
 		},
 		12: {
-			Fname1:   [9]int8{'S', 'W', '1', 'P', 'I', 'P', 'E'},
-			Fname2:   [9]int8{'S', 'W', '2', 'P', 'I', 'P', 'E'},
+			Fname1:   "SW1PIPE",
+			Fname2:   "SW2PIPE",
 			Fepisode: 1,
 		},
 		13: {
-			Fname1:   [9]int8{'S', 'W', '1', 'S', 'L', 'A', 'D'},
-			Fname2:   [9]int8{'S', 'W', '2', 'S', 'L', 'A', 'D'},
+			Fname1:   "SW1SLAD",
+			Fname2:   "SW2SLAD",
 			Fepisode: 1,
 		},
 		14: {
-			Fname1:   [9]int8{'S', 'W', '1', 'S', 'T', 'A', 'R', 'G'},
-			Fname2:   [9]int8{'S', 'W', '2', 'S', 'T', 'A', 'R', 'G'},
+			Fname1:   "SW1STARG",
+			Fname2:   "SW2STARG",
 			Fepisode: 1,
 		},
 		15: {
-			Fname1:   [9]int8{'S', 'W', '1', 'S', 'T', 'O', 'N', '1'},
-			Fname2:   [9]int8{'S', 'W', '2', 'S', 'T', 'O', 'N', '1'},
+			Fname1:   "SW1STON1",
+			Fname2:   "SW2STON1",
 			Fepisode: 1,
 		},
 		16: {
-			Fname1:   [9]int8{'S', 'W', '1', 'S', 'T', 'O', 'N', '2'},
-			Fname2:   [9]int8{'S', 'W', '2', 'S', 'T', 'O', 'N', '2'},
+			Fname1:   "SW1STON2",
+			Fname2:   "SW2STON2",
 			Fepisode: 1,
 		},
 		17: {
-			Fname1:   [9]int8{'S', 'W', '1', 'S', 'T', 'O', 'N', 'E'},
-			Fname2:   [9]int8{'S', 'W', '2', 'S', 'T', 'O', 'N', 'E'},
+			Fname1:   "SW1STONE",
+			Fname2:   "SW2STONE",
 			Fepisode: 1,
 		},
 		18: {
-			Fname1:   [9]int8{'S', 'W', '1', 'S', 'T', 'R', 'T', 'N'},
-			Fname2:   [9]int8{'S', 'W', '2', 'S', 'T', 'R', 'T', 'N'},
+			Fname1:   "SW1STRTN",
+			Fname2:   "SW2STRTN",
 			Fepisode: 1,
 		},
 		19: {
-			Fname1:   [9]int8{'S', 'W', '1', 'B', 'L', 'U', 'E'},
-			Fname2:   [9]int8{'S', 'W', '2', 'B', 'L', 'U', 'E'},
+			Fname1:   "SW1BLUE",
+			Fname2:   "SW2BLUE",
 			Fepisode: 2,
 		},
 		20: {
-			Fname1:   [9]int8{'S', 'W', '1', 'C', 'M', 'T'},
-			Fname2:   [9]int8{'S', 'W', '2', 'C', 'M', 'T'},
+			Fname1:   "SW1CMT",
+			Fname2:   "SW2CMT",
 			Fepisode: 2,
 		},
 		21: {
-			Fname1:   [9]int8{'S', 'W', '1', 'G', 'A', 'R', 'G'},
-			Fname2:   [9]int8{'S', 'W', '2', 'G', 'A', 'R', 'G'},
+			Fname1:   "SW1GARG",
+			Fname2:   "SW2GARG",
 			Fepisode: 2,
 		},
 		22: {
-			Fname1:   [9]int8{'S', 'W', '1', 'G', 'S', 'T', 'O', 'N'},
-			Fname2:   [9]int8{'S', 'W', '2', 'G', 'S', 'T', 'O', 'N'},
+			Fname1:   "SW1GSTON",
+			Fname2:   "SW2GSTON",
 			Fepisode: 2,
 		},
 		23: {
-			Fname1:   [9]int8{'S', 'W', '1', 'H', 'O', 'T'},
-			Fname2:   [9]int8{'S', 'W', '2', 'H', 'O', 'T'},
+			Fname1:   "SW1HOT",
+			Fname2:   "SW2HOT",
 			Fepisode: 2,
 		},
 		24: {
-			Fname1:   [9]int8{'S', 'W', '1', 'L', 'I', 'O', 'N'},
-			Fname2:   [9]int8{'S', 'W', '2', 'L', 'I', 'O', 'N'},
+			Fname1:   "SW1LION",
+			Fname2:   "SW2LION",
 			Fepisode: 2,
 		},
 		25: {
-			Fname1:   [9]int8{'S', 'W', '1', 'S', 'A', 'T', 'Y', 'R'},
-			Fname2:   [9]int8{'S', 'W', '2', 'S', 'A', 'T', 'Y', 'R'},
+			Fname1:   "SW1SATYR",
+			Fname2:   "SW2SATYR",
 			Fepisode: 2,
 		},
 		26: {
-			Fname1:   [9]int8{'S', 'W', '1', 'S', 'K', 'I', 'N'},
-			Fname2:   [9]int8{'S', 'W', '2', 'S', 'K', 'I', 'N'},
+			Fname1:   "SW1SKIN",
+			Fname2:   "SW2SKIN",
 			Fepisode: 2,
 		},
 		27: {
-			Fname1:   [9]int8{'S', 'W', '1', 'V', 'I', 'N', 'E'},
-			Fname2:   [9]int8{'S', 'W', '2', 'V', 'I', 'N', 'E'},
+			Fname1:   "SW1VINE",
+			Fname2:   "SW2VINE",
 			Fepisode: 2,
 		},
 		28: {
-			Fname1:   [9]int8{'S', 'W', '1', 'W', 'O', 'O', 'D'},
-			Fname2:   [9]int8{'S', 'W', '2', 'W', 'O', 'O', 'D'},
+			Fname1:   "SW1WOOD",
+			Fname2:   "SW2WOOD",
 			Fepisode: 2,
 		},
 		29: {
-			Fname1:   [9]int8{'S', 'W', '1', 'P', 'A', 'N', 'E', 'L'},
-			Fname2:   [9]int8{'S', 'W', '2', 'P', 'A', 'N', 'E', 'L'},
+			Fname1:   "SW1PANEL",
+			Fname2:   "SW2PANEL",
 			Fepisode: 3,
 		},
 		30: {
-			Fname1:   [9]int8{'S', 'W', '1', 'R', 'O', 'C', 'K'},
-			Fname2:   [9]int8{'S', 'W', '2', 'R', 'O', 'C', 'K'},
+			Fname1:   "SW1ROCK",
+			Fname2:   "SW2ROCK",
 			Fepisode: 3,
 		},
 		31: {
-			Fname1:   [9]int8{'S', 'W', '1', 'M', 'E', 'T', '2'},
-			Fname2:   [9]int8{'S', 'W', '2', 'M', 'E', 'T', '2'},
+			Fname1:   "SW1MET2",
+			Fname2:   "SW2MET2",
 			Fepisode: 3,
 		},
 		32: {
-			Fname1:   [9]int8{'S', 'W', '1', 'W', 'D', 'M', 'E', 'T'},
-			Fname2:   [9]int8{'S', 'W', '2', 'W', 'D', 'M', 'E', 'T'},
+			Fname1:   "SW1WDMET",
+			Fname2:   "SW2WDMET",
 			Fepisode: 3,
 		},
 		33: {
-			Fname1:   [9]int8{'S', 'W', '1', 'B', 'R', 'I', 'K'},
-			Fname2:   [9]int8{'S', 'W', '2', 'B', 'R', 'I', 'K'},
+			Fname1:   "SW1BRIK",
+			Fname2:   "SW2BRIK",
 			Fepisode: 3,
 		},
 		34: {
-			Fname1:   [9]int8{'S', 'W', '1', 'M', 'O', 'D', '1'},
-			Fname2:   [9]int8{'S', 'W', '2', 'M', 'O', 'D', '1'},
+			Fname1:   "SW1MOD1",
+			Fname2:   "SW2MOD1",
 			Fepisode: 3,
 		},
 		35: {
-			Fname1:   [9]int8{'S', 'W', '1', 'Z', 'I', 'M'},
-			Fname2:   [9]int8{'S', 'W', '2', 'Z', 'I', 'M'},
+			Fname1:   "SW1ZIM",
+			Fname2:   "SW2ZIM",
 			Fepisode: 3,
 		},
 		36: {
-			Fname1:   [9]int8{'S', 'W', '1', 'S', 'T', 'O', 'N', '6'},
-			Fname2:   [9]int8{'S', 'W', '2', 'S', 'T', 'O', 'N', '6'},
+			Fname1:   "SW1STON6",
+			Fname2:   "SW2STON6",
 			Fepisode: 3,
 		},
 		37: {
-			Fname1:   [9]int8{'S', 'W', '1', 'T', 'E', 'K'},
-			Fname2:   [9]int8{'S', 'W', '2', 'T', 'E', 'K'},
+			Fname1:   "SW1TEK",
+			Fname2:   "SW2TEK",
 			Fepisode: 3,
 		},
 		38: {
-			Fname1:   [9]int8{'S', 'W', '1', 'M', 'A', 'R', 'B'},
-			Fname2:   [9]int8{'S', 'W', '2', 'M', 'A', 'R', 'B'},
+			Fname1:   "SW1MARB",
+			Fname2:   "SW2MARB",
 			Fepisode: 3,
 		},
 		39: {
-			Fname1:   [9]int8{'S', 'W', '1', 'S', 'K', 'U', 'L', 'L'},
-			Fname2:   [9]int8{'S', 'W', '2', 'S', 'K', 'U', 'L', 'L'},
+			Fname1:   "SW1SKULL",
+			Fname2:   "SW2SKULL",
 			Fepisode: 3,
 		},
 		40: {
-			Fname1: [9]int8{},
-			Fname2: [9]int8{},
+			Fname1: "",
+			Fname2: "",
 		},
 	}
 }
@@ -33364,10 +33348,10 @@ func P_InitSwitchList() {
 		if int32(alphSwitchList[i].Fepisode) <= episode {
 			v2 = index
 			index++
-			switchlist[v2] = R_TextureNumForName(uintptr(unsafe.Pointer(&alphSwitchList)) + uintptr(i)*20)
+			switchlist[v2] = R_TextureNumForName(alphSwitchList[i].Fname2)
 			v3 = index
 			index++
-			switchlist[v3] = R_TextureNumForName(uintptr(unsafe.Pointer(&alphSwitchList)) + uintptr(i)*20 + 9)
+			switchlist[v3] = R_TextureNumForName(alphSwitchList[i].Fname1)
 		}
 		goto _1
 	_1:
@@ -35032,7 +35016,7 @@ func GenerateTextureHashTable() {
 		// entries with the same name, the first one in the array
 		// wins. The new entry must therefore be added at the end
 		// of the hash chain, so that earlier entries win.
-		key = int32(W_LumpNameHash(uintptr(unsafe.Pointer(&textures[i].Fname[0]))) % uint32(numtextures))
+		key = int32(W_LumpNameHash(gostring_bytes(textures[i].Fname[:])) % uint32(numtextures))
 		rover = &textures_hashtable[key]
 		for *rover != nil {
 			rover = &(*rover).Fnext
@@ -35060,7 +35044,7 @@ func R_InitTextures() {
 	var i, j, maxoff, maxoff2, nummappatches, numtextures1, numtextures2, offset, temp1, temp2, temp3, totalwidth int32
 	// Load the patch names from pnames.lmp.
 	(*(*[9]int8)(unsafe.Pointer(bp)))[int32(8)] = 0
-	names = W_CacheLumpName(__ccgo_ts(26022), PU_STATIC)
+	names = W_CacheLumpName(__ccgo_ts_str(26022), PU_STATIC)
 	nummappatches = *(*int32)(unsafe.Pointer(names))
 	name_p = names + uintptr(4)
 	patchlookup = Z_Malloc(int32(uint64(nummappatches)*4), PU_STATIC, uintptr(0))
@@ -35070,25 +35054,25 @@ func R_InitTextures() {
 			break
 		}
 		M_StringCopy(bp, name_p+uintptr(i*int32(8)), 9)
-		*(*int32)(unsafe.Pointer(patchlookup + uintptr(i)*4)) = W_CheckNumForName(bp)
+		*(*int32)(unsafe.Pointer(patchlookup + uintptr(i)*4)) = W_CheckNumForName(gostring_n(bp, 8))
 		goto _1
 	_1:
 		;
 		i++
 	}
-	W_ReleaseLumpName(__ccgo_ts(26022))
+	W_ReleaseLumpName(__ccgo_ts_str(26022))
 	// Load the map texture definitions from textures.lmp.
 	// The data is contained in one or two lumps,
 	//  TEXTURE1 for shareware, plus TEXTURE2 for commercial.
-	v2 = W_CacheLumpName(__ccgo_ts(26029), PU_STATIC)
+	v2 = W_CacheLumpName(__ccgo_ts_str(26029), PU_STATIC)
 	maptex = v2
 	numtextures1 = *(*int32)(unsafe.Pointer(maptex))
-	maxoff = W_LumpLength(uint32(W_GetNumForName(__ccgo_ts(26029))))
+	maxoff = W_LumpLength(uint32(W_GetNumForName(__ccgo_ts_str(26029))))
 	directory = maptex + uintptr(1)*4
-	if W_CheckNumForName(__ccgo_ts(26038)) != -1 {
-		maptex2 = W_CacheLumpName(__ccgo_ts(26038), PU_STATIC)
+	if W_CheckNumForName(__ccgo_ts_str(26038)) != -1 {
+		maptex2 = W_CacheLumpName(__ccgo_ts_str(26038), PU_STATIC)
 		numtextures2 = *(*int32)(unsafe.Pointer(maptex2))
-		maxoff2 = W_LumpLength(uint32(W_GetNumForName(__ccgo_ts(26038))))
+		maxoff2 = W_LumpLength(uint32(W_GetNumForName(__ccgo_ts_str(26038))))
 	} else {
 		maptex2 = uintptr(0)
 		numtextures2 = 0
@@ -35104,8 +35088,8 @@ func R_InitTextures() {
 	textureheight = make([]fixed_t, numtextures)
 	totalwidth = 0
 	//	Really complex printing shit...
-	temp1 = W_GetNumForName(__ccgo_ts(26047)) // P_???????
-	temp2 = W_GetNumForName(__ccgo_ts(26055)) - 1
+	temp1 = W_GetNumForName(__ccgo_ts_str(26047)) // P_???????
+	temp2 = W_GetNumForName(__ccgo_ts_str(26055)) - 1
 	temp3 = (temp2-temp1+int32(63))/int32(64) + (numtextures+int32(63))/int32(64)
 	// If stdout is a real console, use the classic vanilla "filling
 	// up the box" effect, which uses backspace to "step back" inside
@@ -35198,9 +35182,9 @@ func R_InitTextures() {
 		directory += 4
 	}
 	Z_Free(patchlookup)
-	W_ReleaseLumpName(__ccgo_ts(26029))
+	W_ReleaseLumpName(__ccgo_ts_str(26029))
 	if maptex2 != 0 {
-		W_ReleaseLumpName(__ccgo_ts(26038))
+		W_ReleaseLumpName(__ccgo_ts_str(26038))
 	}
 	// Precalculate whatever possible.
 	i = 0
@@ -35237,8 +35221,8 @@ func R_InitTextures() {
 //	//
 func R_InitFlats() {
 	var i int32
-	firstflat = W_GetNumForName(__ccgo_ts(26151)) + 1
-	lastflat = W_GetNumForName(__ccgo_ts(26159)) - 1
+	firstflat = W_GetNumForName(__ccgo_ts_str(26151)) + 1
+	lastflat = W_GetNumForName(__ccgo_ts_str(26159)) - 1
 	numflats = lastflat - firstflat + 1
 	// Create translation table for global animation.
 	flattranslation = make([]int32, numflats+1)
@@ -35265,8 +35249,8 @@ func R_InitFlats() {
 //	//
 func R_InitSpriteLumps() {
 	var i int32
-	firstspritelump = W_GetNumForName(__ccgo_ts(26047)) + 1
-	lastspritelump = W_GetNumForName(__ccgo_ts(26055)) - 1
+	firstspritelump = W_GetNumForName(__ccgo_ts_str(26047)) + 1
+	lastspritelump = W_GetNumForName(__ccgo_ts_str(26055)) - 1
 	numspritelumps = lastspritelump - firstspritelump + 1
 	spritewidth = make([]fixed_t, numspritelumps)
 	spriteoffset = make([]fixed_t, numspritelumps)
@@ -35301,7 +35285,7 @@ func R_InitColormaps() {
 	var data uintptr
 	// Load in the light tables,
 	//  256 byte align tables.
-	lump = W_GetNumForName(__ccgo_ts(26165))
+	lump = W_GetNumForName(__ccgo_ts_str(26165))
 	size = W_LumpLength(uint32(lump))
 	data = W_CacheLumpNum(lump, PU_STATIC)
 	colormaps = unsafe.Slice((*lighttable_t)(unsafe.Pointer(data)), size)
@@ -35331,11 +35315,11 @@ func R_InitData() {
 //	// R_FlatNumForName
 //	// Retrieval, get a flat number for a flat name.
 //	//
-func R_FlatNumForName(name uintptr) (r int32) {
+func R_FlatNumForName(name string) (r int32) {
 	var i int32
 	i = W_CheckNumForName(name)
 	if i == -1 {
-		I_Error(26174, gostring_n(name, 8))
+		I_Error(26174, name)
 	}
 	return i - firstflat
 }
@@ -35347,17 +35331,17 @@ func R_FlatNumForName(name uintptr) (r int32) {
 //	// Check whether texture is available.
 //	// Filter out NoTexture indicator.
 //	//
-func R_CheckTextureNumForName(name uintptr) (r int32) {
+func R_CheckTextureNumForName(name string) (r int32) {
 	var key int32
 	var texture *texture_t
 	// "NoTexture" marker.
-	if int32(*(*int8)(unsafe.Pointer(name))) == int32('-') {
+	if name[0] == '-' {
 		return 0
 	}
 	key = int32(W_LumpNameHash(name) % uint32(numtextures))
 	texture = textures_hashtable[key]
 	for texture != nil {
-		if strings.EqualFold(gostring_bytes(texture.Fname[:]), gostring_n(name, 8)) {
+		if strings.EqualFold(gostring_bytes(texture.Fname[:]), name) {
 			return texture.Findex
 		}
 		texture = texture.Fnext
@@ -35372,7 +35356,7 @@ func R_CheckTextureNumForName(name uintptr) (r int32) {
 //	// Calls R_CheckTextureNumForName,
 //	//  aborts with error message.
 //	//
-func R_TextureNumForName(name uintptr) (r int32) {
+func R_TextureNumForName(name string) (r int32) {
 	var i int32
 	i = R_CheckTextureNumForName(name)
 	if i == -1 {
@@ -36060,13 +36044,14 @@ func R_InitBuffer(width int32, height int32) {
 //	// Also draws a beveled edge.
 //	//
 func R_FillBackScreen() {
-	var dest, name, name1, name2, src uintptr
+	var dest, src uintptr
+	var name, name1, name2 string
 	var patch *patch_t
 	var x, y int32
 	// DOOM border patch.
-	name1 = __ccgo_ts(26328)
+	name1 = __ccgo_ts_str(26328)
 	// DOOM II border patch.
-	name2 = __ccgo_ts(26337)
+	name2 = __ccgo_ts_str(26337)
 	// If we are running full screen, there is no need to do any of this,
 	// and the background buffer can be freed if it was previously in use.
 	if scaledviewwidth == SCREENWIDTH {
@@ -36115,7 +36100,7 @@ func R_FillBackScreen() {
 	}
 	// Draw screen and bezel; this is done to a separate screen buffer.
 	V_UseBuffer(background_buffer)
-	patch = W_CacheLumpNameT(__ccgo_ts(26345), PU_CACHE)
+	patch = W_CacheLumpNameT(__ccgo_ts_str(26345), PU_CACHE)
 	x = 0
 	for {
 		if x >= scaledviewwidth {
@@ -36127,7 +36112,7 @@ func R_FillBackScreen() {
 		;
 		x += 8
 	}
-	patch = W_CacheLumpNameT(__ccgo_ts(26352), PU_CACHE)
+	patch = W_CacheLumpNameT(__ccgo_ts_str(26352), PU_CACHE)
 	x = 0
 	for {
 		if x >= scaledviewwidth {
@@ -36139,7 +36124,7 @@ func R_FillBackScreen() {
 		;
 		x += 8
 	}
-	patch = W_CacheLumpNameT(__ccgo_ts(26359), PU_CACHE)
+	patch = W_CacheLumpNameT(__ccgo_ts_str(26359), PU_CACHE)
 	y = 0
 	for {
 		if y >= viewheight {
@@ -36151,7 +36136,7 @@ func R_FillBackScreen() {
 		;
 		y += 8
 	}
-	patch = W_CacheLumpNameT(__ccgo_ts(26366), PU_CACHE)
+	patch = W_CacheLumpNameT(__ccgo_ts_str(26366), PU_CACHE)
 	y = 0
 	for {
 		if y >= viewheight {
@@ -36164,10 +36149,10 @@ func R_FillBackScreen() {
 		y += 8
 	}
 	// Draw beveled edge.
-	V_DrawPatch(viewwindowx-int32(8), viewwindowy-int32(8), W_CacheLumpNameT(__ccgo_ts(26373), PU_CACHE))
-	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy-int32(8), W_CacheLumpNameT(__ccgo_ts(26381), PU_CACHE))
-	V_DrawPatch(viewwindowx-int32(8), viewwindowy+viewheight, W_CacheLumpNameT(__ccgo_ts(26389), PU_CACHE))
-	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy+viewheight, W_CacheLumpNameT(__ccgo_ts(26397), PU_CACHE))
+	V_DrawPatch(viewwindowx-int32(8), viewwindowy-int32(8), W_CacheLumpNameT(__ccgo_ts_str(26373), PU_CACHE))
+	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy-int32(8), W_CacheLumpNameT(__ccgo_ts_str(26381), PU_CACHE))
+	V_DrawPatch(viewwindowx-int32(8), viewwindowy+viewheight, W_CacheLumpNameT(__ccgo_ts_str(26389), PU_CACHE))
+	V_DrawPatch(viewwindowx+scaledviewwidth, viewwindowy+viewheight, W_CacheLumpNameT(__ccgo_ts_str(26397), PU_CACHE))
 	V_RestoreBuffer()
 }
 
@@ -37760,7 +37745,7 @@ func R_InitSpriteDefs(namelist []uintptr) {
 				frame = int32(lumpinfo[l].Fname[4] - 'A')
 				rotation = int32(lumpinfo[l].Fname[5] - '0')
 				if modifiedgame != 0 {
-					patched = W_GetNumForName(lumpinfo[l].NamePtr())
+					patched = W_GetNumForName(lumpinfo[l].Name())
 				} else {
 					patched = l
 				}
@@ -39568,7 +39553,7 @@ type st_binicon_t struct {
 }
 
 func STlib_init() {
-	sttminus = W_CacheLumpNameT(__ccgo_ts(27459), PU_STATIC)
+	sttminus = W_CacheLumpNameT(__ccgo_ts_str(27459), PU_STATIC)
 }
 
 // C documentation
@@ -40656,7 +40641,7 @@ func ST_Drawer(fullscreen boolean, refresh boolean) {
 // Iterates through all graphics to be loaded or unloaded, along with
 // the variable they use, invoking the specified callback function.
 
-func ST_loadUnloadGraphics(callback func(uintptr, **patch_t)) {
+func ST_loadUnloadGraphics(callback func(string, **patch_t)) {
 	var facenum, i, j int32
 	// Load the numbers, tall and short
 	i = 0
@@ -40664,10 +40649,10 @@ func ST_loadUnloadGraphics(callback func(uintptr, **patch_t)) {
 		if i >= 10 {
 			break
 		}
-		bp := sprintf_ccgo_bytes(27843, i)
-		callback(byteptr(bp), &tallnum[i])
-		bp = sprintf_ccgo_bytes(27852, i)
-		callback(byteptr(bp), &shortnum[i])
+		bp := fmt.Sprintf(__ccgo_ts_str(27843), i)
+		callback(bp, &tallnum[i])
+		bp = fmt.Sprintf(__ccgo_ts_str(27852), i)
+		callback(bp, &shortnum[i])
 		goto _1
 	_1:
 		;
@@ -40675,31 +40660,31 @@ func ST_loadUnloadGraphics(callback func(uintptr, **patch_t)) {
 	}
 	// Load percent key.
 	//Note: why not load STMINUS here, too?
-	callback(__ccgo_ts(27862), &tallpercent)
+	callback(__ccgo_ts_str(27862), &tallpercent)
 	// key cards
 	i = 0
 	for {
 		if i >= NUMCARDS {
 			break
 		}
-		name := sprintf_ccgo_bytes(27871, i)
-		callback(byteptr(name), &keys[i])
+		name := fmt.Sprintf(__ccgo_ts_str(27871), i)
+		callback(name, &keys[i])
 		goto _2
 	_2:
 		;
 		i++
 	}
 	// arms background
-	callback(__ccgo_ts(27880), &armsbg)
+	callback(__ccgo_ts_str(27880), &armsbg)
 	// arms ownership widgets
 	i = 0
 	for {
 		if i >= 6 {
 			break
 		}
-		name := sprintf_ccgo_bytes(27887, i+2)
+		name := fmt.Sprintf(__ccgo_ts_str(27887), i+2)
 		// gray #
-		callback(byteptr(name), &arms[i][0])
+		callback(name, &arms[i][0])
 		// yellow #
 		arms[i][1] = shortnum[i+int32(2)]
 		goto _3
@@ -40708,10 +40693,10 @@ func ST_loadUnloadGraphics(callback func(uintptr, **patch_t)) {
 		i++
 	}
 	// face backgrounds for different color players
-	name := sprintf_ccgo_bytes(27896, consoleplayer)
-	callback(byteptr(name), &faceback)
+	name := fmt.Sprintf(__ccgo_ts_str(27896), consoleplayer)
+	callback(name, &faceback)
 	// status bar background bits
-	callback(__ccgo_ts(27903), &sbar)
+	callback(__ccgo_ts_str(27903), &sbar)
 	// face states
 	facenum = 0
 	i = 0
@@ -40724,41 +40709,41 @@ func ST_loadUnloadGraphics(callback func(uintptr, **patch_t)) {
 			if j >= ST_NUMSTRAIGHTFACES {
 				break
 			}
-			name := sprintf_ccgo_bytes(27909, i, j)
-			callback(byteptr(name), &faces[facenum])
+			name := fmt.Sprintf(__ccgo_ts_str(27909), i, j)
+			callback(name, &faces[facenum])
 			facenum++
 			goto _5
 		_5:
 			;
 			j++
 		}
-		name := sprintf_ccgo_bytes(27919, i) // turn right
-		callback(byteptr(name), &faces[facenum])
+		name := fmt.Sprintf(__ccgo_ts_str(27919), i) // turn right
+		callback(name, &faces[facenum])
 		facenum++
-		name = sprintf_ccgo_bytes(27928, i) // turn left
-		callback(byteptr(name), &faces[facenum])
+		name = fmt.Sprintf(__ccgo_ts_str(27928), i) // turn left
+		callback(name, &faces[facenum])
 		facenum++
-		name = sprintf_ccgo_bytes(27937, i) // ouch!
-		callback(byteptr(name), &faces[facenum])
+		name = fmt.Sprintf(__ccgo_ts_str(27937), i) // ouch!
+		callback(name, &faces[facenum])
 		facenum++
-		name = sprintf_ccgo_bytes(27947, i) // evil grin ;)
-		callback(byteptr(name), &faces[facenum])
+		name = fmt.Sprintf(__ccgo_ts_str(27947), i) // evil grin ;)
+		callback(name, &faces[facenum])
 		facenum++
-		name = sprintf_ccgo_bytes(27956, i) // pissed off
-		callback(byteptr(name), &faces[facenum])
+		name = fmt.Sprintf(__ccgo_ts_str(27956), i) // pissed off
+		callback(name, &faces[facenum])
 		facenum++
 		goto _4
 	_4:
 		;
 		i++
 	}
-	callback(__ccgo_ts(27966), &faces[facenum])
+	callback(__ccgo_ts_str(27966), &faces[facenum])
 	facenum++
-	callback(__ccgo_ts(27974), &faces[facenum])
+	callback(__ccgo_ts_str(27974), &faces[facenum])
 	facenum++
 }
 
-func ST_loadCallback(lumpname uintptr, variable **patch_t) {
+func ST_loadCallback(lumpname string, variable **patch_t) {
 	*variable = W_CacheLumpNameT(lumpname, PU_STATIC)
 }
 
@@ -40767,7 +40752,7 @@ func ST_loadGraphics() {
 }
 
 func ST_loadData() {
-	lu_palette = W_GetNumForName(__ccgo_ts(1490))
+	lu_palette = W_GetNumForName(__ccgo_ts_str(1490))
 	ST_loadGraphics()
 }
 
@@ -41300,7 +41285,6 @@ func S_StartMusic(m_id int32) {
 }
 
 func S_ChangeMusic(musicnum int32, looping int32) {
-	bp := alloc(32)
 	var handle uintptr
 	var music *musicinfo_t
 	// The Doom IWAD file has two versions of the intro music: d_intro
@@ -41320,7 +41304,7 @@ func S_ChangeMusic(musicnum int32, looping int32) {
 	S_StopMusic()
 	// get lumpnum if neccessary
 	if music.Flumpnum == 0 {
-		M_snprintf(bp, 9, __ccgo_ts_str(28083), gostring(music.Fname))
+		bp := fmt.Sprintf(__ccgo_ts_str(28083), gostring(music.Fname))
 		music.Flumpnum = W_GetNumForName(bp)
 	}
 	music.Fdata = W_CacheLumpNum(music.Flumpnum, PU_STATIC)
@@ -43367,8 +43351,7 @@ func WI_Ticker() {
 // Common load/unload function.  Iterates over all the graphics
 // lumps to be loaded/unloaded into memory.
 
-func WI_loadUnloadData(callback func(uintptr, **patch_t)) {
-	bp1 := alloc(48)
+func WI_loadUnloadData(callback func(string, **patch_t)) {
 	var a *anim_t1
 	var i, j int32
 	if gamemode == commercial {
@@ -43377,7 +43360,7 @@ func WI_loadUnloadData(callback func(uintptr, **patch_t)) {
 			if i >= NUMCMAPS {
 				break
 			}
-			snprintf_ccgo(bp1, 9, 28378, i)
+			bp1 := fmt.Sprintf(__ccgo_ts_str(28378), i)
 			callback(bp1, &lnames[i])
 			goto _1
 		_1:
@@ -43390,7 +43373,7 @@ func WI_loadUnloadData(callback func(uintptr, **patch_t)) {
 			if i >= NUMMAPS {
 				break
 			}
-			snprintf_ccgo(bp1, 9, 28389, wbs.Fepsd, i)
+			bp1 := fmt.Sprintf(__ccgo_ts_str(28389), wbs.Fepsd, i)
 			callback(bp1, &lnames[i])
 			goto _2
 		_2:
@@ -43398,11 +43381,11 @@ func WI_loadUnloadData(callback func(uintptr, **patch_t)) {
 			i++
 		}
 		// you are here
-		callback(__ccgo_ts(28398), &yah[0])
+		callback(__ccgo_ts_str(28398), &yah[0])
 		// you are here (alt.)
-		callback(__ccgo_ts(28405), &yah[1])
+		callback(__ccgo_ts_str(28405), &yah[1])
 		// splat
-		callback(__ccgo_ts(28412), &splat[0])
+		callback(__ccgo_ts_str(28412), &splat[0])
 		if wbs.Fepsd < 3 {
 			j = 0
 			for {
@@ -43418,7 +43401,7 @@ func WI_loadUnloadData(callback func(uintptr, **patch_t)) {
 					// MONDO HACK!
 					if wbs.Fepsd != 1 || j != 8 {
 						// animations
-						snprintf_ccgo(bp1, 9, 28420, wbs.Fepsd, j, i)
+						bp1 := fmt.Sprintf(__ccgo_ts_str(28420), wbs.Fepsd, j, i)
 						callback(bp1, &a.Fp[i])
 					} else {
 						// HACK ALERT!
@@ -43437,14 +43420,14 @@ func WI_loadUnloadData(callback func(uintptr, **patch_t)) {
 		}
 	}
 	// More hacks on minus sign.
-	callback(__ccgo_ts(28434), &wiminus)
+	callback(__ccgo_ts_str(28434), &wiminus)
 	i = 0
 	for {
 		if i >= 10 {
 			break
 		}
 		// numbers 0-9
-		snprintf_ccgo(bp1, 9, 28442, i)
+		bp1 := fmt.Sprintf(__ccgo_ts_str(28442), i)
 		callback(bp1, &num[i])
 		goto _5
 	_5:
@@ -43452,54 +43435,54 @@ func WI_loadUnloadData(callback func(uintptr, **patch_t)) {
 		i++
 	}
 	// percent sign
-	callback(__ccgo_ts(28450), &percent)
+	callback(__ccgo_ts_str(28450), &percent)
 	// "finished"
-	callback(__ccgo_ts(28457), &finished)
+	callback(__ccgo_ts_str(28457), &finished)
 	// "entering"
-	callback(__ccgo_ts(28461), &entering)
+	callback(__ccgo_ts_str(28461), &entering)
 	// "kills"
-	callback(__ccgo_ts(28469), &kills)
+	callback(__ccgo_ts_str(28469), &kills)
 	// "scrt"
-	callback(__ccgo_ts(28476), &secret)
+	callback(__ccgo_ts_str(28476), &secret)
 	// "secret"
-	callback(__ccgo_ts(28483), &sp_secret)
+	callback(__ccgo_ts_str(28483), &sp_secret)
 	// french wad uses WIOBJ (?)
-	if W_CheckNumForName(__ccgo_ts(28491)) >= 0 {
+	if W_CheckNumForName(__ccgo_ts_str(28491)) >= 0 {
 		// "items"
 		if netgame != 0 && deathmatch == 0 {
-			callback(__ccgo_ts(28491), &items)
+			callback(__ccgo_ts_str(28491), &items)
 		} else {
-			callback(__ccgo_ts(28497), &items)
+			callback(__ccgo_ts_str(28497), &items)
 		}
 	} else {
-		callback(__ccgo_ts(28497), &items)
+		callback(__ccgo_ts_str(28497), &items)
 	}
 	// "frgs"
-	callback(__ccgo_ts(28504), &frags)
+	callback(__ccgo_ts_str(28504), &frags)
 	// ":"
-	callback(__ccgo_ts(28511), &colon)
+	callback(__ccgo_ts_str(28511), &colon)
 	// "time"
-	callback(__ccgo_ts(28519), &timepatch)
+	callback(__ccgo_ts_str(28519), &timepatch)
 	// "sucks"
-	callback(__ccgo_ts(28526), &sucks)
+	callback(__ccgo_ts_str(28526), &sucks)
 	// "par"
-	callback(__ccgo_ts(28534), &par)
+	callback(__ccgo_ts_str(28534), &par)
 	// "killers" (vertical)
-	callback(__ccgo_ts(28540), &killers)
+	callback(__ccgo_ts_str(28540), &killers)
 	// "victims" (horiz)
-	callback(__ccgo_ts(28548), &victims)
+	callback(__ccgo_ts_str(28548), &victims)
 	// "total"
-	callback(__ccgo_ts(28556), &total)
+	callback(__ccgo_ts_str(28556), &total)
 	i = 0
 	for {
 		if i >= MAXPLAYERS {
 			break
 		}
 		// "1,2,3,4"
-		snprintf_ccgo(bp1, 9, 28563, i)
+		bp1 := fmt.Sprintf(__ccgo_ts_str(28563), i)
 		callback(bp1, &p[i])
 		// "1,2,3,4"
-		snprintf_ccgo(bp1, 9, 28570, i+int32(1))
+		bp1 = fmt.Sprintf(__ccgo_ts_str(28570), i+1)
 		callback(bp1, &bp[i])
 		goto _6
 	_6:
@@ -43507,20 +43490,21 @@ func WI_loadUnloadData(callback func(uintptr, **patch_t)) {
 		i++
 	}
 	// Background image
+	var bp1 string
 	if gamemode == commercial {
-		M_StringCopy(bp1, __ccgo_ts(1951), 9)
+		bp1 = __ccgo_ts_str(1951)
 	} else {
 		if gamemode == retail && wbs.Fepsd == 3 {
-			M_StringCopy(bp1, __ccgo_ts(1951), 9)
+			bp1 = __ccgo_ts_str(1951)
 		} else {
-			snprintf_ccgo(bp1, 9, 28577, wbs.Fepsd)
+			bp1 = fmt.Sprintf(__ccgo_ts_str(28577), wbs.Fepsd)
 		}
 	}
 	// Draw backdrop and save to a temporary buffer
 	callback(bp1, &background)
 }
 
-func WI_loadCallback(name uintptr, variable **patch_t) {
+func WI_loadCallback(name string, variable **patch_t) {
 	*variable = W_CacheLumpNameT(name, PU_STATIC)
 }
 
@@ -43533,12 +43517,12 @@ func WI_loadData() {
 	// These two graphics are special cased because we're sharing
 	// them with the status bar code
 	// your face
-	star = W_CacheLumpNameT(__ccgo_ts(28585), PU_STATIC)
+	star = W_CacheLumpNameT(__ccgo_ts_str(28585), PU_STATIC)
 	// dead face
-	bstar = W_CacheLumpNameT(__ccgo_ts(27974), PU_STATIC)
+	bstar = W_CacheLumpNameT(__ccgo_ts_str(27974), PU_STATIC)
 }
 
-func WI_unloadCallback(name uintptr, variable **patch_t) {
+func WI_unloadCallback(name string, variable **patch_t) {
 	W_ReleaseLumpName(name)
 	*variable = nil
 }
@@ -43726,21 +43710,12 @@ var lumphash []*lumpinfo_t
 
 // Hash function used for lump names.
 
-func W_LumpNameHash(s uintptr) (r uint32) {
-	var i, result uint32
+func W_LumpNameHash(s string) (r uint32) {
 	// This is the djb2 string hash function, modded to work on strings
 	// that have a maximum length of 8.
-	result = 5381
-	i = 0
-	for {
-		if !(i < 8 && int32(*(*int8)(unsafe.Pointer(s + uintptr(i)))) != int32('\000')) {
-			break
-		}
-		result = result<<int32(5) ^ result ^ uint32(xtoupper(int32(*(*int8)(unsafe.Pointer(s + uintptr(i))))))
-		goto _1
-	_1:
-		;
-		i++
+	result := uint32(5381)
+	for i := 0; i < len(s) && i < 8; i++ {
+		result = result<<5 ^ result ^ uint32(xtoupper(int32(s[i])))
 	}
 	return result
 }
@@ -43851,13 +43826,13 @@ func W_AddFile(filename string) *os.File {
 // Returns -1 if name not found.
 //
 
-func W_CheckNumForName(name uintptr) (r int32) {
+func W_CheckNumForName(name string) (r int32) {
 	// Do we have a hash table yet?
 	if lumphash != nil {
 		// We do! Excellent.
 		hash := int32(W_LumpNameHash(name) % numlumps)
 		for lump_p := lumphash[hash]; lump_p != nil; lump_p = lump_p.Fnext {
-			if xstrncasecmp(lump_p.NamePtr(), name, 8) == 0 {
+			if strings.EqualFold(lump_p.Name(), name) {
 				return lumpIndex(lump_p)
 			}
 		}
@@ -43866,7 +43841,7 @@ func W_CheckNumForName(name uintptr) (r int32) {
 		//
 		// scan backwards so patch lump files take precedence
 		for i := int32(numlumps - 1); i >= 0; i-- {
-			if xstrncasecmp(lumpinfo[i].NamePtr(), name, 8) == 0 {
+			if strings.EqualFold(lumpinfo[i].Name(), name) {
 				return i
 			}
 		}
@@ -43881,7 +43856,7 @@ func W_CheckNumForName(name uintptr) (r int32) {
 //	// W_GetNumForName
 //	// Calls W_CheckNumForName, but bombs out if not found.
 //	//
-func W_GetNumForName(name uintptr) (r int32) {
+func W_GetNumForName(name string) (r int32) {
 	var i int32
 	i = W_CheckNumForName(name)
 	if i < 0 {
@@ -43973,11 +43948,11 @@ func W_CacheLumpNumT[T lumpType](lumpnum int32, tag int32) T {
 //	//
 //	// W_CacheLumpName
 //	//
-func W_CacheLumpName(name uintptr, tag int32) (r uintptr) {
+func W_CacheLumpName(name string, tag int32) (r uintptr) {
 	return W_CacheLumpNum(W_GetNumForName(name), tag)
 }
 
-func W_CacheLumpNameT[T lumpType](name uintptr, tag int32) T {
+func W_CacheLumpNameT[T lumpType](name string, tag int32) T {
 	var result uintptr
 	result = W_CacheLumpName(name, tag)
 	if result == uintptr(0) {
@@ -44004,7 +43979,7 @@ func W_ReleaseLumpNum(lumpnum int32) {
 	Z_ChangeTag2(lump.Fcache, PU_CACHE, __ccgo_ts(28866), 461)
 }
 
-func W_ReleaseLumpName(name uintptr) {
+func W_ReleaseLumpName(name string) {
 	W_ReleaseLumpNum(W_GetNumForName(name))
 }
 
@@ -44022,7 +43997,7 @@ func W_GenerateHashTable() {
 			if i >= numlumps {
 				break
 			}
-			hash = W_LumpNameHash(lumpinfo[i].NamePtr()) % numlumps
+			hash = W_LumpNameHash(lumpinfo[i].Name()) % numlumps
 			// Hook into the hash table
 			lumpinfo[i].Fnext = lumphash[hash]
 			lumphash[hash] = &lumpinfo[i]
@@ -44042,22 +44017,22 @@ func W_GenerateHashTable() {
 //	// chocolate-doom -iwad hexen.wad.
 var unique_lumps = [4]struct {
 	Fmission  GameMission_t
-	Flumpname uintptr
+	Flumpname string
 }{
 	0: {
-		Flumpname: __ccgo_ts(28907),
+		Flumpname: __ccgo_ts_str(28907),
 	},
 	1: {
 		Fmission:  heretic,
-		Flumpname: __ccgo_ts(28914),
+		Flumpname: __ccgo_ts_str(28914),
 	},
 	2: {
 		Fmission:  hexen,
-		Flumpname: __ccgo_ts(28921),
+		Flumpname: __ccgo_ts_str(28921),
 	},
 	3: {
 		Fmission:  strife,
-		Flumpname: __ccgo_ts(28928),
+		Flumpname: __ccgo_ts_str(28928),
 	},
 }
 
@@ -45414,7 +45389,7 @@ var fastparm boolean
 
 var finalecount uint32
 
-var finaleflat uintptr
+var finaleflat string
 
 // ?
 //#include "doomstat.h"
@@ -46152,7 +46127,7 @@ var opposite [9]dirtype_t
 //	//
 var overflowsprite vissprite_t
 
-var pagename uintptr
+var pagename string
 
 var pagetic int32
 
@@ -46460,7 +46435,7 @@ var skullAnimCounter int16
 //
 //	// graphic name of skulls
 //	// warning: initializer-string for array of chars is too long
-var skullName [2]uintptr
+var skullName [2]string
 
 // C documentation
 //
