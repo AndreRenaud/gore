@@ -3345,7 +3345,7 @@ func AM_drawFline(fl *fline_t, color int32) {
 		v1 = fuck
 		fuck++
 
-		fprintf_ccgo(os.Stderr, 93, v1)
+		fprintf_ccgo(os.Stderr, __ccgo_ts_str(93), v1)
 		return
 	}
 	dx = fl.Fb.Fx - fl.Fa.Fx
@@ -3930,7 +3930,7 @@ func CheckDirectoryHasIWAD(dir string, iwadname string) string {
 	} else {
 		filename = dir + __ccgo_ts_str(1252) + iwadname
 	}
-	fprintf_ccgo(os.Stdout, 1254, filename)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1254), filename)
 	if M_FileExists(filename) != 0 {
 		return filename
 	}
@@ -4078,12 +4078,12 @@ func D_FindIWAD(mask int32, mission *GameMission_t) string {
 		iwadfile = myargs[iwadparm+1]
 		result = D_FindWADByName(iwadfile)
 		if result == "" {
-			I_Error(1281, iwadfile)
+			I_Error(__ccgo_ts_str(1281), iwadfile)
 		}
 		*mission = IdentifyIWADByName(result, mask)
 	} else {
 		// Search through the list and look for an IWAD
-		fprintf_ccgo(os.Stdout, 1307)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(1307))
 		result = ""
 		BuildIWADDirList()
 		i = 0
@@ -4486,7 +4486,7 @@ func TryRunTics() {
 		NetUpdate()
 		lowtic = GetLowTic()
 		if lowtic < gametic/ticdup {
-			I_Error(1446, 0)
+			I_Error(__ccgo_ts_str(1446), 0)
 		}
 		// Don't stay in this loop forever.  The menu is still running,
 		// so return to update the screen
@@ -4515,7 +4515,7 @@ func TryRunTics() {
 				break
 			}
 			if gametic/ticdup > lowtic {
-				I_Error(1475, 0)
+				I_Error(__ccgo_ts_str(1475), 0)
 			}
 			local_playeringame = set.Fingame
 			loop_interface.FRunTic(set.Fcmds[:], set.Fingame[:])
@@ -4985,7 +4985,7 @@ func doomgeneric_Tick() {
 //	//
 func D_DoomLoop() {
 	if bfgedition != 0 && (demorecording != 0 || gameaction == ga_playdemo || netgame != 0) {
-		fprintf_ccgo(os.Stdout, 1666)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(1666))
 	}
 	if demorecording != 0 {
 		G_BeginRecording()
@@ -5214,19 +5214,19 @@ func SetMissionForPackName(pack_name string) {
 		;
 		i++
 	}
-	fprintf_ccgo(os.Stdout, 2552)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(2552))
 	i = 0
 	for {
 		if uint64(i) >= 48/16 {
 			break
 		}
-		fprintf_ccgo(os.Stdout, 2578, packs[i].Fname)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(2578), packs[i].Fname)
 		goto _2
 	_2:
 		;
 		i++
 	}
-	I_Error(2583, pack_name)
+	I_Error(__ccgo_ts_str(2583), pack_name)
 }
 
 var packs = [3]struct {
@@ -5282,7 +5282,7 @@ func D_IdentifyVersion() {
 		}
 		if gamemission == none {
 			// Still no idea.  I don't think this is going to work.
-			I_Error(2624, 0)
+			I_Error(__ccgo_ts_str(2624), 0)
 		}
 	}
 	// Make sure gamemode is set up correctly
@@ -5416,7 +5416,7 @@ func D_SetGameDescription() {
 
 func D_AddFile(filename string) (r boolean) {
 	var handle *os.File
-	fprintf_ccgo(os.Stdout, 2817, filename)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(2817), filename)
 	handle = W_AddFile(filename)
 	return booluint32(handle != nil)
 }
@@ -5443,7 +5443,7 @@ func PrintDehackedBanners() {
 			if deh_s[len(deh_s)-1] != '\n' {
 				deh_s += "\n"
 			}
-			fprintf_ccgo(os.Stdout, 3717, deh_s)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(3717), deh_s)
 		}
 	}
 }
@@ -5529,19 +5529,19 @@ func InitGameVersion() {
 			i++
 		}
 		if gameversions[i].Fdescription == "" {
-			fprintf_ccgo(os.Stdout, 3870)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(3870))
 			i = 0
 			for {
 				if gameversions[i].Fdescription == "" {
 					break
 				}
-				fprintf_ccgo(os.Stdout, 3896, gameversions[i].Fcmdline, gameversions[i].Fdescription)
+				fprintf_ccgo(os.Stdout, __ccgo_ts_str(3896), gameversions[i].Fcmdline, gameversions[i].Fdescription)
 				goto _2
 			_2:
 				;
 				i++
 			}
-			I_Error(3906, myargs[p+1])
+			I_Error(__ccgo_ts_str(3906), myargs[p+1])
 		}
 	} else {
 		// Determine automatically
@@ -5596,7 +5596,7 @@ func PrintGameVersion() {
 			break
 		}
 		if gameversions[i].Fversion == gameversion {
-			fprintf_ccgo(os.Stdout, 3932, gameversions[i].Fdescription)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(3932), gameversions[i].Fdescription)
 			break
 		}
 		goto _1
@@ -5633,7 +5633,7 @@ func D_DoomMain() {
 	I_AtExit(D_Endoom, 0)
 	// print banner
 	I_PrintBanner(__ccgo_ts_str(4001))
-	fprintf_ccgo(os.Stdout, 4018)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(4018))
 	Z_Init()
 	//!
 	// @vanilla
@@ -5681,7 +5681,7 @@ func D_DoomMain() {
 		deathmatch = 2
 	}
 	if devparm != 0 {
-		fprintf_ccgo(os.Stdout, 4122)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4122))
 	}
 	// find which dir to use for config files
 	// Auto-detect the configuration dir.
@@ -5706,17 +5706,17 @@ func D_DoomMain() {
 		if scale > 400 {
 			scale = 400
 		}
-		fprintf_ccgo(os.Stdout, 4151, scale)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4151), scale)
 		forwardmove[0] = forwardmove[0] * int32(scale) / 100
 		forwardmove[int32(1)] = forwardmove[int32(1)] * int32(scale) / 100
 		sidemove[0] = sidemove[0] * int32(scale) / 100
 		sidemove[int32(1)] = sidemove[int32(1)] * int32(scale) / 100
 	}
 	// init subsystems
-	fprintf_ccgo(os.Stdout, 4170)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(4170))
 	V_Init()
 	// Load configuration files before initialising other subsystems.
-	fprintf_ccgo(os.Stdout, 4197)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(4197))
 	M_SetConfigFilenames(__ccgo_ts_str(4236), __ccgo_ts_str(4248))
 	D_BindVariables()
 	M_LoadDefaults()
@@ -5726,10 +5726,10 @@ func D_DoomMain() {
 	iwadfile = D_FindIWAD(1<<int32(doom)|1<<int32(doom2)|1<<int32(pack_tnt)|1<<int32(pack_plut)|1<<int32(pack_chex)|1<<int32(pack_hacx), &gamemission)
 	// None found?
 	if iwadfile == "" {
-		I_Error(4268, 0)
+		I_Error(__ccgo_ts_str(4268), 0)
 	}
 	modifiedgame = 0
-	fprintf_ccgo(os.Stdout, 4380)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(4380))
 	D_AddFile(iwadfile)
 	W_CheckCorrectIWAD(doom)
 	// Now that we've loaded the IWAD, we can figure out what gamemission
@@ -5744,7 +5744,7 @@ func D_DoomMain() {
 	// We specifically check for DMENUPIC here, before PWADs have been
 	// loaded which could probably include a lump of that name.
 	if W_CheckNumForName(__ccgo_ts_str(4404)) >= 0 {
-		fprintf_ccgo(os.Stdout, 4413)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4413))
 		bfgedition = 1
 		// BFG Edition changes the names of the secret levels to
 		// censor the Wolfenstein references. It also has an extra
@@ -5801,7 +5801,7 @@ func D_DoomMain() {
 			// tricks like "-playdemo demo1" possible.
 			argDemoName = myargs[p+1]
 		}
-		fprintf_ccgo(os.Stdout, 4488, name)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4488), name)
 	}
 	I_AtExit(G_CheckDemoStatus, 1)
 	// Generate the WAD hash table.  Speed things up a bit.
@@ -5842,7 +5842,7 @@ func D_DoomMain() {
 			22: "spida1d1",
 		}
 		if gamemode == shareware {
-			I_Error(4506, 0)
+			I_Error(__ccgo_ts_str(4506), 0)
 		}
 		// Check for fake IWAD with right name,
 		// but w/o all the lumps of the registered version.
@@ -5853,7 +5853,7 @@ func D_DoomMain() {
 					break
 				}
 				if W_CheckNumForName(levelLumps[i]) < 0 {
-					I_Error(4562, 0)
+					I_Error(__ccgo_ts_str(4562), 0)
 				}
 				goto _2
 			_2:
@@ -5864,7 +5864,7 @@ func D_DoomMain() {
 	}
 	if W_CheckNumForName(__ccgo_ts_str(4599)) >= 0 || W_CheckNumForName(__ccgo_ts_str(4608)) >= 0 {
 		I_PrintDivider()
-		fprintf_ccgo(os.Stdout, 4615)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4615))
 	}
 	I_PrintStartupBanner(gamedescription)
 	PrintDehackedBanners()
@@ -5872,10 +5872,10 @@ func D_DoomMain() {
 	// don't work in Vanilla (though FreeDM is okay). Show a warning
 	// message and give a link to the website.
 	if W_CheckNumForName(__ccgo_ts_str(2670)) >= 0 && W_CheckNumForName(__ccgo_ts_str(2679)) < 0 {
-		fprintf_ccgo(os.Stdout, 4767)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(4767))
 		I_PrintDivider()
 	}
-	fprintf_ccgo(os.Stdout, 4992)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(4992))
 	I_CheckIsScreensaver()
 	I_InitSound(1)
 	I_InitMusic()
@@ -5981,20 +5981,20 @@ func D_DoomMain() {
 		// Not loading a game
 		startloadgame = -1
 	}
-	fprintf_ccgo(os.Stdout, 5071)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5071))
 	M_Init()
-	fprintf_ccgo(os.Stdout, 5105)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5105))
 	R_Init()
-	fprintf_ccgo(os.Stdout, 5141)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5141))
 	P_Init()
-	fprintf_ccgo(os.Stdout, 5172)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5172))
 	S_Init(sfxVolume*int32(8), musicVolume*int32(8))
-	fprintf_ccgo(os.Stdout, 5199)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5199))
 	D_CheckNetGame()
 	PrintGameVersion()
-	fprintf_ccgo(os.Stdout, 5246)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5246))
 	HU_Init()
-	fprintf_ccgo(os.Stdout, 5285)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5285))
 	ST_Init()
 	// If Doom II without a MAP01 lump, this is a store demo.
 	// Moved this here so that MAP01 isn't constantly looked up
@@ -6004,7 +6004,7 @@ func D_DoomMain() {
 	}
 	if M_CheckParmWithArgs(__ccgo_ts_str(5318), 1) != 0 {
 		I_AtExit(StatDump, 1)
-		fprintf_ccgo(os.Stdout, 5328)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(5328))
 	}
 	//!
 	// @arg <x>
@@ -6140,7 +6140,7 @@ func LoadGameSettings(settings *net_gamesettings_t) {
 	timelimit = settings.Ftimelimit
 	consoleplayer = settings.Fconsoleplayer
 	if lowres_turn != 0 {
-		fprintf_ccgo(os.Stdout, 5423)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(5423))
 	}
 	for i := 0; i < MAXPLAYERS; i++ {
 		playeringame[i] = booluint32(i < int(settings.Fnum_players))
@@ -6232,19 +6232,19 @@ func D_CheckNetGame() {
 	SaveGameSettings(settings)
 	D_StartNetGame(settings, 0)
 	LoadGameSettings(settings)
-	fprintf_ccgo(os.Stdout, 5563, startskill, deathmatch, startmap, startepisode)
-	fprintf_ccgo(os.Stdout, 5626, consoleplayer+int32(1), settings.Fnum_players, settings.Fnum_players)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5563), startskill, deathmatch, startmap, startepisode)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(5626), consoleplayer+int32(1), settings.Fnum_players, settings.Fnum_players)
 	// Show players here; the server might have specified a time limit
 	if timelimit > 0 && deathmatch != 0 {
 		// Gross hack to work like Vanilla:
 		if timelimit == 20 && M_CheckParm(__ccgo_ts_str(5050)) != 0 {
-			fprintf_ccgo(os.Stdout, 5654)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(5654))
 		} else {
-			fprintf_ccgo(os.Stdout, 5711, timelimit)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(5711), timelimit)
 			if timelimit > 1 {
-				fprintf_ccgo(os.Stdout, 5743)
+				fprintf_ccgo(os.Stdout, __ccgo_ts_str(5743))
 			}
-			fprintf_ccgo(os.Stdout, 5745)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(5745))
 		}
 	}
 }
@@ -8023,7 +8023,7 @@ func G_Ticker() {
 			}
 			if netgame != 0 && netdemo == 0 && gametic%ticdup == 0 {
 				if gametic > BACKUPTICS && int32(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))) != int32(cmd.Fconsistancy) {
-					I_Error(13760, int32(cmd.Fconsistancy), int32(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))))
+					I_Error(__ccgo_ts_str(13760), int32(cmd.Fconsistancy), int32(*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf)))))
 				}
 				if players[i].Fmo != nil {
 					*(*uint8)(unsafe.Pointer(uintptr(unsafe.Pointer(&consistancy)) + uintptr(i)*128 + uintptr(buf))) = uint8(players[i].Fmo.Fx)
@@ -8219,7 +8219,7 @@ func G_CheckSpot(playernum int32, mthing *mapthing_t) (r boolean) {
 		xa = finecosine[an]
 		ya = finesine[an]
 	default:
-		I_Error(13807, an)
+		I_Error(__ccgo_ts_str(13807), an)
 		v2 = 0
 		ya = v2
 		xa = v2
@@ -8243,7 +8243,7 @@ func G_DeathMatchSpawnPlayer(playernum int32) {
 	var i, j, selections int32
 	selections = int32(deathmatch_pos)
 	if selections < 4 {
-		I_Error(13841, selections)
+		I_Error(__ccgo_ts_str(13841), selections)
 	}
 	j = 0
 	for {
@@ -8639,7 +8639,7 @@ func G_DoLoadGame() {
 	P_UnArchiveThinkers()
 	P_UnArchiveSpecials()
 	if P_ReadSaveGameEOF() == 0 {
-		I_Error(13887, 0)
+		I_Error(__ccgo_ts_str(13887), 0)
 	}
 	if setsizeneeded != 0 {
 		R_ExecuteSetViewSize()
@@ -8680,7 +8680,7 @@ func G_DoSaveGame() {
 		save_stream, err = os.OpenFile(recovery_savegame_file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			log.Printf("G_DoSaveGame: error opening recovery savegame file %s: %v\n", recovery_savegame_file, err)
-			I_Error(13916, temp_savegame_file, recovery_savegame_file)
+			I_Error(__ccgo_ts_str(13916), temp_savegame_file, recovery_savegame_file)
 		}
 	}
 	savegame_error = 0
@@ -8694,7 +8694,7 @@ func G_DoSaveGame() {
 	// except if the vanilla_savegame_limit setting is turned off.
 	pos, err := save_stream.Seek(0, io.SeekCurrent)
 	if vanilla_savegame_limit != 0 && pos > SAVEGAMESIZE {
-		I_Error(13970, 0)
+		I_Error(__ccgo_ts_str(13970), 0)
 	}
 	// Finish up, close the savegame file.
 	save_stream.Close()
@@ -8702,7 +8702,7 @@ func G_DoSaveGame() {
 		// We failed to save to the normal location, but we wrote a
 		// recovery file to the temp directory. Now we can bomb out
 		// with an error.
-		I_Error(13994, temp_savegame_file, recovery_savegame_file)
+		I_Error(__ccgo_ts_str(13994), temp_savegame_file, recovery_savegame_file)
 	}
 	// Now rename the temporary savegame file to the actual savegame
 	// file, overwriting the old savegame if there was one there.
@@ -8985,7 +8985,7 @@ func G_RecordDemo(name string) {
 func G_VanillaVersionCode() (r int32) {
 	switch gameversion {
 	case exe_doom_1_2:
-		I_Error(14119, 0)
+		I_Error(__ccgo_ts_str(14119), 0)
 		fallthrough
 	case exe_doom_1_666:
 		return 106
@@ -9108,7 +9108,7 @@ func G_DoPlayDemo() {
 			longtics = 1
 		} else {
 			//I_Error(message, demoversion, G_VanillaVersionCode(),
-			fprintf_ccgo(os.Stdout, 14232, demoversion, G_VanillaVersionCode(), DemoVersionDescription(demoversion))
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(14232), demoversion, G_VanillaVersionCode(), DemoVersionDescription(demoversion))
 		}
 	}
 	skill = skill_t(demobuffer[demo_pos])
@@ -9190,7 +9190,7 @@ func G_CheckDemoStatus() {
 		// Prevent recursive calls
 		timingdemo = 0
 		demoplayback = 0
-		I_Error(14466, gametic, realtics, float64(fps))
+		I_Error(__ccgo_ts_str(14466), gametic, realtics, float64(fps))
 	}
 	if demoplayback != 0 {
 		W_ReleaseLumpName(defdemoname)
@@ -9220,7 +9220,7 @@ func G_CheckDemoStatus() {
 		M_WriteFile(demoname, demobuffer[:demo_pos])
 		demobuffer = nil
 		demorecording = 0
-		I_Error(14508, demoname)
+		I_Error(__ccgo_ts_str(14508), demoname)
 	}
 	return
 }
@@ -18153,7 +18153,7 @@ func AutoAllocMemory(size *int32, default_ram int32, min_ram int32) (r uintptr) 
 	for zonemem == 0 {
 		// We need a reasonable minimum amount of RAM to start.
 		if default_ram < min_ram {
-			I_Error(18832, default_ram)
+			I_Error(__ccgo_ts_str(18832), default_ram)
 		}
 		// Try to allocate the zone memory.
 		*size = default_ram * 1024 * 1024
@@ -18185,7 +18185,7 @@ func I_ZoneBase(size *int32) (r uintptr) {
 		min_ram = MIN_RAM
 	}
 	zonemem = AutoAllocMemory(size, default_ram, min_ram)
-	fprintf_ccgo(os.Stdout, 18878, zonemem, size)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(18878), zonemem, size)
 	return zonemem
 }
 
@@ -18217,7 +18217,7 @@ func I_PrintStartupBanner(gamedescription string) {
 	I_PrintDivider()
 	I_PrintBanner(gamedescription)
 	I_PrintDivider()
-	fprintf_ccgo(os.Stdout, 18918)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(18918))
 	I_PrintDivider()
 }
 
@@ -18249,16 +18249,15 @@ func I_Quit() {
 
 var already_quitting = 0
 
-func I_Error(strIndex int, args ...any) {
-	errStr := __ccgo_ts_str(strIndex)
+func I_Error(errStr string, args ...any) {
 	var exit_gui_popup boolean
 	if already_quitting != 0 {
-		fprintf_ccgo(os.Stderr, 19278)
+		fprintf_ccgo(os.Stderr, __ccgo_ts_str(19278))
 	} else {
 		already_quitting = 1
 	}
 	fmt.Fprintf(os.Stderr, errStr, args...)
-	fprintf_ccgo(os.Stderr, 19324)
+	fprintf_ccgo(os.Stderr, __ccgo_ts_str(19324))
 
 	debug.PrintStack()
 
@@ -19359,11 +19358,11 @@ func M_LoadDefaults() {
 	i = M_CheckParmWithArgs(__ccgo_ts_str(21869), 1)
 	if i != 0 {
 		doom_defaults.Ffilename = myargs[i+1]
-		fprintf_ccgo(os.Stdout, 21877, doom_defaults.Ffilename)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(21877), doom_defaults.Ffilename)
 	} else {
 		doom_defaults.Ffilename = configdir + default_main_config
 	}
-	fprintf_ccgo(os.Stdout, 21896, doom_defaults.Ffilename)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(21896), doom_defaults.Ffilename)
 	//!
 	// @arg <file>
 	//
@@ -19373,7 +19372,7 @@ func M_LoadDefaults() {
 	i = M_CheckParmWithArgs(__ccgo_ts_str(21917), 1)
 	if i != 0 {
 		extra_defaults.Ffilename = myargs[i+1]
-		fprintf_ccgo(os.Stdout, 21930, extra_defaults.Ffilename)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(21930), extra_defaults.Ffilename)
 	} else {
 		extra_defaults.Ffilename = configdir + default_extra_config
 	}
@@ -19392,7 +19391,7 @@ func GetDefaultForName(name string) *default_t {
 	}
 	// Not found? Internal error.
 	if result == nil {
-		I_Error(21968, name)
+		I_Error(__ccgo_ts_str(21968), name)
 	}
 	return result
 }
@@ -19430,7 +19429,7 @@ func M_SetConfigDir(dir string) {
 		configdir = GetDefaultConfigDir()
 
 		if configdir == "" {
-			fprintf_ccgo(os.Stdout, 22005, configdir)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(22005), configdir)
 		}
 	}
 	// Make the directory if it doesn't already exist:
@@ -19451,7 +19450,7 @@ func M_GetSaveGameDir(iwadname string) string {
 	} else {
 		savegamedir = configdir + __ccgo_ts_str(1252) + __ccgo_ts_str(22043)
 		M_MakeDirectory(savegamedir)
-		fprintf_ccgo(os.Stdout, 22054, savegamedir)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(22054), savegamedir)
 	}
 	return savegamedir
 }
@@ -20430,7 +20429,7 @@ func M_DrawReadThis1() {
 		// Final Doom always displays "HELP".
 		lumpname = __ccgo_ts_str(22501)
 	default:
-		I_Error(22512, 0)
+		I_Error(__ccgo_ts_str(22512), 0)
 		break
 	}
 	V_DrawPatchDirect(0, 0, W_CacheLumpNameT(lumpname, PU_CACHE))
@@ -20556,7 +20555,7 @@ func M_Episode(choice int32) {
 	}
 	// Yet another hack...
 	if gamemode == registered && choice > 2 {
-		fprintf_ccgo(os.Stderr, 22803)
+		fprintf_ccgo(os.Stderr, __ccgo_ts_str(22803))
 		choice = 0
 	}
 	epi = choice
@@ -22378,7 +22377,7 @@ func EV_VerticalDoor(line *line_t, thing *mobj_t) {
 						platP.Fwait = -1
 					} else {
 						// This isn't a door OR a plat.  Now we're in trouble.
-						fprintf_ccgo(os.Stderr, 23591)
+						fprintf_ccgo(os.Stderr, __ccgo_ts_str(23591))
 						// Try closing it anyway. At least it will work on 32-bit
 						// machines.
 						doorP.Fdirection = -1
@@ -22717,7 +22716,7 @@ func P_Move(actor *mobj_t) (r boolean) {
 		return 0
 	}
 	if uint32(actor.Fmovedir) >= 8 {
-		I_Error(23654, 0)
+		I_Error(__ccgo_ts_str(23654), 0)
 	}
 	tryx = actor.Fx + actor.Finfo.Fspeed*xspeed[actor.Fmovedir]
 	tryy = actor.Fy + actor.Finfo.Fspeed*yspeed[actor.Fmovedir]
@@ -22790,7 +22789,7 @@ func P_NewChaseDir(actor *mobj_t) {
 	var olddir, turnaround dirtype_t
 	var tdir int32
 	if actor.Ftarget == nil {
-		I_Error(23676, 0)
+		I_Error(__ccgo_ts_str(23676), 0)
 	}
 	olddir = actor.Fmovedir
 	turnaround = opposite[olddir]
@@ -24615,7 +24614,7 @@ func P_GiveAmmo(player *player_t, ammo ammotype_t, num int32) (r boolean) {
 		return 0
 	}
 	if ammo > NUMAMMO {
-		I_Error(23713, ammo)
+		I_Error(__ccgo_ts_str(23713), ammo)
 	}
 	if player.Fammo[ammo] == player.Fmaxammo[ammo] {
 		return 0
@@ -25121,7 +25120,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		player.Fmessage = __ccgo_ts_str(24630)
 		sound = int32(sfx_wpnup)
 	default:
-		I_Error(24657, 0)
+		I_Error(__ccgo_ts_str(24657), 0)
 	}
 	if special.Fflags&MF_COUNTITEM != 0 {
 		player.Fitemcount++
@@ -26136,7 +26135,7 @@ func P_HitSlideLine(ld *line_t) {
 func PTR_SlideTraverse(in *intercept_t) (r boolean) {
 	var li *line_t
 	if in.Fisaline == 0 {
-		I_Error(24696, 0)
+		I_Error(__ccgo_ts_str(24696), 0)
 	}
 	li = in.Fd.Fthing.(*line_t)
 	if int32(li.Fflags)&ML_TWOSIDED == 0 {
@@ -26718,7 +26717,7 @@ func SpechitOverrun(ld *line_t) {
 	case 14:
 		nofit = boolean(addr)
 	default:
-		fprintf_ccgo(os.Stderr, 24736, numspechit)
+		fprintf_ccgo(os.Stderr, __ccgo_ts_str(24736), numspechit)
 		break
 	}
 }
@@ -28087,7 +28086,7 @@ func P_SpawnMapThing(mthing *mapthing_t) {
 		i++
 	}
 	if i == NUMMOBJTYPES {
-		I_Error(24810, int32(mthing.Ftype1), int32(mthing.Fx), int32(mthing.Fy))
+		I_Error(__ccgo_ts_str(24810), int32(mthing.Ftype1), int32(mthing.Fx), int32(mthing.Fy))
 	}
 	// don't spawn keycards and players in deathmatch
 	if deathmatch != 0 && mobjinfo[i].Fflags&MF_NOTDMATCH != 0 {
@@ -28483,7 +28482,7 @@ func P_AddActivePlat(plat *plat_t) {
 		;
 		i++
 	}
-	I_Error(24855, 0)
+	I_Error(__ccgo_ts_str(24855), 0)
 }
 
 func P_RemoveActivePlat(plat *plat_t) {
@@ -28504,7 +28503,7 @@ func P_RemoveActivePlat(plat *plat_t) {
 		;
 		i++
 	}
-	I_Error(24887, 0)
+	I_Error(__ccgo_ts_str(24887), 0)
 }
 
 const ANG1807 = 2147483648
@@ -29209,7 +29208,7 @@ func saveg_read8() (r uint8) {
 	var val [1]byte
 	if _, err := save_stream.Read(val[:]); err != nil {
 		if savegame_error == 0 {
-			fprintf_ccgo(os.Stderr, 24952)
+			fprintf_ccgo(os.Stderr, __ccgo_ts_str(24952))
 			savegame_error = 1
 		}
 	}
@@ -29220,7 +29219,7 @@ func saveg_write8(_value uint8) {
 	val := [1]byte{_value}
 	if _, err := save_stream.Write(val[:]); err != nil {
 		if savegame_error == 0 {
-			fprintf_ccgo(os.Stderr, 25013)
+			fprintf_ccgo(os.Stderr, __ccgo_ts_str(25013))
 			savegame_error = 1
 		}
 	}
@@ -30476,7 +30475,7 @@ func P_UnArchiveThinkers() {
 			mobj.Fthinker.Ffunction.Facv = __ccgo_fp(P_MobjThinker)
 			P_AddThinker(&mobj.Fthinker)
 		default:
-			I_Error(25069, tclass)
+			I_Error(__ccgo_ts_str(25069), tclass)
 		}
 	}
 }
@@ -30650,7 +30649,7 @@ func P_UnArchiveSpecials() {
 			glowP.Fthinker.Ffunction.Facv = __ccgo_fp(T_Glow)
 			P_AddThinker(&glowP.Fthinker)
 		default:
-			I_Error(25099, tclass)
+			I_Error(__ccgo_ts_str(25099), tclass)
 		}
 	}
 }
@@ -31156,7 +31155,7 @@ func PadRejectArray(array uintptr, len1 uint32) {
 	// We only have a limited pad size.  Print a warning if the
 	// REJECT lump is too small.
 	if uint64(len1) > 16 {
-		fprintf_ccgo(os.Stderr, 25149, len1, 16)
+		fprintf_ccgo(os.Stderr, __ccgo_ts_str(25149), len1, 16)
 		// Pad remaining space with 0 (or 0xff, if specified on command line).
 		if M_CheckParm(__ccgo_ts_str(25206)) != 0 {
 			padvalue = 0xff
@@ -31368,7 +31367,7 @@ func P_CrossSubsector(num int32) (r boolean) {
 	var count, s1, s2 int32
 	var frac, openbottom, opentop, slope fixed_t
 	if num >= numsubsectors {
-		I_Error(25239, num, numsubsectors)
+		I_Error(__ccgo_ts_str(25239), num, numsubsectors)
 	}
 	sub := &subsectors[num]
 	// check lines
@@ -31766,7 +31765,7 @@ func P_InitPicAnims() {
 		lastanim.Fistexture = uint32(animdefs[i].Fistexture)
 		lastanim.Fnumpics = lastanim.Fpicnum - lastanim.Fbasepic + 1
 		if lastanim.Fnumpics < 2 {
-			I_Error(25279, startname, endname)
+			I_Error(__ccgo_ts_str(25279), startname, endname)
 		}
 		lastanim.Fspeed = animdefs[i].Fspeed
 		animPos++
@@ -31934,7 +31933,7 @@ func P_FindNextHighestFloor(sec *sector_t, currentheight int32) (r fixed_t) {
 			} else {
 				if h == MAX_ADJOINING_SECTORS+2 {
 					// Fatal overflow: game crashes at 22 textures
-					I_Error(25319, 0)
+					I_Error(__ccgo_ts_str(25319), 0)
 				}
 			}
 			v2 = h
@@ -32508,7 +32507,7 @@ func P_PlayerInSpecialSector(player *player_t) {
 			G_ExitLevel()
 		}
 	default:
-		I_Error(25387, int32(sector.Fspecial))
+		I_Error(__ccgo_ts_str(25387), int32(sector.Fspecial))
 		break
 	}
 }
@@ -32634,7 +32633,7 @@ func DonutOverrun(s3_floorheight uintptr, s3_floorpic uintptr, line *line_t, pil
 			v, _ = strconv.Atoi(myargs[p+2])
 			tmp_s3_floorpic = int32(v)
 			if tmp_s3_floorpic >= numflats {
-				fprintf_ccgo(os.Stderr, 25438, numflats, DONUT_FLOORPIC_DEFAULT)
+				fprintf_ccgo(os.Stderr, __ccgo_ts_str(25438), numflats, DONUT_FLOORPIC_DEFAULT)
 				tmp_s3_floorpic = DONUT_FLOORPIC_DEFAULT
 			}
 		}
@@ -32689,7 +32688,7 @@ func EV_DoDonut(line *line_t) (r int32) {
 		// isn't something that should be done, anyway.
 		// Just print a warning and return.
 		if s2 == nil {
-			fprintf_ccgo(os.Stderr, 25590)
+			fprintf_ccgo(os.Stderr, __ccgo_ts_str(25590))
 			break
 		}
 		for i := int32(0); i < s2.Flinecount; i++ {
@@ -32703,7 +32702,7 @@ func EV_DoDonut(line *line_t) (r int32) {
 				// s3->floorheight is an int at 0000:0000
 				// s3->floorpic is a short at 0000:0008
 				// Trying to emulate
-				fprintf_ccgo(os.Stderr, 25682)
+				fprintf_ccgo(os.Stderr, __ccgo_ts_str(25682))
 				DonutOverrun(bp, bp+4, line, s1)
 			} else {
 				*(*fixed_t)(unsafe.Pointer(bp)) = s3.Ffloorheight
@@ -32812,7 +32811,7 @@ func P_SpawnSpecials() {
 		switch int32(lines[i].Fspecial) {
 		case 48:
 			if int32(numlinespecials) >= MAXLINEANIMS {
-				I_Error(25801, 0)
+				I_Error(__ccgo_ts_str(25801), 0)
 			}
 			// EFFECT FIRSTCOL SCROLL+
 			linespeciallist[numlinespecials] = &lines[i]
@@ -33121,7 +33120,7 @@ func P_StartButton(line *line_t, w bwhere_e, texture int32, time int32) {
 		;
 		i++
 	}
-	I_Error(25857, 0)
+	I_Error(__ccgo_ts_str(25857), 0)
 }
 
 // C documentation
@@ -34379,7 +34378,7 @@ func R_CheckBBox(bspcoord *box_t) (r boolean) {
 func R_Subsector(num int32) {
 	var count, v1 int32
 	if num >= numsubsectors {
-		I_Error(25894, num, numsubsectors)
+		I_Error(__ccgo_ts_str(25894), num, numsubsectors)
 	}
 	sub := &subsectors[num]
 	frontsector = sub.Fsector
@@ -34679,7 +34678,7 @@ func R_GenerateLookup(texnum int32) {
 			break
 		}
 		if widths[x] == 0 {
-			fprintf_ccgo(os.Stdout, 25938, texture)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(25938), texture)
 			return
 		}
 		// I_Error ("R_GenerateLookup: column without a patch");
@@ -34688,7 +34687,7 @@ func R_GenerateLookup(texnum int32) {
 			collump[x] = -1
 			colofs[x] = uint16(texturecompositesize[texnum])
 			if texturecompositesize[texnum] > 0x10000-int32(texture.Fheight) {
-				I_Error(25985, texnum)
+				I_Error(__ccgo_ts_str(25985), texnum)
 			}
 			texturecompositesize[texnum] += int32(texture.Fheight)
 		}
@@ -34811,25 +34810,25 @@ func R_InitTextures() {
 	// up the box" effect, which uses backspace to "step back" inside
 	// the box.  If stdout is a file, don't draw the box.
 	if I_ConsoleStdout() != 0 {
-		fprintf_ccgo(os.Stdout, 26061)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(26061))
 		i = 0
 		for {
 			if i >= temp3+9 {
 				break
 			}
-			fprintf_ccgo(os.Stdout, 26063)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(26063))
 			goto _3
 		_3:
 			;
 			i++
 		}
-		fprintf_ccgo(os.Stdout, 26065)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(26065))
 		i = 0
 		for {
 			if i >= temp3+int32(10) {
 				break
 			}
-			fprintf_ccgo(os.Stdout, 26067)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(26067))
 			goto _4
 		_4:
 			;
@@ -34842,7 +34841,7 @@ func R_InitTextures() {
 			break
 		}
 		if i&63 == 0 {
-			fprintf_ccgo(os.Stdout, 1250)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 		}
 		if i == numtextures1 {
 			// Start looking in second texture file.
@@ -34852,7 +34851,7 @@ func R_InitTextures() {
 		}
 		offset = *(*int32)(unsafe.Pointer(directory))
 		if offset > maxoff {
-			I_Error(26069, 0)
+			I_Error(__ccgo_ts_str(26069), 0)
 		}
 		mtexture := (*maptexture_t)(unsafe.Pointer(maptex + uintptr(offset)))
 		texture := &texture_t{
@@ -34874,7 +34873,7 @@ func R_InitTextures() {
 			patch.Foriginy = (*mappatch_t)(unsafe.Pointer(mpatch)).Foriginy
 			patch.Fpatch = patchlookup[(*mappatch_t)(unsafe.Pointer(mpatch)).Fpatch]
 			if patch.Fpatch == -1 {
-				I_Error(26107, texture)
+				I_Error(__ccgo_ts_str(26107), texture)
 			}
 			goto _7
 		_7:
@@ -34976,7 +34975,7 @@ func R_InitSpriteLumps() {
 			break
 		}
 		if i&63 == 0 {
-			fprintf_ccgo(os.Stdout, 1250)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 		}
 		patch := W_CacheLumpNumT[*patch_t](firstspritelump+i, PU_CACHE)
 		spritewidth[i] = int32(patch.Fwidth) << FRACBITS
@@ -35016,11 +35015,11 @@ func R_InitColormaps() {
 //	//
 func R_InitData() {
 	R_InitTextures()
-	fprintf_ccgo(os.Stdout, 1250)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 	R_InitFlats()
-	fprintf_ccgo(os.Stdout, 1250)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 	R_InitSpriteLumps()
-	fprintf_ccgo(os.Stdout, 1250)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 	R_InitColormaps()
 }
 
@@ -35034,7 +35033,7 @@ func R_FlatNumForName(name string) (r int32) {
 	var i int32
 	i = W_CheckNumForName(name)
 	if i == -1 {
-		I_Error(26174, name)
+		I_Error(__ccgo_ts_str(26174), name)
 	}
 	return i - firstflat
 }
@@ -35075,7 +35074,7 @@ func R_TextureNumForName(name string) (r int32) {
 	var i int32
 	i = R_CheckTextureNumForName(name)
 	if i == -1 {
-		I_Error(26205, name)
+		I_Error(__ccgo_ts_str(26205), name)
 	}
 	return i
 }
@@ -35245,7 +35244,7 @@ func R_DrawColumn() {
 		return
 	}
 	if uint32(dc_x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(26239, dc_yl, dc_yh, dc_x)
+		I_Error(__ccgo_ts_str(26239), dc_yl, dc_yh, dc_x)
 	}
 	// Framebuffer destination address.
 	// Use ylookup LUT to avoid multiply with ScreenWidth.
@@ -35289,7 +35288,7 @@ func R_DrawColumnLow() {
 		return
 	}
 	if uint32(dc_x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(26239, dc_yl, dc_yh, dc_x)
+		I_Error(__ccgo_ts_str(26239), dc_yl, dc_yh, dc_x)
 	}
 	//	dccount++;
 	// Blocky mode, need to multiply by 2.
@@ -35400,7 +35399,7 @@ func R_DrawFuzzColumn() {
 		return
 	}
 	if uint32(dc_x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(26268, dc_yl, dc_yh, dc_x)
+		I_Error(__ccgo_ts_str(26268), dc_yl, dc_yh, dc_x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[dc_x])
 	// Looks familiar.
@@ -35455,7 +35454,7 @@ func R_DrawFuzzColumnLow() {
 	// low detail mode, need to multiply by 2
 	x = dc_x << 1
 	if uint32(x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(26268, dc_yl, dc_yh, dc_x)
+		I_Error(__ccgo_ts_str(26268), dc_yl, dc_yh, dc_x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[x])
 	dest2 = ylookup[dc_yl] + uintptr(columnofs[x+int32(1)])
@@ -35501,7 +35500,7 @@ func R_DrawTranslatedColumn() {
 		return
 	}
 	if uint32(dc_x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(26239, dc_yl, dc_yh, dc_x)
+		I_Error(__ccgo_ts_str(26239), dc_yl, dc_yh, dc_x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[dc_x])
 	// Looks familiar.
@@ -35539,7 +35538,7 @@ func R_DrawTranslatedColumnLow() {
 	// low detail, need to scale by 2
 	x = dc_x << 1
 	if uint32(x) >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT {
-		I_Error(26239, dc_yl, dc_yh, x)
+		I_Error(__ccgo_ts_str(26239), dc_yl, dc_yh, x)
 	}
 	dest = ylookup[dc_yl] + uintptr(columnofs[x])
 	dest2 = ylookup[dc_yl] + uintptr(columnofs[x+int32(1)])
@@ -35614,7 +35613,7 @@ func R_DrawSpan() {
 	var dest, v3 uintptr
 	var position, step, xtemp, ytemp uint32
 	if ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= SCREENWIDTH || uint32(ds_y) > SCREENHEIGHT {
-		I_Error(26301, ds_x1, ds_x2, ds_y)
+		I_Error(__ccgo_ts_str(26301), ds_x1, ds_x2, ds_y)
 	}
 	//	dscount++;
 	// Pack position and step variables into a single 32-bit integer,
@@ -35661,7 +35660,7 @@ func R_DrawSpanLow() {
 	var dest, v3, v4 uintptr
 	var position, step, xtemp, ytemp uint32
 	if ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= SCREENWIDTH || uint32(ds_y) > SCREENHEIGHT {
-		I_Error(26301, ds_x1, ds_x2, ds_y)
+		I_Error(__ccgo_ts_str(26301), ds_x1, ds_x2, ds_y)
 	}
 	//	dscount++;
 	position = uint32(ds_xfrac<<10)&0xffff0000 | uint32(ds_yfrac>>6&0x0000ffff)
@@ -36408,20 +36407,20 @@ func R_ExecuteSetViewSize() {
 
 func R_Init() {
 	R_InitData()
-	fprintf_ccgo(os.Stdout, 1250)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 	R_InitPointToAngle()
-	fprintf_ccgo(os.Stdout, 1250)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 	R_InitTables()
 	// viewwidth / viewheight / detailLevel are set by the defaults
-	fprintf_ccgo(os.Stdout, 1250)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 	R_SetViewSize(screenblocks, detailLevel)
 	R_InitPlanes()
-	fprintf_ccgo(os.Stdout, 1250)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 	R_InitLightTables()
-	fprintf_ccgo(os.Stdout, 1250)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 	R_InitSkyMap()
 	R_InitTranslationTables()
-	fprintf_ccgo(os.Stdout, 1250)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(1250))
 }
 
 // C documentation
@@ -36535,7 +36534,7 @@ func R_MapPlane(y int32, x1 int32, x2 int32) {
 	var distance, length, v1, v2, v3 fixed_t
 	var index uint32
 	if x2 < x1 || x1 < 0 || x2 >= viewwidth || y > viewheight {
-		I_Error(26405, x1, x2, y)
+		I_Error(__ccgo_ts_str(26405), x1, x2, y)
 	}
 	if planeheight != cachedheight[y] {
 		cachedheight[y] = planeheight
@@ -36623,7 +36622,7 @@ func R_FindPlane(height fixed_t, picnum int32, lightlevel int32) *visplane_t {
 		}
 	}
 	if lastvisplane_index >= len(visplanes)-1 {
-		I_Error(26430, 0)
+		I_Error(__ccgo_ts_str(26430), 0)
 	}
 	check := &visplanes[lastvisplane_index]
 	check.Fheight = height
@@ -36701,13 +36700,13 @@ func R_CheckPlane(pl *visplane_t, start int32, stop int32) *visplane_t {
 func R_DrawPlanes() {
 	var angle, b1, b2, light, lumpnum, stop, t1, t2, x int32
 	if ds_index >= len(drawsegs) {
-		I_Error(26461, ds_index)
+		I_Error(__ccgo_ts_str(26461), ds_index)
 	}
 	if lastvisplane_index >= len(visplanes)-1 {
-		I_Error(26498, lastvisplane_index)
+		I_Error(__ccgo_ts_str(26498), lastvisplane_index)
 	}
 	if (int64(lastopening)-int64(uintptr(unsafe.Pointer(&openings))))/2 > int64(SCREENWIDTH*64) {
-		I_Error(26535, (int64(lastopening)-int64(uintptr(unsafe.Pointer(&openings))))/2)
+		I_Error(__ccgo_ts_str(26535), (int64(lastopening)-int64(uintptr(unsafe.Pointer(&openings))))/2)
 	}
 	for i := 0; i < lastvisplane_index; i++ {
 		pl := &visplanes[i]
@@ -37071,7 +37070,7 @@ func R_StoreWallRange(start int32, stop int32) {
 		return
 	}
 	if start >= viewwidth || start > stop {
-		I_Error(26571, start, stop)
+		I_Error(__ccgo_ts_str(26571), start, stop)
 	}
 	sidedef = curline.Fsidedef
 	linedef = curline.Flinedef
@@ -37361,7 +37360,7 @@ const INT_MAX17 = 2147483647
 func R_InstallSpriteLump(spritename string, lump int32, frame uint32, rotation uint32, flipped boolean) {
 	var r int32
 	if frame >= 29 || rotation > 8 {
-		I_Error(26603, lump)
+		I_Error(__ccgo_ts_str(26603), lump)
 	}
 	if int32(frame) > maxframe {
 		maxframe = int32(frame)
@@ -37369,10 +37368,10 @@ func R_InstallSpriteLump(spritename string, lump int32, frame uint32, rotation u
 	if rotation == 0 {
 		// the lump should be used for all rotations
 		if sprtemp[frame].Frotate == 0 {
-			I_Error(26656, spritename, 'A'+frame)
+			I_Error(__ccgo_ts_str(26656), spritename, 'A'+frame)
 		}
 		if sprtemp[frame].Frotate == 1 {
-			I_Error(26712, spritename, 'A'+frame)
+			I_Error(__ccgo_ts_str(26712), spritename, 'A'+frame)
 		}
 		sprtemp[frame].Frotate = 0
 		r = 0
@@ -37392,13 +37391,13 @@ func R_InstallSpriteLump(spritename string, lump int32, frame uint32, rotation u
 	}
 	// the lump is only used for one rotation
 	if sprtemp[frame].Frotate == 0 {
-		I_Error(26712, spritename, 'A'+frame)
+		I_Error(__ccgo_ts_str(26712), spritename, 'A'+frame)
 	}
 	sprtemp[frame].Frotate = 1
 	// make 0 based
 	rotation--
 	if int32(sprtemp[frame].Flump[rotation]) != -1 {
-		I_Error(26777, spritename, 'A'+frame, '1'+rotation)
+		I_Error(__ccgo_ts_str(26777), spritename, 'A'+frame, '1'+rotation)
 	}
 	sprtemp[frame].Flump[rotation] = int16(lump - firstspritelump)
 	sprtemp[frame].Fflip[rotation] = uint8(flipped)
@@ -37491,7 +37490,7 @@ func R_InitSpriteDefs(namelist []string) {
 		_4:
 			;
 			// no rotations were found for that frame at all
-			I_Error(26839, spritename, frame+'A')
+			I_Error(__ccgo_ts_str(26839), spritename, frame+'A')
 			goto _7
 		_5:
 			;
@@ -37507,7 +37506,7 @@ func R_InitSpriteDefs(namelist []string) {
 				goto _8
 			}
 			if int32(sprtemp[frame].Flump[rotation]) == -1 {
-				I_Error(26887, spritename, frame+'A')
+				I_Error(__ccgo_ts_str(26887), spritename, frame+'A')
 			}
 			goto _9
 		_9:
@@ -37644,7 +37643,7 @@ func R_DrawVisSprite(vis *vissprite_t, x1 int32, x2 int32) {
 		}
 		texturecolumn = frac >> FRACBITS
 		if texturecolumn < 0 || texturecolumn >= int32(patch.Fwidth) {
-			I_Error(26942, 0)
+			I_Error(__ccgo_ts_str(26942), 0)
 		}
 		R_DrawMaskedColumn(patch.GetColumn(texturecolumn))
 		goto _1
@@ -37692,11 +37691,11 @@ func R_ProjectSprite(thing *mobj_t) {
 	}
 	// decide which patch to use for sprite relative to player
 	if uint32(thing.Fsprite) >= uint32(numsprites) {
-		I_Error(26979, thing.Fsprite)
+		I_Error(__ccgo_ts_str(26979), thing.Fsprite)
 	}
 	sprdef = &sprites[thing.Fsprite]
 	if thing.Fframe&int32(FF_FRAMEMASK3) >= sprdef.Fnumframes {
-		I_Error(27022, thing.Fsprite, thing.Fframe)
+		I_Error(__ccgo_ts_str(27022), thing.Fsprite, thing.Fframe)
 	}
 	sprframe = &sprdef.Fspriteframes[thing.Fframe&int32(FF_FRAMEMASK3)]
 	if sprframe.Frotate != 0 {
@@ -37837,11 +37836,11 @@ func R_DrawPSprite(psp *pspdef_t) {
 	var tx fixed_t
 	// decide which patch to use
 	if uint32(psp.Fstate.Fsprite) >= uint32(numsprites) {
-		I_Error(26979, psp.Fstate.Fsprite)
+		I_Error(__ccgo_ts_str(26979), psp.Fstate.Fsprite)
 	}
 	sprdef = &sprites[psp.Fstate.Fsprite]
 	if psp.Fstate.Fframe&int32(FF_FRAMEMASK3) >= sprdef.Fnumframes {
-		I_Error(27022, psp.Fstate.Fsprite, psp.Fstate.Fframe)
+		I_Error(__ccgo_ts_str(27022), psp.Fstate.Fsprite, psp.Fstate.Fframe)
 	}
 	sprframe = &sprdef.Fspriteframes[psp.Fstate.Fframe&int32(FF_FRAMEMASK3)]
 	lump = int32(sprframe.Flump[0])
@@ -39309,7 +39308,7 @@ func STlib_drawNum(n *st_number_t, refresh boolean) {
 	// clear the area
 	x = n.Fx - numdigits*w
 	if n.Fy-(SCREENHEIGHT-ST_HEIGHT) < 0 {
-		I_Error(27468, 0)
+		I_Error(__ccgo_ts_str(27468), 0)
 	}
 	V_CopyRect(x, n.Fy-(SCREENHEIGHT-ST_HEIGHT), st_backing_screen, w*numdigits, h, x, n.Fy)
 	// if non-number, do not draw it
@@ -39382,7 +39381,7 @@ func STlib_updateMultIcon(mi *st_multicon_t, refresh boolean) {
 			w = int32(mi.Fp[mi.Foldinum].Fwidth)
 			h = int32(mi.Fp[mi.Foldinum].Fheight)
 			if y-(SCREENHEIGHT-ST_HEIGHT) < 0 {
-				I_Error(27493, 0)
+				I_Error(__ccgo_ts_str(27493), 0)
 			}
 			V_CopyRect(x, y-(SCREENHEIGHT-ST_HEIGHT), st_backing_screen, w, h, x, y)
 		}
@@ -39408,7 +39407,7 @@ func STlib_updateBinIcon(bi *st_binicon_t, refresh boolean) {
 		w = int32(bi.Fp.Fwidth)
 		h = int32(bi.Fp.Fheight)
 		if y-(SCREENHEIGHT-ST_HEIGHT) < 0 {
-			I_Error(27522, 0)
+			I_Error(__ccgo_ts_str(27522), 0)
 		}
 		if *(*boolean)(unsafe.Pointer(bi.Fval)) != 0 {
 			V_DrawPatch(bi.Fx, bi.Fy, bi.Fp)
@@ -40855,7 +40854,7 @@ func S_StartSound(origin *degenmobj_t, sfx_id int32) {
 	*(*int32)(unsafe.Pointer(bp + 4)) = snd_SfxVolume
 	// check for bogus sound #
 	if sfx_id < 1 || sfx_id > NUMSFX {
-		I_Error(27983, sfx_id)
+		I_Error(__ccgo_ts_str(27983), sfx_id)
 	}
 	sfx = &S_sfx[sfx_id]
 	// Initialize sound parameters
@@ -40971,14 +40970,14 @@ func S_UpdateSounds(listener *degenmobj_t) {
 
 func S_SetMusicVolume(volume int32) {
 	if volume < 0 || volume > 127 {
-		I_Error(27997, volume)
+		I_Error(__ccgo_ts_str(27997), volume)
 	}
 	I_SetMusicVolume(volume)
 }
 
 func S_SetSfxVolume(volume int32) {
 	if volume < 0 || volume > 127 {
-		I_Error(28031, volume)
+		I_Error(__ccgo_ts_str(28031), volume)
 	}
 	snd_SfxVolume = volume
 }
@@ -41000,7 +40999,7 @@ func S_ChangeMusic(musicnum int32, looping int32) {
 		musicnum = int32(mus_introa)
 	}
 	if musicnum <= int32(mus_None) || musicnum >= NUMMUSIC {
-		I_Error(28063, musicnum)
+		I_Error(__ccgo_ts_str(28063), musicnum)
 	} else {
 		music = &S_music[musicnum]
 	}
@@ -41113,7 +41112,7 @@ func V_MarkRect(x int32, y int32, width int32, height int32) {
 func V_CopyRect(srcx int32, srcy int32, source uintptr, width int32, height int32, destx int32, desty int32) {
 	var dest, src uintptr
 	if srcx < 0 || srcx+width > SCREENWIDTH || srcy < 0 || srcy+height > SCREENHEIGHT || destx < 0 || destx+width > SCREENWIDTH || desty < 0 || desty+height > SCREENHEIGHT {
-		I_Error(28088, 0)
+		I_Error(__ccgo_ts_str(28088), 0)
 	}
 	V_MarkRect(destx, desty, width, height)
 	src = source + uintptr(SCREENWIDTH*srcy) + uintptr(srcx)
@@ -41143,7 +41142,7 @@ func V_DrawPatch(x int32, y int32, patch *patch_t) {
 	y -= int32(patch.Ftopoffset)
 	x -= int32(patch.Fleftoffset)
 	if x < 0 || x+int32(patch.Fwidth) > SCREENWIDTH || y < 0 || y+int32(patch.Fheight) > SCREENHEIGHT {
-		I_Error(28103, x, y, int32(patch.Fwidth), int32(patch.Fheight), int32(patch.Ftopoffset), int32(patch.Fleftoffset))
+		I_Error(__ccgo_ts_str(28103), x, y, int32(patch.Fwidth), int32(patch.Fheight), int32(patch.Ftopoffset), int32(patch.Fleftoffset))
 	}
 	V_MarkRect(x, y, int32(patch.Fwidth), int32(patch.Fheight))
 	col = 0
@@ -41192,7 +41191,7 @@ func V_DrawPatchFlipped(x int32, y int32, patch *patch_t) {
 	y -= int32(patch.Ftopoffset)
 	x -= int32(patch.Fleftoffset)
 	if x < 0 || x+int32(patch.Fwidth) > SCREENWIDTH || y < 0 || y+int32(patch.Fheight) > SCREENHEIGHT {
-		I_Error(28187, 0)
+		I_Error(__ccgo_ts_str(28187), 0)
 	}
 	V_MarkRect(x, y, int32(patch.Fwidth), int32(patch.Fheight))
 	col = 0
@@ -41247,7 +41246,7 @@ func V_DrawBlock(x int32, y int32, width int32, height int32, src uintptr) {
 	var dest uintptr
 	var v1 int32
 	if x < 0 || x+width > SCREENWIDTH || y < 0 || y+height > SCREENHEIGHT {
-		I_Error(28288, 0)
+		I_Error(__ccgo_ts_str(28288), 0)
 	}
 	V_MarkRect(x, y, width, height)
 	dest = dest_screen + uintptr(y*SCREENWIDTH) + uintptr(x)
@@ -42075,7 +42074,7 @@ func WI_drawOnLnode(n int32, c []*patch_t) {
 		V_DrawPatch(lnodes[wbs.Fepsd][n].Fx, lnodes[wbs.Fepsd][n].Fy, c[i])
 	} else {
 		// DEBUG
-		fprintf_ccgo(os.Stdout, 28344, n+1)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(28344), n+1)
 	}
 }
 
@@ -43391,7 +43390,7 @@ func W_ParseCommandLine() (r boolean) {
 				break
 			}
 			filename = D_TryFindWADByName(myargs[p])
-			fprintf_ccgo(os.Stdout, 2817, filename)
+			fprintf_ccgo(os.Stdout, __ccgo_ts_str(2817), filename)
 			W_AddFile(filename)
 		}
 	}
@@ -43466,7 +43465,7 @@ func W_AddFile(filename string) *os.File {
 	}
 	wad_file = W_OpenFile(filename)
 	if wad_file == nil {
-		fprintf_ccgo(os.Stdout, 28631, filename)
+		fprintf_ccgo(os.Stdout, __ccgo_ts_str(28631), filename)
 		return nil
 	}
 	newnumlumps = int32(numlumps)
@@ -43490,7 +43489,7 @@ func W_AddFile(filename string) *os.File {
 		if gostring_bytes(wadinfo.Fidentification[:]) != __ccgo_ts_str(28654) {
 			// Homebrew levels?
 			if gostring_bytes(wadinfo.Fidentification[:]) != __ccgo_ts_str(28659) {
-				I_Error(28664, filename)
+				I_Error(__ccgo_ts_str(28664), filename)
 			}
 			// ???modifiedgame = true;
 		}
@@ -43556,7 +43555,7 @@ func W_GetNumForName(name string) (r int32) {
 	var i int32
 	i = W_CheckNumForName(name)
 	if i < 0 {
-		I_Error(28706, name)
+		I_Error(__ccgo_ts_str(28706), name)
 	}
 	return i
 }
@@ -43569,7 +43568,7 @@ func W_GetNumForName(name string) (r int32) {
 //	//
 func W_LumpLength(lump uint32) (r int32) {
 	if lump >= numlumps {
-		I_Error(28737, lump)
+		I_Error(__ccgo_ts_str(28737), lump)
 	}
 	return lumpinfo[lump].Fsize
 }
@@ -43584,13 +43583,13 @@ func W_LumpLength(lump uint32) (r int32) {
 func W_ReadLump(lump uint32, dest uintptr) {
 	var c int32
 	if lump >= numlumps {
-		I_Error(28766, lump)
+		I_Error(__ccgo_ts_str(28766), lump)
 	}
 	l := &lumpinfo[lump]
 	I_BeginRead()
 	c = int32(W_Read(l.Fwad_file, uint32(l.Fposition), dest, uint64(l.Fsize)))
 	if c < l.Fsize {
-		I_Error(28793, c, l.Fsize, lump)
+		I_Error(__ccgo_ts_str(28793), c, l.Fsize, lump)
 	}
 	I_EndRead()
 }
@@ -43610,7 +43609,7 @@ func W_ReadLump(lump uint32, dest uintptr) {
 func W_CacheLumpNum(lumpnum int32, tag int32) (r uintptr) {
 	var result uintptr
 	if uint32(lumpnum) >= numlumps {
-		I_Error(28835, lumpnum)
+		I_Error(__ccgo_ts_str(28835), lumpnum)
 	}
 	lump := &lumpinfo[lumpnum]
 	// Get the pointer to return.  If the lump is in a memory-mapped
@@ -43669,7 +43668,7 @@ func W_CacheLumpNameT[T lumpType](name string, tag int32) T {
 
 func W_ReleaseLumpNum(lumpnum int32) {
 	if uint32(lumpnum) >= numlumps {
-		I_Error(28874, lumpnum)
+		I_Error(__ccgo_ts_str(28874), lumpnum)
 	}
 	lump := &lumpinfo[lumpnum]
 	Z_ChangeTag2(lump.Fcache, PU_CACHE, __ccgo_ts_str(28866), 461)
@@ -43742,7 +43741,7 @@ func W_CheckCorrectIWAD(mission GameMission_t) {
 		if mission != unique_lumps[i].Fmission {
 			lumpnum = W_CheckNumForName(unique_lumps[i].Flumpname)
 			if lumpnum >= 0 {
-				I_Error(28935, D_SuggestGameName(unique_lumps[i].Fmission, indetermined), __ccgo_ts_str(29063), D_GameMissionString(mission), __ccgo_ts_str(29063), D_GameMissionString(unique_lumps[i].Fmission))
+				I_Error(__ccgo_ts_str(28935), D_SuggestGameName(unique_lumps[i].Fmission, indetermined), __ccgo_ts_str(29063), D_GameMissionString(mission), __ccgo_ts_str(29063), D_GameMissionString(unique_lumps[i].Fmission))
 			}
 		}
 		goto _1
@@ -43866,7 +43865,7 @@ func Z_Free(ptr uintptr) {
 	var block, other uintptr
 	block = ptr - uintptr(40)
 	if (*memblock_t)(unsafe.Pointer(block)).Fid != ZONEID {
-		I_Error(29075, 0)
+		I_Error(__ccgo_ts_str(29075), 0)
 	}
 	if (*memblock_t)(unsafe.Pointer(block)).Ftag != PU_FREE && (*memblock_t)(unsafe.Pointer(block)).Fuser != 0 {
 		// clear the user's mark
@@ -43925,7 +43924,7 @@ func Z_Malloc(size int32, tag int32, user uintptr) (r uintptr) {
 	for cond := true; cond; cond = (*memblock_t)(unsafe.Pointer(base)).Ftag != PU_FREE || (*memblock_t)(unsafe.Pointer(base)).Fsize < size {
 		if rover == start {
 			// scanned all the way around the list
-			I_Error(29114, size)
+			I_Error(__ccgo_ts_str(29114), size)
 		}
 		if (*memblock_t)(unsafe.Pointer(rover)).Ftag != PU_FREE {
 			if (*memblock_t)(unsafe.Pointer(rover)).Ftag < PU_PURGELEVEL {
@@ -43961,7 +43960,7 @@ func Z_Malloc(size int32, tag int32, user uintptr) (r uintptr) {
 		(*memblock_t)(unsafe.Pointer(base)).Fsize = size
 	}
 	if user == 0 && tag >= PU_PURGELEVEL {
-		I_Error(29157, 0)
+		I_Error(__ccgo_ts_str(29157), 0)
 	}
 	(*memblock_t)(unsafe.Pointer(base)).Fuser = user
 	(*memblock_t)(unsafe.Pointer(base)).Ftag = tag
@@ -44017,13 +44016,13 @@ func Z_CheckHeap() {
 			break
 		}
 		if block+uintptr((*memblock_t)(unsafe.Pointer(block)).Fsize) != (*memblock_t)(unsafe.Pointer(block)).Fnext {
-			I_Error(29436, 0)
+			I_Error(__ccgo_ts_str(29436), 0)
 		}
 		if (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Fprev != block {
-			I_Error(29491, 0)
+			I_Error(__ccgo_ts_str(29491), 0)
 		}
 		if (*memblock_t)(unsafe.Pointer(block)).Ftag == PU_FREE && (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Ftag == PU_FREE {
-			I_Error(29546, 0)
+			I_Error(__ccgo_ts_str(29546), 0)
 		}
 		goto _1
 	_1:
@@ -44041,10 +44040,10 @@ func Z_ChangeTag2(ptr uintptr, tag int32, file string, line int32) {
 	var block uintptr
 	block = ptr - uintptr(40)
 	if (*memblock_t)(unsafe.Pointer(block)).Fid != ZONEID {
-		I_Error(29588, file, line)
+		I_Error(__ccgo_ts_str(29588), file, line)
 	}
 	if tag >= PU_PURGELEVEL && (*memblock_t)(unsafe.Pointer(block)).Fuser == 0 {
-		I_Error(29632, file, line)
+		I_Error(__ccgo_ts_str(29632), file, line)
 	}
 	(*memblock_t)(unsafe.Pointer(block)).Ftag = tag
 }
@@ -44346,7 +44345,7 @@ func I_SetPalette(palette uintptr) {
 
 func I_GetPaletteIndex(r int32, g int32, b int32) (r1 int32) {
 	var best, best_diff, diff int32
-	fprintf_ccgo(os.Stdout, 30076)
+	fprintf_ccgo(os.Stdout, __ccgo_ts_str(30076))
 	best = 0
 	best_diff = int32(INT_MAX19)
 	for i := int32(0); i < 256; i++ {
@@ -46688,8 +46687,8 @@ var yspeed [8]fixed_t
 
 var zlight [16][128][]lighttable_t
 
-func fprintf_ccgo(output io.Writer, index int, args ...any) {
-	fmt.Fprintf(output, __ccgo_ts_str(index), args...)
+func fprintf_ccgo(output io.Writer, str string, args ...any) {
+	fmt.Fprintf(output, str, args...)
 }
 
 func __ccgo_ts_str(index int) string {
