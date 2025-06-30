@@ -40,12 +40,12 @@ func alloc(size int) uintptr {
 
 // Horrible memory allocation hack to avoid Go GC
 // Once we're done with libc, this should go
-var dg_alloced = []byte{}
+var dg_alloced = [][]byte{}
 
 func xmalloc(n uint64) uintptr {
 	data := make([]byte, n)
 	res := uintptr(unsafe.Pointer(&data[0]))
-	dg_alloced = append(dg_alloced, data...)
+	dg_alloced = append(dg_alloced, data)
 	return res
 }
 
