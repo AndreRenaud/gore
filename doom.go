@@ -44154,11 +44154,6 @@ func Run(fg DoomFrontend, args []string) {
 	dg_frontend = nil
 }
 
-func __ccgo_fp(f interface{}) uintptr {
-	type iface [2]uintptr
-	return (*iface)(unsafe.Pointer(&f))[1]
-}
-
 var DG_ScreenBuffer *image.RGBA
 
 var EpiDef menu_t
