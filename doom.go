@@ -4548,7 +4548,7 @@ type sfxinfo_t struct {
 	Ftagname     uintptr
 	Fname        [9]int8
 	Fpriority    int32
-	Flink        uintptr
+	Flink        *sfxinfo_t
 	Fpitch       int32
 	Fvolume      int32
 	Fusefulness  int32
@@ -39017,7 +39017,7 @@ func init() {
 		86: {
 			Fname:        [9]int8{'c', 'h', 'g', 'u', 'n'},
 			Fpriority:    64,
-			Flink:        uintptr(unsafe.Pointer(&S_sfx)) + uintptr(sfx_pistol)*64,
+			Flink:        &S_sfx[sfx_pistol],
 			Fpitch:       150,
 			Fnumchannels: -1,
 		},
@@ -40831,7 +40831,7 @@ func S_StartSound(origin *degenmobj_t, sfx_id int32) {
 	}
 	sfx = &S_sfx[sfx_id]
 	// Initialize sound parameters
-	if sfx.Flink != 0 {
+	if sfx.Flink != nil {
 		*(*int32)(unsafe.Pointer(bp + 4)) += sfx.Fvolume
 		if *(*int32)(unsafe.Pointer(bp + 4)) < 1 {
 			return
@@ -40907,8 +40907,8 @@ func S_UpdateSounds(listener *degenmobj_t) {
 				// initialize parameters
 				*(*int32)(unsafe.Pointer(bp)) = snd_SfxVolume
 				*(*int32)(unsafe.Pointer(bp + 4)) = NORM_SEP
-				if (*sfxinfo_t)(unsafe.Pointer(sfx)).Flink != 0 {
-					*(*int32)(unsafe.Pointer(bp)) += (*sfxinfo_t)(unsafe.Pointer(sfx)).Fvolume
+				if sfx.Flink != nil {
+					*(*int32)(unsafe.Pointer(bp)) += sfx.Fvolume
 					if *(*int32)(unsafe.Pointer(bp)) < 1 {
 						S_StopChannel(cnum)
 						goto _1
