@@ -4486,7 +4486,7 @@ func TryRunTics() {
 		NetUpdate()
 		lowtic = GetLowTic()
 		if lowtic < gametic/ticdup {
-			I_Error("TryRunTics: lowtic < gametic", 0)
+			I_Error("TryRunTics: lowtic < gametic")
 		}
 		// Don't stay in this loop forever.  The menu is still running,
 		// so return to update the screen
@@ -4515,7 +4515,7 @@ func TryRunTics() {
 				break
 			}
 			if gametic/ticdup > lowtic {
-				I_Error("gametic>lowtic", 0)
+				I_Error("gametic>lowtic")
 			}
 			local_playeringame = set.Fingame
 			loop_interface.FRunTic(set.Fcmds[:], set.Fingame[:])
@@ -5282,7 +5282,7 @@ func D_IdentifyVersion() {
 		}
 		if gamemission == none {
 			// Still no idea.  I don't think this is going to work.
-			I_Error("Unknown or invalid IWAD file.", 0)
+			I_Error("Unknown or invalid IWAD file.")
 		}
 	}
 	// Make sure gamemode is set up correctly
@@ -5726,7 +5726,7 @@ func D_DoomMain() {
 	iwadfile = D_FindIWAD(1<<int32(doom)|1<<int32(doom2)|1<<int32(pack_tnt)|1<<int32(pack_plut)|1<<int32(pack_chex)|1<<int32(pack_hacx), &gamemission)
 	// None found?
 	if iwadfile == "" {
-		I_Error("Game mode indeterminate.  No IWAD file was found.  Try\nspecifying one with the '-iwad' command line parameter.\n", 0)
+		I_Error("Game mode indeterminate.  No IWAD file was found.  Try\nspecifying one with the '-iwad' command line parameter.\n")
 	}
 	modifiedgame = 0
 	fprintf_ccgo(os.Stdout, "W_Init: Init WADfiles.\n")
@@ -5842,7 +5842,7 @@ func D_DoomMain() {
 			22: "spida1d1",
 		}
 		if gamemode == shareware {
-			I_Error("\nYou cannot -file with the shareware version. Register!", 0)
+			I_Error("\nYou cannot -file with the shareware version. Register!")
 		}
 		// Check for fake IWAD with right name,
 		// but w/o all the lumps of the registered version.
@@ -5853,7 +5853,7 @@ func D_DoomMain() {
 					break
 				}
 				if W_CheckNumForName(levelLumps[i]) < 0 {
-					I_Error("\nThis is not the registered version.", 0)
+					I_Error("\nThis is not the registered version.")
 				}
 				goto _2
 			_2:
@@ -8639,7 +8639,7 @@ func G_DoLoadGame() {
 	P_UnArchiveThinkers()
 	P_UnArchiveSpecials()
 	if P_ReadSaveGameEOF() == 0 {
-		I_Error("Bad savegame", 0)
+		I_Error("Bad savegame")
 	}
 	if setsizeneeded != 0 {
 		R_ExecuteSetViewSize()
@@ -8694,7 +8694,7 @@ func G_DoSaveGame() {
 	// except if the vanilla_savegame_limit setting is turned off.
 	pos, err := save_stream.Seek(0, io.SeekCurrent)
 	if vanilla_savegame_limit != 0 && pos > SAVEGAMESIZE {
-		I_Error("Savegame buffer overrun", 0)
+		I_Error("Savegame buffer overrun")
 	}
 	// Finish up, close the savegame file.
 	save_stream.Close()
@@ -8985,7 +8985,7 @@ func G_RecordDemo(name string) {
 func G_VanillaVersionCode() (r int32) {
 	switch gameversion {
 	case exe_doom_1_2:
-		I_Error("Doom 1.2 does not have a version code!", 0)
+		I_Error("Doom 1.2 does not have a version code!")
 		fallthrough
 	case exe_doom_1_666:
 		return 106
@@ -18185,7 +18185,7 @@ func I_ZoneBase(size *int32) (r uintptr) {
 		min_ram = MIN_RAM
 	}
 	zonemem = AutoAllocMemory(size, default_ram, min_ram)
-	fprintf_ccgo(os.Stdout, "zone memory: %p, %x allocated for zone\n", zonemem, size)
+	fprintf_ccgo(os.Stdout, "zone memory: 0x%x, %x allocated for zone\n", zonemem, size)
 	return zonemem
 }
 
@@ -20429,7 +20429,7 @@ func M_DrawReadThis1() {
 		// Final Doom always displays "HELP".
 		lumpname = "HELP"
 	default:
-		I_Error("Unhandled game version", 0)
+		I_Error("Unhandled game version")
 		break
 	}
 	V_DrawPatchDirect(0, 0, W_CacheLumpNameT(lumpname, PU_CACHE))
@@ -22716,7 +22716,7 @@ func P_Move(actor *mobj_t) (r boolean) {
 		return 0
 	}
 	if uint32(actor.Fmovedir) >= 8 {
-		I_Error("Weird actor->movedir!", 0)
+		I_Error("Weird actor->movedir!")
 	}
 	tryx = actor.Fx + actor.Finfo.Fspeed*xspeed[actor.Fmovedir]
 	tryy = actor.Fy + actor.Finfo.Fspeed*yspeed[actor.Fmovedir]
@@ -22789,7 +22789,7 @@ func P_NewChaseDir(actor *mobj_t) {
 	var olddir, turnaround dirtype_t
 	var tdir int32
 	if actor.Ftarget == nil {
-		I_Error("P_NewChaseDir: called with no target", 0)
+		I_Error("P_NewChaseDir: called with no target")
 	}
 	olddir = actor.Fmovedir
 	turnaround = opposite[olddir]
@@ -25120,7 +25120,7 @@ func P_TouchSpecialThing(special *mobj_t, toucher *mobj_t) {
 		player.Fmessage = "You got the super shotgun!"
 		sound = int32(sfx_wpnup)
 	default:
-		I_Error("P_SpecialThing: Unknown gettable thing", 0)
+		I_Error("P_SpecialThing: Unknown gettable thing")
 	}
 	if special.Fflags&MF_COUNTITEM != 0 {
 		player.Fitemcount++
@@ -26135,7 +26135,7 @@ func P_HitSlideLine(ld *line_t) {
 func PTR_SlideTraverse(in *intercept_t) (r boolean) {
 	var li *line_t
 	if in.Fisaline == 0 {
-		I_Error("PTR_SlideTraverse: not a line?", 0)
+		I_Error("PTR_SlideTraverse: not a line?")
 	}
 	li = in.Fd.Fthing.(*line_t)
 	if int32(li.Fflags)&ML_TWOSIDED == 0 {
@@ -28482,7 +28482,7 @@ func P_AddActivePlat(plat *plat_t) {
 		;
 		i++
 	}
-	I_Error("P_AddActivePlat: no more plats!", 0)
+	I_Error("P_AddActivePlat: no more plats!")
 }
 
 func P_RemoveActivePlat(plat *plat_t) {
@@ -28503,7 +28503,7 @@ func P_RemoveActivePlat(plat *plat_t) {
 		;
 		i++
 	}
-	I_Error("P_RemoveActivePlat: can't find plat!", 0)
+	I_Error("P_RemoveActivePlat: can't find plat!")
 }
 
 const ANG1807 = 2147483648
@@ -31933,7 +31933,7 @@ func P_FindNextHighestFloor(sec *sector_t, currentheight int32) (r fixed_t) {
 			} else {
 				if h == MAX_ADJOINING_SECTORS+2 {
 					// Fatal overflow: game crashes at 22 textures
-					I_Error("Sector with more than 22 adjoining sectors. Vanilla will crash here", 0)
+					I_Error("Sector with more than 22 adjoining sectors. Vanilla will crash here")
 				}
 			}
 			v2 = h
@@ -32811,7 +32811,7 @@ func P_SpawnSpecials() {
 		switch int32(lines[i].Fspecial) {
 		case 48:
 			if int32(numlinespecials) >= MAXLINEANIMS {
-				I_Error("Too many scrolling wall linedefs! (Vanilla limit is 64)", 0)
+				I_Error("Too many scrolling wall linedefs! (Vanilla limit is 64)")
 			}
 			// EFFECT FIRSTCOL SCROLL+
 			linespeciallist[numlinespecials] = &lines[i]
@@ -33120,7 +33120,7 @@ func P_StartButton(line *line_t, w bwhere_e, texture int32, time int32) {
 		;
 		i++
 	}
-	I_Error("P_StartButton: no button slots left!", 0)
+	I_Error("P_StartButton: no button slots left!")
 }
 
 // C documentation
@@ -34678,7 +34678,7 @@ func R_GenerateLookup(texnum int32) {
 			break
 		}
 		if widths[x] == 0 {
-			fprintf_ccgo(os.Stdout, "R_GenerateLookup: column without a patch (%s)\n", texture)
+			fprintf_ccgo(os.Stdout, "R_GenerateLookup: column without a patch (%s)\n", gostring_bytes(texture.Fname[:]))
 			return
 		}
 		// I_Error ("R_GenerateLookup: column without a patch");
@@ -34851,7 +34851,7 @@ func R_InitTextures() {
 		}
 		offset = *(*int32)(unsafe.Pointer(directory))
 		if offset > maxoff {
-			I_Error("R_InitTextures: bad texture directory", 0)
+			I_Error("R_InitTextures: bad texture directory")
 		}
 		mtexture := (*maptexture_t)(unsafe.Pointer(maptex + uintptr(offset)))
 		texture := &texture_t{
@@ -34873,7 +34873,7 @@ func R_InitTextures() {
 			patch.Foriginy = (*mappatch_t)(unsafe.Pointer(mpatch)).Foriginy
 			patch.Fpatch = patchlookup[(*mappatch_t)(unsafe.Pointer(mpatch)).Fpatch]
 			if patch.Fpatch == -1 {
-				I_Error("R_InitTextures: Missing patch in texture %s", texture)
+				I_Error("R_InitTextures: Missing patch in texture %s", gostring_bytes(texture.Fname[:]))
 			}
 			goto _7
 		_7:
@@ -36622,7 +36622,7 @@ func R_FindPlane(height fixed_t, picnum int32, lightlevel int32) *visplane_t {
 		}
 	}
 	if lastvisplane_index >= len(visplanes)-1 {
-		I_Error("R_FindPlane: no more visplanes", 0)
+		I_Error("R_FindPlane: no more visplanes")
 	}
 	check := &visplanes[lastvisplane_index]
 	check.Fheight = height
@@ -37643,7 +37643,7 @@ func R_DrawVisSprite(vis *vissprite_t, x1 int32, x2 int32) {
 		}
 		texturecolumn = frac >> FRACBITS
 		if texturecolumn < 0 || texturecolumn >= int32(patch.Fwidth) {
-			I_Error("R_DrawSpriteRange: bad texturecolumn", 0)
+			I_Error("R_DrawSpriteRange: bad texturecolumn")
 		}
 		R_DrawMaskedColumn(patch.GetColumn(texturecolumn))
 		goto _1
@@ -39308,7 +39308,7 @@ func STlib_drawNum(n *st_number_t, refresh boolean) {
 	// clear the area
 	x = n.Fx - numdigits*w
 	if n.Fy-(SCREENHEIGHT-ST_HEIGHT) < 0 {
-		I_Error("drawNum: n->y - ST_Y < 0", 0)
+		I_Error("drawNum: n->y - ST_Y < 0")
 	}
 	V_CopyRect(x, n.Fy-(SCREENHEIGHT-ST_HEIGHT), st_backing_screen, w*numdigits, h, x, n.Fy)
 	// if non-number, do not draw it
@@ -39381,7 +39381,7 @@ func STlib_updateMultIcon(mi *st_multicon_t, refresh boolean) {
 			w = int32(mi.Fp[mi.Foldinum].Fwidth)
 			h = int32(mi.Fp[mi.Foldinum].Fheight)
 			if y-(SCREENHEIGHT-ST_HEIGHT) < 0 {
-				I_Error("updateMultIcon: y - ST_Y < 0", 0)
+				I_Error("updateMultIcon: y - ST_Y < 0")
 			}
 			V_CopyRect(x, y-(SCREENHEIGHT-ST_HEIGHT), st_backing_screen, w, h, x, y)
 		}
@@ -39407,7 +39407,7 @@ func STlib_updateBinIcon(bi *st_binicon_t, refresh boolean) {
 		w = int32(bi.Fp.Fwidth)
 		h = int32(bi.Fp.Fheight)
 		if y-(SCREENHEIGHT-ST_HEIGHT) < 0 {
-			I_Error("updateBinIcon: y - ST_Y < 0", 0)
+			I_Error("updateBinIcon: y - ST_Y < 0")
 		}
 		if *(*boolean)(unsafe.Pointer(bi.Fval)) != 0 {
 			V_DrawPatch(bi.Fx, bi.Fy, bi.Fp)
@@ -41112,7 +41112,7 @@ func V_MarkRect(x int32, y int32, width int32, height int32) {
 func V_CopyRect(srcx int32, srcy int32, source uintptr, width int32, height int32, destx int32, desty int32) {
 	var dest, src uintptr
 	if srcx < 0 || srcx+width > SCREENWIDTH || srcy < 0 || srcy+height > SCREENHEIGHT || destx < 0 || destx+width > SCREENWIDTH || desty < 0 || desty+height > SCREENHEIGHT {
-		I_Error("Bad V_CopyRect", 0)
+		I_Error("Bad V_CopyRect")
 	}
 	V_MarkRect(destx, desty, width, height)
 	src = source + uintptr(SCREENWIDTH*srcy) + uintptr(srcx)
@@ -41191,7 +41191,7 @@ func V_DrawPatchFlipped(x int32, y int32, patch *patch_t) {
 	y -= int32(patch.Ftopoffset)
 	x -= int32(patch.Fleftoffset)
 	if x < 0 || x+int32(patch.Fwidth) > SCREENWIDTH || y < 0 || y+int32(patch.Fheight) > SCREENHEIGHT {
-		I_Error("Bad V_DrawPatchFlipped", 0)
+		I_Error("Bad V_DrawPatchFlipped")
 	}
 	V_MarkRect(x, y, int32(patch.Fwidth), int32(patch.Fheight))
 	col = 0
@@ -41246,7 +41246,7 @@ func V_DrawBlock(x int32, y int32, width int32, height int32, src uintptr) {
 	var dest uintptr
 	var v1 int32
 	if x < 0 || x+width > SCREENWIDTH || y < 0 || y+height > SCREENHEIGHT {
-		I_Error("Bad V_DrawBlock", 0)
+		I_Error("Bad V_DrawBlock")
 	}
 	V_MarkRect(x, y, width, height)
 	dest = dest_screen + uintptr(y*SCREENWIDTH) + uintptr(x)
@@ -43865,7 +43865,7 @@ func Z_Free(ptr uintptr) {
 	var block, other uintptr
 	block = ptr - uintptr(40)
 	if (*memblock_t)(unsafe.Pointer(block)).Fid != ZONEID {
-		I_Error("Z_Free: freed a pointer without ZONEID", 0)
+		I_Error("Z_Free: freed a pointer without ZONEID")
 	}
 	if (*memblock_t)(unsafe.Pointer(block)).Ftag != PU_FREE && (*memblock_t)(unsafe.Pointer(block)).Fuser != 0 {
 		// clear the user's mark
@@ -43960,7 +43960,7 @@ func Z_Malloc(size int32, tag int32, user uintptr) (r uintptr) {
 		(*memblock_t)(unsafe.Pointer(base)).Fsize = size
 	}
 	if user == 0 && tag >= PU_PURGELEVEL {
-		I_Error("Z_Malloc: an owner is required for purgable blocks", 0)
+		I_Error("Z_Malloc: an owner is required for purgable blocks")
 	}
 	(*memblock_t)(unsafe.Pointer(base)).Fuser = user
 	(*memblock_t)(unsafe.Pointer(base)).Ftag = tag
@@ -44016,13 +44016,13 @@ func Z_CheckHeap() {
 			break
 		}
 		if block+uintptr((*memblock_t)(unsafe.Pointer(block)).Fsize) != (*memblock_t)(unsafe.Pointer(block)).Fnext {
-			I_Error("Z_CheckHeap: block size does not touch the next block\n", 0)
+			I_Error("Z_CheckHeap: block size does not touch the next block\n")
 		}
 		if (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Fprev != block {
-			I_Error("Z_CheckHeap: next block doesn't have proper back link\n", 0)
+			I_Error("Z_CheckHeap: next block doesn't have proper back link\n")
 		}
 		if (*memblock_t)(unsafe.Pointer(block)).Ftag == PU_FREE && (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Ftag == PU_FREE {
-			I_Error("Z_CheckHeap: two consecutive free blocks\n", 0)
+			I_Error("Z_CheckHeap: two consecutive free blocks\n")
 		}
 		goto _1
 	_1:
