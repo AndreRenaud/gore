@@ -397,7 +397,7 @@ func compareScreen(game *doomTestHeadless, testdataPrefix string, percentOk floa
 }
 
 func TestDoomLevels(t *testing.T) {
-	dg_speed_ratio = 20.0
+	dg_speed_ratio = 100.0
 	var game *doomTestHeadless
 	game = &doomTestHeadless{
 		t: t,
@@ -435,42 +435,8 @@ func TestDoomLevels(t *testing.T) {
 			{ticks: 2000, callback: func(d *doomTestHeadless) { compareScreen(d, fmt.Sprintf("e1m%d", i), 15) }},
 		}...)
 	}
+	// Quit the game
 	game.keys = append(game.keys, delayedEvent{ticks: 1000, callback: func(d *doomTestHeadless) { D_Endoom() }})
-	/*
-		go func() {
-			// Start a game
-			game.InsertKey(KEY_ESCAPE) // Open menu
-			game.InsertKey(KEY_ENTER)
-			game.InsertKey(KEY_ENTER)
-			game.InsertKey(KEY_ENTER) // Start new game
-
-			// Go through levels E1M1 to E1M9 using the IDCLEV cheat
-			for i := 1; i <= 9; i++ {
-				sequence := []uint8{'i', 'd', 'c', 'l', 'e', 'v', '1', '0' + uint8(i)}
-				game.InsertKeySequence(sequence...)
-				time.Sleep(20 * time.Millisecond) // Wait for the level to load
-				t.Logf("Completed level E1M%d", i)
-				img1 := game.GetScreen()
-				knownGood, err := loadPNG(fmt.Sprintf("testdata/good_doom_test_e1m%d.png", i))
-				if err != nil {
-					t.Errorf("Error loading known good image for E1M%d: %v", i, err)
-					continue
-				}
-				diffImg, percent, err := diff.CompareImages(img1, knownGood)
-				if err != nil || percent > 10 {
-					t.Errorf("Level E1M%d screenshot does not match known good: %f%% difference", i, percent)
-					savePNG(fmt.Sprintf("doom_test_e1m%d.png", i), img1)
-					savePNG(fmt.Sprintf("doom_test_e1m%d_diff.png", i), diffImg)
-				}
-			}
-
-			// Exit
-			game.InsertKey(KEY_ESCAPE)   // Open menu
-			game.InsertKey(KEY_UPARROW1) // Go to quit
-			game.InsertKey(KEY_ENTER)    // Confirm quit
-			game.InsertKey('y')          // Confirm exit
-		}()
-	*/
 	Run(game, []string{"-iwad", "doom1.wad"})
 }
 
