@@ -31,8 +31,6 @@ var start_time time.Time
 
 type boolean = uint32
 
-const uintptr_negative_one = ^uintptr(0)
-
 // Horrible memory allocation hack to avoid Go GC
 // Once we're done with libc, this should go
 var dg_alloced = make(map[uintptr][]byte)
@@ -381,7 +379,11 @@ type actionf_t struct {
 type thinker_t struct {
 	Fprev     *thinker_t
 	Fnext     *thinker_t
-	Ffunction actionf_t
+	Ffunction thinker_func_t
+}
+
+type thinker_func_t interface {
+	ThinkerFunc()
 }
 
 const ML_THINGS = 1
@@ -21748,6 +21750,10 @@ func M_ClearRandom() {
 // T_MoveCeiling
 //
 
+func (c *ceiling_t) ThinkerFunc() {
+	T_MoveCeiling(c)
+}
+
 func T_MoveCeiling(ceiling *ceiling_t) {
 	var res result_e
 	switch ceiling.Fdirection {
@@ -21862,7 +21868,7 @@ func EV_DoCeiling(line *line_t, type1 ceiling_e) (r int32) {
 		ceiling := &ceiling_t{}
 		P_AddThinker(&ceiling.Fthinker)
 		sec.Fspecialdata = ceiling
-		ceiling.Fthinker.Ffunction.Facv = __ccgo_fp(T_MoveCeiling)
+		ceiling.Fthinker.Ffunction = ceiling
 		ceiling.Fsector = sec
 		ceiling.Fcrush = 0
 		switch type1 {
@@ -21953,8 +21959,7 @@ func P_ActivateInStasisCeiling(line *line_t) {
 		}
 		if activeceilings[i] != nil && activeceilings[i].Ftag == int32(line.Ftag) && activeceilings[i].Fdirection == 0 {
 			activeceilings[i].Fdirection = activeceilings[i].Folddirection
-			activeceilings[i].Fthinker.Ffunction.Facv = __ccgo_fp(T_MoveCeiling)
-			//*(*actionf_p1)(unsafe.Pointer(activeceilings[i] + 16)) = __ccgo_fp(T_MoveCeiling)
+			activeceilings[i].Fthinker.Ffunction = activeceilings[i]
 		}
 		goto _1
 	_1:
@@ -21979,7 +21984,7 @@ func EV_CeilingCrushStop(line *line_t) (r int32) {
 		}
 		if activeceilings[i] != nil && activeceilings[i].Ftag == int32(line.Ftag) && activeceilings[i].Fdirection != 0 {
 			activeceilings[i].Folddirection = activeceilings[i].Fdirection
-			activeceilings[i].Fthinker.Ffunction.Facv = 0
+			activeceilings[i].Fthinker.Ffunction = nil
 			activeceilings[i].Fdirection = 0 // in-stasis
 			rtn = 1
 		}
@@ -22019,6 +22024,9 @@ func EV_CeilingCrushStop(line *line_t) (r int32) {
 //	//
 //	// T_VerticalDoor
 //	//
+func (door *vldoor_t) ThinkerFunc() {
+	T_VerticalDoor(door)
+}
 func T_VerticalDoor(door *vldoor_t) {
 	var res result_e
 	switch door.Fdirection {
@@ -22182,7 +22190,7 @@ func EV_DoDoor(line *line_t, type1 vldoor_e) (r int32) {
 		doorP := &vldoor_t{}
 		P_AddThinker(&doorP.Fthinker)
 		sec.Fspecialdata = doorP
-		doorP.Fthinker.Ffunction.Facv = __ccgo_fp(T_VerticalDoor)
+		doorP.Fthinker.Ffunction = doorP
 		doorP.Fsector = sec
 		doorP.Ftype1 = type1
 		doorP.Ftopwait = VDOORWAIT
@@ -22280,7 +22288,7 @@ func EV_VerticalDoor(line *line_t, thing *mobj_t) {
 	// if the sector has an active thinker, use it
 	sec = sides[line.Fsidenum[side^int32(1)]].Fsector
 	if sec.Fspecialdata != nil {
-		doorP := sec.Fspecialdata.(*vldoor_t)
+		special := sec.Fspecialdata
 		switch int32(line.Fspecial) {
 		case 1: // ONLY FOR "RAISE" DOORS, NOT "OPEN"s
 			fallthrough
@@ -22336,7 +22344,7 @@ func EV_VerticalDoor(line *line_t, thing *mobj_t) {
 	doorP := &vldoor_t{}
 	P_AddThinker(&doorP.Fthinker)
 	sec.Fspecialdata = doorP
-	doorP.Fthinker.Ffunction.Facv = __ccgo_fp(T_VerticalDoor)
+	doorP.Fthinker.Ffunction = doorP
 	doorP.Fsector = sec
 	doorP.Fdirection = 1
 	doorP.Fspeed = 1 << FRACBITS * 2
@@ -22401,7 +22409,7 @@ func P_SpawnDoorRaiseIn5Mins(sec *sector_t, secnum int32) {
 	P_AddThinker(&doorP.Fthinker)
 	sec.Fspecialdata = doorP
 	sec.Fspecial = 0
-	doorP.Fthinker.Ffunction.Facv = __ccgo_fp(T_VerticalDoor)
+	doorP.Fthinker.Ffunction = doorP
 	doorP.Fsector = sec
 	doorP.Fdirection = 2
 	doorP.Ftype1 = int32(vld_raiseIn5Mins)
@@ -22888,7 +22896,6 @@ func P_LookForPlayers(actor *mobj_t, allaround boolean) (r boolean) {
 //	// Uses special tag 666.
 //	//
 func A_KeenDie(mo *mobj_t) {
-	var mo2 *mobj_t
 	var th *thinker_t
 	A_Fall(mo)
 	// scan the remaining thinkers
@@ -22898,10 +22905,10 @@ func A_KeenDie(mo *mobj_t) {
 		if th == &thinkercap {
 			break
 		}
-		if th.Ffunction.Facv != __ccgo_fp(P_MobjThinker) {
+		mo2, ok := th.Ffunction.(*mobj_t)
+		if !ok {
 			goto _1
 		}
-		mo2 = (*mobj_t)(unsafe.Pointer(th)) // cast to mobj_t
 		if mo2 != mo && mo2.Ftype1 == mo.Ftype1 && mo2.Fhealth > 0 {
 			// other Keen not dead
 			return
@@ -27707,19 +27714,22 @@ func P_NightmareRespawn(mobj *mobj_t) {
 //	//
 //	// P_MobjThinker
 //	//
+func (mobj *mobj_t) ThinkerFunc() {
+	P_MobjThinker(mobj)
+}
 func P_MobjThinker(mobj *mobj_t) {
 	// momentum movement
 	if mobj.Fmomx != 0 || mobj.Fmomy != 0 || mobj.Fflags&MF_SKULLFLY != 0 {
 		P_XYMovement(mobj)
 		// FIXME: decent NOP/NULL/Nil function pointer please.
-		if mobj.Fthinker.Ffunction.Facv == uintptr_negative_one {
+		if mobj.Fthinker.Ffunction == nil {
 			return
 		} // mobj was removed
 	}
 	if mobj.Fz != mobj.Ffloorz || mobj.Fmomz != 0 {
 		P_ZMovement(mobj)
 		// FIXME: decent NOP/NULL/Nil function pointer please.
-		if mobj.Fthinker.Ffunction.Facv == uintptr_negative_one {
+		if mobj.Fthinker.Ffunction == nil {
 			return
 		} // mobj was removed
 	}
@@ -30454,46 +30464,46 @@ func P_ArchiveSpecials() {
 			}
 			goto _1
 		}
-		if th.Ffunction.Facv == __ccgo_fp(T_MoveCeiling) {
+		if ceiling, ok := th.Ffunction.(*ceiling_t); ok {
 			saveg_write8(uint8(tc_ceiling))
 			saveg_write_pad()
-			saveg_write_ceiling_t((*ceiling_t)(unsafe.Pointer(th)))
+			saveg_write_ceiling_t(ceiling)
 			goto _1
 		}
-		if th.Ffunction.Facv == __ccgo_fp(T_VerticalDoor) {
+		if vldoor, ok := th.Ffunction.(*vldoor_t); ok {
 			saveg_write8(uint8(tc_door))
 			saveg_write_pad()
-			saveg_write_vldoor_t((*vldoor_t)(unsafe.Pointer(th)))
+			saveg_write_vldoor_t(vldoor)
 			goto _1
 		}
-		if th.Ffunction.Facv == __ccgo_fp(T_MoveFloor) {
+		if floor, ok := th.Ffunction.(*floormove_t); ok {
 			saveg_write8(uint8(tc_floor))
 			saveg_write_pad()
-			saveg_write_floormove_t((*floormove_t)(unsafe.Pointer(th)))
+			saveg_write_floormove_t(floor)
 			goto _1
 		}
-		if th.Ffunction.Facv == __ccgo_fp(T_PlatRaise) {
+		if plat, ok := th.Ffunction.(*plat_t); ok {
 			saveg_write8(uint8(tc_plat))
 			saveg_write_pad()
-			saveg_write_plat_t((*plat_t)(unsafe.Pointer(th)))
+			saveg_write_plat_t(plat)
 			goto _1
 		}
-		if th.Ffunction.Facv == __ccgo_fp(T_LightFlash) {
+		if light, ok := th.Ffunction.(*lightflash_t); ok {
 			saveg_write8(uint8(tc_flash))
 			saveg_write_pad()
-			saveg_write_lightflash_t((*lightflash_t)(unsafe.Pointer(th)))
+			saveg_write_lightflash_t(light)
 			goto _1
 		}
-		if th.Ffunction.Facv == __ccgo_fp(T_StrobeFlash) {
+		if strobe, ok := th.Ffunction.(*stobe_t); ok {
 			saveg_write8(uint8(tc_strobe))
 			saveg_write_pad()
-			saveg_write_strobe_t((*strobe_t)(unsafe.Pointer(th)))
+			saveg_write_strobe_t(strobe)
 			goto _1
 		}
-		if th.Ffunction.Facv == __ccgo_fp(T_Glow) {
+		if glow, ok := th.Ffunction.(*glow_t); ok {
 			saveg_write8(uint8(tc_glow))
 			saveg_write_pad()
-			saveg_write_glow_t((*glow_t)(unsafe.Pointer(th)))
+			saveg_write_glow_t(glow)
 			goto _1
 		}
 		goto _1
@@ -33604,7 +33614,7 @@ func P_AddThinker(thinker *thinker_t) {
 //	//
 func P_RemoveThinker(thinker *thinker_t) {
 	// FIXME: NOP.
-	thinker.Ffunction.Facv = uintptr_negative_one
+	thinker.Ffunction = nil
 }
 
 // C documentation
@@ -33616,14 +33626,14 @@ func P_RunThinkers() {
 	var currentthinker *thinker_t
 	currentthinker = thinkercap.Fnext
 	for currentthinker != &thinkercap {
-		if currentthinker.Ffunction.Facv == uintptr_negative_one {
+		if currentthinker.Ffunction == nil {
 			// time to remove it
 			currentthinker.Fnext.Fprev = currentthinker.Fprev
 			currentthinker.Fprev.Fnext = currentthinker.Fnext
 			//Z_Free(uintptr(unsafe.Pointer(currentthinker)))
 		} else {
-			if currentthinker.Ffunction.Facv != 0 {
-				(*(*func(*thinker_t))(unsafe.Pointer(&struct{ uintptr }{*(*actionf_p1)(unsafe.Pointer(&currentthinker.Ffunction))})))(currentthinker)
+			if currentthinker.Ffunction != nil {
+				currentthinker.Ffunction.ThinkerFunc()
 			}
 		}
 		currentthinker = currentthinker.Fnext
