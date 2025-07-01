@@ -19,7 +19,7 @@ const (
 type DoomGame struct {
 	lastFrame *ebiten.Image
 
-	keyEvents   []gore.DoomKeyEvent
+	events      []gore.DoomEvent
 	lock        sync.Mutex
 	terminating bool
 }
@@ -63,17 +63,30 @@ func (g *DoomGame) Update() error {
 	defer g.lock.Unlock()
 	for key, doomKey := range keys {
 		if inpututil.IsKeyJustPressed(key) {
-			var event gore.DoomKeyEvent
+			var event gore.DoomEvent
 
-			event.Pressed = true
+			event.Type = gore.Ev_keydown
 			event.Key = doomKey
-			g.keyEvents = append(g.keyEvents, event)
+			g.events = append(g.events, event)
 		} else if inpututil.IsKeyJustReleased(key) {
-			var event gore.DoomKeyEvent
-			event.Pressed = false
+			var event gore.DoomEvent
+			event.Type = gore.Ev_keyup
 			event.Key = doomKey
-			g.keyEvents = append(g.keyEvents, event)
+			g.events = append(g.events, event)
 		}
+
+		var mouseEvent gore.DoomEvent
+		x, y := ebiten.CursorPosition()
+		mouseEvent.Mouse.XPos = float64(x) / float64(screenWidth)
+		mouseEvent.Mouse.YPos = float64(y) / float64(screenHeight)
+		mouseEvent.Type = gore.Ev_mouse
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			mouseEvent.Mouse.Button1 = true
+		}
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+			mouseEvent.Mouse.Button2 = true
+		}
+		g.events = append(g.events, mouseEvent)
 	}
 	if g.terminating {
 		return ebiten.Termination
@@ -91,12 +104,12 @@ func (g *DoomGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
-func (g *DoomGame) GetKey(event *gore.DoomKeyEvent) bool {
+func (g *DoomGame) GetEvent(event *gore.DoomEvent) bool {
 	g.lock.Lock()
 	defer g.lock.Unlock()
-	if len(g.keyEvents) > 0 {
-		*event = g.keyEvents[0]
-		g.keyEvents = g.keyEvents[1:]
+	if len(g.events) > 0 {
+		*event = g.events[0]
+		g.events = g.events[1:]
 		return true
 	}
 	return false

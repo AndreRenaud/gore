@@ -51,7 +51,7 @@ func (w *webDoomFrontend) DrawFrame(frame *image.RGBA) {
 	}
 }
 
-func (w *webDoomFrontend) GetKey(event *gore.DoomKeyEvent) bool {
+func (w *webDoomFrontend) GetEvent(event *gore.DoomEvent) bool {
 	// This is a stub; actual key handling would depend on the platform and input system.
 	keyLock.Lock()
 	defer keyLock.Unlock()
@@ -84,7 +84,11 @@ func (w *webDoomFrontend) GetKey(event *gore.DoomKeyEvent) bool {
 			return false
 		}
 
-		event.Pressed = change.State
+		t := gore.Ev_keyup
+		if change.State {
+			t = gore.Ev_keydown
+		}
+		event.Type = t
 		event.Key = uint8(thisDoomKey)
 		return true
 	}

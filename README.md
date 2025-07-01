@@ -62,7 +62,7 @@ Similar to `doomgeneric`, the actual input/output is provided externally. The fo
 type DoomFrontend interface {
 	DrawFrame(img *image.RGBA)
 	SetTitle(title string)
-	GetKey(event *DoomKeyEvent) bool
+	GetEvent(event *DoomEvent) bool
 }
 ```
 
@@ -70,7 +70,7 @@ type DoomFrontend interface {
 |----------|---------|
 | `DrawFrame()` | Render the frame to your display |
 | `SetTitle()` | Set the window title as appropriate to the given WAD |
-| `GetKey()` | Handle keyboard input |
+| `GetEvent()` | Report key presses/mouse movements |
 
 ## 📜 LICENSE
 

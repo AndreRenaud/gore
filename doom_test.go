@@ -18,7 +18,7 @@ import (
 
 type delayedEvent struct {
 	ticks    int32 // How many game ticks before we trigger this event, since the last one
-	event    DoomKeyEvent
+	event    DoomEvent
 	callback func(*doomTestHeadless)
 }
 
@@ -121,7 +121,7 @@ func (d *doomTestHeadless) GetScreen() *image.RGBA {
 	return screenCopy
 }
 
-func (d *doomTestHeadless) GetKey(event *DoomKeyEvent) bool {
+func (d *doomTestHeadless) GetEvent(event *DoomEvent) bool {
 	if len(d.keys) == 0 {
 		return false
 	}
@@ -162,16 +162,16 @@ func (d *doomTestHeadless) InsertKeySequence(keys ...uint8) {
 	for _, key := range keys {
 		// Insert a key press and release for each key
 		d.keys = append(d.keys, delayedEvent{
-			event: DoomKeyEvent{
-				Pressed: true,
-				Key:     key,
+			event: DoomEvent{
+				Type: Ev_keydown,
+				Key:  key,
 			},
 			ticks: 1,
 		},
 			delayedEvent{
-				event: DoomKeyEvent{
-					Pressed: false,
-					Key:     key,
+				event: DoomEvent{
+					Type: Ev_keyup,
+					Key:  key,
 				},
 				ticks: 1,
 			},
@@ -192,10 +192,14 @@ func (d *doomTestHeadless) InsertKeySequence(keys ...uint8) {
 
 func (d *doomTestHeadless) InsertKeyChange(Key uint8, pressed bool) {
 	d.lock.Lock()
+	evType := Ev_keyup
+	if pressed {
+		evType = Ev_keydown
+	}
 	d.keys = append(d.keys, delayedEvent{
-		event: DoomKeyEvent{
-			Pressed: pressed,
-			Key:     Key,
+		event: DoomEvent{
+			Type: evType,
+			Key:  Key,
 		},
 		ticks: 0, // Insert immediately
 	})
@@ -401,35 +405,35 @@ func TestDoomLevels(t *testing.T) {
 		t: t,
 		keys: []delayedEvent{
 			{ticks: 1500, callback: func(d *doomTestHeadless) { compareScreen(d, "start", 2) }},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: KEY_ESCAPE}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: KEY_ESCAPE}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: KEY_ENTER}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: KEY_ENTER}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: KEY_ENTER}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: KEY_ENTER}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: KEY_ENTER}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: KEY_ESCAPE}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: KEY_ESCAPE}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: KEY_ENTER}},
 		},
 	}
 	defer game.Close()
 	for i := 1; i <= 9; i++ {
 		game.keys = append(game.keys, []delayedEvent{
-			{ticks: 100, event: DoomKeyEvent{Pressed: true, Key: 'i'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'i'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: 'd'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'd'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: 'c'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'c'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: 'l'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'l'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: 'e'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'e'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: 'v'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'v'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: '1'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: '1'}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: '0' + byte(i)}},
-			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: '0' + byte(i)}},
+			{ticks: 100, event: DoomEvent{Type: Ev_keydown, Key: 'i'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: 'i'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: 'd'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: 'd'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: 'c'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: 'c'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: 'l'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: 'l'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: 'e'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: 'e'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: 'v'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: 'v'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: '1'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: '1'}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keydown, Key: '0' + byte(i)}},
+			{ticks: 1, event: DoomEvent{Type: Ev_keyup, Key: '0' + byte(i)}},
 			{ticks: 2000, callback: func(d *doomTestHeadless) { compareScreen(d, fmt.Sprintf("e1m%d", i), 15) }},
 		}...)
 	}

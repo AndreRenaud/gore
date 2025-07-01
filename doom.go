@@ -21,7 +21,7 @@ import (
 type DoomFrontend interface {
 	DrawFrame(img *image.RGBA)
 	SetTitle(title string)
-	GetKey(event *DoomKeyEvent) bool
+	GetEvent(event *DoomEvent) bool
 }
 
 var dg_frontend DoomFrontend
@@ -313,16 +313,16 @@ const INVISTICS = 2100
 const INFRATICS = 4200
 const IRONTICS = 2100
 
-type evtype_t = int32
+type Evtype_t int32
 
-const ev_keydown = 0
-const ev_keyup = 1
-const ev_mouse = 2
-const ev_joystick = 3
-const ev_quit = 4
+const Ev_keydown Evtype_t = 0
+const Ev_keyup Evtype_t = 1
+const Ev_mouse Evtype_t = 2
+const Ev_joystick Evtype_t = 3
+const Ev_quit Evtype_t = 4
 
 type event_t struct {
-	Ftype1 evtype_t
+	Ftype1 Evtype_t
 	Fdata1 int32
 	Fdata2 int32
 	Fdata3 int32
@@ -2803,7 +2803,7 @@ func AM_initVariables() {
 }
 
 var st_notify = event_t{
-	Ftype1: ev_keyup,
+	Ftype1: Ev_keyup,
 	Fdata1: 'a'<<24 + 'm'<<16 | 'e'<<8,
 }
 
@@ -2893,7 +2893,7 @@ func AM_Stop() {
 }
 
 var st_notify1 = event_t{
-	Fdata1: ev_keyup,
+	Fdata1: int32(Ev_keyup),
 	Fdata2: 'a'<<24 + 'm'<<16 | 'x'<<8,
 }
 
@@ -2951,13 +2951,13 @@ func AM_Responder(ev *event_t) (r boolean) {
 	var key, rc int32
 	rc = 0
 	if automapactive == 0 {
-		if ev.Ftype1 == ev_keydown && ev.Fdata1 == key_map_toggle {
+		if ev.Ftype1 == Ev_keydown && ev.Fdata1 == key_map_toggle {
 			AM_Start()
 			viewactive = 0
 			rc = 1
 		}
 	} else {
-		if ev.Ftype1 == ev_keydown {
+		if ev.Ftype1 == Ev_keydown {
 			rc = 1
 			key = ev.Fdata1
 			if key == key_map_east { // pan right
@@ -3053,7 +3053,7 @@ func AM_Responder(ev *event_t) (r boolean) {
 				cheating = (cheating + 1) % 3
 			}
 		} else {
-			if ev.Ftype1 == ev_keyup {
+			if ev.Ftype1 == Ev_keyup {
 				rc = 0
 				key = ev.Fdata1
 				if key == key_map_east {
@@ -6848,7 +6848,7 @@ _2:
 //
 
 func F_CastResponder(ev *event_t) (r boolean) {
-	if ev.Ftype1 != ev_keydown {
+	if ev.Ftype1 != Ev_keydown {
 		return 0
 	}
 	if castdeath != 0 {
@@ -7838,7 +7838,7 @@ func SetMouseButtons(buttons_mask uint32) {
 //	//
 func G_Responder(ev *event_t) (r boolean) {
 	// allow spy mode changes even during the demo
-	if gamestate == GS_LEVEL && ev.Ftype1 == ev_keydown && ev.Fdata1 == key_spy && (singledemo != 0 || deathmatch == 0) {
+	if gamestate == GS_LEVEL && ev.Ftype1 == Ev_keydown && ev.Fdata1 == key_spy && (singledemo != 0 || deathmatch == 0) {
 		// spy mode
 		for cond := true; cond; cond = playeringame[displayplayer] == 0 && displayplayer != consoleplayer {
 			displayplayer++
@@ -7850,7 +7850,7 @@ func G_Responder(ev *event_t) (r boolean) {
 	}
 	// any other key pops up menu if in demos
 	if gameaction == ga_nothing && singledemo == 0 && (demoplayback != 0 || gamestate == GS_DEMOSCREEN) {
-		if ev.Ftype1 == ev_keydown || ev.Ftype1 == ev_mouse && ev.Fdata1 != 0 || ev.Ftype1 == ev_joystick && ev.Fdata1 != 0 {
+		if ev.Ftype1 == Ev_keydown || ev.Ftype1 == Ev_mouse && ev.Fdata1 != 0 || ev.Ftype1 == Ev_joystick && ev.Fdata1 != 0 {
 			M_StartControlPanel()
 			return 1
 		}
@@ -7872,7 +7872,7 @@ func G_Responder(ev *event_t) (r boolean) {
 			return 1
 		} // finale ate the event
 	}
-	if testcontrols != 0 && ev.Ftype1 == ev_mouse {
+	if testcontrols != 0 && ev.Ftype1 == Ev_mouse {
 		// If we are invoked by setup to test the controls, save the
 		// mouse speed so that we can display it on-screen.
 		// Perform a low pass filter on this so that the thermometer
@@ -7881,15 +7881,15 @@ func G_Responder(ev *event_t) (r boolean) {
 	}
 	// If the next/previous weapon keys are pressed, set the next_weapon
 	// variable to change weapons when the next ticcmd is generated.
-	if ev.Ftype1 == ev_keydown && ev.Fdata1 == key_prevweapon {
+	if ev.Ftype1 == Ev_keydown && ev.Fdata1 == key_prevweapon {
 		next_weapon = -1
 	} else {
-		if ev.Ftype1 == ev_keydown && ev.Fdata1 == key_nextweapon {
+		if ev.Ftype1 == Ev_keydown && ev.Fdata1 == key_nextweapon {
 			next_weapon = 1
 		}
 	}
 	switch ev.Ftype1 {
-	case ev_keydown:
+	case Ev_keydown:
 		if ev.Fdata1 == key_pause {
 			sendpause = 1
 		} else {
@@ -7898,17 +7898,17 @@ func G_Responder(ev *event_t) (r boolean) {
 			}
 		}
 		return 1 // eat key down events
-	case ev_keyup:
+	case Ev_keyup:
 		if ev.Fdata1 < NUMKEYS {
 			gamekeydown[ev.Fdata1] = 0
 		}
 		return 0 // always let key up events filter down
-	case ev_mouse:
+	case Ev_mouse:
 		SetMouseButtons(uint32(ev.Fdata1))
 		mousex = ev.Fdata2 * (mouseSensitivity + 5) / 10
 		mousey = ev.Fdata3 * (mouseSensitivity + 5) / 10
 		return 1 // eat events
-	case ev_joystick:
+	case Ev_joystick:
 		SetJoyButtons(uint32(ev.Fdata1))
 		joyxmove = ev.Fdata2
 		joyymove = ev.Fdata3
@@ -9863,11 +9863,11 @@ func HU_Responder(ev *event_t) (r boolean) {
 		return 0
 	} else {
 		if ev.Fdata1 == 0x80+0x38 {
-			altdown = booluint32(ev.Ftype1 == ev_keydown)
+			altdown = booluint32(ev.Ftype1 == Ev_keydown)
 			return 0
 		}
 	}
-	if ev.Ftype1 != ev_keydown {
+	if ev.Ftype1 != Ev_keydown {
 		return 0
 	}
 	if chat_on == 0 {
@@ -20815,14 +20815,14 @@ func M_Responder(ev *event_t) (r boolean) {
 	// In testcontrols mode, none of the function keys should do anything
 	// - the only key is escape to quit.
 	if testcontrols != 0 {
-		if ev.Ftype1 == ev_quit || ev.Ftype1 == ev_keydown && (ev.Fdata1 == key_menu_activate || ev.Fdata1 == key_menu_quit) {
+		if ev.Ftype1 == Ev_quit || ev.Ftype1 == Ev_keydown && (ev.Fdata1 == key_menu_activate || ev.Fdata1 == key_menu_quit) {
 			I_Quit()
 			return 1
 		}
 		return 0
 	}
 	// "close" button pressed on window?
-	if ev.Ftype1 == ev_quit {
+	if ev.Ftype1 == Ev_quit {
 		// First click on close button = bring up quit confirm message.
 		// Second click on close button = confirm quit
 
@@ -20837,7 +20837,7 @@ func M_Responder(ev *event_t) (r boolean) {
 	// key is the key pressed, ch is the actual character typed
 	ch = 0
 	key = -1
-	if ev.Ftype1 == ev_joystick && joywait < I_GetTime() {
+	if ev.Ftype1 == Ev_joystick && joywait < I_GetTime() {
 		if ev.Fdata3 < 0 {
 			key = key_menu_up
 			joywait = I_GetTime() + 5
@@ -20869,7 +20869,7 @@ func M_Responder(ev *event_t) (r boolean) {
 			joywait = I_GetTime() + 5
 		}
 	} else {
-		if ev.Ftype1 == ev_mouse && mousewait < I_GetTime() {
+		if ev.Ftype1 == Ev_mouse && mousewait < I_GetTime() {
 			mousey1 += ev.Fdata3
 			if mousey1 < lasty-int32(30) {
 				key = key_menu_down
@@ -20907,7 +20907,7 @@ func M_Responder(ev *event_t) (r boolean) {
 				mousewait = I_GetTime() + 15
 			}
 		} else {
-			if ev.Ftype1 == ev_keydown {
+			if ev.Ftype1 == Ev_keydown {
 				key = ev.Fdata1
 				ch = ev.Fdata2
 			}
@@ -39703,7 +39703,7 @@ func ST_Responder(ev *event_t) (r boolean) {
 	var v6, v8 GameMission_t
 	var v10 bool
 	// Filter automap on/off.
-	if ev.Ftype1 == ev_keyup && uint32(ev.Fdata1)&0xffff0000 == 'a'<<24+'m'<<16 {
+	if ev.Ftype1 == Ev_keyup && uint32(ev.Fdata1)&0xffff0000 == 'a'<<24+'m'<<16 {
 		switch ev.Fdata1 {
 		case 'a'<<24 + 'm'<<16 | 'e'<<8:
 			st_firsttime = 1
@@ -39712,7 +39712,7 @@ func ST_Responder(ev *event_t) (r boolean) {
 			break
 		}
 	} else {
-		if ev.Ftype1 == ev_keydown {
+		if ev.Ftype1 == Ev_keydown {
 			if netgame == 0 && gameskill != sk_nightmare {
 				// 'dqd' cheat for toggleable god mode
 				if cht_CheckCheat(&cheat_god, int8(ev.Fdata2)) != 0 {
@@ -43933,55 +43933,78 @@ func UpdateShiftStatus(pressed int32, key uint8) {
 	}
 }
 
-type DoomKeyEvent struct {
-	Pressed bool
-	Key     uint8
+type DoomEvent struct {
+	Type  Evtype_t
+	Key   uint8
+	Mouse struct {
+		Button1 bool
+		Button2 bool
+		XPos    float64 // from 0-1
+		YPos    float64 // from 0-1
+	}
 }
 
-func I_GetEvent() {
-	var bp event_t
-	var event DoomKeyEvent
-	for dg_frontend.GetKey(&event) {
-		var pressed int32
-		if event.Pressed {
-			pressed = 1
-		}
+var lastMouse DoomEvent
 
-		UpdateShiftStatus(pressed, event.Key)
-		// process event
-		if event.Pressed {
-			// data1 has the key pressed, data2 has the character
-			// (shift-translated, etc)
-			bp.Ftype1 = ev_keydown
-			bp.Fdata1 = int32(event.Key)
-			bp.Fdata2 = int32(GetTypedChar(event.Key))
-			if bp.Fdata1 != 0 {
-				D_PostEvent(&bp)
+func I_GetEvent() {
+	var newEvent event_t
+	var event DoomEvent
+	for dg_frontend.GetEvent(&event) {
+		if event.Type == Ev_keydown || event.Type == Ev_keyup {
+			pressed := int32(0)
+			if event.Type == Ev_keydown {
+				pressed = 1
 			}
-		} else {
-			bp.Ftype1 = ev_keyup
-			bp.Fdata1 = int32(event.Key)
-			// data2 is just initialized to zero for ev_keyup.
-			// For ev_keydown it's the shifted Unicode character
-			// that was typed, but if something wants to detect
-			// key releases it should do so based on data1
-			// (key ID), not the printable char.
-			bp.Fdata2 = 0
-			if bp.Fdata1 != 0 {
-				D_PostEvent(&bp)
+			UpdateShiftStatus(pressed, event.Key)
+			// process event
+			if event.Type == Ev_keydown {
+				// data1 has the key pressed, data2 has the character
+				// (shift-translated, etc)
+				newEvent.Ftype1 = Ev_keydown
+				newEvent.Fdata1 = int32(event.Key)
+				newEvent.Fdata2 = int32(GetTypedChar(event.Key))
+				if newEvent.Fdata1 != 0 {
+					D_PostEvent(&newEvent)
+				}
+			} else {
+				newEvent.Ftype1 = Ev_keyup
+				newEvent.Fdata1 = int32(event.Key)
+				// data2 is just initialized to zero for ev_keyup.
+				// For ev_keydown it's the shifted Unicode character
+				// that was typed, but if something wants to detect
+				// key releases it should do so based on data1
+				// (key ID), not the printable char.
+				newEvent.Fdata2 = 0
+				if newEvent.Fdata1 != 0 {
+					D_PostEvent(&newEvent)
+				}
 			}
-			break
+		}
+		if event.Type == Ev_mouse {
+			if lastMouse.Type == 0 {
+				lastMouse = event
+			}
+			newEvent.Ftype1 = Ev_mouse
+			if event.Mouse.Button1 {
+				newEvent.Fdata1 |= 1
+			}
+			if event.Mouse.Button2 {
+				newEvent.Fdata1 |= 2
+			}
+			newEvent.Fdata2 = int32((event.Mouse.XPos - lastMouse.Mouse.XPos) * SCREENWIDTH * 100)
+			newEvent.Fdata3 = int32((lastMouse.Mouse.YPos - event.Mouse.YPos) * SCREENHEIGHT * 100)
+			if newEvent.Fdata2 < 5 && newEvent.Fdata2 > -5 &&
+				newEvent.Fdata3 < 5 && newEvent.Fdata3 > -5 {
+				// Ignore small mouse movements.
+				continue
+			}
+			if event.Mouse.Button1 {
+				log.Printf("Mouse event %#v", newEvent)
+			}
+			lastMouse = event
+			D_PostEvent(&newEvent)
 		}
 	}
-	/*
-	   case SDL_MOUSEMOTION:
-	       event.type = ev_mouse;
-	       event.data1 = mouse_button_state;
-	       event.data2 = AccelerateMouse(sdlevent.motion.xrel);
-	       event.data3 = -AccelerateMouse(sdlevent.motion.yrel);
-	       D_PostEvent(&event);
-	       break;
-	*/
 }
 
 func I_InitInput() {
