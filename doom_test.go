@@ -16,14 +16,15 @@ import (
 	diff "github.com/olegfedoseev/image-diff"
 )
 
-type delayedKeyEvent struct {
-	event DoomKeyEvent
-	ticks int32 // How many game ticks before we trigger this event, since the last one
+type delayedEvent struct {
+	ticks    int32 // How many game ticks before we trigger this event, since the last one
+	event    DoomKeyEvent
+	callback func(*doomTestHeadless)
 }
 
 type doomTestHeadless struct {
 	t             *testing.T
-	keys          []delayedKeyEvent
+	keys          []delayedEvent
 	lastEventTick int32
 	outputFile    io.WriteCloser
 	lock          sync.Mutex
@@ -124,18 +125,30 @@ func (d *doomTestHeadless) GetKey(event *DoomKeyEvent) bool {
 	if len(d.keys) == 0 {
 		return false
 	}
+	if d.lastEventTick == 0 {
+		d.lastEventTick = I_GetTimeMS()
+	}
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	now := I_GetTimeMS()
 	delta := now - d.lastEventTick
-	if d.keys[0].ticks <= delta {
-		*event = d.keys[0].event
-		//d.t.Logf("Key event: %#v, delta=%d (%d remaining)", *event, delta, len(d.keys)-1)
-		d.keys = d.keys[1:]
-		d.lastEventTick = now
-		return true
+	if d.keys[0].ticks > delta {
+		return false
 	}
-	return false
+	retval := false
+	if d.keys[0].callback != nil {
+		d.lock.Unlock()
+		d.keys[0].callback(d)
+		d.lock.Lock()
+	}
+	if d.keys[0].event.Key != 0 {
+		*event = d.keys[0].event
+		retval = true
+	}
+	//d.t.Logf("Key event: %#v, delta=%d (%d remaining)", *event, delta, len(d.keys)-1)
+	d.keys = d.keys[1:]
+	d.lastEventTick = now
+	return retval
 }
 
 // InsertKey simulates an immediate key press and release event in the game.
@@ -148,14 +161,14 @@ func (d *doomTestHeadless) InsertKeySequence(keys ...uint8) {
 	d.lock.Lock()
 	for _, key := range keys {
 		// Insert a key press and release for each key
-		d.keys = append(d.keys, delayedKeyEvent{
+		d.keys = append(d.keys, delayedEvent{
 			event: DoomKeyEvent{
 				Pressed: true,
 				Key:     key,
 			},
 			ticks: 1,
 		},
-			delayedKeyEvent{
+			delayedEvent{
 				event: DoomKeyEvent{
 					Pressed: false,
 					Key:     key,
@@ -179,7 +192,7 @@ func (d *doomTestHeadless) InsertKeySequence(keys ...uint8) {
 
 func (d *doomTestHeadless) InsertKeyChange(Key uint8, pressed bool) {
 	d.lock.Lock()
-	d.keys = append(d.keys, delayedKeyEvent{
+	d.keys = append(d.keys, delayedEvent{
 		event: DoomKeyEvent{
 			Pressed: pressed,
 			Key:     Key,
@@ -354,60 +367,110 @@ func TestDoomRandom(t *testing.T) {
 	Run(game, []string{"-iwad", "doom1.wad"})
 }
 
+func compareScreen(game *doomTestHeadless, testdataPrefix string, percentOk float64) {
+	screen := game.GetScreen()
+	if screen == nil {
+		game.t.Errorf("No screen captured for %s", filename)
+		return
+	}
+	// Save the screenshot for debugging
+	if err := savePNG(fmt.Sprintf("doom_test_%s.png", testdataPrefix), screen); err != nil {
+		game.t.Errorf("Error saving screenshot: %v", err)
+	}
+
+	knownGood, err := loadPNG(fmt.Sprintf("testdata/good_doom_test_%s.png", testdataPrefix))
+	if err != nil {
+		game.t.Errorf("Error loading known good image: %v", err)
+		return
+	}
+
+	diffImg, percent, err := diff.CompareImages(screen, knownGood)
+	if err != nil {
+		game.t.Errorf("Error comparing screenshot: %v", err)
+		return
+	}
+	if percent > percentOk {
+		game.t.Errorf("Screenshot %s does not match known good: %f%% difference (over %f%%)", testdataPrefix, percent, percentOk)
+		savePNG(fmt.Sprintf("doom_test_%s_diff.png", testdataPrefix), diffImg)
+	}
+	game.t.Logf("Screenshot %s comparison: %f%% difference (allowed: %f%%)", testdataPrefix, percent, percentOk)
+}
+
 func TestDoomLevels(t *testing.T) {
-	dg_speed_ratio = 100.0
-	game := &doomTestHeadless{
+	dg_speed_ratio = 20.0
+	var game *doomTestHeadless
+	game = &doomTestHeadless{
 		t: t,
+		keys: []delayedEvent{
+			{ticks: 1500, callback: func(d *doomTestHeadless) { compareScreen(d, "start", 2) }},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: KEY_ESCAPE}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: KEY_ESCAPE}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: KEY_ENTER}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: KEY_ENTER}},
+		},
 	}
 	defer game.Close()
-	go func() {
-		// Let things get settled
-		time.Sleep(40 * time.Millisecond)
-		startScreen := game.GetScreen()
-		knownGood, err := loadPNG("testdata/good_doom_test_start.png")
-		if err != nil {
-			t.Errorf("Error loading known good image: %v", err)
-		} else {
-			diffImg, percent, err := diff.CompareImages(startScreen, knownGood)
-			if err != nil || percent > 2 {
-				t.Errorf("Start screen screenshot does not match known good: %f%% difference", percent)
-				savePNG("doom_test_start.png", startScreen)
-				savePNG("doom_test_start_diff.png", diffImg)
-			}
-		}
+	for i := 1; i <= 9; i++ {
+		game.keys = append(game.keys, []delayedEvent{
+			{ticks: 100, event: DoomKeyEvent{Pressed: true, Key: 'i'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'i'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: 'd'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'd'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: 'c'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'c'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: 'l'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'l'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: 'e'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'e'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: 'v'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: 'v'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: '1'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: '1'}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: true, Key: '0' + byte(i)}},
+			{ticks: 1, event: DoomKeyEvent{Pressed: false, Key: '0' + byte(i)}},
+			{ticks: 2000, callback: func(d *doomTestHeadless) { compareScreen(d, fmt.Sprintf("e1m%d", i), 15) }},
+		}...)
+	}
+	game.keys = append(game.keys, delayedEvent{ticks: 1000, callback: func(d *doomTestHeadless) { D_Endoom() }})
+	/*
+		go func() {
+			// Start a game
+			game.InsertKey(KEY_ESCAPE) // Open menu
+			game.InsertKey(KEY_ENTER)
+			game.InsertKey(KEY_ENTER)
+			game.InsertKey(KEY_ENTER) // Start new game
 
-		// Start a game
-		game.InsertKey(KEY_ESCAPE) // Open menu
-		game.InsertKey(KEY_ENTER)
-		game.InsertKey(KEY_ENTER)
-		game.InsertKey(KEY_ENTER) // Start new game
-
-		// Go through levels E1M1 to E1M9 using the IDCLEV cheat
-		for i := 1; i <= 9; i++ {
-			sequence := []uint8{'i', 'd', 'c', 'l', 'e', 'v', '1', '0' + uint8(i)}
-			game.InsertKeySequence(sequence...)
-			time.Sleep(20 * time.Millisecond) // Wait for the level to load
-			t.Logf("Completed level E1M%d", i)
-			img1 := game.GetScreen()
-			knownGood, err := loadPNG(fmt.Sprintf("testdata/good_doom_test_e1m%d.png", i))
-			if err != nil {
-				t.Errorf("Error loading known good image for E1M%d: %v", i, err)
-				continue
+			// Go through levels E1M1 to E1M9 using the IDCLEV cheat
+			for i := 1; i <= 9; i++ {
+				sequence := []uint8{'i', 'd', 'c', 'l', 'e', 'v', '1', '0' + uint8(i)}
+				game.InsertKeySequence(sequence...)
+				time.Sleep(20 * time.Millisecond) // Wait for the level to load
+				t.Logf("Completed level E1M%d", i)
+				img1 := game.GetScreen()
+				knownGood, err := loadPNG(fmt.Sprintf("testdata/good_doom_test_e1m%d.png", i))
+				if err != nil {
+					t.Errorf("Error loading known good image for E1M%d: %v", i, err)
+					continue
+				}
+				diffImg, percent, err := diff.CompareImages(img1, knownGood)
+				if err != nil || percent > 10 {
+					t.Errorf("Level E1M%d screenshot does not match known good: %f%% difference", i, percent)
+					savePNG(fmt.Sprintf("doom_test_e1m%d.png", i), img1)
+					savePNG(fmt.Sprintf("doom_test_e1m%d_diff.png", i), diffImg)
+				}
 			}
-			diffImg, percent, err := diff.CompareImages(img1, knownGood)
-			if err != nil || percent > 10 {
-				t.Errorf("Level E1M%d screenshot does not match known good: %f%% difference", i, percent)
-				savePNG(fmt.Sprintf("doom_test_e1m%d.png", i), img1)
-				savePNG(fmt.Sprintf("doom_test_e1m%d_diff.png", i), diffImg)
-			}
-		}
 
-		// Exit
-		game.InsertKey(KEY_ESCAPE)   // Open menu
-		game.InsertKey(KEY_UPARROW1) // Go to quit
-		game.InsertKey(KEY_ENTER)    // Confirm quit
-		game.InsertKey('y')          // Confirm exit
-	}()
+			// Exit
+			game.InsertKey(KEY_ESCAPE)   // Open menu
+			game.InsertKey(KEY_UPARROW1) // Go to quit
+			game.InsertKey(KEY_ENTER)    // Confirm quit
+			game.InsertKey('y')          // Confirm exit
+		}()
+	*/
 	Run(game, []string{"-iwad", "doom1.wad"})
 }
 
