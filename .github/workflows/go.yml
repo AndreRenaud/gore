@@ -18,7 +18,18 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y --no-install-recommends ffmpeg
+        sudo apt-get install -y --no-install-recommends \
+            ffmpeg \
+            libx11-dev \
+            libgl1-mesa-dev \
+            libasound2-dev \
+            libgles2-mesa-dev \
+            libalut-dev \
+            libxcursor-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxxf86vm-dev
         go install golang.org/x/tools/cmd/deadcode@latest
     - name: Install doom wad
       run: wget https://github.com/Akbar30Bill/DOOM_wads/raw/refs/heads/master/doom1.wad
