@@ -205,7 +205,7 @@ func (d *doomTestHeadless) InsertKeyChange(Key uint8, pressed bool) {
 		d.lock.Lock()
 		inuse := len(d.keys) > 0
 		d.lock.Unlock()
-		time.Sleep(1 * time.Millisecond) // Wait a bit before checking again
+		time.Sleep(100 * time.Microsecond) // Wait a bit before checking again
 		if !inuse {
 			break
 		}
@@ -323,7 +323,7 @@ func TestLoadSave(t *testing.T) {
 }
 
 func TestDoomRandom(t *testing.T) {
-	dg_speed_ratio = 100.0
+	dg_speed_ratio = 200.0
 	game := &doomTestHeadless{
 		t: t,
 	}
@@ -345,14 +345,12 @@ func TestDoomRandom(t *testing.T) {
 		// Press shift to run
 		game.InsertKeyChange(0x80+0x36, true)
 		// Do some random movement
-		count := 1000
-		for i := 0; i < count; i++ {
-			change := rand.Intn(len(keys))
-			key := keys[change]
+		count := 5000
+		for i := range count {
+			key := keys[rand.Intn(len(keys))]
 			game.InsertKeyChange(key, true)
-			time.Sleep(2 * time.Millisecond)
-			game.InsertKeyChange(key, false)
 			time.Sleep(1 * time.Millisecond)
+			game.InsertKeyChange(key, false)
 			if i%100 == 0 {
 				t.Logf("%d/%d done", i, count)
 			}

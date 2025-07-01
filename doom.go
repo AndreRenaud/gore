@@ -33,11 +33,6 @@ type boolean = uint32
 
 const uintptr_negative_one = ^uintptr(0)
 
-func alloc(size int) uintptr {
-	data := make([]byte, size)
-	return uintptr(unsafe.Pointer(&data[0]))
-}
-
 // Horrible memory allocation hack to avoid Go GC
 // Once we're done with libc, this should go
 var dg_alloced = make(map[uintptr][]byte)
@@ -47,6 +42,10 @@ func xmalloc(n uint64) uintptr {
 	res := uintptr(unsafe.Pointer(&data[0]))
 	dg_alloced[res] = data
 	return res
+}
+
+func xfree(p uintptr) {
+	delete(dg_alloced, p)
 }
 
 // LIBC functions
@@ -18122,56 +18121,6 @@ func I_AtExit(func1 func(), run_on_error boolean) {
 func I_Tactile(on int32, off int32, total int32) {
 }
 
-// Zone memory auto-allocation function that allocates the zone size
-// by trying progressively smaller zone sizes until one is found that
-// works.
-
-func AutoAllocMemory(size *int32, default_ram int32, min_ram int32) (r uintptr) {
-	var zonemem uintptr
-	// Allocate the zone memory.  This loop tries progressively smaller
-	// zone sizes until a size is found that can be allocated.
-	// If we used the -mb command line parameter, only the parameter
-	// provided is accepted.
-	zonemem = 0
-	for zonemem == 0 {
-		// We need a reasonable minimum amount of RAM to start.
-		if default_ram < min_ram {
-			I_Error("Unable to allocate %d MiB of RAM for zone", default_ram)
-		}
-		// Try to allocate the zone memory.
-		*size = default_ram * 1024 * 1024
-		zonemem = xmalloc(uint64(*size))
-		// Failed to allocate?  Reduce zone size until we reach a size
-		// that is acceptable.
-		if zonemem == 0 {
-			default_ram -= 1
-		}
-	}
-	return zonemem
-}
-
-func I_ZoneBase(size *int32) (r uintptr) {
-	var default_ram, min_ram, p int32
-	var zonemem uintptr
-	//!
-	// @arg <mb>
-	//
-	// Specify the heap size, in MiB (default 16).
-	//
-	p = M_CheckParmWithArgs("-mb", 1)
-	if p > 0 {
-		v, _ := strconv.Atoi(myargs[p+1])
-		default_ram = int32(v)
-		min_ram = default_ram
-	} else {
-		default_ram = DEFAULT_RAM
-		min_ram = MIN_RAM
-	}
-	zonemem = AutoAllocMemory(size, default_ram, min_ram)
-	fprintf_ccgo(os.Stdout, "zone memory: 0x%x, %x allocated for zone\n", zonemem, size)
-	return zonemem
-}
-
 func I_PrintBanner(msg string) {
 	spaces := 35 - len(msg)/2
 	for i := 0; i < spaces; i++ {
@@ -32571,7 +32520,7 @@ func P_UpdateSpecials() {
 // as usual :-)
 //
 
-func DonutOverrun(s3_floorheight uintptr, s3_floorpic uintptr, line *line_t, pillar_sector *sector_t) {
+func DonutOverrun(s3_floorheight *fixed_t, s3_floorpic *int16, line *line_t, pillar_sector *sector_t) {
 	var p int32
 	if first != 0 {
 		// This is the first time we have had an overrun.
@@ -32620,8 +32569,8 @@ func DonutOverrun(s3_floorheight uintptr, s3_floorpic uintptr, line *line_t, pil
 	           line->iLineID, pillar_sector->iSectorID,
 	           tmp_s3_floorheight >> 16, tmp_s3_floorpic);
 	*/
-	*(*fixed_t)(unsafe.Pointer(s3_floorheight)) = tmp_s3_floorheight
-	*(*int16)(unsafe.Pointer(s3_floorpic)) = int16(tmp_s3_floorpic)
+	*s3_floorheight = tmp_s3_floorheight
+	*s3_floorpic = int16(tmp_s3_floorpic)
 }
 
 var first = 1
@@ -32636,7 +32585,6 @@ var tmp_s3_floorpic int32
 //	// Special Stuff that can not be categorized
 //	//
 func EV_DoDonut(line *line_t) (r int32) {
-	bp := alloc(16)
 	var s1, s2, s3 *sector_t
 	var rtn, secnum, v1 int32
 	secnum = -1
@@ -32671,6 +32619,8 @@ func EV_DoDonut(line *line_t) (r int32) {
 			if s3 == s1 {
 				continue
 			}
+			var floorpic int16
+			var floorheight fixed_t
 			if s3 == nil {
 				// e6y
 				// s3 is NULL, so
@@ -32678,10 +32628,10 @@ func EV_DoDonut(line *line_t) (r int32) {
 				// s3->floorpic is a short at 0000:0008
 				// Trying to emulate
 				fprintf_ccgo(os.Stderr, "EV_DoDonut: WARNING: emulating buffer overrun due to NULL back sector. Unexpected behavior may occur in Vanilla Doom.\n")
-				DonutOverrun(bp, bp+4, line, s1)
+				DonutOverrun(&floorheight, &floorpic, line, s1)
 			} else {
-				*(*fixed_t)(unsafe.Pointer(bp)) = s3.Ffloorheight
-				*(*int16)(unsafe.Pointer(bp + 4)) = s3.Ffloorpic
+				floorheight = s3.Ffloorheight
+				floorpic = s3.Ffloorpic
 			}
 			//	Spawn rising slime
 			floorP := &floormove_t{}
@@ -32693,9 +32643,9 @@ func EV_DoDonut(line *line_t) (r int32) {
 			floorP.Fdirection = 1
 			floorP.Fsector = s2
 			floorP.Fspeed = 1 << FRACBITS / 2
-			floorP.Ftexture = *(*int16)(unsafe.Pointer(bp + 4))
+			floorP.Ftexture = floorpic
 			floorP.Fnewspecial = 0
-			floorP.Ffloordestheight = *(*fixed_t)(unsafe.Pointer(bp))
+			floorP.Ffloordestheight = floorheight
 			//	Spawn lowering donut-hole
 			floorP = &floormove_t{}
 			P_AddThinker(&floorP.Fthinker)
@@ -32706,7 +32656,7 @@ func EV_DoDonut(line *line_t) (r int32) {
 			floorP.Fdirection = -1
 			floorP.Fsector = s1
 			floorP.Fspeed = 1 << FRACBITS / 2
-			floorP.Ffloordestheight = *(*fixed_t)(unsafe.Pointer(bp))
+			floorP.Ffloordestheight = floorheight
 			break
 		}
 	}
@@ -40773,7 +40723,7 @@ func S_GetChannel(origin *degenmobj_t, sfxinfo *sfxinfo_t) (r int32) {
 // Otherwise, modifies parameters and returns 1.
 //
 
-func S_AdjustSoundParams(listener *degenmobj_t, source *degenmobj_t, vol uintptr, sep uintptr) (r int32) {
+func S_AdjustSoundParams(listener *degenmobj_t, source *degenmobj_t, vol *int32, sep *int32) (r int32) {
 	var adx, ady, approx_dist fixed_t
 	var angle angle_t
 	var v1 int32
@@ -40811,20 +40761,20 @@ func S_AdjustSoundParams(listener *degenmobj_t, source *degenmobj_t, vol uintptr
 			if approx_dist > 1200*(1<<FRACBITS) {
 				approx_dist = 1200 * (1 << FRACBITS)
 			}
-			*(*int32)(unsafe.Pointer(vol)) = 15 + (snd_SfxVolume-int32(15))*((1200*(1<<FRACBITS)-approx_dist)>>FRACBITS)/((1200*(1<<FRACBITS)-200*(1<<FRACBITS))>>FRACBITS)
+			*vol = 15 + (snd_SfxVolume-int32(15))*((1200*(1<<FRACBITS)-approx_dist)>>FRACBITS)/((1200*(1<<FRACBITS)-200*(1<<FRACBITS))>>FRACBITS)
 		} else {
 			// distance effect
-			*(*int32)(unsafe.Pointer(vol)) = snd_SfxVolume * ((1200*(1<<FRACBITS) - approx_dist) >> FRACBITS) / ((1200*(1<<FRACBITS) - 200*(1<<FRACBITS)) >> FRACBITS)
+			*vol = snd_SfxVolume * ((1200*(1<<FRACBITS) - approx_dist) >> FRACBITS) / ((1200*(1<<FRACBITS) - 200*(1<<FRACBITS)) >> FRACBITS)
 		}
 	}
-	return boolint32(*(*int32)(unsafe.Pointer(vol)) > 0)
+	return boolint32(*vol > 0)
 }
 
 func S_StartSound(origin *degenmobj_t, sfx_id int32) {
-	bp := alloc(32)
+	var channel, volume int32
 	var cnum, rc int32
 	var sfx *sfxinfo_t
-	*(*int32)(unsafe.Pointer(bp + 4)) = snd_SfxVolume
+	volume = snd_SfxVolume
 	// check for bogus sound #
 	if sfx_id < 1 || sfx_id > NUMSFX {
 		I_Error("Bad sfx #: %d", sfx_id)
@@ -40832,26 +40782,26 @@ func S_StartSound(origin *degenmobj_t, sfx_id int32) {
 	sfx = &S_sfx[sfx_id]
 	// Initialize sound parameters
 	if sfx.Flink != nil {
-		*(*int32)(unsafe.Pointer(bp + 4)) += sfx.Fvolume
-		if *(*int32)(unsafe.Pointer(bp + 4)) < 1 {
+		volume += sfx.Fvolume
+		if volume < 1 {
 			return
 		}
-		if *(*int32)(unsafe.Pointer(bp + 4)) > snd_SfxVolume {
-			*(*int32)(unsafe.Pointer(bp + 4)) = snd_SfxVolume
+		if volume > snd_SfxVolume {
+			volume = snd_SfxVolume
 		}
 	}
 	// Check to see if it is audible,
 	//  and if not, modify the params
 	if origin != nil && origin != &players[consoleplayer].Fmo.degenmobj_t {
-		rc = S_AdjustSoundParams(&players[consoleplayer].Fmo.degenmobj_t, origin, bp+4, bp)
+		rc = S_AdjustSoundParams(&players[consoleplayer].Fmo.degenmobj_t, origin, &volume, &channel)
 		if origin.Fx == players[consoleplayer].Fmo.Fx && origin.Fy == players[consoleplayer].Fmo.Fy {
-			*(*int32)(unsafe.Pointer(bp)) = NORM_SEP
+			channel = NORM_SEP
 		}
 		if rc == 0 {
 			return
 		}
 	} else {
-		*(*int32)(unsafe.Pointer(bp)) = NORM_SEP
+		channel = NORM_SEP
 	}
 	// kill old sound
 	S_StopSound(origin)
@@ -40865,7 +40815,7 @@ func S_StartSound(origin *degenmobj_t, sfx_id int32) {
 	if sfx.Flumpnum < 0 {
 		sfx.Flumpnum = I_GetSfxLumpNum(sfx)
 	}
-	channels[cnum].Fhandle = I_StartSound(sfx, cnum, *(*int32)(unsafe.Pointer(bp + 4)), *(*int32)(unsafe.Pointer(bp)))
+	channels[cnum].Fhandle = I_StartSound(sfx, cnum, volume, channel)
 }
 
 //
@@ -40891,7 +40841,7 @@ func S_ResumeSound() {
 //
 
 func S_UpdateSounds(listener *degenmobj_t) {
-	bp := alloc(16)
+	var volume, channel int32
 	var audible, cnum int32
 	var sfx *sfxinfo_t
 	I_UpdateSound()
@@ -40905,27 +40855,28 @@ func S_UpdateSounds(listener *degenmobj_t) {
 		if sfx != nil {
 			if I_SoundIsPlaying(c.Fhandle) != 0 {
 				// initialize parameters
-				*(*int32)(unsafe.Pointer(bp)) = snd_SfxVolume
-				*(*int32)(unsafe.Pointer(bp + 4)) = NORM_SEP
+				volume = snd_SfxVolume
+				channel = NORM_SEP
 				if sfx.Flink != nil {
-					*(*int32)(unsafe.Pointer(bp)) += sfx.Fvolume
-					if *(*int32)(unsafe.Pointer(bp)) < 1 {
+					volume += sfx.Fvolume
+					if volume < 1 {
 						S_StopChannel(cnum)
 						goto _1
 					} else {
-						if *(*int32)(unsafe.Pointer(bp)) > snd_SfxVolume {
-							*(*int32)(unsafe.Pointer(bp)) = snd_SfxVolume
+						if volume > snd_SfxVolume {
+							volume = snd_SfxVolume
+
 						}
 					}
 				}
 				// check non-local sounds for distance clipping
 				//  or modify their params
 				if c.Forigin != nil && listener != c.Forigin {
-					audible = S_AdjustSoundParams(listener, c.Forigin, bp, bp+4)
+					audible = S_AdjustSoundParams(listener, c.Forigin, &volume, &channel)
 					if audible == 0 {
 						S_StopChannel(cnum)
 					} else {
-						I_UpdateSoundParams(c.Fhandle, *(*int32)(unsafe.Pointer(bp)), *(*int32)(unsafe.Pointer(bp + 4)))
+						I_UpdateSoundParams(c.Fhandle, volume, channel)
 					}
 				}
 			} else {
@@ -43748,26 +43699,6 @@ const ZONEID = 1919505
 //
 
 //
-// ZONE MEMORY ALLOCATION
-//
-// There is never any space between memblocks,
-//  and there will never be two contiguous free memblocks.
-// The rover can be left pointing at a non-empty block.
-//
-// It is of no value to free a cachable block,
-//  because it will get overwritten automatically if needed.
-//
-
-type memblock_t struct {
-	Fsize int32
-	Fuser uintptr
-	Ftag  int32
-	Fid   int32
-	Fnext uintptr
-	Fprev uintptr
-}
-
-//
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -43797,37 +43728,13 @@ type memblock_t struct {
 //  because it will get overwritten automatically if needed.
 //
 
-type memzone_t struct {
-	Fsize      int32
-	Fblocklist memblock_t
-	Frover     uintptr
-}
-
 // C documentation
 //
 //	//
 //	// Z_Init
 //	//
 func Z_Init() {
-	var size int32
-	var block, v1, v2, v3 uintptr
-	mainzone = I_ZoneBase(&size)
-	(*memzone_t)(unsafe.Pointer(mainzone)).Fsize = size
-	// set the entire zone to one free block
-	v2 = mainzone + uintptr(56)
-	block = v2
-	v1 = v2
-	(*memzone_t)(unsafe.Pointer(mainzone)).Fblocklist.Fprev = v1
-	(*memzone_t)(unsafe.Pointer(mainzone)).Fblocklist.Fnext = v1
-	(*memzone_t)(unsafe.Pointer(mainzone)).Fblocklist.Fuser = mainzone
-	(*memzone_t)(unsafe.Pointer(mainzone)).Fblocklist.Ftag = PU_STATIC
-	(*memzone_t)(unsafe.Pointer(mainzone)).Frover = block
-	v3 = mainzone + 8
-	(*memblock_t)(unsafe.Pointer(block)).Fnext = v3
-	(*memblock_t)(unsafe.Pointer(block)).Fprev = v3
-	// free block
-	(*memblock_t)(unsafe.Pointer(block)).Ftag = PU_FREE
-	(*memblock_t)(unsafe.Pointer(block)).Fsize = int32(uint64((*memzone_t)(unsafe.Pointer(mainzone)).Fsize) - 56)
+	return
 }
 
 // C documentation
@@ -43836,40 +43743,7 @@ func Z_Init() {
 //	// Z_Free
 //	//
 func Z_Free(ptr uintptr) {
-	var block, other uintptr
-	block = ptr - uintptr(40)
-	if (*memblock_t)(unsafe.Pointer(block)).Fid != ZONEID {
-		I_Error("Z_Free: freed a pointer without ZONEID")
-	}
-	if (*memblock_t)(unsafe.Pointer(block)).Ftag != PU_FREE && (*memblock_t)(unsafe.Pointer(block)).Fuser != 0 {
-		// clear the user's mark
-		*(*uintptr)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fuser)) = 0
-	}
-	// mark as free
-	(*memblock_t)(unsafe.Pointer(block)).Ftag = PU_FREE
-	(*memblock_t)(unsafe.Pointer(block)).Fuser = 0
-	(*memblock_t)(unsafe.Pointer(block)).Fid = 0
-	other = (*memblock_t)(unsafe.Pointer(block)).Fprev
-	if (*memblock_t)(unsafe.Pointer(other)).Ftag == PU_FREE {
-		// merge with previous free block
-		*(*int32)(unsafe.Pointer(other)) += (*memblock_t)(unsafe.Pointer(block)).Fsize
-		(*memblock_t)(unsafe.Pointer(other)).Fnext = (*memblock_t)(unsafe.Pointer(block)).Fnext
-		(*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(other)).Fnext)).Fprev = other
-		if block == (*memzone_t)(unsafe.Pointer(mainzone)).Frover {
-			(*memzone_t)(unsafe.Pointer(mainzone)).Frover = other
-		}
-		block = other
-	}
-	other = (*memblock_t)(unsafe.Pointer(block)).Fnext
-	if (*memblock_t)(unsafe.Pointer(other)).Ftag == PU_FREE {
-		// merge the next free block onto the end
-		*(*int32)(unsafe.Pointer(block)) += (*memblock_t)(unsafe.Pointer(other)).Fsize
-		(*memblock_t)(unsafe.Pointer(block)).Fnext = (*memblock_t)(unsafe.Pointer(other)).Fnext
-		(*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Fprev = block
-		if other == (*memzone_t)(unsafe.Pointer(mainzone)).Frover {
-			(*memzone_t)(unsafe.Pointer(mainzone)).Frover = block
-		}
-	}
+	xfree(ptr)
 }
 
 //
@@ -43878,74 +43752,7 @@ func Z_Free(ptr uintptr) {
 //
 
 func Z_Malloc(size int32, tag int32, user uintptr) (r uintptr) {
-	var base, newblock, result, rover, start, v1 uintptr
-	var extra int32
-	size = int32((uint64(size) + 8 - uint64(1)) & 0xffff_fff8)
-	// scan through the block list,
-	// looking for the first free block
-	// of sufficient size,
-	// throwing out any purgable blocks along the way.
-	// account for size of block header
-	size = int32(uint64(size) + 40)
-	// if there is a free block behind the rover,
-	//  back up over them
-	base = (*memzone_t)(unsafe.Pointer(mainzone)).Frover
-	if (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(base)).Fprev)).Ftag == PU_FREE {
-		base = (*memblock_t)(unsafe.Pointer(base)).Fprev
-	}
-	rover = base
-	start = (*memblock_t)(unsafe.Pointer(base)).Fprev
-	for cond := true; cond; cond = (*memblock_t)(unsafe.Pointer(base)).Ftag != PU_FREE || (*memblock_t)(unsafe.Pointer(base)).Fsize < size {
-		if rover == start {
-			// scanned all the way around the list
-			I_Error("Z_Malloc: failed on allocation of %d bytes", size)
-		}
-		if (*memblock_t)(unsafe.Pointer(rover)).Ftag != PU_FREE {
-			if (*memblock_t)(unsafe.Pointer(rover)).Ftag < PU_PURGELEVEL {
-				// hit a block that can't be purged,
-				// so move base past it
-				v1 = (*memblock_t)(unsafe.Pointer(rover)).Fnext
-				rover = v1
-				base = v1
-			} else {
-				// free the rover block (adding the size to base)
-				// the rover can be the base block
-				base = (*memblock_t)(unsafe.Pointer(base)).Fprev
-				Z_Free(rover + uintptr(40))
-				base = (*memblock_t)(unsafe.Pointer(base)).Fnext
-				rover = (*memblock_t)(unsafe.Pointer(base)).Fnext
-			}
-		} else {
-			rover = (*memblock_t)(unsafe.Pointer(rover)).Fnext
-		}
-	}
-	// found a block big enough
-	extra = (*memblock_t)(unsafe.Pointer(base)).Fsize - size
-	if extra > MINFRAGMENT {
-		// there will be a free fragment after the allocated block
-		newblock = base + uintptr(size)
-		(*memblock_t)(unsafe.Pointer(newblock)).Fsize = extra
-		(*memblock_t)(unsafe.Pointer(newblock)).Ftag = PU_FREE
-		(*memblock_t)(unsafe.Pointer(newblock)).Fuser = 0
-		(*memblock_t)(unsafe.Pointer(newblock)).Fprev = base
-		(*memblock_t)(unsafe.Pointer(newblock)).Fnext = (*memblock_t)(unsafe.Pointer(base)).Fnext
-		(*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(newblock)).Fnext)).Fprev = newblock
-		(*memblock_t)(unsafe.Pointer(base)).Fnext = newblock
-		(*memblock_t)(unsafe.Pointer(base)).Fsize = size
-	}
-	if user == 0 && tag >= PU_PURGELEVEL {
-		I_Error("Z_Malloc: an owner is required for purgable blocks")
-	}
-	(*memblock_t)(unsafe.Pointer(base)).Fuser = user
-	(*memblock_t)(unsafe.Pointer(base)).Ftag = tag
-	result = base + uintptr(40)
-	if (*memblock_t)(unsafe.Pointer(base)).Fuser != 0 {
-		*(*uintptr)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(base)).Fuser)) = result
-	}
-	// next allocation will start looking here
-	(*memzone_t)(unsafe.Pointer(mainzone)).Frover = (*memblock_t)(unsafe.Pointer(base)).Fnext
-	(*memblock_t)(unsafe.Pointer(base)).Fid = ZONEID
-	return result
+	return xmalloc(uint64(size))
 }
 
 // C documentation
@@ -43954,26 +43761,7 @@ func Z_Malloc(size int32, tag int32, user uintptr) (r uintptr) {
 //	// Z_FreeTags
 //	//
 func Z_FreeTags(lowtag int32, hightag int32) {
-	var block, next uintptr
-	block = (*memzone_t)(unsafe.Pointer(mainzone)).Fblocklist.Fnext
-	for {
-		if block == mainzone+8 {
-			break
-		}
-		// get link before freeing
-		next = (*memblock_t)(unsafe.Pointer(block)).Fnext
-		// free block?
-		if (*memblock_t)(unsafe.Pointer(block)).Ftag == PU_FREE {
-			goto _1
-		}
-		if (*memblock_t)(unsafe.Pointer(block)).Ftag >= lowtag && (*memblock_t)(unsafe.Pointer(block)).Ftag <= hightag {
-			Z_Free(block + uintptr(40))
-		}
-		goto _1
-	_1:
-		;
-		block = next
-	}
+	return
 }
 
 // C documentation
@@ -43982,27 +43770,7 @@ func Z_FreeTags(lowtag int32, hightag int32) {
 //	// Z_CheckHeap
 //	//
 func Z_CheckHeap() {
-	var block uintptr
-	block = (*memzone_t)(unsafe.Pointer(mainzone)).Fblocklist.Fnext
-	for {
-		if (*memblock_t)(unsafe.Pointer(block)).Fnext == mainzone+8 {
-			// all blocks have been hit
-			break
-		}
-		if block+uintptr((*memblock_t)(unsafe.Pointer(block)).Fsize) != (*memblock_t)(unsafe.Pointer(block)).Fnext {
-			I_Error("Z_CheckHeap: block size does not touch the next block\n")
-		}
-		if (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Fprev != block {
-			I_Error("Z_CheckHeap: next block doesn't have proper back link\n")
-		}
-		if (*memblock_t)(unsafe.Pointer(block)).Ftag == PU_FREE && (*memblock_t)(unsafe.Pointer((*memblock_t)(unsafe.Pointer(block)).Fnext)).Ftag == PU_FREE {
-			I_Error("Z_CheckHeap: two consecutive free blocks\n")
-		}
-		goto _1
-	_1:
-		;
-		block = (*memblock_t)(unsafe.Pointer(block)).Fnext
-	}
+	return
 }
 
 // Read data from the specified position in the file into the
@@ -45473,8 +45241,6 @@ func lumpIndex(l *lumpinfo_t) int32 {
 //
 //	// If true, the main game loop has started.
 var main_loop_started boolean
-
-var mainzone uintptr
 
 //
 // Builtin map names.
