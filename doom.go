@@ -43998,9 +43998,6 @@ func I_GetEvent() {
 				// Ignore small mouse movements.
 				continue
 			}
-			if event.Mouse.Button1 {
-				log.Printf("Mouse event %#v", newEvent)
-			}
 			lastMouse = event
 			D_PostEvent(&newEvent)
 		}

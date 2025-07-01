@@ -80,10 +80,10 @@ func (g *DoomGame) Update() error {
 		mouseEvent.Mouse.XPos = float64(x) / float64(screenWidth)
 		mouseEvent.Mouse.YPos = float64(y) / float64(screenHeight)
 		mouseEvent.Type = gore.Ev_mouse
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 			mouseEvent.Mouse.Button1 = true
 		}
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
 			mouseEvent.Mouse.Button2 = true
 		}
 		g.events = append(g.events, mouseEvent)
