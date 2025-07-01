@@ -33,11 +33,6 @@ type boolean = uint32
 
 const uintptr_negative_one = ^uintptr(0)
 
-func alloc(size int) uintptr {
-	data := make([]byte, size)
-	return uintptr(unsafe.Pointer(&data[0]))
-}
-
 // Horrible memory allocation hack to avoid Go GC
 // Once we're done with libc, this should go
 var dg_alloced = make(map[uintptr][]byte)
@@ -32525,7 +32520,7 @@ func P_UpdateSpecials() {
 // as usual :-)
 //
 
-func DonutOverrun(s3_floorheight uintptr, s3_floorpic uintptr, line *line_t, pillar_sector *sector_t) {
+func DonutOverrun(s3_floorheight *fixed_t, s3_floorpic *int16, line *line_t, pillar_sector *sector_t) {
 	var p int32
 	if first != 0 {
 		// This is the first time we have had an overrun.
@@ -32574,8 +32569,8 @@ func DonutOverrun(s3_floorheight uintptr, s3_floorpic uintptr, line *line_t, pil
 	           line->iLineID, pillar_sector->iSectorID,
 	           tmp_s3_floorheight >> 16, tmp_s3_floorpic);
 	*/
-	*(*fixed_t)(unsafe.Pointer(s3_floorheight)) = tmp_s3_floorheight
-	*(*int16)(unsafe.Pointer(s3_floorpic)) = int16(tmp_s3_floorpic)
+	*s3_floorheight = tmp_s3_floorheight
+	*s3_floorpic = int16(tmp_s3_floorpic)
 }
 
 var first = 1
@@ -32590,7 +32585,6 @@ var tmp_s3_floorpic int32
 //	// Special Stuff that can not be categorized
 //	//
 func EV_DoDonut(line *line_t) (r int32) {
-	bp := alloc(16)
 	var s1, s2, s3 *sector_t
 	var rtn, secnum, v1 int32
 	secnum = -1
@@ -32625,6 +32619,8 @@ func EV_DoDonut(line *line_t) (r int32) {
 			if s3 == s1 {
 				continue
 			}
+			var floorpic int16
+			var floorheight fixed_t
 			if s3 == nil {
 				// e6y
 				// s3 is NULL, so
@@ -32632,10 +32628,10 @@ func EV_DoDonut(line *line_t) (r int32) {
 				// s3->floorpic is a short at 0000:0008
 				// Trying to emulate
 				fprintf_ccgo(os.Stderr, "EV_DoDonut: WARNING: emulating buffer overrun due to NULL back sector. Unexpected behavior may occur in Vanilla Doom.\n")
-				DonutOverrun(bp, bp+4, line, s1)
+				DonutOverrun(&floorheight, &floorpic, line, s1)
 			} else {
-				*(*fixed_t)(unsafe.Pointer(bp)) = s3.Ffloorheight
-				*(*int16)(unsafe.Pointer(bp + 4)) = s3.Ffloorpic
+				floorheight = s3.Ffloorheight
+				floorpic = s3.Ffloorpic
 			}
 			//	Spawn rising slime
 			floorP := &floormove_t{}
@@ -32647,9 +32643,9 @@ func EV_DoDonut(line *line_t) (r int32) {
 			floorP.Fdirection = 1
 			floorP.Fsector = s2
 			floorP.Fspeed = 1 << FRACBITS / 2
-			floorP.Ftexture = *(*int16)(unsafe.Pointer(bp + 4))
+			floorP.Ftexture = floorpic
 			floorP.Fnewspecial = 0
-			floorP.Ffloordestheight = *(*fixed_t)(unsafe.Pointer(bp))
+			floorP.Ffloordestheight = floorheight
 			//	Spawn lowering donut-hole
 			floorP = &floormove_t{}
 			P_AddThinker(&floorP.Fthinker)
@@ -32660,7 +32656,7 @@ func EV_DoDonut(line *line_t) (r int32) {
 			floorP.Fdirection = -1
 			floorP.Fsector = s1
 			floorP.Fspeed = 1 << FRACBITS / 2
-			floorP.Ffloordestheight = *(*fixed_t)(unsafe.Pointer(bp))
+			floorP.Ffloordestheight = floorheight
 			break
 		}
 	}
@@ -40727,7 +40723,7 @@ func S_GetChannel(origin *degenmobj_t, sfxinfo *sfxinfo_t) (r int32) {
 // Otherwise, modifies parameters and returns 1.
 //
 
-func S_AdjustSoundParams(listener *degenmobj_t, source *degenmobj_t, vol uintptr, sep uintptr) (r int32) {
+func S_AdjustSoundParams(listener *degenmobj_t, source *degenmobj_t, vol *int32, sep *int32) (r int32) {
 	var adx, ady, approx_dist fixed_t
 	var angle angle_t
 	var v1 int32
@@ -40765,20 +40761,20 @@ func S_AdjustSoundParams(listener *degenmobj_t, source *degenmobj_t, vol uintptr
 			if approx_dist > 1200*(1<<FRACBITS) {
 				approx_dist = 1200 * (1 << FRACBITS)
 			}
-			*(*int32)(unsafe.Pointer(vol)) = 15 + (snd_SfxVolume-int32(15))*((1200*(1<<FRACBITS)-approx_dist)>>FRACBITS)/((1200*(1<<FRACBITS)-200*(1<<FRACBITS))>>FRACBITS)
+			*vol = 15 + (snd_SfxVolume-int32(15))*((1200*(1<<FRACBITS)-approx_dist)>>FRACBITS)/((1200*(1<<FRACBITS)-200*(1<<FRACBITS))>>FRACBITS)
 		} else {
 			// distance effect
-			*(*int32)(unsafe.Pointer(vol)) = snd_SfxVolume * ((1200*(1<<FRACBITS) - approx_dist) >> FRACBITS) / ((1200*(1<<FRACBITS) - 200*(1<<FRACBITS)) >> FRACBITS)
+			*vol = snd_SfxVolume * ((1200*(1<<FRACBITS) - approx_dist) >> FRACBITS) / ((1200*(1<<FRACBITS) - 200*(1<<FRACBITS)) >> FRACBITS)
 		}
 	}
-	return boolint32(*(*int32)(unsafe.Pointer(vol)) > 0)
+	return boolint32(*vol > 0)
 }
 
 func S_StartSound(origin *degenmobj_t, sfx_id int32) {
-	bp := alloc(32)
+	var channel, volume int32
 	var cnum, rc int32
 	var sfx *sfxinfo_t
-	*(*int32)(unsafe.Pointer(bp + 4)) = snd_SfxVolume
+	volume = snd_SfxVolume
 	// check for bogus sound #
 	if sfx_id < 1 || sfx_id > NUMSFX {
 		I_Error("Bad sfx #: %d", sfx_id)
@@ -40786,26 +40782,26 @@ func S_StartSound(origin *degenmobj_t, sfx_id int32) {
 	sfx = &S_sfx[sfx_id]
 	// Initialize sound parameters
 	if sfx.Flink != 0 {
-		*(*int32)(unsafe.Pointer(bp + 4)) += sfx.Fvolume
-		if *(*int32)(unsafe.Pointer(bp + 4)) < 1 {
+		volume += sfx.Fvolume
+		if volume < 1 {
 			return
 		}
-		if *(*int32)(unsafe.Pointer(bp + 4)) > snd_SfxVolume {
-			*(*int32)(unsafe.Pointer(bp + 4)) = snd_SfxVolume
+		if volume > snd_SfxVolume {
+			volume = snd_SfxVolume
 		}
 	}
 	// Check to see if it is audible,
 	//  and if not, modify the params
 	if origin != nil && origin != &players[consoleplayer].Fmo.degenmobj_t {
-		rc = S_AdjustSoundParams(&players[consoleplayer].Fmo.degenmobj_t, origin, bp+4, bp)
+		rc = S_AdjustSoundParams(&players[consoleplayer].Fmo.degenmobj_t, origin, &volume, &channel)
 		if origin.Fx == players[consoleplayer].Fmo.Fx && origin.Fy == players[consoleplayer].Fmo.Fy {
-			*(*int32)(unsafe.Pointer(bp)) = NORM_SEP
+			channel = NORM_SEP
 		}
 		if rc == 0 {
 			return
 		}
 	} else {
-		*(*int32)(unsafe.Pointer(bp)) = NORM_SEP
+		channel = NORM_SEP
 	}
 	// kill old sound
 	S_StopSound(origin)
@@ -40819,7 +40815,7 @@ func S_StartSound(origin *degenmobj_t, sfx_id int32) {
 	if sfx.Flumpnum < 0 {
 		sfx.Flumpnum = I_GetSfxLumpNum(sfx)
 	}
-	channels[cnum].Fhandle = I_StartSound(sfx, cnum, *(*int32)(unsafe.Pointer(bp + 4)), *(*int32)(unsafe.Pointer(bp)))
+	channels[cnum].Fhandle = I_StartSound(sfx, cnum, volume, channel)
 }
 
 //
@@ -40845,7 +40841,7 @@ func S_ResumeSound() {
 //
 
 func S_UpdateSounds(listener *degenmobj_t) {
-	bp := alloc(16)
+	var volume, channel int32
 	var audible, cnum int32
 	var sfx *sfxinfo_t
 	I_UpdateSound()
@@ -40859,27 +40855,28 @@ func S_UpdateSounds(listener *degenmobj_t) {
 		if sfx != nil {
 			if I_SoundIsPlaying(c.Fhandle) != 0 {
 				// initialize parameters
-				*(*int32)(unsafe.Pointer(bp)) = snd_SfxVolume
-				*(*int32)(unsafe.Pointer(bp + 4)) = NORM_SEP
+				volume = snd_SfxVolume
+				channel = NORM_SEP
 				if (*sfxinfo_t)(unsafe.Pointer(sfx)).Flink != 0 {
-					*(*int32)(unsafe.Pointer(bp)) += (*sfxinfo_t)(unsafe.Pointer(sfx)).Fvolume
-					if *(*int32)(unsafe.Pointer(bp)) < 1 {
+					volume += (*sfxinfo_t)(unsafe.Pointer(sfx)).Fvolume
+					if volume < 1 {
 						S_StopChannel(cnum)
 						goto _1
 					} else {
-						if *(*int32)(unsafe.Pointer(bp)) > snd_SfxVolume {
-							*(*int32)(unsafe.Pointer(bp)) = snd_SfxVolume
+						if volume > snd_SfxVolume {
+							volume = snd_SfxVolume
+
 						}
 					}
 				}
 				// check non-local sounds for distance clipping
 				//  or modify their params
 				if c.Forigin != nil && listener != c.Forigin {
-					audible = S_AdjustSoundParams(listener, c.Forigin, bp, bp+4)
+					audible = S_AdjustSoundParams(listener, c.Forigin, &volume, &channel)
 					if audible == 0 {
 						S_StopChannel(cnum)
 					} else {
-						I_UpdateSoundParams(c.Fhandle, *(*int32)(unsafe.Pointer(bp)), *(*int32)(unsafe.Pointer(bp + 4)))
+						I_UpdateSoundParams(c.Fhandle, volume, channel)
 					}
 				}
 			} else {
