@@ -52,6 +52,7 @@ jobs:
       run: |
         go build -o webserver ./example/webserver
         go build -o ebitengine ./example/ebitengine
+        go build -o termdoom ./example/termdoom
     - name: Save the test movie outputs
       uses: actions/upload-artifact@v4
       with:
