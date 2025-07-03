@@ -36,11 +36,17 @@ The original C code was converted to Go using (modernc.org/ccgo/v4), by cznic (h
 These examples are both very minimal, and whilst technically run the game, they are not really fully complete games in their own right (ie: Missing key bindings etc...)
 #### Web based
 ```bash
-git clone <this-repo>
+git clone https://github.com/AndreRenaud/gore.git
 cd gore
 go run ./example/webserver
 ```
 Now browse to http://localhost:8080 to play
+
+#### ASCII
+<video src=doom-ascii-example.mp4>
+```bash
+go run ./example/termdoom -iwad doom1.wad
+```
 
 #### Ebitengine
 ```bash
