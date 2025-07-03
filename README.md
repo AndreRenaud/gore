@@ -44,7 +44,7 @@ Now browse to http://localhost:8080 to play
 
 #### ASCII
 
-<video src="doom-ascii-example.webm" width="50%"></video>
+![Demo](doom-ascii-example.gif)
 
 ```bash
 go run ./example/termdoom -iwad doom1.wad
