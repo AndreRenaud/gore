@@ -43,7 +43,9 @@ go run ./example/webserver
 Now browse to http://localhost:8080 to play
 
 #### ASCII
-<video src=doom-ascii-example.mp4  width=50%></video>
+
+doom-ascii-example.mp4
+
 ```bash
 go run ./example/termdoom -iwad doom1.wad
 ```
