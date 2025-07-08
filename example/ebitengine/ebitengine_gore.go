@@ -17,6 +17,7 @@ const (
 )
 
 type DoomGame struct {
+	frame     *ebiten.Image
 	lastFrame *ebiten.Image
 
 	events      []gore.DoomEvent
@@ -116,6 +117,17 @@ func (g *DoomGame) GetEvent(event *gore.DoomEvent) bool {
 }
 
 func (g *DoomGame) DrawFrame(frame *image.RGBA) {
+	if g.frame != nil {
+		if g.frame.Bounds().Dx() != frame.Bounds().Dx() || g.frame.Bounds().Dy() != frame.Bounds().Dy() {
+			g.frame.Deallocate()
+			g.frame = nil
+		}
+	}
+	if g.frame == nil {
+		g.frame = ebiten.NewImage(frame.Bounds().Dx(), frame.Bounds().Dy())
+	}
+	g.frame.WritePixels(frame.Pix)
+
 	g.lock.Lock()
 	op := &ebiten.DrawImageOptions{}
 	rect := frame.Bounds()
@@ -123,7 +135,7 @@ func (g *DoomGame) DrawFrame(frame *image.RGBA) {
 	xScale := float64(screenWidth) / float64(rect.Dx())
 	op.GeoM.Scale(xScale, yScale)
 	op.GeoM.Translate(xScale, yScale)
-	g.lastFrame.DrawImage(ebiten.NewImageFromImage(frame), op)
+	g.lastFrame.DrawImage(g.frame, op)
 	g.lock.Unlock()
 }
 
