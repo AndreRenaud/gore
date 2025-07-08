@@ -98,6 +98,9 @@ func (g *DoomGame) Draw(screen *ebiten.Image) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 
+	if g.lastFrame == nil {
+		return
+	}
 	op := &ebiten.DrawImageOptions{}
 	rect := g.lastFrame.Bounds()
 	yScale := float64(screenHeight) / float64(rect.Dy())
