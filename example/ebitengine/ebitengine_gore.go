@@ -17,7 +17,6 @@ const (
 )
 
 type DoomGame struct {
-	frame     *ebiten.Image
 	lastFrame *ebiten.Image
 
 	events      []gore.DoomEvent
@@ -98,7 +97,14 @@ func (g *DoomGame) Update() error {
 func (g *DoomGame) Draw(screen *ebiten.Image) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
-	screen.DrawImage(g.lastFrame, nil)
+
+	op := &ebiten.DrawImageOptions{}
+	rect := g.lastFrame.Bounds()
+	yScale := float64(screenHeight) / float64(rect.Dy())
+	xScale := float64(screenWidth) / float64(rect.Dx())
+	op.GeoM.Scale(xScale, yScale)
+	op.GeoM.Translate(xScale, yScale)
+	screen.DrawImage(g.lastFrame, op)
 }
 
 func (g *DoomGame) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -117,26 +123,19 @@ func (g *DoomGame) GetEvent(event *gore.DoomEvent) bool {
 }
 
 func (g *DoomGame) DrawFrame(frame *image.RGBA) {
-	if g.frame != nil {
-		if g.frame.Bounds().Dx() != frame.Bounds().Dx() || g.frame.Bounds().Dy() != frame.Bounds().Dy() {
-			g.frame.Deallocate()
-			g.frame = nil
+	g.lock.Lock()
+	defer g.lock.Unlock()
+
+	if g.lastFrame != nil {
+		if g.lastFrame.Bounds().Dx() != frame.Bounds().Dx() || g.lastFrame.Bounds().Dy() != frame.Bounds().Dy() {
+			g.lastFrame.Deallocate()
+			g.lastFrame = nil
 		}
 	}
-	if g.frame == nil {
-		g.frame = ebiten.NewImage(frame.Bounds().Dx(), frame.Bounds().Dy())
+	if g.lastFrame == nil {
+		g.lastFrame = ebiten.NewImage(frame.Bounds().Dx(), frame.Bounds().Dy())
 	}
-	g.frame.WritePixels(frame.Pix)
-
-	g.lock.Lock()
-	op := &ebiten.DrawImageOptions{}
-	rect := frame.Bounds()
-	yScale := float64(screenHeight) / float64(rect.Dy())
-	xScale := float64(screenWidth) / float64(rect.Dx())
-	op.GeoM.Scale(xScale, yScale)
-	op.GeoM.Translate(xScale, yScale)
-	g.lastFrame.DrawImage(g.frame, op)
-	g.lock.Unlock()
+	g.lastFrame.WritePixels(frame.Pix)
 }
 
 func (g *DoomGame) SetTitle(title string) {
@@ -145,7 +144,6 @@ func (g *DoomGame) SetTitle(title string) {
 
 func main() {
 	game := &DoomGame{}
-	game.lastFrame = ebiten.NewImage(screenWidth, screenHeight)
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Gamepad (Ebitengine Demo)")
 	ebiten.SetFullscreen(true)
