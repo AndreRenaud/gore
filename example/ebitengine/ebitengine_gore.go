@@ -106,7 +106,6 @@ func (g *DoomGame) Draw(screen *ebiten.Image) {
 	yScale := float64(screenHeight) / float64(rect.Dy())
 	xScale := float64(screenWidth) / float64(rect.Dx())
 	op.GeoM.Scale(xScale, yScale)
-	op.GeoM.Translate(xScale, yScale)
 	screen.DrawImage(g.lastFrame, op)
 }
 
