@@ -44018,6 +44018,27 @@ func doomgeneric_Create(args []string) {
 	d_DoomMain()
 }
 
+// StartLevel forces the game to start at the beginning of the specified episode/map, with the specified skill
+func StartLevel(episode int32, mapnum int32, skill skill_t) error {
+	// TODO: Validate episode, mapnum, skill
+	if episode < 1 || episode > 4 {
+		return fmt.Errorf("invalid episode %d, must be between 1 and 4", episode)
+	}
+	if mapnum < 1 || mapnum > 32 {
+		return fmt.Errorf("invalid mapnum %d, must be between 1 and 32", mapnum)
+	}
+	if skill < skill_t(0) || skill > skill_t(4) {
+		return fmt.Errorf("invalid skill %d, must be between 0 and 4", skill)
+	}
+
+	gameaction = ga_loadlevel
+	gameepisode = episode
+	gamemap = mapnum
+	gameskill = skill
+	g_PlayerReborn(0) // reset everything
+	return nil
+}
+
 func Run(fg DoomFrontend, args []string) {
 	if dg_frontend != nil {
 		log.Printf("Run called twice, ignoring second call")

@@ -633,3 +633,26 @@ func TestMenus(t *testing.T) {
 	}()
 	Run(game, []string{"-iwad", "doom1.wad"})
 }
+
+func TestForceLevel(t *testing.T) {
+	dg_run_full_speed = true
+	game := &doomTestHeadless{
+		t: t,
+		keys: []delayedEvent{
+			// Start a new game
+			{ticks: 1, callback: func(d *doomTestHeadless) {
+				StartLevel(1, 6, sk_medium) // Start E1M1 on medium skill
+			}},
+			{ticks: 100, callback: func(d *doomTestHeadless) {
+				// Wait for the level to load and take a screenshot
+				compareScreen(d, "e1m6", 5)
+			}},
+			{ticks: 1000, callback: func(d *doomTestHeadless) {
+				// Quit the game
+				Stop()
+			}},
+		},
+	}
+	defer game.Close()
+	Run(game, []string{"-iwad", "doom1.wad"})
+}
