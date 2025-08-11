@@ -7,7 +7,7 @@ require (
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6
 	golang.org/x/sys v0.35.0
-	golang.org/x/term v0.33.0
+	golang.org/x/term v0.34.0
 )
 
 require (
