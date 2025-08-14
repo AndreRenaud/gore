@@ -2491,10 +2491,7 @@ func init() {
 }
 
 var cheating int32 = 0
-var grid int32 = 0
-
-var finit_width int32 = SCREENWIDTH
-var finit_height int32 = SCREENHEIGHT - 32
+var grid bool
 
 // C documentation
 //
@@ -2782,50 +2779,23 @@ var st_notify = event_t{
 //	//
 //	//
 func am_loadPics() {
-	var i int32
-	i = 0
-	for {
-		if i >= 10 {
-			break
-		}
+	for i := range 10 {
 		name := fmt.Sprintf("AMMNUM%d", i)
 		marknums[i] = w_CacheLumpNameT(name)
-		goto _1
-	_1:
-		;
-		i++
 	}
 }
 
 func am_unloadPics() {
-	var i int32
-	i = 0
-	for {
-		if i >= 10 {
-			break
-		}
+	for i := range 10 {
 		name := fmt.Sprintf("AMMNUM%d", i)
 		w_ReleaseLumpName(name)
-		goto _1
-	_1:
-		;
-		i++
 	}
 }
 
 func am_clearMarks() {
-	var i int32
-	i = 0
-	for {
-		if i >= AM_NUMMARKPOINTS {
-			break
-		}
+	for i := range AM_NUMMARKPOINTS {
 		markpoints[i].Fx = -1
-		goto _1
-	_1:
-		;
-		i++
-	} // means empty
+	}
 	markpointnum = 0
 }
 
@@ -2838,8 +2808,8 @@ func am_clearMarks() {
 func am_LevelInit() {
 	f_y = 0
 	f_x = 0
-	f_w = finit_width
-	f_h = finit_height
+	f_w = SCREENWIDTH
+	f_h = SCREENHEIGHT - 32
 	am_clearMarks()
 	am_findMinMaxBoundaries()
 	scale_mtof = fixedDiv(min_scale_mtof, float2fixed(0.7))
@@ -2989,8 +2959,8 @@ func am_Responder(ev *event_t) boolean {
 												}
 											} else {
 												if key == key_map_grid {
-													grid = boolint32(grid == 0)
-													if grid != 0 {
+													grid = !grid
+													if grid {
 														plr.Fmessage = "Grid ON"
 													} else {
 														plr.Fmessage = "Grid OFF"
@@ -3410,18 +3380,10 @@ func am_drawGrid(color int32) {
 	// draw vertical gridlines
 	bp.Fa.Fy = m_y
 	bp.Fb.Fy = m_y + m_h
-	x = start
-	for {
-		if x >= end {
-			break
-		}
+	for x = start; x < end; x += MAPBLOCKUNITS << FRACBITS {
 		bp.Fa.Fx = x
 		bp.Fb.Fx = x
 		am_drawMline(bp, color)
-		goto _1
-	_1:
-		;
-		x += MAPBLOCKUNITS << FRACBITS
 	}
 	// Figure out start of horizontal gridlines
 	start = m_y
@@ -3432,18 +3394,10 @@ func am_drawGrid(color int32) {
 	// draw horizontal gridlines
 	bp.Fa.Fx = m_x
 	bp.Fb.Fx = m_x + m_w
-	y = start
-	for {
-		if y >= end {
-			break
-		}
+	for y = start; y < end; y += MAPBLOCKUNITS << FRACBITS {
 		bp.Fa.Fy = y
 		bp.Fb.Fy = y
 		am_drawMline(bp, color)
-		goto _2
-	_2:
-		;
-		y += MAPBLOCKUNITS << FRACBITS
 	}
 }
 
@@ -3913,24 +3867,15 @@ func checkDirectoryHasIWAD(dir string, iwadname string) string {
 
 func searchDirectoryForIWAD(dir string, mask int32, mission *gamemission_t) string {
 	var filename string
-	var i uint64
-	i = 0
-	for {
-		if i >= uint64(len(iwads)) {
-			break
-		}
+	for i := 0; i < len(iwads); i++ {
 		if 1<<iwads[i].Fmission&mask == 0 {
-			goto _1
+			continue
 		}
 		filename = checkDirectoryHasIWAD(dir, iwads[i].Fname)
 		if filename != "" {
 			*mission = iwads[i].Fmission
 			return filename
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 	return ""
 }
@@ -3939,28 +3884,19 @@ func searchDirectoryForIWAD(dir string, mask int32, mission *gamemission_t) stri
 // attempt to identify it by its name.
 
 func identifyIWADByName(name string, mask int32) gamemission_t {
-	var i uint64
 	var mission gamemission_t
 	mission = none
-	i = 0
-	for {
-		if i >= uint64(len(iwads)) {
-			break
-		}
+	for i := 0; i < len(iwads); i++ {
 		// Check if the filename is this IWAD name.
 		// Only use supported missions:
 		if 1<<iwads[i].Fmission&mask == 0 {
-			goto _1
+			continue
 		}
 		// Check if it ends in this IWAD name.
 		if name == iwads[i].Fname {
 			mission = iwads[i].Fmission
 			break
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 	return mission
 }
