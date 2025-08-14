@@ -20,6 +20,9 @@ import (
 	"unsafe"
 )
 
+// Wad is a wad file to load
+var Wad fs.File
+
 type DoomFrontend interface {
 	DrawFrame(img *image.RGBA)
 	SetTitle(title string)
@@ -42951,18 +42954,30 @@ var fd int
 func w_AddFile(filename string) fs.File {
 	var fileinfo []filelump_t
 	var wad_file fs.File
+	var size int64
 	var length, newnumlumps int32
 	var startlump uint32
 	// open the file and add to directory
-	stat, err := os.Stat(filename)
-	if err != nil {
-		log.Printf("Error stating file %q: %v", filename, err)
-		return nil
-	}
-	wad_file = w_OpenFile(filename)
-	if wad_file == nil {
-		fprintf_ccgo(os.Stdout, " couldn't open %s\n", filename)
-		return nil
+	if Wad == nil {
+		stat, err := os.Stat(filename)
+		if err != nil {
+			log.Printf("Error stating file %q: %v", filename, err)
+			return nil
+		}
+		size = stat.Size()
+		wad_file = w_OpenFile(filename)
+		if wad_file == nil {
+			fprintf_ccgo(os.Stdout, " couldn't open %s\n", filename)
+			return nil
+		}
+	} else {
+		stat, err := Wad.Stat()
+		if err != nil {
+			log.Printf("Error stating file %q: %v", filename, err)
+			return nil
+		}
+		size = stat.Size()
+		wad_file = Wad
 	}
 	newnumlumps = int32(numlumps)
 	if !strings.EqualFold(filepath.Ext(filename), ".wad") {
@@ -42973,7 +42988,7 @@ func w_AddFile(filename string) fs.File {
 		// here, as it would appear on disk.
 		fileinfo = make([]filelump_t, 1)
 		fileinfo[0].Ffilepos = 0
-		fileinfo[0].Fsize = int32(stat.Size())
+		fileinfo[0].Fsize = int32(size)
 		// Name the lump after the base of the filename (without the
 		// extension).
 		m_ExtractFileBase(filename, fileinfo[0].Fname[:])
