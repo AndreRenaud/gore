@@ -5226,6 +5226,7 @@ func d_IdentifyVersion() {
 		// Doom 2 of some kind.
 		gamemode = commercial
 		// We can manually override the gamemission that we got from the
+		// We can manually override the gamemission that we got from the
 		// IWAD detection code. This allows us to eg. play Plutonia 2
 		// with Freedoom and get the right level names.
 		//!
@@ -21261,6 +21262,9 @@ func m_MakeDirectory(path string) {
 // Check if a file exists
 
 func m_FileExists(filename string) boolean {
+	if Wad != nil {
+		return 1
+	}
 	if _, err := os.Stat(filename); err == nil {
 		return 1
 	}
