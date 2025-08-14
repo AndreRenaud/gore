@@ -37050,7 +37050,7 @@ func r_SortVisSprites() {
 	bp := &vissprite_t{}
 	var best, ds *vissprite_t
 	var bestscale fixed_t
-	var count, i int32
+	var count int32
 	count = int32(vissprite_n)
 	bp.Fprev = bp
 	bp.Fnext = bp
@@ -37077,11 +37077,7 @@ func r_SortVisSprites() {
 	// pull the vissprites out by scale
 	vsprsortedhead.Fprev = &vsprsortedhead
 	vsprsortedhead.Fnext = &vsprsortedhead
-	i = 0
-	for {
-		if i >= count {
-			break
-		}
+	for range count {
 		bestscale = int32(INT_MAX17)
 		best = (*bp).Fnext
 		ds = (*bp).Fnext
@@ -37104,10 +37100,6 @@ func r_SortVisSprites() {
 		best.Fprev = vsprsortedhead.Fprev
 		vsprsortedhead.Fprev.Fnext = best
 		vsprsortedhead.Fprev = best
-		goto _4
-	_4:
-		;
-		i++
 	}
 }
 
@@ -37122,20 +37114,12 @@ var cliptop [320]int16
 func r_DrawSprite(spr *vissprite_t) {
 	var ds int
 	var lowscale, scale fixed_t
-	var r1, r2, silhouette, x, v4, v5 int32
+	var r1, r2, silhouette, v4, v5 int32
 	var v2 int16
-	x = spr.Fx1
-	for {
-		if !(x <= spr.Fx2) {
-			break
-		}
+	for x := spr.Fx1; x <= spr.Fx2; x++ {
 		v2 = int16(-2)
 		cliptop[x] = v2
 		clipbot[x] = v2
-		goto _1
-	_1:
-		;
-		x++
 	}
 	// Scan drawsegs from end to start for obscuring segs.
 	// The first drawseg that has a greater scale
@@ -37187,53 +37171,29 @@ func r_DrawSprite(spr *vissprite_t) {
 		}
 		if silhouette == 1 {
 			// bottom sil
-			x = r1
-			for {
-				if !(x <= r2) {
-					break
-				}
+			for x := r1; x <= r2; x++ {
 				if int32(clipbot[x]) == -2 {
 					clipbot[x] = *(*int16)(unsafe.Pointer(drawsegs[ds].Fsprbottomclip + uintptr(x)*2))
 				}
-				goto _6
-			_6:
-				;
-				x++
 			}
 		} else {
 			if silhouette == 2 {
 				// top sil
-				x = r1
-				for {
-					if !(x <= r2) {
-						break
-					}
+				for x := r1; x <= r2; x++ {
 					if int32(cliptop[x]) == -2 {
 						cliptop[x] = *(*int16)(unsafe.Pointer(drawsegs[ds].Fsprtopclip + uintptr(x)*2))
 					}
-					goto _7
-				_7:
-					;
-					x++
 				}
 			} else {
 				if silhouette == 3 {
 					// both
-					x = r1
-					for {
-						if !(x <= r2) {
-							break
-						}
+					for x := r1; x <= r2; x++ {
 						if int32(clipbot[x]) == -2 {
 							clipbot[x] = *(*int16)(unsafe.Pointer(drawsegs[ds].Fsprbottomclip + uintptr(x)*2))
 						}
 						if int32(cliptop[x]) == -2 {
 							cliptop[x] = *(*int16)(unsafe.Pointer(drawsegs[ds].Fsprtopclip + uintptr(x)*2))
 						}
-						goto _8
-					_8:
-						;
-						x++
 					}
 				}
 			}
@@ -37245,21 +37205,13 @@ func r_DrawSprite(spr *vissprite_t) {
 	}
 	// all clipping has been performed, so draw the sprite
 	// check for unclipped columns
-	x = spr.Fx1
-	for {
-		if !(x <= spr.Fx2) {
-			break
-		}
+	for x := spr.Fx1; x <= spr.Fx2; x++ {
 		if int32(clipbot[x]) == -2 {
 			clipbot[x] = int16(viewheight)
 		}
 		if int32(cliptop[x]) == -2 {
 			cliptop[x] = int16(-1)
 		}
-		goto _9
-	_9:
-		;
-		x++
 	}
 	mfloorclip = uintptr(unsafe.Pointer(&clipbot))
 	mceilingclip = uintptr(unsafe.Pointer(&cliptop))
@@ -38872,7 +38824,7 @@ func st_refreshBackground() {
 //	// Respond to keyboard input events,
 //	//  intercept cheats.
 func st_Responder(ev *event_t) boolean {
-	var epsd, i, map1, musnum int32
+	var epsd, map1, musnum int32
 	var v6, v8 gamemission_t
 	var v10 bool
 	// Filter automap on/off.
@@ -38903,65 +38855,25 @@ func st_Responder(ev *event_t) boolean {
 					if cht_CheckCheat(&cheat_ammonokey, int8(ev.Fdata2)) != 0 {
 						plyr.Farmorpoints = DEH_DEFAULT_IDFA_ARMOR
 						plyr.Farmortype = DEH_DEFAULT_IDFA_ARMOR_CLASS
-						i = 0
-						for {
-							if i >= NUMWEAPONS {
-								break
-							}
+						for i := range NUMWEAPONS {
 							plyr.Fweaponowned[i] = 1
-							goto _1
-						_1:
-							;
-							i++
 						}
-						i = 0
-						for {
-							if i >= NUMAMMO {
-								break
-							}
+						for i := range NUMAMMO {
 							plyr.Fammo[i] = plyr.Fmaxammo[i]
-							goto _2
-						_2:
-							;
-							i++
 						}
 						plyr.Fmessage = "Ammo (no keys) Added"
 					} else {
 						if cht_CheckCheat(&cheat_ammo, int8(ev.Fdata2)) != 0 {
 							plyr.Farmorpoints = DEH_DEFAULT_IDKFA_ARMOR
 							plyr.Farmortype = DEH_DEFAULT_IDKFA_ARMOR_CLASS
-							i = 0
-							for {
-								if i >= NUMWEAPONS {
-									break
-								}
+							for i := range NUMWEAPONS {
 								plyr.Fweaponowned[i] = 1
-								goto _3
-							_3:
-								;
-								i++
 							}
-							i = 0
-							for {
-								if i >= NUMAMMO {
-									break
-								}
+							for i := range NUMAMMO {
 								plyr.Fammo[i] = plyr.Fmaxammo[i]
-								goto _4
-							_4:
-								;
-								i++
 							}
-							i = 0
-							for {
-								if i >= NUMCARDS {
-									break
-								}
+							for i := range NUMCARDS {
 								plyr.Fcards[i] = 1
-								goto _5
-							_5:
-								;
-								i++
 							}
 							plyr.Fmessage = "Very Happy Ammo Added"
 						} else {
@@ -39025,11 +38937,7 @@ func st_Responder(ev *event_t) boolean {
 					}
 				}
 				// 'behold?' power-up cheats
-				i = 0
-				for {
-					if i >= 6 {
-						break
-					}
+				for i := range int32(6) {
 					if cht_CheckCheat(&cheat_powerup[i], int8(ev.Fdata2)) != 0 {
 						if plyr.Fpowers[i] == 0 {
 							p_GivePower(plyr, i)
@@ -39042,10 +38950,6 @@ func st_Responder(ev *event_t) boolean {
 						}
 						plyr.Fmessage = "Power-up Toggled"
 					}
-					goto _11
-				_11:
-					;
-					i++
 				}
 				// 'behold' power-up menu
 				if cht_CheckCheat(&cheat_powerup[6], int8(ev.Fdata2)) != 0 {
@@ -39151,19 +39055,11 @@ func st_updateFaceWidget() {
 		if plyr.Fbonuscount != 0 {
 			// picking up bonus
 			doevilgrin = 0
-			i = 0
-			for {
-				if i >= NUMWEAPONS {
-					break
-				}
+			for i := range NUMWEAPONS {
 				if oldweaponsowned[i] != plyr.Fweaponowned[i] {
 					doevilgrin = 1
 					oldweaponsowned[i] = plyr.Fweaponowned[i]
 				}
-				goto _1
-			_1:
-				;
-				i++
 			}
 			if doevilgrin != 0 {
 				// evil grin if just picked up weapon
@@ -39263,7 +39159,7 @@ var lastattackdown int32 = -1
 var priority int32
 
 func st_updateWidgets() {
-	var i, v2 int32
+	var v2 int32
 	// must redirect the pointer if the ready weapon has changed.
 	//  if (w_ready.data != plyr->readyweapon)
 	//  {
@@ -39287,11 +39183,7 @@ func st_updateWidgets() {
 	// refresh weapon change
 	//  }
 	// update keycard multiple widgets
-	i = 0
-	for {
-		if i >= 3 {
-			break
-		}
+	for i := range int32(3) {
 		if plyr.Fcards[i] != 0 {
 			v2 = i
 		} else {
@@ -39301,10 +39193,6 @@ func st_updateWidgets() {
 		if plyr.Fcards[i+3] != 0 {
 			keyboxes[i] = i + 3
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 	// refresh everything if this is him coming back to life
 	st_updateFaceWidget()
@@ -39315,20 +39203,12 @@ func st_updateWidgets() {
 	// used by w_frags widget
 	st_fragson = booluint32(deathmatch != 0 && st_statusbaron != 0)
 	st_fragscount = 0
-	i = 0
-	for {
-		if i >= MAXPLAYERS {
-			break
-		}
+	for i := range int32(MAXPLAYERS) {
 		if i != consoleplayer {
 			st_fragscount += plyr.Ffrags[i]
 		} else {
 			st_fragscount -= plyr.Ffrags[i]
 		}
-		goto _3
-	_3:
-		;
-		i++
 	}
 }
 
@@ -39449,55 +39329,31 @@ func st_Drawer(fullscreen boolean, refresh boolean) {
 // the variable they use, invoking the specified callback function.
 
 func st_loadUnloadGraphics(callback func(string, **patch_t)) {
-	var facenum, i, j int32
+	var facenum int32
 	// Load the numbers, tall and short
-	i = 0
-	for {
-		if i >= 10 {
-			break
-		}
+	for i := range 10 {
 		bp := fmt.Sprintf("STTNUM%d", i)
 		callback(bp, &tallnum[i])
 		bp = fmt.Sprintf("STYSNUM%d", i)
 		callback(bp, &shortnum[i])
-		goto _1
-	_1:
-		;
-		i++
 	}
 	// Load percent key.
 	//Note: why not load STMINUS here, too?
 	callback("STTPRCNT", &tallpercent)
 	// key cards
-	i = 0
-	for {
-		if i >= NUMCARDS {
-			break
-		}
+	for i := range NUMCARDS {
 		name := fmt.Sprintf("STKEYS%d", i)
 		callback(name, &keys[i])
-		goto _2
-	_2:
-		;
-		i++
 	}
 	// arms background
 	callback("STARMS", &armsbg)
 	// arms ownership widgets
-	i = 0
-	for {
-		if i >= 6 {
-			break
-		}
+	for i := range 6 {
 		name := fmt.Sprintf("STGNUM%d", i+2)
 		// gray #
 		callback(name, &arms[i][0])
 		// yellow #
 		arms[i][1] = shortnum[i+2]
-		goto _3
-	_3:
-		;
-		i++
 	}
 	// face backgrounds for different color players
 	name := fmt.Sprintf("STFB%d", consoleplayer)
@@ -39506,23 +39362,11 @@ func st_loadUnloadGraphics(callback func(string, **patch_t)) {
 	callback("STBAR", &sbar)
 	// face states
 	facenum = 0
-	i = 0
-	for {
-		if i >= st_NUMPAINFACES {
-			break
-		}
-		j = 0
-		for {
-			if j >= st_NUMSTRAIGHTFACES {
-				break
-			}
+	for i := range st_NUMPAINFACES {
+		for j := range st_NUMSTRAIGHTFACES {
 			name := fmt.Sprintf("STFST%d%d", i, j)
 			callback(name, &faces[facenum])
 			facenum++
-			goto _5
-		_5:
-			;
-			j++
 		}
 		name := fmt.Sprintf("STFTR%d0", i) // turn right
 		callback(name, &faces[facenum])
@@ -39539,10 +39383,6 @@ func st_loadUnloadGraphics(callback func(string, **patch_t)) {
 		name = fmt.Sprintf("STFKILL%d", i) // pissed off
 		callback(name, &faces[facenum])
 		facenum++
-		goto _4
-	_4:
-		;
-		i++
 	}
 	callback("STFGOD0", &faces[facenum])
 	facenum++
@@ -39564,34 +39404,17 @@ func st_loadData() {
 }
 
 func st_initData() {
-	var i int32
 	st_firsttime = 1
 	plyr = &players[consoleplayer]
 	st_statusbaron = 1
 	st_faceindex = 0
 	st_palette = -1
 	st_oldhealth = -1
-	i = 0
-	for {
-		if i >= NUMWEAPONS {
-			break
-		}
+	for i := range NUMWEAPONS {
 		oldweaponsowned[i] = plyr.Fweaponowned[i]
-		goto _2
-	_2:
-		;
-		i++
 	}
-	i = 0
-	for {
-		if i >= 3 {
-			break
-		}
+	for i := range keyboxes {
 		keyboxes[i] = -1
-		goto _3
-	_3:
-		;
-		i++
 	}
 	stlib_init()
 }
@@ -39716,7 +39539,7 @@ var mus_playing *musicinfo_t
 //
 
 func s_Init(sfxVolume int32, musicVolume int32) {
-	var i, v3 int32
+	var v3 int32
 	i_PrecacheSounds(S_sfx[:])
 	s_SetSfxVolume(sfxVolume)
 	s_SetMusicVolume(musicVolume)
@@ -39727,18 +39550,10 @@ func s_Init(sfxVolume int32, musicVolume int32) {
 	// no sounds are playing, and they are not mus_paused
 	mus_paused = 0
 	// Note that sounds have not been cached (yet).
-	i = 1
-	for {
-		if i >= NUMSFX {
-			break
-		}
+	for i := 1; i < NUMSFX; i++ {
 		v3 = -1
 		S_sfx[i].Fusefulness = v3
 		S_sfx[i].Flumpnum = v3
-		goto _2
-	_2:
-		;
-		i++
 	}
 	i_AtExit(s_Shutdown, 1)
 }
@@ -39749,7 +39564,6 @@ func s_Shutdown() {
 }
 
 func s_StopChannel(cnum int32) {
-	var i int32
 	c := &channels[cnum]
 	if c.Fsfxinfo != nil {
 		// stop the sound playing
@@ -39757,18 +39571,10 @@ func s_StopChannel(cnum int32) {
 			i_StopSound(c.Fhandle)
 		}
 		// check to see if other channels are playing the sound
-		i = 0
-		for {
-			if i >= snd_channels {
-				break
-			}
+		for i := range snd_channels {
 			if cnum != i && c.Fsfxinfo == channels[i].Fsfxinfo {
 				break
 			}
-			goto _1
-		_1:
-			;
-			i++
 		}
 		// degrade usefulness of sound data
 		c.Fsfxinfo.Fusefulness--
@@ -39783,22 +39589,14 @@ func s_StopChannel(cnum int32) {
 //
 
 func s_Start() {
-	var cnum, mnum int32
+	var mnum int32
 	var spmus [9]int32
 	// kill all playing sounds at start of level
 	//  (trust me - a good idea)
-	cnum = 0
-	for {
-		if cnum >= snd_channels {
-			break
-		}
+	for cnum := range snd_channels {
 		if channels[cnum].Fsfxinfo != nil {
 			s_StopChannel(cnum)
 		}
-		goto _1
-	_1:
-		;
-		cnum++
 	}
 	// start new music for the level
 	mus_paused = 0
@@ -39826,20 +39624,11 @@ func s_Start() {
 }
 
 func s_StopSound(origin *degenmobj_t) {
-	var cnum int32
-	cnum = 0
-	for {
-		if cnum >= snd_channels {
-			break
-		}
+	for cnum := range snd_channels {
 		if channels[cnum].Fsfxinfo != nil && channels[cnum].Forigin == origin {
 			s_StopChannel(cnum)
 			break
 		}
-		goto _1
-	_1:
-		;
-		cnum++
 	}
 }
 
@@ -39851,11 +39640,7 @@ func s_StopSound(origin *degenmobj_t) {
 func s_GetChannel(origin *degenmobj_t, sfxinfo *sfxinfo_t) int32 {
 	var cnum int32
 	// Find an open channel
-	cnum = 0
-	for {
-		if cnum >= snd_channels {
-			break
-		}
+	for cnum = range snd_channels {
 		if channels[cnum].Fsfxinfo == nil {
 			break
 		} else {
@@ -39864,26 +39649,14 @@ func s_GetChannel(origin *degenmobj_t, sfxinfo *sfxinfo_t) int32 {
 				break
 			}
 		}
-		goto _1
-	_1:
-		;
-		cnum++
 	}
 	// None available
 	if cnum == snd_channels {
 		// Look for lower priority
-		cnum = 0
-		for {
-			if cnum >= snd_channels {
-				break
-			}
+		for cnum = range snd_channels {
 			if channels[cnum].Fsfxinfo.Fpriority >= sfxinfo.Fpriority {
 				break
 			}
-			goto _2
-		_2:
-			;
-			cnum++
 		}
 		if cnum == snd_channels {
 			// FUCK!  No lower priority.  Sorry, Charlie.
@@ -40026,14 +39799,10 @@ func s_ResumeSound() {
 
 func s_UpdateSounds(listener *degenmobj_t) {
 	var volume, channel int32
-	var audible, cnum int32
+	var audible int32
 	var sfx *sfxinfo_t
 	i_UpdateSound()
-	cnum = 0
-	for {
-		if cnum >= snd_channels {
-			break
-		}
+	for cnum := range snd_channels {
 		c := &channels[cnum]
 		sfx = c.Fsfxinfo
 		if sfx != nil {
@@ -40045,7 +39814,7 @@ func s_UpdateSounds(listener *degenmobj_t) {
 					volume += sfx.Fvolume
 					if volume < 1 {
 						s_StopChannel(cnum)
-						goto _1
+						continue
 					} else {
 						if volume > snd_SfxVolume {
 							volume = snd_SfxVolume
@@ -40069,10 +39838,6 @@ func s_UpdateSounds(listener *degenmobj_t) {
 				s_StopChannel(cnum)
 			}
 		}
-		goto _1
-	_1:
-		;
-		cnum++
 	}
 }
 
@@ -41124,18 +40889,13 @@ func wi_drawOnLnode(n int32, c []*patch_t) {
 
 func wi_initAnimatedBack() {
 	var a *anim_t1
-	var i int32
 	if gamemode == commercial {
 		return
 	}
 	if wbs.Fepsd > 2 {
 		return
 	}
-	i = 0
-	for {
-		if i >= NUMANIMS[wbs.Fepsd] {
-			break
-		}
+	for i := range NUMANIMS[wbs.Fepsd] {
 		a = &anims1[wbs.Fepsd][i]
 		// init variables
 		a.Fctr = -1
@@ -41151,10 +40911,6 @@ func wi_initAnimatedBack() {
 				}
 			}
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 }
 
