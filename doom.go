@@ -35256,7 +35256,7 @@ func r_InitTables() {
 //	//
 func r_InitTextureMapping() {
 	var focallength fixed_t
-	var i, t, x int32
+	var t int32
 	// Use tangent table to generate viewangletox:
 	//  viewangletox will give the next greatest x
 	//  after the view angle.
@@ -35264,11 +35264,7 @@ func r_InitTextureMapping() {
 	// Calc focallength
 	//  so FIELDOFVIEW angles covers SCREENWIDTH.
 	focallength = fixedDiv(centerxfrac, finetangent[FINEANGLES/4+FIELDOFVIEW/2])
-	i = 0
-	for {
-		if i >= FINEANGLES/2 {
-			break
-		}
+	for i := 0; i < FINEANGLES/2; i++ {
 		if finetangent[i] > 1<<FRACBITS*2 {
 			t = -1
 		} else {
@@ -35287,35 +35283,19 @@ func r_InitTextureMapping() {
 			}
 		}
 		viewangletox[i] = t
-		goto _1
-	_1:
-		;
-		i++
 	}
 	// Scan viewangletox[] to generate xtoviewangle[]:
 	//  xtoviewangle will give the smallest view angle
 	//  that maps to x.
-	x = 0
-	for {
-		if !(x <= viewwidth) {
-			break
-		}
-		i = 0
+	for x := int32(0); x < viewwidth; x++ {
+		i := int32(0)
 		for viewangletox[i] > x {
 			i++
 		}
 		xtoviewangle[x] = uint32(i<<ANGLETOFINESHIFT - int32(ANG909))
-		goto _2
-	_2:
-		;
-		x++
 	}
 	// Take out the fencepost cases from viewangletox.
-	i = 0
-	for {
-		if i >= FINEANGLES/2 {
-			break
-		}
+	for i := range FINEANGLES / 2 {
 		t = fixedMul(finetangent[i], focallength)
 		t = centerx - t
 		if viewangletox[i] == -1 {
@@ -35325,10 +35305,6 @@ func r_InitTextureMapping() {
 				viewangletox[i] = viewwidth
 			}
 		}
-		goto _3
-	_3:
-		;
-		i++
 	}
 	clipangle = xtoviewangle[0]
 }
@@ -35340,20 +35316,12 @@ func r_InitTextureMapping() {
 //
 
 func r_InitLightTables() {
-	var i, j, level, scale, startmap int32
+	var level, scale, startmap int32
 	// Calculate the light levels to use
 	//  for each level / distance combination.
-	i = 0
-	for {
-		if i >= LIGHTLEVELS {
-			break
-		}
+	for i := range int32(LIGHTLEVELS) {
 		startmap = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS
-		j = 0
-		for {
-			if j >= MAXLIGHTZ {
-				break
-			}
+		for j := range int32(MAXLIGHTZ) {
 			scale = fixedDiv(SCREENWIDTH/2*(1<<FRACBITS), (j+1)<<LIGHTZSHIFT)
 			scale >>= LIGHTSCALESHIFT
 			level = startmap - scale/DISTMAP
@@ -35364,15 +35332,7 @@ func r_InitLightTables() {
 				level = NUMCOLORMAPS - 1
 			}
 			zlight[i][j] = colormaps[level*int32(256):]
-			goto _2
-		_2:
-			;
-			j++
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 }
 
@@ -35389,7 +35349,7 @@ func r_SetViewSize(blocks int32, detail int32) {
 //	//
 func r_ExecuteSetViewSize() {
 	var cosadj, dy fixed_t
-	var i, j, level, startmap int32
+	var level, startmap int32
 	setsizeneeded = 0
 	if setblocks == 11 {
 		scaledviewwidth = SCREENWIDTH
@@ -35424,56 +35384,24 @@ func r_ExecuteSetViewSize() {
 	pspritescale = 1 << FRACBITS * viewwidth / SCREENWIDTH
 	pspriteiscale = 1 << FRACBITS * SCREENWIDTH / viewwidth
 	// thing clipping
-	i = 0
-	for {
-		if i >= viewwidth {
-			break
-		}
+	for i := range viewwidth {
 		screenheightarray[i] = int16(viewheight)
-		goto _3
-	_3:
-		;
-		i++
 	}
 	// planes
-	i = 0
-	for {
-		if i >= viewheight {
-			break
-		}
+	for i := range viewheight {
 		dy = (i-viewheight/2)<<FRACBITS + 1<<FRACBITS/2
 		dy = xabs(dy)
 		yslope[i] = fixedDiv(viewwidth<<detailshift/2*(1<<FRACBITS), dy)
-		goto _4
-	_4:
-		;
-		i++
 	}
-	i = 0
-	for {
-		if i >= viewwidth {
-			break
-		}
+	for i := range viewwidth {
 		cosadj = xabs(finecosine[xtoviewangle[i]>>ANGLETOFINESHIFT])
 		distscale[i] = fixedDiv(1<<FRACBITS, cosadj)
-		goto _5
-	_5:
-		;
-		i++
 	}
 	// Calculate the light levels to use
 	//  for each level / scale combination.
-	i = 0
-	for {
-		if i >= LIGHTLEVELS {
-			break
-		}
+	for i := range int32(LIGHTLEVELS) {
 		startmap = (LIGHTLEVELS - 1 - i) * 2 * NUMCOLORMAPS / LIGHTLEVELS
-		j = 0
-		for {
-			if j >= MAXLIGHTSCALE {
-				break
-			}
+		for j := range int32(MAXLIGHTSCALE) {
 			level = startmap - j*SCREENWIDTH/(viewwidth<<detailshift)/DISTMAP
 			if level < 0 {
 				level = 0
@@ -35482,15 +35410,7 @@ func r_ExecuteSetViewSize() {
 				level = NUMCOLORMAPS - 1
 			}
 			scalelight[i][j] = colormaps[level*256:]
-			goto _7
-		_7:
-			;
-			j++
 		}
-		goto _6
-	_6:
-		;
-		i++
 	}
 }
 
@@ -35542,7 +35462,6 @@ func r_PointInSubsector(x fixed_t, y fixed_t) *subsector_t {
 //	// R_SetupFrame
 //	//
 func r_SetupFrame(player *player_t) {
-	var i int32
 	viewplayer = player
 	viewx = player.Fmo.Fx
 	viewy = player.Fmo.Fy
@@ -35554,16 +35473,8 @@ func r_SetupFrame(player *player_t) {
 	if player.Ffixedcolormap != 0 {
 		fixedcolormap = colormaps[player.Ffixedcolormap*int32(256):]
 		walllights = scalelightfixed
-		i = 0
-		for {
-			if i >= MAXLIGHTSCALE {
-				break
-			}
+		for i := range MAXLIGHTSCALE {
 			scalelightfixed[i] = fixedcolormap
-			goto _1
-		_1:
-			;
-			i++
 		}
 	} else {
 		fixedcolormap = nil
@@ -35673,19 +35584,10 @@ func r_MapPlane(y int32, x1 int32, x2 int32) {
 //	//
 func r_ClearPlanes() {
 	var angle angle_t
-	var i int32
 	// opening / clipping determination
-	i = 0
-	for {
-		if i >= viewwidth {
-			break
-		}
+	for i := range viewwidth {
 		floorclip[i] = int16(viewheight)
 		ceilingclip[i] = int16(-1)
-		goto _1
-	_1:
-		;
-		i++
 	}
 	lastvisplane_index = 0
 	lastopening = uintptr(unsafe.Pointer(&openings))
@@ -36451,7 +36353,6 @@ const INT_MAX17 = 2147483647
 //	// Local function for r_InitSprites.
 //	//
 func r_InstallSpriteLump(spritename string, lump int32, frame uint32, rotation uint32, flipped boolean) {
-	var r int32
 	if frame >= 29 || rotation > 8 {
 		i_Error("r_InstallSpriteLump: Bad frame characters in lump %d", lump)
 	}
@@ -36467,18 +36368,9 @@ func r_InstallSpriteLump(spritename string, lump int32, frame uint32, rotation u
 			i_Error("r_InitSprites: Sprite %s frame %c has rotations and a rot=0 lump", spritename, 'A'+frame)
 		}
 		sprtemp[frame].Frotate = 0
-		r = 0
-		for {
-			if r >= 8 {
-				break
-			}
-
+		for r := range 8 {
 			sprtemp[frame].Flump[r] = int16(lump - firstspritelump)
 			sprtemp[frame].Fflip[r] = uint8(flipped)
-			goto _1
-		_1:
-			;
-			r++
 		}
 		return
 	}
@@ -36514,7 +36406,7 @@ func r_InstallSpriteLump(spritename string, lump int32, frame uint32, rotation u
 //	// The rotation character can be 0 to signify no rotations.
 //	//
 func r_InitSpriteDefs(namelist []string) {
-	var end, frame, i, l, patched, rotation, start int32
+	var end, frame, l, patched, rotation, start int32
 	// count the number of sprite names
 	numsprites = int32(len(namelist))
 	if numsprites == 0 {
@@ -36526,11 +36418,7 @@ func r_InitSpriteDefs(namelist []string) {
 	// scan all the lump names for each of the names,
 	//  noting the highest frame letter.
 	// Just compare 4 characters as ints
-	i = 0
-	for {
-		if i >= numsprites {
-			break
-		}
+	for i := range numsprites {
 
 		spritename := namelist[i][:4]
 		for i := range sprtemp {
@@ -36571,68 +36459,30 @@ func r_InitSpriteDefs(namelist []string) {
 		// check the frames that were found for completeness
 		if maxframe == -1 {
 			sprites[i].Fnumframes = 0
-			goto _1
+			continue
 		}
 		maxframe++
-		frame = 0
-		for {
-			if frame >= maxframe {
-				break
-			}
+		for frame := range maxframe {
 			switch int32(sprtemp[frame].Frotate) {
 			case -1:
-				goto _4
+				// no rotations were found for that frame at all
+				i_Error("r_InitSprites: No patches found for %s frame %c", spritename, frame+'A')
+				break
 			case 0:
-				goto _5
+				break
 			case 1:
-				goto _6
+				// must have all 8 frames
+				for rotation := range 8 {
+					if int32(sprtemp[frame].Flump[rotation]) == -1 {
+						i_Error("r_InitSprites: Sprite %s frame %c is missing rotations", spritename, frame+'A')
+					}
+				}
 			}
-			goto _7
-		_4:
-			;
-			// no rotations were found for that frame at all
-			i_Error("r_InitSprites: No patches found for %s frame %c", spritename, frame+'A')
-			goto _7
-		_5:
-			;
-			// only the first rotation is needed
-			goto _7
-		_6:
-			;
-			// must have all 8 frames
-			rotation = 0
-		_10:
-			;
-			if rotation >= 8 {
-				goto _8
-			}
-			if int32(sprtemp[frame].Flump[rotation]) == -1 {
-				i_Error("r_InitSprites: Sprite %s frame %c is missing rotations", spritename, frame+'A')
-			}
-			goto _9
-		_9:
-			;
-			rotation++
-			goto _10
-			goto _8
-		_8:
-			;
-			goto _7
-		_7:
-			;
-			goto _3
-		_3:
-			;
-			frame++
 		}
 		// allocate space for the frames present and copy sprtemp to it
 		sprites[i].Fnumframes = maxframe
 		sprites[i].Fspriteframes = make([]spriteframe_t, maxframe)
 		copy(sprites[i].Fspriteframes, sprtemp[:maxframe])
-		goto _1
-	_1:
-		;
-		i++
 	}
 }
 
@@ -36643,17 +36493,8 @@ func r_InitSpriteDefs(namelist []string) {
 //	// Called at program start.
 //	//
 func r_InitSprites(namelist []string) {
-	var i int32
-	i = 0
-	for {
-		if i >= SCREENWIDTH {
-			break
-		}
+	for i := range SCREENWIDTH {
 		negonearray[i] = int16(-1)
-		goto _1
-	_1:
-		;
-		i++
 	}
 	r_InitSpriteDefs(namelist)
 }
@@ -37014,7 +36855,7 @@ func r_DrawPSprite(psp *pspdef_t) {
 //	// R_DrawPlayerSprites
 //	//
 func r_DrawPlayerSprites() {
-	var i, lightnum int32
+	var lightnum int32
 	// get light level
 	lightnum = int32(viewplayer.Fmo.Fsubsector.Fsector.Flightlevel)>>LIGHTSEGSHIFT + extralight
 	if lightnum < 0 {
@@ -37030,19 +36871,11 @@ func r_DrawPlayerSprites() {
 	mfloorclip = uintptr(unsafe.Pointer(&screenheightarray))
 	mceilingclip = uintptr(unsafe.Pointer(&negonearray))
 	// add all active psprites
-	i = 0
-	for {
-		if i >= NUMPSPRITES {
-			break
-		}
+	for i := range NUMPSPRITES {
 		psp := &viewplayer.Fpsprites[i]
 		if psp.Fstate != nil {
 			r_DrawPSprite(psp)
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 }
 
