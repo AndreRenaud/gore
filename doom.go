@@ -2652,18 +2652,14 @@ func am_addMark() {
 //	//
 func am_findMinMaxBoundaries() {
 	var a, b, v1, v2 fixed_t
-	var i, v4 int32
+	var v4 int32
 	v1 = INT_MAX1
 	min_y = v1
 	min_x = v1
 	v2 = -INT_MAX1
 	max_y = v2
 	max_x = v2
-	i = 0
-	for {
-		if i >= numvertexes {
-			break
-		}
+	for i := int32(0); i < numvertexes; i++ {
 		if vertexes[i].Fx < min_x {
 			min_x = vertexes[i].Fx
 		} else {
@@ -2678,10 +2674,6 @@ func am_findMinMaxBoundaries() {
 				max_y = vertexes[i].Fy
 			}
 		}
-		goto _3
-	_3:
-		;
-		i++
 	}
 	max_w = max_x - min_x
 	max_h = max_y - min_y
@@ -3572,7 +3564,7 @@ func am_Drawer() {
 		return
 	}
 	am_clearFB(BLACK)
-	if grid != 0 {
+	if grid {
 		am_drawGrid(6*16 + GRAYSRANGE/2)
 	}
 	am_drawWalls()
@@ -3713,8 +3705,6 @@ func init() {
 	}
 }
 
-const MAX_IWAD_DIRS = 128
-
 type iwad_t struct {
 	Fname        string
 	Fmission     gamemission_t
@@ -3809,17 +3799,10 @@ var iwads = [14]iwad_t{
 }
 
 // Array of locations to search for IWAD files
-//
-// "128 IWAD search directories should be enough for anybody".
-
-var iwad_dirs [128]string
-var num_iwad_dirs int32 = 0
+var iwad_dirs []string
 
 func addIWADDir(dir string) {
-	if num_iwad_dirs < MAX_IWAD_DIRS {
-		iwad_dirs[num_iwad_dirs] = dir
-		num_iwad_dirs++
-	}
+	iwad_dirs = append(iwad_dirs, dir)
 }
 
 // This is Windows-specific code that automatically finds the location
@@ -3914,18 +3897,13 @@ func buildIWADDirList() {
 //
 
 func d_FindWADByName(name string) string {
-	var i int32
 	// Absolute path?
 	if m_FileExists(name) != 0 {
 		return name
 	}
 	buildIWADDirList()
 	// Search through all IWAD paths for a file with the given name.
-	i = 0
-	for {
-		if i >= num_iwad_dirs {
-			break
-		}
+	for i := 0; i < len(iwad_dirs); i++ {
 		// As a special case, if this is in DOOMWADDIR or DOOMWADPATH,
 		// the "directory" may actually refer directly to an IWAD
 		// file.
@@ -3937,10 +3915,6 @@ func d_FindWADByName(name string) string {
 		if m_FileExists(path) != 0 {
 			return path
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 	// File not found
 	return ""
@@ -3970,7 +3944,7 @@ func d_TryFindWADByName(filename string) string {
 //
 
 func d_FindIWAD(mask int32, mission *gamemission_t) string {
-	var i, iwadparm int32
+	var iwadparm int32
 	var result string
 	var iwadfile string
 	// Check for the -iwad parameter
@@ -3993,16 +3967,11 @@ func d_FindIWAD(mask int32, mission *gamemission_t) string {
 		fprintf_ccgo(os.Stdout, "-iwad not specified, trying a few iwad names\n")
 		result = ""
 		buildIWADDirList()
-		i = 0
-		for {
-			if !(result == "" && i < num_iwad_dirs) {
+		for i := 0; i < len(iwad_dirs); i++ {
+			result = searchDirectoryForIWAD(iwad_dirs[i], mask, mission)
+			if result != "" {
 				break
 			}
-			result = searchDirectoryForIWAD(iwad_dirs[i], mask, mission)
-			goto _1
-		_1:
-			;
-			i++
 		}
 	}
 	return result
@@ -4013,25 +3982,16 @@ func d_FindIWAD(mask int32, mission *gamemission_t) string {
 //
 
 func d_SaveGameIWADName(gamemission gamemission_t) string {
-	var i uint64
 	// Determine the IWAD name to use for savegames.
 	// This determines the directory the savegame files get put into.
 	//
 	// Note that we match on gamemission rather than on IWAD name.
 	// This ensures that doom1.wad and doom.wad saves are stored
 	// in the same place.
-	i = 0
-	for {
-		if i >= uint64(len(iwads)) {
-			break
-		}
+	for i := 0; i < len(iwads); i++ {
 		if gamemission == iwads[i].Fmission {
 			return iwads[i].Fname
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 	// Default fallback:
 	return "unknown.wad"
@@ -4151,7 +4111,7 @@ func buildNewTic() boolean {
 }
 
 func netUpdate() {
-	var i, newtics, nowtime int32
+	var newtics, nowtime int32
 	// If we are running with singletics (timing a demo), this
 	// is all done separately.
 	if singletics != 0 {
@@ -4169,18 +4129,10 @@ func netUpdate() {
 		newtics = 0
 	}
 	// build new ticcmds for console player
-	i = 0
-	for {
-		if i >= newtics {
-			break
-		}
+	for i := int32(0); i < newtics; i++ {
 		if buildNewTic() == 0 {
 			break
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 }
 
@@ -4233,25 +4185,16 @@ var frameskip [4]int32
 var oldnettics int32
 
 func oldNetSync() {
-	var i uint32
 	var keyplayer int32
 	keyplayer = -1
 	frameon++
 	// ideally maketic should be 1 - 3 tics above lowtic
 	// if we are consistantly slower, speed up time
-	i = 0
-	for {
-		if i >= NET_MAXPLAYERS {
-			break
-		}
+	for i := 0; i < NET_MAXPLAYERS; i++ {
 		if local_playeringame[i] != 0 {
 			keyplayer = int32(i)
 			break
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 	if keyplayer < 0 {
 		// If there are no players, we can never advance anyway
@@ -4276,22 +4219,13 @@ func oldNetSync() {
 // Returns true if there are players in the game:
 
 func playersInGame() boolean {
-	var i uint32
 	var result boolean
 	result = 0
 	// If we are connected to a server, check if there are any players
 	// in the game.
 	if net_client_connected != 0 {
-		i = 0
-		for {
-			if i >= NET_MAXPLAYERS {
-				break
-			}
+		for i := 0; i < NET_MAXPLAYERS; i++ {
 			result = booluint32(result != 0 || local_playeringame[i] != 0)
-			goto _1
-		_1:
-			;
-			i++
 		}
 	}
 	// Whether single or multi-player, unless we are running as a drone,
@@ -4306,21 +4240,12 @@ func playersInGame() boolean {
 // the duplicate ticcmds.
 
 func ticdupSquash(set *ticcmd_set_t) {
-	var i uint32
-	i = 0
-	for {
-		if i >= NET_MAXPLAYERS {
-			break
-		}
+	for i := 0; i < NET_MAXPLAYERS; i++ {
 		cmd := &set.Fcmds[i]
 		cmd.Fchatchar = 0
 		if int32(cmd.Fbuttons)&bt_SPECIAL != 0 {
 			cmd.Fbuttons = 0
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 }
 
@@ -6911,7 +6836,7 @@ func wipe_exitColorXForm(width int32, height int32, ticks int32) int32 {
 var y_screen []int32
 
 func wipe_initMelt(width int32, height int32, ticks int32) (r1 int32) {
-	var i, r int32
+	var r int32
 	// copy start screen to main screen
 	copy(wipe_scr, wipe_scr_start)
 	// makes this wipe faster (in theory)
@@ -6922,11 +6847,7 @@ func wipe_initMelt(width int32, height int32, ticks int32) (r1 int32) {
 	// (y<0 => not ready to scroll yet)
 	y_screen = make([]int32, width)
 	y_screen[0] = -(m_Random() % 16)
-	i = 1
-	for {
-		if i >= width {
-			break
-		}
+	for i := int32(1); i < width; i++ {
 		r = m_Random()%3 - 1
 		y_screen[i] = y_screen[i-1] + r
 		if y_screen[i] > 0 {
@@ -6936,10 +6857,6 @@ func wipe_initMelt(width int32, height int32, ticks int32) (r1 int32) {
 				y_screen[i] = -15
 			}
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 	return 0
 }
@@ -6947,7 +6864,7 @@ func wipe_initMelt(width int32, height int32, ticks int32) (r1 int32) {
 func wipe_doMelt(width int32, height int32, ticks int32) int32 {
 	var d, s int32
 	var done boolean
-	var dy, i, idx, j, v1, v3 int32
+	var dy, idx, v1, v3 int32
 	done = 1
 	width /= 2
 	for {
@@ -6956,11 +6873,7 @@ func wipe_doMelt(width int32, height int32, ticks int32) int32 {
 		if v1 == 0 {
 			break
 		}
-		i = 0
-		for {
-			if i >= width {
-				break
-			}
+		for i := int32(0); i < width; i++ {
 			if y_screen[i] < 0 {
 				y_screen[i]++
 				done = 0
@@ -6978,45 +6891,25 @@ func wipe_doMelt(width int32, height int32, ticks int32) int32 {
 					s = (i*height + y_screen[i]) * 2
 					d = (y_screen[i]*width + i) * 2
 					idx = 0
-					j = dy
-					for {
-						if j == 0 {
-							break
-						}
+					for j := dy; j > 0; j-- {
 						wipe_scr[d+idx*2] = wipe_scr_end[s]
 						wipe_scr[d+idx*2+1] = wipe_scr_end[s+1]
 						s += 2
 						idx += width
-						goto _4
-					_4:
-						;
-						j--
 					}
 					y_screen[i] += dy
 					s = (i * height) * 2
 					d = (y_screen[i]*width + i) * 2
 					idx = 0
-					j = height - y_screen[i]
-					for {
-						if j == 0 {
-							break
-						}
+					for j := height - y_screen[i]; j > 0; j-- {
 						wipe_scr[d+idx*2] = wipe_scr_start[s]
 						wipe_scr[d+idx*2+1] = wipe_scr_start[s+1]
 						s += 2
 						idx += width
-						goto _6
-					_6:
-						;
-						j--
 					}
 					done = 0
 				}
 			}
-			goto _2
-		_2:
-			;
-			i++
 		}
 	}
 	return int32(done)
@@ -7269,18 +7162,10 @@ func g_NextWeapon(direction int32) weapontype_t {
 	} else {
 		weapon = players[consoleplayer].Fpendingweapon
 	}
-	i = 0
-	for {
-		if i >= int32(len(weapon_order_table)) {
-			break
-		}
+	for i = 0; i < int32(len(weapon_order_table)); i++ {
 		if weapon_order_table[i].Fweapon == weapon {
 			break
 		}
-		goto _1
-	_1:
-		;
-		i++
 	}
 	// Switch weapon. Don't loop forever.
 	start_i = i
