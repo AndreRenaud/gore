@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"hash"
+	"hash/fnv"
 	"image"
 	"image/color"
 	"io"
@@ -20,8 +21,12 @@ import (
 	"unsafe"
 )
 
-// Wad is a wad file to load
-var Wad fs.File
+var vfs fs.FS
+
+// SetVirtualFileSystem sets the virtual file system
+func SetVirtualFileSystem(a fs.FS) {
+	vfs = a
+}
 
 type DoomFrontend interface {
 	DrawFrame(img *image.RGBA)
@@ -21262,8 +21267,13 @@ func m_MakeDirectory(path string) {
 // Check if a file exists
 
 func m_FileExists(filename string) boolean {
-	if Wad != nil {
-		return 1
+	if vfs != nil {
+		file, err := vfs.Open(filename)
+		if file != nil && err == nil {
+			file.Close()
+			return 1
+		}
+		return 0
 	}
 	if _, err := os.Stat(filename); err == nil {
 		return 1
@@ -42943,8 +42953,7 @@ func extendLumpInfo(newnumlumps int32) {
 // LUMP BASED ROUTINES.
 //
 // Stop go garbage collecting these
-var wad_files = map[int]fs.File{}
-var fd int
+var wad_files = map[uintptr]fs.File{}
 
 //
 // W_AddFile
@@ -42961,8 +42970,9 @@ func w_AddFile(filename string) fs.File {
 	var size int64
 	var length, newnumlumps int32
 	var startlump uint32
+	var fd uintptr
 	// open the file and add to directory
-	if Wad == nil {
+	if vfs == nil {
 		stat, err := os.Stat(filename)
 		if err != nil {
 			log.Printf("Error stating file %q: %v", filename, err)
@@ -42974,14 +42984,39 @@ func w_AddFile(filename string) fs.File {
 			fprintf_ccgo(os.Stdout, " couldn't open %s\n", filename)
 			return nil
 		}
+		fd = wad_file.(*os.File).Fd()
 	} else {
-		stat, err := Wad.Stat()
+		wad, err := vfs.Open(filename)
+		if err != nil {
+			fprintf_ccgo(os.Stdout, " couldn't open %s\n", filename)
+			return nil
+		}
+		stat, err := wad.Stat()
 		if err != nil {
 			log.Printf("Error stating file %q: %v", filename, err)
 			return nil
 		}
 		size = stat.Size()
-		wad_file = Wad
+		wad_file = wad
+		{
+			wad, err := vfs.Open(filename)
+			if err != nil {
+				fprintf_ccgo(os.Stdout, " couldn't open %s\n", filename)
+				return nil
+			}
+			defer func() {
+				err := wad.Close()
+				if err != nil {
+					panic(err)
+				}
+			}()
+			hash := fnv.New32()
+			_, err = io.Copy(hash, wad)
+			if err != nil {
+				panic(err)
+			}
+			fd = uintptr(hash.Sum32())
+		}
 	}
 	newnumlumps = int32(numlumps)
 	if !strings.EqualFold(filepath.Ext(filename), ".wad") {
@@ -43028,7 +43063,6 @@ func w_AddFile(filename string) fs.File {
 	}
 	lumphash = nil
 	wad_files[fd] = wad_file
-	fd++
 	return wad_file
 }
 
