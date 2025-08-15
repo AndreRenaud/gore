@@ -5234,7 +5234,6 @@ func d_IdentifyVersion() {
 		// Doom 2 of some kind.
 		gamemode = commercial
 		// We can manually override the gamemission that we got from the
-		// We can manually override the gamemission that we got from the
 		// IWAD detection code. This allows us to eg. play Plutonia 2
 		// with Freedoom and get the right level names.
 		//!
@@ -42946,9 +42945,6 @@ func extendLumpInfo(newnumlumps int32) {
 }
 
 // LUMP BASED ROUTINES.
-//
-// Stop go garbage collecting these
-var wad_files = []fs.File{}
 
 //
 // W_AddFile
@@ -43021,7 +43017,6 @@ func w_AddFile(filename string) fs.File {
 		lump_p.Fname = fileinfo[i].Fname
 	}
 	lumphash = nil
-	wad_files = append(wad_files, wad_file)
 	return wad_file
 }
 
