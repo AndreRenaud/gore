@@ -127,6 +127,9 @@ func main() {
 		}
 	}()
 
+	// Called explicitly here to ensure `deadcode` check doesn't impact us
+	gore.SetVirtualFileSystem(os.DirFS("."))
+
 	defer gore.Stop()
 
 	gore.Run(frontend, os.Args[1:])

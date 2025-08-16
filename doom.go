@@ -44,7 +44,7 @@ func fsStat(name string) (fs.FileInfo, error) {
 }
 
 // SetVirtualFileSystem sets the virtual file system
-func SetVirtualFileSystem(a fs.StatFS) {
+func SetVirtualFileSystem(a fs.FS) {
 	vfs = a
 }
 
