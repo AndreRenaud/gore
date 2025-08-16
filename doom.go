@@ -20,20 +20,18 @@ import (
 	"unsafe"
 )
 
-var vfs fs.StatFS
+var vfs fs.FS
 
 func init() {
-	vfs = os.DirFS(".").(fs.StatFS)
-}
-
-// VFSAdapter adapts an fs for statfs
-type VFSAdapter struct {
-	fs.FS
+	vfs = os.DirFS(".")
 }
 
 // Stat is the stat function implemented with fs
-func (v VFSAdapter) Stat(name string) (fs.FileInfo, error) {
-	file, err := v.Open(name)
+func fsStat(name string) (fs.FileInfo, error) {
+	if statfs, ok := vfs.(fs.StatFS); ok {
+		return statfs.Stat(name)
+	}
+	file, err := vfs.Open(name)
 	if err != nil {
 		return nil, err
 	}
@@ -21288,7 +21286,7 @@ func m_MakeDirectory(path string) {
 // Check if a file exists
 
 func m_FileExists(filename string) boolean {
-	if _, err := vfs.Stat(filename); err == nil {
+	if _, err := fsStat(filename); err == nil {
 		return 1
 	}
 	return 0
@@ -42981,7 +42979,7 @@ func w_AddFile(filename string) fs.File {
 	var length, newnumlumps int32
 	var startlump uint32
 	// open the file and add to directory
-	stat, err := vfs.Stat(filename)
+	stat, err := fsStat(filename)
 	if err != nil {
 		log.Printf("Error stating file %q: %v", filename, err)
 		return nil
