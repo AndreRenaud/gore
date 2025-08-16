@@ -7,6 +7,7 @@ import (
 	"image"
 	"image/color"
 	"io"
+	"io/fs"
 	"log"
 	"math"
 	"os"
@@ -18,6 +19,36 @@ import (
 	"time"
 	"unsafe"
 )
+
+var vfs fs.StatFS
+
+func init() {
+	vfs = os.DirFS(".").(fs.StatFS)
+}
+
+// VFSAdapter adapts an fs for statfs
+type VFSAdapter struct {
+	fs.FS
+}
+
+// Stat is the stat function implemented with fs
+func (v VFSAdapter) Stat(name string) (fs.FileInfo, error) {
+	file, err := v.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	stat, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	return stat, nil
+}
+
+// SetVirtualFileSystem sets the virtual file system
+func SetVirtualFileSystem(a fs.StatFS) {
+	vfs = a
+}
 
 type DoomFrontend interface {
 	DrawFrame(img *image.RGBA)
@@ -2178,7 +2209,7 @@ const pastdest = 2
 
 type lumpinfo_t struct {
 	Fname     [8]byte
-	Fwad_file *os.File
+	Fwad_file fs.File
 	Fposition int32
 	Fsize     int32
 	Fcache    []byte
@@ -5186,7 +5217,7 @@ func d_SetGameDescription() {
 }
 
 func d_AddFile(filename string) boolean {
-	var handle *os.File
+	var handle fs.File
 	fprintf_ccgo(os.Stdout, " adding %s\n", filename)
 	handle = w_AddFile(filename)
 	return booluint32(handle != nil)
@@ -20719,7 +20750,7 @@ func m_MakeDirectory(path string) {
 // Check if a file exists
 
 func m_FileExists(filename string) boolean {
-	if _, err := os.Stat(filename); err == nil {
+	if _, err := vfs.Stat(filename); err == nil {
 		return 1
 	}
 	return 0
@@ -41368,9 +41399,9 @@ func wi_Start(wbstartstruct *wbstartstruct_t) {
 	}
 }
 
-var open_wadfiles []*os.File
+var open_wadfiles []fs.File
 
-func getFileNumber(handle *os.File) int32 {
+func getFileNumber(handle fs.File) int32 {
 	for i := 0; i < len(open_wadfiles); i++ {
 		if open_wadfiles[i] == handle {
 			return int32(i)
@@ -41399,8 +41430,8 @@ func w_Checksum(digest *sha1_digest_t) {
 	copy(digest[:], sha.Sum(nil))
 }
 
-func w_OpenFile(path string) *os.File {
-	f, err := os.Open(path)
+func w_OpenFile(path string) fs.File {
+	f, err := vfs.Open(path)
 	if err != nil {
 		log.Printf("Error opening file %q: %v", path, err)
 		return nil
@@ -41408,9 +41439,9 @@ func w_OpenFile(path string) *os.File {
 	return f
 }
 
-func w_Read(wad *os.File, offset uint32, buffer uintptr, buffer_len uint64) uint64 {
+func w_Read(wad fs.File, offset uint32, buffer uintptr, buffer_len uint64) uint64 {
 	buf := unsafe.Slice((*byte)(unsafe.Pointer(buffer)), buffer_len)
-	n, err := wad.ReadAt(buf, int64(offset))
+	n, err := wad.(io.ReaderAt).ReadAt(buf, int64(offset))
 	if err != nil {
 		log.Printf("Error reading from file: %v", err)
 	}
@@ -41497,9 +41528,6 @@ func extendLumpInfo(newnumlumps int32) {
 }
 
 // LUMP BASED ROUTINES.
-//
-// Stop go garbage collecting these
-var wad_files = map[uintptr]*os.File{}
 
 //
 // W_AddFile
@@ -41510,17 +41538,19 @@ var wad_files = map[uintptr]*os.File{}
 // Other files are single lumps with the base filename
 //  for the lump name.
 
-func w_AddFile(filename string) *os.File {
+func w_AddFile(filename string) fs.File {
 	var fileinfo []filelump_t
-	var wad_file *os.File
+	var wad_file fs.File
+	var size int64
 	var length, newnumlumps int32
 	var startlump uint32
 	// open the file and add to directory
-	stat, err := os.Stat(filename)
+	stat, err := vfs.Stat(filename)
 	if err != nil {
 		log.Printf("Error stating file %q: %v", filename, err)
 		return nil
 	}
+	size = stat.Size()
 	wad_file = w_OpenFile(filename)
 	if wad_file == nil {
 		fprintf_ccgo(os.Stdout, " couldn't open %s\n", filename)
@@ -41535,7 +41565,7 @@ func w_AddFile(filename string) *os.File {
 		// here, as it would appear on disk.
 		fileinfo = make([]filelump_t, 1)
 		fileinfo[0].Ffilepos = 0
-		fileinfo[0].Fsize = int32(stat.Size())
+		fileinfo[0].Fsize = int32(size)
 		// Name the lump after the base of the filename (without the
 		// extension).
 		m_ExtractFileBase(filename, fileinfo[0].Fname[:])
@@ -41570,7 +41600,6 @@ func w_AddFile(filename string) *os.File {
 		lump_p.Fname = fileinfo[i].Fname
 	}
 	lumphash = nil
-	wad_files[wad_file.Fd()] = wad_file
 	return wad_file
 }
 
@@ -41637,7 +41666,7 @@ func w_ReadLumpBytes(lump uint32) []byte {
 	}
 	l := &lumpinfo[lump]
 	res := make([]byte, l.Fsize)
-	if n, err := l.Fwad_file.ReadAt(res, int64(l.Fposition)); err != nil {
+	if n, err := l.Fwad_file.(io.ReaderAt).ReadAt(res, int64(l.Fposition)); err != nil {
 		log.Fatalf("w_ReadLumpBytes: error reading lump %d (%dB at %d): %v", lump, l.Fsize, l.Fposition, err)
 	} else if n < int(l.Fsize) {
 		log.Fatalf("w_ReadLumpBytes: only read %d of %d on lump %d", n, l.Fsize, lump)
