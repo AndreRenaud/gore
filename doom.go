@@ -26,6 +26,25 @@ func init() {
 	vfs = os.DirFS(".").(fs.StatFS)
 }
 
+// VFSAdapter adapts an fs for statfs
+type VFSAdapter struct {
+	fs.FS
+}
+
+// Stat is the stat function implemented with fs
+func (v VFSAdapter) Stat(name string) (fs.FileInfo, error) {
+	file, err := v.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	stat, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	return stat, nil
+}
+
 // SetVirtualFileSystem sets the virtual file system
 func SetVirtualFileSystem(a fs.StatFS) {
 	vfs = a
@@ -42848,7 +42867,7 @@ func w_Checksum(digest *sha1_digest_t) {
 }
 
 func w_OpenFile(path string) fs.File {
-	f, err := os.Open(path)
+	f, err := vfs.Open(path)
 	if err != nil {
 		log.Printf("Error opening file %q: %v", path, err)
 		return nil
