@@ -20,11 +20,7 @@ import (
 	"unsafe"
 )
 
-var vfs fs.FS
-
-func init() {
-	vfs = os.DirFS(".")
-}
+var vfs fs.FS = os.DirFS(".")
 
 // Stat is the stat function implemented with fs
 func fsStat(name string) (fs.FileInfo, error) {
@@ -2269,7 +2265,7 @@ type mline_t struct {
 	Fb mpoint_t
 }
 
-func init() {
+func arrows_init() {
 	player_arrow = [7]mline_t{
 		0: {
 			Fa: mpoint_t{
@@ -2599,14 +2595,6 @@ var markpoints [10]mpoint_t // where the points are
 var markpointnum int32 = 0  // next point to be assigned
 
 var followplayer int32 = 1 // specifies whether to follow the player around
-
-func init() {
-	cheat_amap = cheatseq_t{
-		Fsequence:      "iddt",
-		Fsequence_len:  5 - 1,
-		Fparameter_buf: [5]byte{},
-	}
-}
 
 var stopped int32 = 1
 
@@ -3604,7 +3592,7 @@ func am_Drawer() {
 	v_MarkRect(f_x, f_y, f_w, f_h)
 }
 
-func init() {
+func messages_init() {
 	gamemode = indetermined
 	gameversion = exe_final2
 	doom1_endmsg = [8]string{
@@ -3659,7 +3647,7 @@ func d_PopEvent() *event_t {
 	return result
 }
 
-func init() {
+func weapon_init() {
 	weaponinfo = [9]weaponinfo_t{
 		0: {
 			Fammo:       am_noammo,
@@ -4575,8 +4563,13 @@ const NoState = -1
 const StatCount = 0
 const ShowNextLoc = 1
 
-func init() {
+func variables_init() {
 	show_endoom = 1
+	wipegamestate = gs_DEMOSCREEN
+	precache = 1
+	vanilla_savegame_limit = 1
+	vanilla_demo_limit = 1
+	validcount = 1
 }
 
 // C documentation
@@ -4600,10 +4593,6 @@ func d_ProcessEvents() {
 		} // menu ate the event
 		g_Responder(ev)
 	}
-}
-
-func init() {
-	wipegamestate = gs_DEMOSCREEN
 }
 
 func d_Display() {
@@ -6352,7 +6341,7 @@ type castinfo_t struct {
 	Ftype1 mobjtype_t
 }
 
-func init() {
+func cast_init() {
 	castorder = [18]castinfo_t{
 		0: {
 			Fname:  "ZOMBIEMAN",
@@ -6982,25 +6971,17 @@ const SLOWTURNTICS = 6
 const TURBOTHRESHOLD = 50
 const VERSIONSIZE = 16
 
-func init() {
-	precache = 1
-}
-
-func init() {
+func move_init() {
 	forwardmove = [2]fixed_t{
 		0: 0x19,
 		1: 0x32,
 	}
-}
 
-func init() {
 	sidemove = [2]fixed_t{
 		0: 0x18,
 		1: 0x28,
 	}
-}
 
-func init() {
 	angleturn = [3]fixed_t{
 		0: 640,
 		1: 1280,
@@ -7101,14 +7082,6 @@ func setJoyButton(button int32, state bool) {
 
 var savegameslot int32
 var savedescription string
-
-func init() {
-	vanilla_savegame_limit = 1
-}
-
-func init() {
-	vanilla_demo_limit = 1
-}
 
 func weaponSelectable(weapon weapontype_t) boolean {
 	var v1 gamemission_t
@@ -7887,7 +7860,7 @@ func g_DoReborn(playernum int32) {
 	}
 }
 
-func init() {
+func pars_init() {
 	pars = [4][10]int32{
 		0: {},
 		1: {
@@ -7924,9 +7897,7 @@ func init() {
 			9: 135,
 		},
 	}
-}
 
-func init() {
 	cpars = [32]int32{
 		0:  30,
 		1:  90,
@@ -8956,7 +8927,7 @@ func hulib_eraseIText(it *hu_itext_t) {
 const HU_TITLEX = 0
 const QUEUESIZE = 128
 
-func init() {
+func names_init() {
 	chat_macros = [10]string{
 		0: "No",
 		1: "I'm ready to kick butt!",
@@ -8969,33 +8940,14 @@ func init() {
 		8: "I'll take care of it.",
 		9: "Yes",
 	}
-}
 
-func init() {
 	player_names = [4]string{
 		0: "Green: ",
 		1: "Indigo: ",
 		2: "Brown: ",
 		3: "Red: ",
 	}
-}
 
-var plr1 *player_t
-var w_title hu_textline_t
-var w_chat hu_itext_t
-var always_off boolean = 0
-var chat_dest [4]int8
-var w_inputbuffer [4]hu_itext_t
-
-var message_on boolean
-var message_nottobefuckedwith boolean
-
-var w_message hu_stext_t
-var message_counter int32
-
-var headsupactive = 0
-
-func init() {
 	mapnames = [45]string{
 		0:  "E1M1: Hangar",
 		1:  "E1M2: Nuclear Plant",
@@ -9043,9 +8995,7 @@ func init() {
 		43: "NEWLEVEL",
 		44: "NEWLEVEL",
 	}
-}
 
-func init() {
 	mapnames_commercial = [96]string{
 		0:  "level 1: entryway",
 		1:  "level 2: underhalls",
@@ -9144,7 +9094,168 @@ func init() {
 		94: "level 31: pharaoh",
 		95: "level 32: caribbean",
 	}
+
+	sprnames = []string{
+		0:   "TROO",
+		1:   "SHTG",
+		2:   "PUNG",
+		3:   "PISG",
+		4:   "PISF",
+		5:   "SHTF",
+		6:   "SHT2",
+		7:   "CHGG",
+		8:   "CHGF",
+		9:   "MISG",
+		10:  "MISF",
+		11:  "SAWG",
+		12:  "PLSG",
+		13:  "PLSF",
+		14:  "BFGG",
+		15:  "BFGF",
+		16:  "BLUD",
+		17:  "PUFF",
+		18:  "BAL1",
+		19:  "BAL2",
+		20:  "PLSS",
+		21:  "PLSE",
+		22:  "MISL",
+		23:  "BFS1",
+		24:  "BFE1",
+		25:  "BFE2",
+		26:  "TFOG",
+		27:  "IFOG",
+		28:  "PLAY",
+		29:  "POSS",
+		30:  "SPOS",
+		31:  "VILE",
+		32:  "FIRE",
+		33:  "FATB",
+		34:  "FBXP",
+		35:  "SKEL",
+		36:  "MANF",
+		37:  "FATT",
+		38:  "CPOS",
+		39:  "SARG",
+		40:  "HEAD",
+		41:  "BAL7",
+		42:  "BOSS",
+		43:  "BOS2",
+		44:  "SKUL",
+		45:  "SPID",
+		46:  "BSPI",
+		47:  "APLS",
+		48:  "APBX",
+		49:  "CYBR",
+		50:  "PAIN",
+		51:  "SSWV",
+		52:  "KEEN",
+		53:  "BBRN",
+		54:  "BOSF",
+		55:  "ARM1",
+		56:  "ARM2",
+		57:  "BAR1",
+		58:  "BEXP",
+		59:  "FCAN",
+		60:  "BON1",
+		61:  "BON2",
+		62:  "BKEY",
+		63:  "RKEY",
+		64:  "YKEY",
+		65:  "BSKU",
+		66:  "RSKU",
+		67:  "YSKU",
+		68:  "STIM",
+		69:  "MEDI",
+		70:  "SOUL",
+		71:  "PINV",
+		72:  "PSTR",
+		73:  "PINS",
+		74:  "MEGA",
+		75:  "SUIT",
+		76:  "PMAP",
+		77:  "PVIS",
+		78:  "CLIP",
+		79:  "AMMO",
+		80:  "ROCK",
+		81:  "BROK",
+		82:  "CELL",
+		83:  "CELP",
+		84:  "SHEL",
+		85:  "SBOX",
+		86:  "BPAK",
+		87:  "BFUG",
+		88:  "MGUN",
+		89:  "CSAW",
+		90:  "LAUN",
+		91:  "PLAS",
+		92:  "SHOT",
+		93:  "SGN2",
+		94:  "COLU",
+		95:  "SMT2",
+		96:  "GOR1",
+		97:  "POL2",
+		98:  "POL5",
+		99:  "POL4",
+		100: "POL3",
+		101: "POL1",
+		102: "POL6",
+		103: "GOR2",
+		104: "GOR3",
+		105: "GOR4",
+		106: "GOR5",
+		107: "SMIT",
+		108: "COL1",
+		109: "COL2",
+		110: "COL3",
+		111: "COL4",
+		112: "CAND",
+		113: "CBRA",
+		114: "COL6",
+		115: "TRE1",
+		116: "TRE2",
+		117: "ELEC",
+		118: "CEYE",
+		119: "FSKU",
+		120: "COL5",
+		121: "TBLU",
+		122: "TGRN",
+		123: "TRED",
+		124: "SMBT",
+		125: "SMGT",
+		126: "SMRT",
+		127: "HDB1",
+		128: "HDB2",
+		129: "HDB3",
+		130: "HDB4",
+		131: "HDB5",
+		132: "HDB6",
+		133: "POB1",
+		134: "POB2",
+		135: "BRS1",
+		136: "TLMP",
+		137: "TLP2",
+	}
+
+	skullName = [2]string{
+		0: "M_SKULL1",
+		1: "M_SKULL2",
+	}
 }
+
+var plr1 *player_t
+var w_title hu_textline_t
+var w_chat hu_itext_t
+var always_off boolean = 0
+var chat_dest [4]int8
+var w_inputbuffer [4]hu_itext_t
+
+var message_on boolean
+var message_nottobefuckedwith boolean
+
+var w_message hu_stext_t
+var message_counter int32
+
+var headsupactive = 0
 
 func hu_Init() {
 	var j int32
@@ -9437,149 +9548,6 @@ var altdown boolean
 
 var num_nobrainers int32
 
-func init() {
-	sprnames = []string{
-		0:   "TROO",
-		1:   "SHTG",
-		2:   "PUNG",
-		3:   "PISG",
-		4:   "PISF",
-		5:   "SHTF",
-		6:   "SHT2",
-		7:   "CHGG",
-		8:   "CHGF",
-		9:   "MISG",
-		10:  "MISF",
-		11:  "SAWG",
-		12:  "PLSG",
-		13:  "PLSF",
-		14:  "BFGG",
-		15:  "BFGF",
-		16:  "BLUD",
-		17:  "PUFF",
-		18:  "BAL1",
-		19:  "BAL2",
-		20:  "PLSS",
-		21:  "PLSE",
-		22:  "MISL",
-		23:  "BFS1",
-		24:  "BFE1",
-		25:  "BFE2",
-		26:  "TFOG",
-		27:  "IFOG",
-		28:  "PLAY",
-		29:  "POSS",
-		30:  "SPOS",
-		31:  "VILE",
-		32:  "FIRE",
-		33:  "FATB",
-		34:  "FBXP",
-		35:  "SKEL",
-		36:  "MANF",
-		37:  "FATT",
-		38:  "CPOS",
-		39:  "SARG",
-		40:  "HEAD",
-		41:  "BAL7",
-		42:  "BOSS",
-		43:  "BOS2",
-		44:  "SKUL",
-		45:  "SPID",
-		46:  "BSPI",
-		47:  "APLS",
-		48:  "APBX",
-		49:  "CYBR",
-		50:  "PAIN",
-		51:  "SSWV",
-		52:  "KEEN",
-		53:  "BBRN",
-		54:  "BOSF",
-		55:  "ARM1",
-		56:  "ARM2",
-		57:  "BAR1",
-		58:  "BEXP",
-		59:  "FCAN",
-		60:  "BON1",
-		61:  "BON2",
-		62:  "BKEY",
-		63:  "RKEY",
-		64:  "YKEY",
-		65:  "BSKU",
-		66:  "RSKU",
-		67:  "YSKU",
-		68:  "STIM",
-		69:  "MEDI",
-		70:  "SOUL",
-		71:  "PINV",
-		72:  "PSTR",
-		73:  "PINS",
-		74:  "MEGA",
-		75:  "SUIT",
-		76:  "PMAP",
-		77:  "PVIS",
-		78:  "CLIP",
-		79:  "AMMO",
-		80:  "ROCK",
-		81:  "BROK",
-		82:  "CELL",
-		83:  "CELP",
-		84:  "SHEL",
-		85:  "SBOX",
-		86:  "BPAK",
-		87:  "BFUG",
-		88:  "MGUN",
-		89:  "CSAW",
-		90:  "LAUN",
-		91:  "PLAS",
-		92:  "SHOT",
-		93:  "SGN2",
-		94:  "COLU",
-		95:  "SMT2",
-		96:  "GOR1",
-		97:  "POL2",
-		98:  "POL5",
-		99:  "POL4",
-		100: "POL3",
-		101: "POL1",
-		102: "POL6",
-		103: "GOR2",
-		104: "GOR3",
-		105: "GOR4",
-		106: "GOR5",
-		107: "SMIT",
-		108: "COL1",
-		109: "COL2",
-		110: "COL3",
-		111: "COL4",
-		112: "CAND",
-		113: "CBRA",
-		114: "COL6",
-		115: "TRE1",
-		116: "TRE2",
-		117: "ELEC",
-		118: "CEYE",
-		119: "FSKU",
-		120: "COL5",
-		121: "TBLU",
-		122: "TGRN",
-		123: "TRED",
-		124: "SMBT",
-		125: "SMGT",
-		126: "SMRT",
-		127: "HDB1",
-		128: "HDB2",
-		129: "HDB3",
-		130: "HDB4",
-		131: "HDB5",
-		132: "HDB6",
-		133: "POB1",
-		134: "POB2",
-		135: "BRS1",
-		136: "TLMP",
-		137: "TLP2",
-	}
-}
-
 // Original doom had function pointers relying on the base address of *mobj_t & *player_t being the same.
 // Go doesn't like that without a lot of unsafe casting, so we use a wrapper function to convert
 // the player function to a mobj function.
@@ -9596,7 +9564,7 @@ func mobjFuncToAction(f func(mo *mobj_t)) func(*mobj_t, *pspdef_t) {
 	}
 }
 
-func init() {
+func states_init() {
 	states = [967]state_t{
 		0: {
 			Ftics: -1,
@@ -15550,7 +15518,7 @@ func init() {
 	}
 }
 
-func init() {
+func mobj_init() {
 	mobjinfo = [137]mobjinfo_t{
 		0: {
 			Fdoomednum:    -1,
@@ -17259,34 +17227,1015 @@ func i_BindJoystickVariables() {
 // 1x scale doesn't really do any scaling: it just copies the buffer
 // a line at a time for when pitch != SCREENWIDTH (!native_surface)
 
-func init() {
+func sound_init() {
 	snd_samplerate = 44100
-}
-
-func init() {
 	snd_cachesize = 64 * 1024 * 1024
-}
-
-func init() {
 	snd_maxslicetime_ms = 28
-}
-
-func init() {
 	snd_musiccmd = ""
+	snd_musicdevice = SNDDEVICE_SB
+	snd_sfxdevice = SNDDEVICE_SB
+
+	sfxVolume = 8
+	musicVolume = 8
+	snd_channels = 8
+
+	quitsounds = [8]int32{
+		0: int32(sfx_pldeth),
+		1: int32(sfx_dmpain),
+		2: int32(sfx_popain),
+		3: int32(sfx_slop),
+		4: int32(sfx_telept),
+		5: int32(sfx_posit1),
+		6: int32(sfx_posit3),
+		7: int32(sfx_sgtatk),
+	}
+
+	quitsounds2 = [8]int32{
+		0: int32(sfx_vilact),
+		1: int32(sfx_getpow),
+		2: int32(sfx_boscub),
+		3: int32(sfx_slop),
+		4: int32(sfx_skeswg),
+		5: int32(sfx_kntdth),
+		6: int32(sfx_bspact),
+		7: int32(sfx_sgtatk),
+	}
+
+	S_music = [68]musicinfo_t{
+		0: {},
+		1: {
+			Fname: "e1m1",
+		},
+		2: {
+			Fname: "e1m2",
+		},
+		3: {
+			Fname: "e1m3",
+		},
+		4: {
+			Fname: "e1m4",
+		},
+		5: {
+			Fname: "e1m5",
+		},
+		6: {
+			Fname: "e1m6",
+		},
+		7: {
+			Fname: "e1m7",
+		},
+		8: {
+			Fname: "e1m8",
+		},
+		9: {
+			Fname: "e1m9",
+		},
+		10: {
+			Fname: "e2m1",
+		},
+		11: {
+			Fname: "e2m2",
+		},
+		12: {
+			Fname: "e2m3",
+		},
+		13: {
+			Fname: "e2m4",
+		},
+		14: {
+			Fname: "e2m5",
+		},
+		15: {
+			Fname: "e2m6",
+		},
+		16: {
+			Fname: "e2m7",
+		},
+		17: {
+			Fname: "e2m8",
+		},
+		18: {
+			Fname: "e2m9",
+		},
+		19: {
+			Fname: "e3m1",
+		},
+		20: {
+			Fname: "e3m2",
+		},
+		21: {
+			Fname: "e3m3",
+		},
+		22: {
+			Fname: "e3m4",
+		},
+		23: {
+			Fname: "e3m5",
+		},
+		24: {
+			Fname: "e3m6",
+		},
+		25: {
+			Fname: "e3m7",
+		},
+		26: {
+			Fname: "e3m8",
+		},
+		27: {
+			Fname: "e3m9",
+		},
+		28: {
+			Fname: "inter",
+		},
+		29: {
+			Fname: "intro",
+		},
+		30: {
+			Fname: "bunny",
+		},
+		31: {
+			Fname: "victor",
+		},
+		32: {
+			Fname: "introa",
+		},
+		33: {
+			Fname: "runnin",
+		},
+		34: {
+			Fname: "stalks",
+		},
+		35: {
+			Fname: "countd",
+		},
+		36: {
+			Fname: "betwee",
+		},
+		37: {
+			Fname: "doom",
+		},
+		38: {
+			Fname: "the_da",
+		},
+		39: {
+			Fname: "shawn",
+		},
+		40: {
+			Fname: "ddtblu",
+		},
+		41: {
+			Fname: "in_cit",
+		},
+		42: {
+			Fname: "dead",
+		},
+		43: {
+			Fname: "stlks2",
+		},
+		44: {
+			Fname: "theda2",
+		},
+		45: {
+			Fname: "doom2",
+		},
+		46: {
+			Fname: "ddtbl2",
+		},
+		47: {
+			Fname: "runni2",
+		},
+		48: {
+			Fname: "dead2",
+		},
+		49: {
+			Fname: "stlks3",
+		},
+		50: {
+			Fname: "romero",
+		},
+		51: {
+			Fname: "shawn2",
+		},
+		52: {
+			Fname: "messag",
+		},
+		53: {
+			Fname: "count2",
+		},
+		54: {
+			Fname: "ddtbl3",
+		},
+		55: {
+			Fname: "ampie",
+		},
+		56: {
+			Fname: "theda3",
+		},
+		57: {
+			Fname: "adrian",
+		},
+		58: {
+			Fname: "messg2",
+		},
+		59: {
+			Fname: "romer2",
+		},
+		60: {
+			Fname: "tense",
+		},
+		61: {
+			Fname: "shawn3",
+		},
+		62: {
+			Fname: "openin",
+		},
+		63: {
+			Fname: "evil",
+		},
+		64: {
+			Fname: "ultima",
+		},
+		65: {
+			Fname: "read_m",
+		},
+		66: {
+			Fname: "dm2ttl",
+		},
+		67: {
+			Fname: "dm2int",
+		},
+	}
+
+	S_sfx = [109]sfxinfo_t{
+		0: {
+			Fname:        "none",
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		1: {
+			Fname:        "pistol",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		2: {
+			Fname:        "shotgn",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		3: {
+			Fname:        "sgcock",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		4: {
+			Fname:        "dshtgn",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		5: {
+			Fname:        "dbopn",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		6: {
+			Fname:        "dbcls",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		7: {
+			Fname:        "dbload",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		8: {
+			Fname:        "plasma",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		9: {
+			Fname:        "bfg",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		10: {
+			Fname:        "sawup",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		11: {
+			Fname:        "sawidl",
+			Fpriority:    118,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		12: {
+			Fname:        "sawful",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		13: {
+			Fname:        "sawhit",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		14: {
+			Fname:        "rlaunc",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		15: {
+			Fname:        "rxplod",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		16: {
+			Fname:        "firsht",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		17: {
+			Fname:        "firxpl",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		18: {
+			Fname:        "pstart",
+			Fpriority:    100,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		19: {
+			Fname:        "pstop",
+			Fpriority:    100,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		20: {
+			Fname:        "doropn",
+			Fpriority:    100,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		21: {
+			Fname:        "dorcls",
+			Fpriority:    100,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		22: {
+			Fname:        "stnmov",
+			Fpriority:    119,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		23: {
+			Fname:        "swtchn",
+			Fpriority:    78,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		24: {
+			Fname:        "swtchx",
+			Fpriority:    78,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		25: {
+			Fname:        "plpain",
+			Fpriority:    96,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		26: {
+			Fname:        "dmpain",
+			Fpriority:    96,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		27: {
+			Fname:        "popain",
+			Fpriority:    96,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		28: {
+			Fname:        "vipain",
+			Fpriority:    96,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		29: {
+			Fname:        "mnpain",
+			Fpriority:    96,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		30: {
+			Fname:        "pepain",
+			Fpriority:    96,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		31: {
+			Fname:        "slop",
+			Fpriority:    78,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		32: {
+			Fname:        "itemup",
+			Fpriority:    78,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		33: {
+			Fname:        "wpnup",
+			Fpriority:    78,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		34: {
+			Fname:        "oof",
+			Fpriority:    96,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		35: {
+			Fname:        "telept",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		36: {
+			Fname:        "posit1",
+			Fpriority:    98,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		37: {
+			Fname:        "posit2",
+			Fpriority:    98,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		38: {
+			Fname:        "posit3",
+			Fpriority:    98,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		39: {
+			Fname:        "bgsit1",
+			Fpriority:    98,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		40: {
+			Fname:        "bgsit2",
+			Fpriority:    98,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		41: {
+			Fname:        "sgtsit",
+			Fpriority:    98,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		42: {
+			Fname:        "cacsit",
+			Fpriority:    98,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		43: {
+			Fname:        "brssit",
+			Fpriority:    94,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		44: {
+			Fname:        "cybsit",
+			Fpriority:    92,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		45: {
+			Fname:        "spisit",
+			Fpriority:    90,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		46: {
+			Fname:        "bspsit",
+			Fpriority:    90,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		47: {
+			Fname:        "kntsit",
+			Fpriority:    90,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		48: {
+			Fname:        "vilsit",
+			Fpriority:    90,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		49: {
+			Fname:        "mansit",
+			Fpriority:    90,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		50: {
+			Fname:        "pesit",
+			Fpriority:    90,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		51: {
+			Fname:        "sklatk",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		52: {
+			Fname:        "sgtatk",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		53: {
+			Fname:        "skepch",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		54: {
+			Fname:        "vilatk",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		55: {
+			Fname:        "claw",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		56: {
+			Fname:        "skeswg",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		57: {
+			Fname:        "pldeth",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		58: {
+			Fname:        "pdiehi",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		59: {
+			Fname:        "podth1",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		60: {
+			Fname:        "podth2",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		61: {
+			Fname:        "podth3",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		62: {
+			Fname:        "bgdth1",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		63: {
+			Fname:        "bgdth2",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		64: {
+			Fname:        "sgtdth",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		65: {
+			Fname:        "cacdth",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		66: {
+			Fname:        "skldth",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		67: {
+			Fname:        "brsdth",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		68: {
+			Fname:        "cybdth",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		69: {
+			Fname:        "spidth",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		70: {
+			Fname:        "bspdth",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		71: {
+			Fname:        "vildth",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		72: {
+			Fname:        "kntdth",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		73: {
+			Fname:        "pedth",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		74: {
+			Fname:        "skedth",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		75: {
+			Fname:        "posact",
+			Fpriority:    120,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		76: {
+			Fname:        "bgact",
+			Fpriority:    120,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		77: {
+			Fname:        "dmact",
+			Fpriority:    120,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		78: {
+			Fname:        "bspact",
+			Fpriority:    100,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		79: {
+			Fname:        "bspwlk",
+			Fpriority:    100,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		80: {
+			Fname:        "vilact",
+			Fpriority:    100,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		81: {
+			Fname:        "noway",
+			Fpriority:    78,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		82: {
+			Fname:        "barexp",
+			Fpriority:    60,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		83: {
+			Fname:        "punch",
+			Fpriority:    64,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		84: {
+			Fname:        "hoof",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		85: {
+			Fname:        "metal",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		86: {
+			Fname:        "chgun",
+			Fpriority:    64,
+			Flink:        &S_sfx[sfx_pistol],
+			Fpitch:       150,
+			Fnumchannels: -1,
+		},
+		87: {
+			Fname:        "tink",
+			Fpriority:    60,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		88: {
+			Fname:        "bdopn",
+			Fpriority:    100,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		89: {
+			Fname:        "bdcls",
+			Fpriority:    100,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		90: {
+			Fname:        "itmbk",
+			Fpriority:    100,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		91: {
+			Fname:        "flame",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		92: {
+			Fname:        "flamst",
+			Fpriority:    32,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		93: {
+			Fname:        "getpow",
+			Fpriority:    60,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		94: {
+			Fname:        "bospit",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		95: {
+			Fname:        "boscub",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		96: {
+			Fname:        "bossit",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		97: {
+			Fname:        "bospn",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		98: {
+			Fname:        "bosdth",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		99: {
+			Fname:        "manatk",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		100: {
+			Fname:        "mandth",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		101: {
+			Fname:        "sssit",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		102: {
+			Fname:        "ssdth",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		103: {
+			Fname:        "keenpn",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		104: {
+			Fname:        "keendt",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		105: {
+			Fname:        "skeact",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		106: {
+			Fname:        "skesit",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		107: {
+			Fname:        "skeatk",
+			Fpriority:    70,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+		108: {
+			Fname:        "radio",
+			Fpriority:    60,
+			Fpitch:       -1,
+			Fvolume:      -1,
+			Fnumchannels: -1,
+		},
+	}
 }
 
 // Low-level sound and music modules we are using
 
 var sound_module *sound_module_t
 var music_module *music_module_t
-
-func init() {
-	snd_musicdevice = SNDDEVICE_SB
-}
-
-func init() {
-	snd_sfxdevice = SNDDEVICE_SB
-}
 
 // DOS-specific options: These are unused but should be maintained
 // so that the config file can be shared between chocolate
@@ -18794,7 +19743,7 @@ const KEY_STRAFE_L1 = 160
 const KEY_STRAFE_R1 = 161
 const KEY_USE1 = 162
 
-func init() {
+func input_init() {
 	key_right = int32(KEY_RIGHTARROW1)
 	key_left = int32(KEY_LEFTARROW1)
 	key_up = int32(KEY_UPARROW1)
@@ -18898,6 +19847,21 @@ func init() {
 	joybnextweapon = -1
 	joybmenu = -1
 	dclick_use = 1
+
+	mouseSensitivity = 5
+	showMessages = 1
+	screenblocks = 10
+	gammamsg = [5]string{
+		"Gamma correction OFF",
+		"Gamma correction level 1",
+		"Gamma correction level 2",
+		"Gamma correction level 3",
+		"Gamma correction level 4",
+	}
+
+	mouse_acceleration = float32(2)
+	mouse_threshold = 10
+	vanilla_keyboard_mapping = 1
 }
 
 //
@@ -19042,19 +20006,6 @@ func fixedDiv(a fixed_t, b fixed_t) fixed_t {
 
 const LINEHEIGHT = 16
 
-func init() {
-	mouseSensitivity = 5
-	showMessages = 1
-	screenblocks = 10
-	gammamsg = [5]string{
-		"Gamma correction OFF",
-		"Gamma correction level 1",
-		"Gamma correction level 2",
-		"Gamma correction level 3",
-		"Gamma correction level 4",
-	}
-}
-
 //static boolean opldev;
 
 // C documentation
@@ -19079,18 +20030,34 @@ type menu_t struct {
 	FlastOn    int16
 }
 
-func init() {
-	skullName = [2]string{
-		0: "M_SKULL1",
-		1: "M_SKULL2",
-	}
-}
-
 const readthis = 4
 const quitdoom = 5
 const main_end = 6
 
-func init() {
+const ep_end = 4
+
+const hurtme = 2
+
+// const nightmare = 4
+const newg_end = 5
+
+const messages = 1
+const detail = 2
+const scrnsize = 3
+const mousesens = 5
+const opt_end = 8
+
+const read1_end = 1
+
+const read2_end = 1
+
+const sfx_vol = 0
+const music_vol = 2
+const sound_end = 4
+
+const load_end = 6
+
+func menus_init() {
 	MainMenu = [6]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19129,9 +20096,7 @@ func init() {
 			Froutine:  m_QuitDOOM,
 		},
 	}
-}
 
-func init() {
 	MainDef = menu_t{
 		Fnumitems:  int16(main_end),
 		Fmenuitems: MainMenu[:],
@@ -19139,11 +20104,7 @@ func init() {
 		Fx:         97,
 		Fy:         64,
 	}
-}
 
-const ep_end = 4
-
-func init() {
 	EpisodeMenu = [4]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19170,9 +20131,7 @@ func init() {
 			Froutine:  m_Episode,
 		},
 	}
-}
 
-func init() {
 	EpiDef = menu_t{
 		Fnumitems:  int16(ep_end),
 		FprevMenu:  &MainDef,
@@ -19181,14 +20140,7 @@ func init() {
 		Fx:         48,
 		Fy:         63,
 	}
-}
 
-const hurtme = 2
-
-// const nightmare = 4
-const newg_end = 5
-
-func init() {
 	NewGameMenu = [5]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19221,9 +20173,7 @@ func init() {
 			Froutine:  m_ChooseSkill,
 		},
 	}
-}
 
-func init() {
 	NewDef = menu_t{
 		Fnumitems:  int16(newg_end),
 		FprevMenu:  &EpiDef,
@@ -19233,15 +20183,7 @@ func init() {
 		Fy:         63,
 		FlastOn:    int16(hurtme),
 	}
-}
 
-const messages = 1
-const detail = 2
-const scrnsize = 3
-const mousesens = 5
-const opt_end = 8
-
-func init() {
 	OptionsMenu = [8]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19288,9 +20230,7 @@ func init() {
 			Froutine:  m_Sound,
 		},
 	}
-}
 
-func init() {
 	OptionsDef = menu_t{
 		Fnumitems:  int16(opt_end),
 		FprevMenu:  &MainDef,
@@ -19299,20 +20239,14 @@ func init() {
 		Fx:         60,
 		Fy:         37,
 	}
-}
 
-const read1_end = 1
-
-func init() {
 	ReadMenu1 = [1]menuitem_t{
 		0: {
 			Fstatus:  1,
 			Froutine: m_ReadThis2,
 		},
 	}
-}
 
-func init() {
 	ReadDef1 = menu_t{
 		Fnumitems:  int16(read1_end),
 		FprevMenu:  &MainDef,
@@ -19321,20 +20255,14 @@ func init() {
 		Fx:         280,
 		Fy:         185,
 	}
-}
 
-const read2_end = 1
-
-func init() {
 	ReadMenu2 = [1]menuitem_t{
 		0: {
 			Fstatus:  1,
 			Froutine: m_FinishReadThis,
 		},
 	}
-}
 
-func init() {
 	ReadDef2 = menu_t{
 		Fnumitems:  int16(read2_end),
 		FprevMenu:  &ReadDef1,
@@ -19343,13 +20271,7 @@ func init() {
 		Fx:         330,
 		Fy:         175,
 	}
-}
 
-const sfx_vol = 0
-const music_vol = 2
-const sound_end = 4
-
-func init() {
 	SoundMenu = [4]menuitem_t{
 		0: {
 			Fstatus:   2,
@@ -19370,9 +20292,7 @@ func init() {
 			Fstatus: int16(-1),
 		},
 	}
-}
 
-func init() {
 	SoundDef = menu_t{
 		Fnumitems:  int16(sound_end),
 		FprevMenu:  &OptionsDef,
@@ -19381,11 +20301,7 @@ func init() {
 		Fx:         80,
 		Fy:         64,
 	}
-}
 
-const load_end = 6
-
-func init() {
 	LoadMenu = [6]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19418,9 +20334,7 @@ func init() {
 			Froutine:  m_LoadSelect,
 		},
 	}
-}
 
-func init() {
 	LoadDef = menu_t{
 		Fnumitems:  int16(load_end),
 		FprevMenu:  &MainDef,
@@ -19429,9 +20343,7 @@ func init() {
 		Fx:         80,
 		Fy:         54,
 	}
-}
 
-func init() {
 	SaveMenu = [6]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19464,9 +20376,7 @@ func init() {
 			Froutine:  m_SaveSelect,
 		},
 	}
-}
 
-func init() {
 	SaveDef = menu_t{
 		Fnumitems:  int16(load_end),
 		FprevMenu:  &MainDef,
@@ -19938,32 +20848,6 @@ func m_ReadThis2(choice int32) {
 
 func m_FinishReadThis(choice int32) {
 	m_SetupNextMenu(&MainDef)
-}
-
-func init() {
-	quitsounds = [8]int32{
-		0: int32(sfx_pldeth),
-		1: int32(sfx_dmpain),
-		2: int32(sfx_popain),
-		3: int32(sfx_slop),
-		4: int32(sfx_telept),
-		5: int32(sfx_posit1),
-		6: int32(sfx_posit3),
-		7: int32(sfx_sgtatk),
-	}
-}
-
-func init() {
-	quitsounds2 = [8]int32{
-		0: int32(sfx_vilact),
-		1: int32(sfx_getpow),
-		2: int32(sfx_boscub),
-		3: int32(sfx_slop),
-		4: int32(sfx_skeswg),
-		5: int32(sfx_kntdth),
-		6: int32(sfx_bspact),
-		7: int32(sfx_sgtatk),
-	}
 }
 
 var M_QuitResponse = func(key int32) {
@@ -21750,7 +22634,7 @@ const DI_SOUTH = 6
 const DI_SOUTHEAST = 7
 const DI_NODIR = 8
 
-func init() {
+func dirtype_init() {
 	opposite = [9]dirtype_t{
 		0: DI_WEST,
 		1: DI_SOUTHWEST,
@@ -21761,9 +22645,7 @@ func init() {
 		7: DI_NORTHWEST,
 		8: DI_NODIR,
 	}
-}
 
-func init() {
 	diags = [4]dirtype_t{
 		0: DI_NORTHWEST,
 		1: DI_NORTHEAST,
@@ -21892,7 +22774,7 @@ func p_CheckMissileRange(actor *mobj_t) boolean {
 	return 1
 }
 
-func init() {
+func speed_init() {
 	xspeed = [8]fixed_t{
 		0: 1 << FRACBITS,
 		1: 47000,
@@ -21901,9 +22783,7 @@ func init() {
 		5: -int32(47000),
 		7: 47000,
 	}
-}
 
-func init() {
 	yspeed = [8]fixed_t{
 		1: 47000,
 		2: 1 << FRACBITS,
@@ -22494,10 +23374,6 @@ func a_SkelMissile(actor *mobj_t) {
 	actor.Fx += mo.Fmomx
 	actor.Fy += mo.Fmomy
 	mo.Ftracer = actor.Ftarget
-}
-
-func init() {
-	TRACEANGLE = 0xc000000
 }
 
 func a_Tracer(actor *mobj_t) {
@@ -23662,16 +24538,14 @@ func ev_BuildStairs(line *line_t, type1 stair_e) int32 {
 const ANG1803 = 2147483648
 const BONUSADD = 6
 
-func init() {
+func ammo_init() {
 	maxammo = [4]int32{
 		0: 200,
 		1: 50,
 		2: 300,
 		3: 50,
 	}
-}
 
-func init() {
 	clipammo = [4]int32{
 		0: 10,
 		1: 4,
@@ -30212,7 +31086,7 @@ type animdef_t struct {
 	Fspeed     int32
 }
 
-func init() {
+func anims_init() {
 	animdefs = [23]animdef_t{
 		0: {
 			Fendname:   "NUKAGE3",
@@ -31322,7 +32196,7 @@ func p_SpawnSpecials() {
 	//	P_InitSlidingDoorFrames();
 }
 
-func init() {
+func switch_init() {
 	alphSwitchList = [41]switchlist_t{
 		0: {
 			Fname1:   "SW1BRCOM",
@@ -32662,7 +33536,7 @@ clipsolid:
 	r_ClipSolidWallSegment(x1, x2-1)
 }
 
-func init() {
+func coord_init() {
 	checkcoord = [12][4]int32{
 		0: {
 			0: 3,
@@ -33544,7 +34418,7 @@ func r_DrawColumnLow() {
 	}
 }
 
-func init() {
+func fuzz_init() {
 	fuzzoffset = [50]int32{
 		0:  SCREENWIDTH,
 		1:  -SCREENWIDTH,
@@ -34120,10 +34994,6 @@ const ANG909 = 1073741824
 const DISTMAP = 2
 const FIELDOFVIEW = 2048
 const NF_SUBSECTOR5 = 32768
-
-func init() {
-	validcount = 1
-}
 
 // C documentation
 //
@@ -36159,980 +37029,6 @@ func sha1_UpdateString(sha hash.Hash, str string) {
 	sha1_Update(sha, []byte{0}) // Null-terminate the string
 }
 
-func init() {
-	S_music = [68]musicinfo_t{
-		0: {},
-		1: {
-			Fname: "e1m1",
-		},
-		2: {
-			Fname: "e1m2",
-		},
-		3: {
-			Fname: "e1m3",
-		},
-		4: {
-			Fname: "e1m4",
-		},
-		5: {
-			Fname: "e1m5",
-		},
-		6: {
-			Fname: "e1m6",
-		},
-		7: {
-			Fname: "e1m7",
-		},
-		8: {
-			Fname: "e1m8",
-		},
-		9: {
-			Fname: "e1m9",
-		},
-		10: {
-			Fname: "e2m1",
-		},
-		11: {
-			Fname: "e2m2",
-		},
-		12: {
-			Fname: "e2m3",
-		},
-		13: {
-			Fname: "e2m4",
-		},
-		14: {
-			Fname: "e2m5",
-		},
-		15: {
-			Fname: "e2m6",
-		},
-		16: {
-			Fname: "e2m7",
-		},
-		17: {
-			Fname: "e2m8",
-		},
-		18: {
-			Fname: "e2m9",
-		},
-		19: {
-			Fname: "e3m1",
-		},
-		20: {
-			Fname: "e3m2",
-		},
-		21: {
-			Fname: "e3m3",
-		},
-		22: {
-			Fname: "e3m4",
-		},
-		23: {
-			Fname: "e3m5",
-		},
-		24: {
-			Fname: "e3m6",
-		},
-		25: {
-			Fname: "e3m7",
-		},
-		26: {
-			Fname: "e3m8",
-		},
-		27: {
-			Fname: "e3m9",
-		},
-		28: {
-			Fname: "inter",
-		},
-		29: {
-			Fname: "intro",
-		},
-		30: {
-			Fname: "bunny",
-		},
-		31: {
-			Fname: "victor",
-		},
-		32: {
-			Fname: "introa",
-		},
-		33: {
-			Fname: "runnin",
-		},
-		34: {
-			Fname: "stalks",
-		},
-		35: {
-			Fname: "countd",
-		},
-		36: {
-			Fname: "betwee",
-		},
-		37: {
-			Fname: "doom",
-		},
-		38: {
-			Fname: "the_da",
-		},
-		39: {
-			Fname: "shawn",
-		},
-		40: {
-			Fname: "ddtblu",
-		},
-		41: {
-			Fname: "in_cit",
-		},
-		42: {
-			Fname: "dead",
-		},
-		43: {
-			Fname: "stlks2",
-		},
-		44: {
-			Fname: "theda2",
-		},
-		45: {
-			Fname: "doom2",
-		},
-		46: {
-			Fname: "ddtbl2",
-		},
-		47: {
-			Fname: "runni2",
-		},
-		48: {
-			Fname: "dead2",
-		},
-		49: {
-			Fname: "stlks3",
-		},
-		50: {
-			Fname: "romero",
-		},
-		51: {
-			Fname: "shawn2",
-		},
-		52: {
-			Fname: "messag",
-		},
-		53: {
-			Fname: "count2",
-		},
-		54: {
-			Fname: "ddtbl3",
-		},
-		55: {
-			Fname: "ampie",
-		},
-		56: {
-			Fname: "theda3",
-		},
-		57: {
-			Fname: "adrian",
-		},
-		58: {
-			Fname: "messg2",
-		},
-		59: {
-			Fname: "romer2",
-		},
-		60: {
-			Fname: "tense",
-		},
-		61: {
-			Fname: "shawn3",
-		},
-		62: {
-			Fname: "openin",
-		},
-		63: {
-			Fname: "evil",
-		},
-		64: {
-			Fname: "ultima",
-		},
-		65: {
-			Fname: "read_m",
-		},
-		66: {
-			Fname: "dm2ttl",
-		},
-		67: {
-			Fname: "dm2int",
-		},
-	}
-}
-
-func init() {
-	S_sfx = [109]sfxinfo_t{
-		0: {
-			Fname:        "none",
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		1: {
-			Fname:        "pistol",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		2: {
-			Fname:        "shotgn",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		3: {
-			Fname:        "sgcock",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		4: {
-			Fname:        "dshtgn",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		5: {
-			Fname:        "dbopn",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		6: {
-			Fname:        "dbcls",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		7: {
-			Fname:        "dbload",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		8: {
-			Fname:        "plasma",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		9: {
-			Fname:        "bfg",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		10: {
-			Fname:        "sawup",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		11: {
-			Fname:        "sawidl",
-			Fpriority:    118,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		12: {
-			Fname:        "sawful",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		13: {
-			Fname:        "sawhit",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		14: {
-			Fname:        "rlaunc",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		15: {
-			Fname:        "rxplod",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		16: {
-			Fname:        "firsht",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		17: {
-			Fname:        "firxpl",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		18: {
-			Fname:        "pstart",
-			Fpriority:    100,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		19: {
-			Fname:        "pstop",
-			Fpriority:    100,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		20: {
-			Fname:        "doropn",
-			Fpriority:    100,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		21: {
-			Fname:        "dorcls",
-			Fpriority:    100,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		22: {
-			Fname:        "stnmov",
-			Fpriority:    119,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		23: {
-			Fname:        "swtchn",
-			Fpriority:    78,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		24: {
-			Fname:        "swtchx",
-			Fpriority:    78,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		25: {
-			Fname:        "plpain",
-			Fpriority:    96,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		26: {
-			Fname:        "dmpain",
-			Fpriority:    96,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		27: {
-			Fname:        "popain",
-			Fpriority:    96,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		28: {
-			Fname:        "vipain",
-			Fpriority:    96,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		29: {
-			Fname:        "mnpain",
-			Fpriority:    96,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		30: {
-			Fname:        "pepain",
-			Fpriority:    96,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		31: {
-			Fname:        "slop",
-			Fpriority:    78,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		32: {
-			Fname:        "itemup",
-			Fpriority:    78,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		33: {
-			Fname:        "wpnup",
-			Fpriority:    78,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		34: {
-			Fname:        "oof",
-			Fpriority:    96,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		35: {
-			Fname:        "telept",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		36: {
-			Fname:        "posit1",
-			Fpriority:    98,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		37: {
-			Fname:        "posit2",
-			Fpriority:    98,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		38: {
-			Fname:        "posit3",
-			Fpriority:    98,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		39: {
-			Fname:        "bgsit1",
-			Fpriority:    98,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		40: {
-			Fname:        "bgsit2",
-			Fpriority:    98,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		41: {
-			Fname:        "sgtsit",
-			Fpriority:    98,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		42: {
-			Fname:        "cacsit",
-			Fpriority:    98,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		43: {
-			Fname:        "brssit",
-			Fpriority:    94,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		44: {
-			Fname:        "cybsit",
-			Fpriority:    92,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		45: {
-			Fname:        "spisit",
-			Fpriority:    90,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		46: {
-			Fname:        "bspsit",
-			Fpriority:    90,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		47: {
-			Fname:        "kntsit",
-			Fpriority:    90,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		48: {
-			Fname:        "vilsit",
-			Fpriority:    90,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		49: {
-			Fname:        "mansit",
-			Fpriority:    90,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		50: {
-			Fname:        "pesit",
-			Fpriority:    90,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		51: {
-			Fname:        "sklatk",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		52: {
-			Fname:        "sgtatk",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		53: {
-			Fname:        "skepch",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		54: {
-			Fname:        "vilatk",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		55: {
-			Fname:        "claw",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		56: {
-			Fname:        "skeswg",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		57: {
-			Fname:        "pldeth",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		58: {
-			Fname:        "pdiehi",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		59: {
-			Fname:        "podth1",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		60: {
-			Fname:        "podth2",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		61: {
-			Fname:        "podth3",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		62: {
-			Fname:        "bgdth1",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		63: {
-			Fname:        "bgdth2",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		64: {
-			Fname:        "sgtdth",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		65: {
-			Fname:        "cacdth",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		66: {
-			Fname:        "skldth",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		67: {
-			Fname:        "brsdth",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		68: {
-			Fname:        "cybdth",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		69: {
-			Fname:        "spidth",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		70: {
-			Fname:        "bspdth",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		71: {
-			Fname:        "vildth",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		72: {
-			Fname:        "kntdth",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		73: {
-			Fname:        "pedth",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		74: {
-			Fname:        "skedth",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		75: {
-			Fname:        "posact",
-			Fpriority:    120,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		76: {
-			Fname:        "bgact",
-			Fpriority:    120,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		77: {
-			Fname:        "dmact",
-			Fpriority:    120,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		78: {
-			Fname:        "bspact",
-			Fpriority:    100,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		79: {
-			Fname:        "bspwlk",
-			Fpriority:    100,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		80: {
-			Fname:        "vilact",
-			Fpriority:    100,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		81: {
-			Fname:        "noway",
-			Fpriority:    78,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		82: {
-			Fname:        "barexp",
-			Fpriority:    60,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		83: {
-			Fname:        "punch",
-			Fpriority:    64,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		84: {
-			Fname:        "hoof",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		85: {
-			Fname:        "metal",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		86: {
-			Fname:        "chgun",
-			Fpriority:    64,
-			Flink:        &S_sfx[sfx_pistol],
-			Fpitch:       150,
-			Fnumchannels: -1,
-		},
-		87: {
-			Fname:        "tink",
-			Fpriority:    60,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		88: {
-			Fname:        "bdopn",
-			Fpriority:    100,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		89: {
-			Fname:        "bdcls",
-			Fpriority:    100,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		90: {
-			Fname:        "itmbk",
-			Fpriority:    100,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		91: {
-			Fname:        "flame",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		92: {
-			Fname:        "flamst",
-			Fpriority:    32,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		93: {
-			Fname:        "getpow",
-			Fpriority:    60,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		94: {
-			Fname:        "bospit",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		95: {
-			Fname:        "boscub",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		96: {
-			Fname:        "bossit",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		97: {
-			Fname:        "bospn",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		98: {
-			Fname:        "bosdth",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		99: {
-			Fname:        "manatk",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		100: {
-			Fname:        "mandth",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		101: {
-			Fname:        "sssit",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		102: {
-			Fname:        "ssdth",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		103: {
-			Fname:        "keenpn",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		104: {
-			Fname:        "keendt",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		105: {
-			Fname:        "skeact",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		106: {
-			Fname:        "skesit",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		107: {
-			Fname:        "skeatk",
-			Fpriority:    70,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-		108: {
-			Fname:        "radio",
-			Fpriority:    60,
-			Fpitch:       -1,
-			Fvolume:      -1,
-			Fnumchannels: -1,
-		},
-	}
-}
-
 const MAX_CAPTURES = 32
 
 // Array of end-of-level statistics that have been captured.
@@ -37568,56 +37464,50 @@ var keyboxes [3]int32
 //	// a random number per tick
 var st_randomnumber int32
 
-func init() {
+func cheat_init() {
+	cheat_amap = cheatseq_t{
+		Fsequence:      "iddt",
+		Fsequence_len:  5 - 1,
+		Fparameter_buf: [5]byte{},
+	}
+
 	cheat_mus = cheatseq_t{
 		Fsequence:        "idmus",
 		Fsequence_len:    6 - 1,
 		Fparameter_chars: 2,
 		Fparameter_buf:   [5]byte{},
 	}
-}
 
-func init() {
 	cheat_god = cheatseq_t{
 		Fsequence:      "iddqd",
 		Fsequence_len:  6 - 1,
 		Fparameter_buf: [5]byte{},
 	}
-}
 
-func init() {
 	cheat_ammo = cheatseq_t{
 		Fsequence:      "idkfa",
 		Fsequence_len:  6 - 1,
 		Fparameter_buf: [5]byte{},
 	}
-}
 
-func init() {
 	cheat_ammonokey = cheatseq_t{
 		Fsequence:      "idfa",
 		Fsequence_len:  5 - 1,
 		Fparameter_buf: [5]byte{},
 	}
-}
 
-func init() {
 	cheat_noclip = cheatseq_t{
 		Fsequence:      "idspispopd",
 		Fsequence_len:  11 - 1,
 		Fparameter_buf: [5]byte{},
 	}
-}
 
-func init() {
 	cheat_commercial_noclip = cheatseq_t{
 		Fsequence:      "idclip",
 		Fsequence_len:  7 - 1,
 		Fparameter_buf: [5]byte{},
 	}
-}
 
-func init() {
 	cheat_powerup = [7]cheatseq_t{
 		0: {
 			Fsequence:      "idbeholdv",
@@ -37655,26 +37545,20 @@ func init() {
 			Fparameter_buf: [5]byte{},
 		},
 	}
-}
 
-func init() {
 	cheat_choppers = cheatseq_t{
 		Fsequence:      "idchoppers",
 		Fsequence_len:  11 - 1,
 		Fparameter_buf: [5]byte{},
 	}
-}
 
-func init() {
 	cheat_clev = cheatseq_t{
 		Fsequence:        "idclev",
 		Fsequence_len:    7 - 1,
 		Fparameter_chars: 2,
 		Fparameter_buf:   [5]byte{},
 	}
-}
 
-func init() {
 	cheat_mypos = cheatseq_t{
 		Fsequence:      "idmypos",
 		Fsequence_len:  8 - 1,
@@ -38389,12 +38273,6 @@ type channel_t struct {
 
 var channels []channel_t
 
-func init() {
-	sfxVolume = 8
-	musicVolume = 8
-	snd_channels = 8
-}
-
 // Internal volume level, ranging from 0-127
 
 var snd_SfxVolume int32
@@ -38801,7 +38679,7 @@ func slopeDiv(num uint32, den uint32) int32 {
 	}
 }
 
-func init() {
+func angles_init() {
 	// Calculate all the various tables
 
 	finetangent = [4096]fixed_t{}
@@ -41202,10 +41080,6 @@ func z_Init() {
 // Read data from the specified position in the file into the
 // provided buffer.  Returns the number of bytes read.
 
-func init() {
-	vanilla_keyboard_mapping = 1
-}
-
 // Is the shift key currently down?
 
 var shiftdown int32 = 0
@@ -41448,11 +41322,6 @@ const INT_MAX19 = 2147483647
 
 var colors [256]color.RGBA
 
-func init() {
-	mouse_acceleration = float32(2)
-	mouse_threshold = 10
-}
-
 func i_InitGraphics() {
 	/* Allocate screen to draw to */
 	I_VideoBuffer = make([]byte, SCREENWIDTH*SCREENHEIGHT) // For DOOM to draw on
@@ -41566,6 +41435,30 @@ func doomgeneric_Create(args []string) {
 }
 
 func Run(fg DoomFrontend, args []string) {
+	// Run all the various init functions
+	sound_init()
+	fuzz_init()
+	speed_init()
+	messages_init()
+	dirtype_init()
+	angles_init()
+	input_init()
+	menus_init()
+	states_init()
+	names_init()
+	cheat_init()
+	move_init()
+	ammo_init()
+	mobj_init()
+	weapon_init()
+	arrows_init()
+	cast_init()
+	variables_init()
+	pars_init()
+	anims_init()
+	switch_init()
+	coord_init()
+
 	if dg_frontend != nil {
 		log.Printf("Run called twice, ignoring second call")
 	}
@@ -41645,7 +41538,7 @@ var SoundDef menu_t
 
 var SoundMenu [4]menuitem_t
 
-var TRACEANGLE angle_t
+const TRACEANGLE angle_t = 0xc000000
 
 //
 // Copyright(C) 1993-1996 Id Software, Inc.
