@@ -17259,34 +17259,19 @@ func i_BindJoystickVariables() {
 // 1x scale doesn't really do any scaling: it just copies the buffer
 // a line at a time for when pitch != SCREENWIDTH (!native_surface)
 
-func init() {
+func sound_init() {
 	snd_samplerate = 44100
-}
-
-func init() {
 	snd_cachesize = 64 * 1024 * 1024
-}
-
-func init() {
 	snd_maxslicetime_ms = 28
-}
-
-func init() {
 	snd_musiccmd = ""
+	snd_musicdevice = SNDDEVICE_SB
+	snd_sfxdevice = SNDDEVICE_SB
 }
 
 // Low-level sound and music modules we are using
 
 var sound_module *sound_module_t
 var music_module *music_module_t
-
-func init() {
-	snd_musicdevice = SNDDEVICE_SB
-}
-
-func init() {
-	snd_sfxdevice = SNDDEVICE_SB
-}
 
 // DOS-specific options: These are unused but should be maintained
 // so that the config file can be shared between chocolate
@@ -18794,7 +18779,7 @@ const KEY_STRAFE_L1 = 160
 const KEY_STRAFE_R1 = 161
 const KEY_USE1 = 162
 
-func init() {
+func input_init() {
 	key_right = int32(KEY_RIGHTARROW1)
 	key_left = int32(KEY_LEFTARROW1)
 	key_up = int32(KEY_UPARROW1)
@@ -18898,6 +18883,21 @@ func init() {
 	joybnextweapon = -1
 	joybmenu = -1
 	dclick_use = 1
+
+	mouseSensitivity = 5
+	showMessages = 1
+	screenblocks = 10
+	gammamsg = [5]string{
+		"Gamma correction OFF",
+		"Gamma correction level 1",
+		"Gamma correction level 2",
+		"Gamma correction level 3",
+		"Gamma correction level 4",
+	}
+
+	mouse_acceleration = float32(2)
+	mouse_threshold = 10
+	vanilla_keyboard_mapping = 1
 }
 
 //
@@ -19042,19 +19042,6 @@ func fixedDiv(a fixed_t, b fixed_t) fixed_t {
 
 const LINEHEIGHT = 16
 
-func init() {
-	mouseSensitivity = 5
-	showMessages = 1
-	screenblocks = 10
-	gammamsg = [5]string{
-		"Gamma correction OFF",
-		"Gamma correction level 1",
-		"Gamma correction level 2",
-		"Gamma correction level 3",
-		"Gamma correction level 4",
-	}
-}
-
 //static boolean opldev;
 
 // C documentation
@@ -19090,7 +19077,30 @@ const readthis = 4
 const quitdoom = 5
 const main_end = 6
 
-func init() {
+const ep_end = 4
+
+const hurtme = 2
+
+// const nightmare = 4
+const newg_end = 5
+
+const messages = 1
+const detail = 2
+const scrnsize = 3
+const mousesens = 5
+const opt_end = 8
+
+const read1_end = 1
+
+const read2_end = 1
+
+const sfx_vol = 0
+const music_vol = 2
+const sound_end = 4
+
+const load_end = 6
+
+func menus_init() {
 	MainMenu = [6]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19129,9 +19139,7 @@ func init() {
 			Froutine:  m_QuitDOOM,
 		},
 	}
-}
 
-func init() {
 	MainDef = menu_t{
 		Fnumitems:  int16(main_end),
 		Fmenuitems: MainMenu[:],
@@ -19139,11 +19147,7 @@ func init() {
 		Fx:         97,
 		Fy:         64,
 	}
-}
 
-const ep_end = 4
-
-func init() {
 	EpisodeMenu = [4]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19170,9 +19174,7 @@ func init() {
 			Froutine:  m_Episode,
 		},
 	}
-}
 
-func init() {
 	EpiDef = menu_t{
 		Fnumitems:  int16(ep_end),
 		FprevMenu:  &MainDef,
@@ -19181,14 +19183,7 @@ func init() {
 		Fx:         48,
 		Fy:         63,
 	}
-}
 
-const hurtme = 2
-
-// const nightmare = 4
-const newg_end = 5
-
-func init() {
 	NewGameMenu = [5]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19221,9 +19216,7 @@ func init() {
 			Froutine:  m_ChooseSkill,
 		},
 	}
-}
 
-func init() {
 	NewDef = menu_t{
 		Fnumitems:  int16(newg_end),
 		FprevMenu:  &EpiDef,
@@ -19233,15 +19226,7 @@ func init() {
 		Fy:         63,
 		FlastOn:    int16(hurtme),
 	}
-}
 
-const messages = 1
-const detail = 2
-const scrnsize = 3
-const mousesens = 5
-const opt_end = 8
-
-func init() {
 	OptionsMenu = [8]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19288,9 +19273,7 @@ func init() {
 			Froutine:  m_Sound,
 		},
 	}
-}
 
-func init() {
 	OptionsDef = menu_t{
 		Fnumitems:  int16(opt_end),
 		FprevMenu:  &MainDef,
@@ -19299,20 +19282,14 @@ func init() {
 		Fx:         60,
 		Fy:         37,
 	}
-}
 
-const read1_end = 1
-
-func init() {
 	ReadMenu1 = [1]menuitem_t{
 		0: {
 			Fstatus:  1,
 			Froutine: m_ReadThis2,
 		},
 	}
-}
 
-func init() {
 	ReadDef1 = menu_t{
 		Fnumitems:  int16(read1_end),
 		FprevMenu:  &MainDef,
@@ -19321,20 +19298,14 @@ func init() {
 		Fx:         280,
 		Fy:         185,
 	}
-}
 
-const read2_end = 1
-
-func init() {
 	ReadMenu2 = [1]menuitem_t{
 		0: {
 			Fstatus:  1,
 			Froutine: m_FinishReadThis,
 		},
 	}
-}
 
-func init() {
 	ReadDef2 = menu_t{
 		Fnumitems:  int16(read2_end),
 		FprevMenu:  &ReadDef1,
@@ -19343,13 +19314,7 @@ func init() {
 		Fx:         330,
 		Fy:         175,
 	}
-}
 
-const sfx_vol = 0
-const music_vol = 2
-const sound_end = 4
-
-func init() {
 	SoundMenu = [4]menuitem_t{
 		0: {
 			Fstatus:   2,
@@ -19370,9 +19335,7 @@ func init() {
 			Fstatus: int16(-1),
 		},
 	}
-}
 
-func init() {
 	SoundDef = menu_t{
 		Fnumitems:  int16(sound_end),
 		FprevMenu:  &OptionsDef,
@@ -19381,11 +19344,7 @@ func init() {
 		Fx:         80,
 		Fy:         64,
 	}
-}
 
-const load_end = 6
-
-func init() {
 	LoadMenu = [6]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19418,9 +19377,7 @@ func init() {
 			Froutine:  m_LoadSelect,
 		},
 	}
-}
 
-func init() {
 	LoadDef = menu_t{
 		Fnumitems:  int16(load_end),
 		FprevMenu:  &MainDef,
@@ -19429,9 +19386,7 @@ func init() {
 		Fx:         80,
 		Fy:         54,
 	}
-}
 
-func init() {
 	SaveMenu = [6]menuitem_t{
 		0: {
 			Fstatus:   1,
@@ -19464,9 +19419,7 @@ func init() {
 			Froutine:  m_SaveSelect,
 		},
 	}
-}
 
-func init() {
 	SaveDef = menu_t{
 		Fnumitems:  int16(load_end),
 		FprevMenu:  &MainDef,
@@ -38801,7 +38754,7 @@ func slopeDiv(num uint32, den uint32) int32 {
 	}
 }
 
-func init() {
+func angles_init() {
 	// Calculate all the various tables
 
 	finetangent = [4096]fixed_t{}
@@ -41203,7 +41156,6 @@ func z_Init() {
 // provided buffer.  Returns the number of bytes read.
 
 func init() {
-	vanilla_keyboard_mapping = 1
 }
 
 // Is the shift key currently down?
@@ -41449,8 +41401,6 @@ const INT_MAX19 = 2147483647
 var colors [256]color.RGBA
 
 func init() {
-	mouse_acceleration = float32(2)
-	mouse_threshold = 10
 }
 
 func i_InitGraphics() {
@@ -41566,6 +41516,12 @@ func doomgeneric_Create(args []string) {
 }
 
 func Run(fg DoomFrontend, args []string) {
+	// Run all the various init functions
+	sound_init()
+	angles_init()
+	input_init()
+	menus_init()
+
 	if dg_frontend != nil {
 		log.Printf("Run called twice, ignoring second call")
 	}
