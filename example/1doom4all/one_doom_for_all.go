@@ -140,8 +140,8 @@ func queueEvent(doomKey uint8, down bool) {
 func removeClient(cid string) {
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
-	c := clients[cid]
-	if c == nil {
+	c, ok := clients[cid]
+	if !ok || c == nil {
 		return
 	}
 	delete(clients, cid)
@@ -160,6 +160,7 @@ func removeClient(cid string) {
 			queueEvent(dk, now)
 		}
 	}
+	log.Printf("Removed client %s, %d clients remain", cid, len(clients))
 }
 
 // cleanupInactiveClients periodically removes clients that have not pinged recently.
@@ -176,7 +177,6 @@ func cleanupInactiveClients(maxAge time.Duration) {
 		}
 		clientsMu.Unlock()
 		for _, id := range toRemove {
-			log.Printf("Removing inactive client %s", id)
 			removeClient(id)
 		}
 	}
