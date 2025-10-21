@@ -4,10 +4,8 @@ import (
 	"image"
 	"log"
 	"os"
-	"os/signal"
 	"runtime"
 	"sync"
-	"syscall"
 	"unsafe"
 
 	"github.com/AndreRenaud/gore"
@@ -32,25 +30,6 @@ type DoomGame struct {
 	// Channel for frame updates from DOOM goroutine
 	frameChannel chan *image.RGBA
 	titleChannel chan string
-}
-
-func init() {
-	// Ensure we run on the main OS thread (required for SDL on macOS)
-	runtime.LockOSThread()
-
-	// Handle signals gracefully to prevent crashes during CGO calls
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGPIPE)
-	go func() {
-		for sig := range sigChan {
-			log.Printf("Received signal: %v", sig)
-			if sig == syscall.SIGPIPE {
-				// Ignore SIGPIPE signals that can occur during SDL operations
-				continue
-			}
-			os.Exit(0)
-		}
-	}()
 }
 
 func NewDoomGame() (*DoomGame, error) {
