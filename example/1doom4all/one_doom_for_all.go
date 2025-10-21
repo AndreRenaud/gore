@@ -272,7 +272,10 @@ func handlePlayers(w http.ResponseWriter, r *http.Request) {
 	count := len(clients)
 	clientsMu.Unlock()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(playersResp{Count: count})
+	if err := json.NewEncoder(w).Encode(playersResp{Count: count}); err != nil {
+		log.Printf("failed to encode players response: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func main() {
