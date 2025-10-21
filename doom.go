@@ -17458,7 +17458,6 @@ func i_PrecacheSounds(sounds []sfxinfo_t) {
 	for _, sfx := range sounds {
 		lump := w_CheckNumForName(fmt.Sprintf("ds%s", sfx.Fname))
 		if lump < 0 {
-			log.Printf("i_PrecacheSounds: sound %s not found!\n", sfx.Fname)
 			continue
 		}
 		lumpData := w_ReadLumpBytes(lump)
