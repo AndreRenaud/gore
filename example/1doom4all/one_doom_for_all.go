@@ -7,13 +7,17 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
 
+	_ "embed"
+
 	"github.com/AndreRenaud/gore"
 )
+
+//go:embed index.html
+var indexHTML []byte
 
 type keyEvent struct {
 	doomKey uint8
@@ -275,10 +279,11 @@ func main() {
 	mux.HandleFunc("POST /disconnect", handleDisconnect)
 	mux.HandleFunc("GET /players", handlePlayers)
 
-	// Serve index.html from this example directory
-	cwd, _ := os.Getwd()
-	root := filepath.Join(cwd, "example", "1doom4all")
-	mux.Handle("GET /", http.FileServer(http.Dir(root)))
+	// Serve embedded index.html
+	mux.Handle("GET /", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(indexHTML)
+	}))
 
 	go func() {
 		log.Printf("Starting HTTP server on %s", *addr)

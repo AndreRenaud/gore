@@ -74,7 +74,9 @@ func (h *MJPEGHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if n, err := io.WriteString(w, "\r\n"); err != nil || n != 2 {
 			return
 		}
-		w.(http.Flusher).Flush()
+		if flusher, ok := w.(http.Flusher); ok {
+			flusher.Flush()
+		}
 	}
 }
 
