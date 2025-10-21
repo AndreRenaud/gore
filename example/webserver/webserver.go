@@ -135,6 +135,8 @@ func main() {
 
 	// Called explicitly here to ensure `deadcode` check doesn't impact us
 	gore.SetVirtualFileSystem(os.DirFS("."))
+	// Quitting doesn't make sense in a web server context
+	gore.EnableQuitting(false)
 
 	defer gore.Stop()
 
