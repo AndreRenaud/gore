@@ -254,7 +254,7 @@ func (g *DoomGame) drawFrameOnMainThread(frame *image.RGBA) {
 
 	if g.texture == nil {
 		var err error
-		g.texture, err = g.renderer.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STREAMING, int32(width), int32(height))
+		g.texture, err = g.renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STREAMING, int32(width), int32(height))
 		if err != nil {
 			log.Printf("Failed to create texture: %v", err)
 			return
@@ -303,20 +303,13 @@ func (g *DoomGame) Run() {
 	for g.running {
 		g.handleEvents()
 
-		// Process frame updates from DOOM goroutine
 		select {
 		case frame := <-g.frameChannel:
 			g.drawFrameOnMainThread(frame)
-		default:
-			// No frame available, continue
-		}
-
-		// Process title updates from DOOM goroutine
-		select {
 		case title := <-g.titleChannel:
 			g.window.SetTitle(title)
 		default:
-			// No title update available, continue
+			// No frame available, continue
 		}
 
 		sdl.Delay(16) // ~60 FPS
