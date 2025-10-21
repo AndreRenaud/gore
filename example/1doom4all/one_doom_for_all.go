@@ -50,10 +50,18 @@ func mapBrowserKeyToDoom(key int) uint8 {
 		return gore.KEY_LEFTARROW1
 	case 39:
 		return gore.KEY_RIGHTARROW1
+	case 65: // 'A' - strafe left
+		return gore.KEY_STRAFE_L1
+	case 68: // 'D' - strafe right
+		return gore.KEY_STRAFE_R1
 	case 17: // Ctrl
 		return gore.KEY_FIRE1
 	case 32: // Space
 		return gore.KEY_USE1
+	case 16: // Shift - run (key_speed)
+		return uint8(0x80 + 0x36)
+	case 18: // Alt - strafe modifier (key_strafe)
+		return uint8(0x80 + 0x38)
 	case 13: // Enter
 		return gore.KEY_ENTER
 	case 27: // Escape
@@ -122,6 +130,7 @@ func updateClientKey(cid string, doomKey uint8, down bool) {
 }
 
 func queueEvent(doomKey uint8, down bool) {
+	log.Printf("Queueing event: key=%d down=%t", doomKey, down)
 	eventQueueMu.Lock()
 	defer eventQueueMu.Unlock()
 	eventQueue = append(eventQueue, keyEvent{doomKey: doomKey, down: down})
@@ -286,7 +295,6 @@ func main() {
 	}))
 
 	go func() {
-		log.Printf("Starting HTTP server on %s", *addr)
 		if err := http.ListenAndServe(*addr, mux); err != nil {
 			log.Fatalf("HTTP server error: %v", err)
 		}

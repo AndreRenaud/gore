@@ -4,17 +4,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       body { margin: 0; background: #000; color: #ccc; font-family: sans-serif; }
-      .container { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-      img { width: 100%; height: auto; max-width: 960px; background: #111; }
-  .status { font-size: 12px; opacity: .7; }
-  .players { font-size: 12px; opacity: .7; }
+      .container { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px; }
+      .video-wrap { position: relative; width: 100%; max-width: 960px; }
+      .video-wrap img { width: 100%; height: auto; display: block; background: #111; }
+      /* Disable text selection and callouts for touch */
+      * { -webkit-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
+      html, body { -webkit-tap-highlight-color: transparent; }
+      /* 3x3 touch grid overlay */
+      #touch-grid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); touch-action: none; }
+  /* #touch-grid .cell elements are invisible hit areas */
+      /* Optional: uncomment to visualize the grid on mobile for debugging */
+      /* #touch-grid .cell { outline: 1px dashed rgba(255,255,255,0.1); } */
+      .controls { width: 100%; max-width: 960px; display: flex; flex-direction: column; gap: 8px; }
+      .button-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+      button { background: #222; color: #eee; border: 1px solid #444; border-radius: 6px; padding: 10px 14px; font-size: 16px; touch-action: manipulation; }
+      button:active { background: #333; }
+      .status { font-size: 12px; opacity: .7; }
+      .players { font-size: 12px; opacity: .7; }
+      @media (hover: none) and (pointer: coarse) {
+        button { font-size: 18px; padding: 14px 18px; }
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <img src="/stream.mjpg" alt="MJPEG Stream" />
-  <div class="status" id="status">Connecting…</div>
-  <div class="players">Players connected: <span id="players-count">0</span></div>
+      <div class="video-wrap">
+        <img src="/stream.mjpg" alt="MJPEG Stream" draggable="false" />
+        <div id="touch-grid" aria-label="Touch controls">
+          <div class="cell" data-zone="tl"></div>
+          <div class="cell" data-zone="tm"></div>
+          <div class="cell" data-zone="tr"></div>
+          <div class="cell" data-zone="ml"></div>
+          <div class="cell" data-zone="mm"></div>
+          <div class="cell" data-zone="mr"></div>
+          <div class="cell" data-zone="bl"></div>
+          <div class="cell" data-zone="bm"></div>
+          <div class="cell" data-zone="br"></div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="button-row">
+          <button data-key="27" data-hold>Escape</button>
+          <button data-key="17" data-hold>Fire</button>
+          <button data-key="18" data-hold>Strafe</button>
+          <button data-key="16" data-hold>Run</button>
+        </div>
+        <div class="button-row" id="weapons"></div>
+      </div>
+      <div class="status" id="status">Connecting…</div>
+      <div class="players">Players connected: <span id="players-count">0</span></div>
     </div>
     <script>
       // Generate a simple client id and persist across refreshes
@@ -39,6 +77,9 @@
           console.error('sendKey failed', e);
         }
       }
+      // Helper to press and release multiple keys
+      function pressKeys(codes) { codes.forEach(k => sendKey(k, 1)); }
+      function releaseKeys(codes) { codes.forEach(k => sendKey(k, 0)); }
       async function ping() {
         try {
           await fetch(`/ping?cid=${encodeURIComponent(cid)}`);
@@ -67,6 +108,76 @@
       document.addEventListener('keyup', (e) => {
         sendKey(e.keyCode, 0);
         e.preventDefault();
+      });
+
+      // --- Mobile touch grid controls ---
+      const GRID_TO_KEYS = {
+        tl: [38,37], // up + left
+        tm: [38],    // up
+        tr: [38,39], // up + right
+        ml: [37],    // left (turn)
+        mm: [13],    // center - enter
+        mr: [39],    // right (turn)
+        bl: [40,37], // down + left
+        bm: [40],    // down
+        br: [40,39], // down + right
+      };
+      const activePointers = new Map(); // pointerId -> number[] keys pressed
+      const grid = document.getElementById('touch-grid');
+      // Prevent context menu / long-press actions on overlay and buttons
+      document.addEventListener('contextmenu', (e)=>{
+        if (grid.contains(e.target) || e.target.closest('button')) e.preventDefault();
+      });
+      function handleGridPointerDown(e) {
+        const cell = e.target.closest('.cell');
+        if (!cell) return;
+        const zone = cell.getAttribute('data-zone');
+        const codes = GRID_TO_KEYS[zone] || [];
+        if (codes.length === 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+        pressKeys(codes);
+        activePointers.set(e.pointerId, codes);
+        grid.setPointerCapture?.(e.pointerId);
+      }
+      function endPointer(e) {
+        const codes = activePointers.get(e.pointerId);
+        if (codes) {
+          releaseKeys(codes);
+          activePointers.delete(e.pointerId);
+        }
+      }
+      grid.addEventListener('pointerdown', handleGridPointerDown);
+      grid.addEventListener('pointerup', endPointer);
+      grid.addEventListener('pointercancel', endPointer);
+      grid.addEventListener('pointerleave', endPointer);
+
+      // --- Action buttons ---
+      function wireHoldButton(btn, code) {
+        const down = (e)=>{ e.preventDefault(); sendKey(code,1); };
+        const up = (e)=>{ e.preventDefault(); sendKey(code,0); };
+        btn.addEventListener('pointerdown', down);
+        btn.addEventListener('pointerup', up);
+        btn.addEventListener('pointercancel', up);
+        btn.addEventListener('pointerleave', up);
+        // Also support click for desktop
+        btn.addEventListener('mousedown', (e)=>{ e.preventDefault(); sendKey(code,1); });
+        btn.addEventListener('mouseup', (e)=>{ e.preventDefault(); sendKey(code,0); });
+      }
+      // Attach to Fire/Strafe/Run
+      document.querySelectorAll('button[data-hold][data-key]').forEach(btn=>{
+        const code = parseInt(btn.getAttribute('data-key'),10);
+        wireHoldButton(btn, code);
+      });
+      // Weapon buttons 1-9 and 0
+      const weaponsRow = document.getElementById('weapons');
+      const weaponKeys = [1,2,3,4,5,6,7,8,9,0];
+      weaponKeys.forEach(n => {
+        const code = n === 0 ? 48 : 48 + n; // '0' is 48, '1'..'9' are 49..57
+        const b = document.createElement('button');
+        b.textContent = String(n);
+        b.addEventListener('click', (e)=>{ e.preventDefault(); sendKey(code,1); sendKey(code,0); });
+        weaponsRow.appendChild(b);
       });
 
       // Heartbeat to keep the session alive for disconnection tracking
