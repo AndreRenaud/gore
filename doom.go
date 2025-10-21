@@ -52,6 +52,9 @@ type DoomFrontend interface {
 	DrawFrame(img *image.RGBA)
 	SetTitle(title string)
 	GetEvent(event *DoomEvent) bool
+
+	CacheSound(name string, data []byte)
+	PlaySound(name string, channel, volume, sep int)
 }
 
 var dg_frontend DoomFrontend
@@ -5058,7 +5061,7 @@ func d_IdentifyVersion() {
 	// any known IWAD name, we may have a dilemma.  Try to
 	// identify by its contents.
 	if gamemission == none {
-		for i := uint32(0); i < numlumps; i++ {
+		for i := range numlumps {
 			if strings.EqualFold(lumpinfo[i].Name(), "MAP01") {
 				gamemission = doom2
 				break
@@ -8590,7 +8593,7 @@ func g_DoPlayDemo() {
 	var skill skill_t
 	gameaction = ga_nothing
 	num := w_GetNumForName(defdemoname)
-	length := w_LumpLength(uint32(num))
+	length := w_LumpLength(num)
 	demodata := w_CacheLumpNum(num)
 	demobuffer = make([]byte, length)
 	copy(demobuffer, unsafe.Slice((*uint8)(unsafe.Pointer(demodata)), length))
@@ -17429,8 +17432,10 @@ func i_UpdateSoundParams(channel int32, vol int32, sep int32) {
 }
 
 func i_StartSound(sfxinfo *sfxinfo_t, channel int32, vol int32, sep int32) int32 {
+	checkVolumeSeparation(&vol, &sep)
+	dg_frontend.PlaySound(sfxinfo.Fname, int(channel), int(vol), int(sep))
+
 	if sound_module != nil {
-		checkVolumeSeparation(&vol, &sep)
 		return sound_module.FStartSound(sfxinfo, channel, vol, sep)
 	}
 	return 0
@@ -17450,6 +17455,14 @@ func i_SoundIsPlaying(channel int32) boolean {
 }
 
 func i_PrecacheSounds(sounds []sfxinfo_t) {
+	for _, sfx := range sounds {
+		lump := w_CheckNumForName(fmt.Sprintf("ds%s", sfx.Fname))
+		if lump < 0 {
+			continue
+		}
+		lumpData := w_ReadLumpBytes(lump)
+		dg_frontend.CacheSound(sfx.Fname, lumpData)
+	}
 	if sound_module != nil && sound_module.FCacheSounds != nil {
 		sound_module.FCacheSounds(sounds)
 	}
@@ -29335,7 +29348,7 @@ func p_LoadVertexes(lump int32) {
 	var data uintptr
 	// Determine number of lumps:
 	//  total lump length / vertex record length.
-	numvertexes = int32(uint64(w_LumpLength(uint32(lump))) / 4)
+	numvertexes = w_LumpLength(lump) / 4
 	// Allocate zone memory for buffer.
 	vertexes = make([]vertex_t, numvertexes)
 	// Load data into cache.
@@ -29380,7 +29393,7 @@ func p_LoadSegs(lump int32) {
 	var data uintptr
 	var ldef *line_t
 	var linedef, side, sidenum int32
-	numsegs = int32(uint64(w_LumpLength(uint32(lump))) / 12)
+	numsegs = w_LumpLength(lump) / 12
 	segs = make([]seg_t, numsegs)
 	data = w_CacheLumpNum(lump)
 	ml := unsafe.Slice((*mapseg_t)(unsafe.Pointer(data)), numsegs)
@@ -29422,7 +29435,7 @@ func p_LoadSegs(lump int32) {
 //	//
 func p_LoadSubsectors(lump int32) {
 	var data uintptr
-	numsubsectors = int32(uint64(w_LumpLength(uint32(lump))) / 4)
+	numsubsectors = w_LumpLength(lump) / 4
 	subsectors = make([]subsector_t, numsubsectors)
 	data = w_CacheLumpNum(lump)
 	ms := unsafe.Slice((*mapsubsector_t)(unsafe.Pointer(data)), numsubsectors)
@@ -29440,7 +29453,7 @@ func p_LoadSubsectors(lump int32) {
 //	//
 func p_LoadSectors(lump int32) {
 	var data uintptr
-	numsectors = int32(uint64(w_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapsector_t{})))
+	numsectors = w_LumpLength(lump) / int32(unsafe.Sizeof(mapsector_t{}))
 	sectors = make([]sector_t, numsectors)
 	data = w_CacheLumpNum(lump)
 	mapsectors := unsafe.Slice((*mapsector_t)(unsafe.Pointer(data)), numsectors)
@@ -29466,7 +29479,7 @@ func p_LoadSectors(lump int32) {
 //	//
 func p_LoadNodes(lump int32) {
 	var data uintptr
-	numnodes = int32(uint64(w_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapnode_t{})))
+	numnodes = w_LumpLength(lump) / int32(unsafe.Sizeof(mapnode_t{}))
 	nodes = make([]node_t, numnodes)
 	data = w_CacheLumpNum(lump)
 	mapnodes := unsafe.Slice((*mapnode_t)(unsafe.Pointer(data)), numnodes)
@@ -29497,7 +29510,7 @@ func p_LoadThings(lump int32) {
 	var numthings int32
 	var spawn boolean
 	data = w_CacheLumpNum(lump)
-	numthings = int32(uint64(w_LumpLength(uint32(lump))) / uint64(unsafe.Sizeof(mapthing_t{})))
+	numthings = w_LumpLength(lump) / int32(unsafe.Sizeof(mapthing_t{}))
 	mthings := unsafe.Slice((*mapthing_t)(unsafe.Pointer(data)), numthings)
 	for i := int32(0); i < numthings; i++ {
 		mt := &mthings[i]
@@ -29554,7 +29567,7 @@ func p_LoadLineDefs(lump int32) {
 	var data uintptr
 	var v1, v2, v21, v3 *vertex_t
 	var i int32
-	numlines = int32(uint64(w_LumpLength(uint32(lump))) / 14)
+	numlines = w_LumpLength(lump) / 14
 	lines = make([]line_t, numlines)
 	data = w_CacheLumpNum(lump)
 	ml := unsafe.Slice((*maplinedef_t)(unsafe.Pointer(data)), numlines)
@@ -29622,7 +29635,7 @@ func p_LoadLineDefs(lump int32) {
 //	//
 func p_LoadSideDefs(lump int32) {
 	var data uintptr
-	numsides = int32(uint64(w_LumpLength(uint32(lump))) / 30)
+	numsides = w_LumpLength(lump) / 30
 	sides = make([]side_t, numsides)
 	data = w_CacheLumpNum(lump)
 	msd := unsafe.Slice((*mapsidedef_t)(unsafe.Pointer(data)), numsides)
@@ -29644,7 +29657,7 @@ func p_LoadSideDefs(lump int32) {
 //	// P_LoadBlockMap
 //	//
 func p_LoadBlockMap(lump int32) {
-	rawLump := w_ReadLumpBytes(uint32(lump))
+	rawLump := w_ReadLumpBytes(lump)
 	blockmaplump = make([]int16, len(rawLump)/2)
 	for i := 0; i < len(rawLump); i += 2 {
 		blockmaplump[i/2] = int16(rawLump[i]) | int16(rawLump[i+1])<<8
@@ -29801,12 +29814,12 @@ func p_LoadReject(lumpnum int32) {
 	// If the lump meets the minimum length, it can be loaded directly.
 	// Otherwise, we need to allocate a buffer of the correct size
 	// and pad it with appropriate data.
-	lumplen = w_LumpLength(uint32(lumpnum))
+	lumplen = w_LumpLength(lumpnum)
 	if lumplen >= minlength {
 		data := w_CacheLumpNum(lumpnum)
 		rejectmatrix = unsafe.Slice((*uint8)(unsafe.Pointer(data)), lumplen)
 	} else {
-		rejectmatrix = w_ReadLumpBytes(uint32(lumpnum))
+		rejectmatrix = w_ReadLumpBytes(lumpnum)
 		rejectmatrix = append(rejectmatrix, make([]uint8, minlength-lumplen)...)
 		padRejectArray(rejectmatrix[lumplen:], uint32(minlength-lumplen))
 	}
@@ -33112,7 +33125,7 @@ func r_GetColumn(tex int32, col int32) uintptr {
 }
 
 func generateTextureHashTable() {
-	var key int32
+	var key uint32
 	var rover **texture_t
 	textures_hashtable = make([]*texture_t, numtextures)
 	// Add all textures to hash table
@@ -33124,7 +33137,7 @@ func generateTextureHashTable() {
 		// entries with the same name, the first one in the array
 		// wins. The new entry must therefore be added at the end
 		// of the hash chain, so that earlier entries win.
-		key = int32(w_LumpNameHash(gostring_bytes(textures[i].Fname[:])) % uint32(numtextures))
+		key = w_LumpNameHash(gostring_bytes(textures[i].Fname[:])) % uint32(numtextures)
 		rover = &textures_hashtable[key]
 		for *rover != nil {
 			rover = &(*rover).Fnext
@@ -33159,12 +33172,12 @@ func r_InitTextures() {
 	//  TEXTURE1 for shareware, plus TEXTURE2 for commercial.
 	maptex = w_CacheLumpName("TEXTURE1")
 	numtextures1 = *(*int32)(unsafe.Pointer(maptex))
-	maxoff = w_LumpLength(uint32(w_GetNumForName("TEXTURE1")))
+	maxoff = w_LumpLength(w_GetNumForName("TEXTURE1"))
 	directory = maptex + 4
 	if w_CheckNumForName("TEXTURE2") != -1 {
 		maptex2 = w_CacheLumpName("TEXTURE2")
 		numtextures2 = *(*int32)(unsafe.Pointer(maptex2))
-		maxoff2 = w_LumpLength(uint32(w_GetNumForName("TEXTURE2")))
+		maxoff2 = w_LumpLength(w_GetNumForName("TEXTURE2"))
 	} else {
 		maptex2 = 0
 		numtextures2 = 0
@@ -33309,7 +33322,7 @@ func r_InitColormaps() {
 	// Load in the light tables,
 	//  256 byte align tables.
 	lump = w_GetNumForName("COLORMAP")
-	size = w_LumpLength(uint32(lump))
+	size = w_LumpLength(lump)
 	data = w_CacheLumpNum(lump)
 	colormaps = unsafe.Slice((*lighttable_t)(unsafe.Pointer(data)), size)
 }
@@ -33355,13 +33368,13 @@ func r_FlatNumForName(name string) int32 {
 //	// Filter out NoTexture indicator.
 //	//
 func r_CheckTextureNumForName(name string) int32 {
-	var key int32
+	var key uint32
 	var texture *texture_t
 	// "NoTexture" marker.
 	if name[0] == '-' {
 		return 0
 	}
-	key = int32(w_LumpNameHash(name) % uint32(numtextures))
+	key = w_LumpNameHash(name) % uint32(numtextures)
 	texture = textures_hashtable[key]
 	for texture != nil {
 		if strings.EqualFold(gostring_bytes(texture.Fname[:]), name) {
@@ -38414,7 +38427,6 @@ var mus_playing *musicinfo_t
 //
 
 func s_Init(sfxVolume int32, musicVolume int32) {
-	var v3 int32
 	i_PrecacheSounds(S_sfx[:])
 	s_SetSfxVolume(sfxVolume)
 	s_SetMusicVolume(musicVolume)
@@ -38426,9 +38438,8 @@ func s_Init(sfxVolume int32, musicVolume int32) {
 	mus_paused = 0
 	// Note that sounds have not been cached (yet).
 	for i := 1; i < NUMSFX; i++ {
-		v3 = -1
-		S_sfx[i].Fusefulness = v3
-		S_sfx[i].Flumpnum = v3
+		S_sfx[i].Fusefulness = -1
+		S_sfx[i].Flumpnum = -1
 	}
 	i_AtExit(s_Shutdown, 1)
 }
@@ -40853,7 +40864,7 @@ func extendLumpInfo(newnumlumps int32) {
 		panic("extendLumpInfo called with newnumlumps >= len(lumpinfo)")
 	}
 
-	numlumps = uint32(newnumlumps)
+	numlumps = newnumlumps
 }
 
 // LUMP BASED ROUTINES.
@@ -40872,7 +40883,7 @@ func w_AddFile(filename string) fs.File {
 	var wad_file fs.File
 	var size int64
 	var length, newnumlumps int32
-	var startlump uint32
+	var startlump int32
 	// open the file and add to directory
 	stat, err := fsStat(filename)
 	if err != nil {
@@ -40885,7 +40896,7 @@ func w_AddFile(filename string) fs.File {
 		fprintf_ccgo(os.Stdout, " couldn't open %s\n", filename)
 		return nil
 	}
-	newnumlumps = int32(numlumps)
+	newnumlumps = numlumps
 	if !strings.EqualFold(filepath.Ext(filename), ".wad") {
 		// single lump file
 		// fraggle: Swap the filepos and size here.  The WAD directory
@@ -40912,7 +40923,7 @@ func w_AddFile(filename string) fs.File {
 		}
 		wadinfo.Fnumlumps = wadinfo.Fnumlumps
 		wadinfo.Finfotableofs = wadinfo.Finfotableofs
-		length = int32(uint64(wadinfo.Fnumlumps) * 16)
+		length = int32(wadinfo.Fnumlumps * 16)
 		fileinfo = make([]filelump_t, wadinfo.Fnumlumps)
 		w_Read(wad_file, uint32(wadinfo.Finfotableofs), (uintptr)(unsafe.Pointer(&fileinfo[0])), uint64(length))
 		newnumlumps += wadinfo.Fnumlumps
@@ -40941,7 +40952,7 @@ func w_CheckNumForName(name string) int32 {
 	// Do we have a hash table yet?
 	if lumphash != nil {
 		// We do! Excellent.
-		hash := int32(w_LumpNameHash(name) % numlumps)
+		hash := w_LumpNameHash(name) % uint32(numlumps)
 		for lump_p := lumphash[hash]; lump_p != nil; lump_p = lump_p.Fnext {
 			if strings.EqualFold(lump_p.Name(), name) {
 				return lumpIndex(lump_p)
@@ -40982,14 +40993,14 @@ func w_GetNumForName(name string) int32 {
 //	// W_LumpLength
 //	// Returns the buffer size needed to load the given lump.
 //	//
-func w_LumpLength(lump uint32) int32 {
+func w_LumpLength(lump int32) int32 {
 	if lump >= numlumps {
 		i_Error("w_LumpLength: %d >= numlumps", lump)
 	}
 	return lumpinfo[lump].Fsize
 }
 
-func w_ReadLumpBytes(lump uint32) []byte {
+func w_ReadLumpBytes(lump int32) []byte {
 	if lump >= numlumps {
 		i_Error("w_ReadLumpBytes: %d >= numlumps", lump)
 	}
@@ -41011,22 +41022,22 @@ func w_ReadLumpBytes(lump uint32) []byte {
 //
 
 func w_CacheLumpNum(lumpnum int32) uintptr {
-	if uint32(lumpnum) >= numlumps {
+	if lumpnum >= numlumps {
 		i_Error("w_CacheLumpNum: %d >= numlumps", lumpnum)
 	}
 	lump := &lumpinfo[lumpnum]
 	if lump.Fcache == nil {
-		lump.Fcache = w_ReadLumpBytes(uint32(lumpnum))
+		lump.Fcache = w_ReadLumpBytes(lumpnum)
 	}
 	return (uintptr)(unsafe.Pointer(&lump.Fcache[0]))
 }
 func w_CacheLumpNumBytes(lumpnum int32) []byte {
-	if uint32(lumpnum) >= numlumps {
+	if lumpnum >= numlumps {
 		i_Error("w_CacheLumpNum: %d >= numlumps", lumpnum)
 	}
 	lump := &lumpinfo[lumpnum]
 	if lump.Fcache == nil {
-		lump.Fcache = w_ReadLumpBytes(uint32(lumpnum))
+		lump.Fcache = w_ReadLumpBytes(lumpnum)
 	}
 	return lump.Fcache
 }
@@ -41072,7 +41083,7 @@ func w_CacheLumpNameT[T lumpType](name string) T {
 //
 
 func w_ReleaseLumpNum(lumpnum int32) {
-	if uint32(lumpnum) >= numlumps {
+	if lumpnum >= numlumps {
 		i_Error("w_ReleaseLumpNum: %d >= numlumps", lumpnum)
 	}
 	// TODO/GORE: We don't do anything here. Lumps are just progressively cached & never released. It's a finite number
@@ -41092,7 +41103,7 @@ func w_GenerateHashTable() {
 	if numlumps > 0 {
 		lumphash = make([]*lumpinfo_t, numlumps)
 		for i := range numlumps {
-			hash = w_LumpNameHash(lumpinfo[i].Name()) % numlumps
+			hash = w_LumpNameHash(lumpinfo[i].Name()) % uint32(numlumps)
 			// Hook into the hash table
 			lumpinfo[i].Fnext = lumphash[hash]
 			lumphash[hash] = &lumpinfo[i]
@@ -42900,7 +42911,7 @@ var numlines int32
 //	//
 var numlinespecials int16
 
-var numlumps uint32
+var numlumps int32
 
 var numnodes int32
 

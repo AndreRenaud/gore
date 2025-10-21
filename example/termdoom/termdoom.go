@@ -49,6 +49,12 @@ func (t *termDoom) SetTitle(title string) {
 	fmt.Fprintf(os.Stdout, "\x1b]0;%s\x07", title)
 }
 
+func (t *termDoom) CacheSound(name string, data []byte) {
+}
+
+func (t *termDoom) PlaySound(name string, channel, vol, sep int) {
+}
+
 // GetEvent provides keydown/keyup events from stdin without unix/syscalls.
 func (t *termDoom) GetEvent(ev *gore.DoomEvent) bool {
 	// emit pending key-up after a short delay

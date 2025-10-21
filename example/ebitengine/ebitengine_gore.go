@@ -8,20 +8,31 @@ import (
 
 	"github.com/AndreRenaud/gore"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
 	screenWidth  = 640
 	screenHeight = 480
+
+	// Audio constants
+	ebitengineAudioSampleRate = 44100 // Standard sample rate for Ebitengine
+	doomAudioSampleRate       = 11025 // DOOM's original sample rate
+	doomMaxVolume             = 127   // DOOM's maximum volume value
+	audioVolumeScale          = 0.5   // Scale factor to prevent clipping
 )
 
 type DoomGame struct {
 	lastFrame *ebiten.Image
 
+	audio *audio.Context
+
 	events      []gore.DoomEvent
 	lock        sync.Mutex
 	terminating bool
+
+	soundCache map[string]*audio.Player
 }
 
 func (g *DoomGame) Update() error {
@@ -144,11 +155,72 @@ func (g *DoomGame) SetTitle(title string) {
 	ebiten.SetWindowTitle(title)
 }
 
+// convertAudioSample converts DOOM's 8-bit unsigned mono PCM to 16-bit signed stereo PCM
+// DOOM audio format: 8-bit unsigned PCM (0-255, with 128 = silence)
+// Ebitengine format: 16-bit signed PCM stereo (-32768 to 32767, with 0 = silence)
+func convertAudioSample(data []byte) []byte {
+	// Each 8-bit sample becomes two 16-bit samples (left/right channels)
+	// Output size: input samples * 2 channels * 2 bytes per sample = input * 4
+	// Plus we 4x it to go from 11025Hz to 44100Hz
+	converted := make([]byte, len(data)*4*4)
+
+	for i, sample8 := range data {
+		leftHigh := (sample8 - 128)
+
+		// Duplicate it 4x to upsample, and left/right for stereo
+		// Bottom byte is zero since we've only got 8-bit input
+		baseIdx := i * 4 * 4
+		converted[baseIdx+1] = leftHigh
+		converted[baseIdx+3] = leftHigh
+		converted[baseIdx+5] = leftHigh
+		converted[baseIdx+7] = leftHigh
+		converted[baseIdx+9] = leftHigh
+		converted[baseIdx+11] = leftHigh
+		converted[baseIdx+13] = leftHigh
+		converted[baseIdx+15] = leftHigh
+	}
+
+	return converted
+}
+
+func (g *DoomGame) CacheSound(name string, data []byte) {
+	// Convert DOOM's 8-bit mono audio @11025Hz to 16-bit stereo @44100
+	convertedData := convertAudioSample(data)
+	// Create and configure the audio player
+	player := g.audio.NewPlayerFromBytes(convertedData)
+	if g.soundCache == nil {
+		g.soundCache = make(map[string]*audio.Player)
+	}
+	g.soundCache[name] = player
+
+}
+
+func (g *DoomGame) PlaySound(name string, channel, volume, sep int) {
+	player, ok := g.soundCache[name]
+	if !ok {
+		log.Printf("Sound %s not found in cache", name)
+		return
+	}
+
+	volumeScale := float64(volume) / float64(doomMaxVolume)
+	if volumeScale > 1.0 {
+		volumeScale = 1.0
+	}
+	player.SetVolume(volumeScale * audioVolumeScale)
+	// Start playback
+	player.Rewind()
+	player.Play()
+
+	// Note: The player will be garbage collected when the sound finishes
+	// For a production implementation, you might want to track active players
+}
+
 func main() {
 	game := &DoomGame{}
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Gamepad (Ebitengine Demo)")
+	ebiten.SetWindowTitle("Ebitengine Doom")
 	ebiten.SetFullscreen(true)
+	game.audio = audio.NewContext(ebitengineAudioSampleRate)
 	go func() {
 		gore.Run(game, os.Args[1:])
 		game.terminating = true

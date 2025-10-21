@@ -100,6 +100,12 @@ func (w *webDoomFrontend) SetTitle(title string) {
 	// This is a stub; actual window title setting would depend on the platform and windowing system.
 }
 
+func (w *webDoomFrontend) CacheSound(name string, data []byte) {
+}
+
+func (w *webDoomFrontend) PlaySound(name string, channel, vol, sep int) {
+}
+
 func main() {
 	frontend := &webDoomFrontend{}
 

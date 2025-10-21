@@ -206,6 +206,12 @@ func (g *DoomGame) SetTitle(title string) {
 	}
 }
 
+func (g *DoomGame) CacheSound(name string, data []byte) {
+}
+
+func (g *DoomGame) PlaySound(name string, channel, vol, sep int) {
+}
+
 func (g *DoomGame) drawFrameOnMainThread(frame *image.RGBA) {
 	// Ensure we're on the main thread
 	runtime.LockOSThread()
