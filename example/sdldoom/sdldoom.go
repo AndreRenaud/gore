@@ -6,7 +6,6 @@ import (
 	"os"
 	"runtime"
 	"sync"
-	"unsafe"
 
 	"github.com/AndreRenaud/gore"
 	"github.com/veandco/go-sdl2/sdl"
@@ -233,7 +232,7 @@ func (g *DoomGame) drawFrameOnMainThread(frame *image.RGBA) {
 
 	if g.texture == nil {
 		var err error
-		g.texture, err = g.renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STREAMING, int32(width), int32(height))
+		g.texture, err = g.renderer.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STREAMING, int32(width), int32(height))
 		if err != nil {
 			log.Printf("Failed to create texture: %v", err)
 			return
@@ -241,14 +240,14 @@ func (g *DoomGame) drawFrameOnMainThread(frame *image.RGBA) {
 	}
 
 	// Copy frame data directly without extra conversion
-	frameData := frame.Pix
-	if len(frameData) != width*height*4 {
-		log.Printf("Frame data size mismatch: expected %d, got %d", width*height*4, len(frameData))
-		return
+	frameData := make([]uint32, width*height)
+	for i := 0; i < width*height; i++ {
+		pixPos := i * 4
+		frameData[i] = uint32(frame.Pix[pixPos+0])<<24 | uint32(frame.Pix[pixPos+1])<<16 | uint32(frame.Pix[pixPos+2])<<8 | uint32(frame.Pix[pixPos+3])
 	}
 
 	// Update texture with error handling
-	err := g.texture.Update(nil, unsafe.Pointer(&frameData[0]), width*4)
+	err := g.texture.UpdateRGBA(nil, frameData, width)
 	if err != nil {
 		log.Printf("Failed to update texture: %v", err)
 		return
