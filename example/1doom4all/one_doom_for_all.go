@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"image"
 	"log"
@@ -249,6 +250,18 @@ func handleDisconnect(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// handlePlayers returns the number of currently connected players
+func handlePlayers(w http.ResponseWriter, r *http.Request) {
+	type playersResp struct {
+		Count int `json:"count"`
+	}
+	clientsMu.Lock()
+	count := len(clients)
+	clientsMu.Unlock()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(playersResp{Count: count})
+}
+
 func main() {
 	addr := flag.String("addr", ":8080", "Address to listen on for HTTP server")
 	flag.Parse()
@@ -260,6 +273,7 @@ func main() {
 	mux.HandleFunc("POST /key/{key}/{state}", handleKey)
 	mux.HandleFunc("GET /ping", handlePing)
 	mux.HandleFunc("POST /disconnect", handleDisconnect)
+	mux.HandleFunc("GET /players", handlePlayers)
 
 	// Serve index.html from this example directory
 	cwd, _ := os.Getwd()
