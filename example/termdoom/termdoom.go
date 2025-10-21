@@ -15,8 +15,8 @@ import (
 	"golang.org/x/term"
 )
 
-// Characters from dark to bright
-const ramp = " .:-=+*#%@"
+// Characters from bright to dark
+const brightChars = "$@B%#*+=\"~^;:..."
 
 type termDoom struct {
 	keys            <-chan byte
@@ -125,19 +125,11 @@ func toASCII(w *bytes.Buffer, img *image.RGBA) {
 			r := img.Pix[o+0]
 			g := img.Pix[o+1]
 			bl := img.Pix[o+2]
-			// luma-ish
-			l := int(r)*3 + int(g)*6 + int(bl)*1
-			idx := (l * (len(ramp) - 1)) / (255 * 10)
-			if idx < 0 {
-				idx = 0
-			}
-			if idx >= len(ramp) {
-				idx = len(ramp) - 1
-			}
-			ch := ramp[idx]
+			brightness := int(r+g+bl) * (len(brightChars) - 1) / (3 * 255) // Normalize to 0-1 range
+			ch := brightChars[brightness]
 
-			// emit color only if it changed
-			if r != last.R || g != last.G || bl != last.B {
+			// emit color only if it changed, or at start of line
+			if x == b.Min.X || r != last.R || g != last.G || bl != last.B {
 				fmt.Fprintf(w, "\x1b[38;2;%d;%d;%dm", r, g, bl)
 				last = color.RGBA{r, g, bl, 255}
 			}
