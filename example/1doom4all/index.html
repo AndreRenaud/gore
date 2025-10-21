@@ -1,0 +1,67 @@
+<html>
+  <head>
+    <title>1Doom4All</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { margin: 0; background: #000; color: #ccc; font-family: sans-serif; }
+      .container { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+      img { width: 100%; height: auto; max-width: 960px; background: #111; }
+      .status { font-size: 12px; opacity: .7; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img src="/stream.mjpg" alt="MJPEG Stream" />
+      <div class="status" id="status">Connecting…</div>
+    </div>
+    <script>
+      // Generate a simple client id and persist across refreshes
+      function uuid4() {
+        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+          (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );
+      }
+      const CID_KEY = 'doom_cid';
+      let cid = localStorage.getItem(CID_KEY);
+      if (!cid) { cid = uuid4(); localStorage.setItem(CID_KEY, cid); }
+
+      const statusEl = document.getElementById('status');
+      function setStatus(t){ statusEl.textContent = t; }
+
+      async function sendKey(keyCode, state) {
+        try {
+          await fetch(`/key/${keyCode}/${state}?cid=${encodeURIComponent(cid)}`, { method: 'POST' });
+        } catch (e) {
+          console.error('sendKey failed', e);
+        }
+      }
+      async function ping() {
+        try {
+          await fetch(`/ping?cid=${encodeURIComponent(cid)}`);
+          setStatus('Connected');
+        } catch (e) {
+          setStatus('Reconnecting…');
+        }
+      }
+
+      document.addEventListener('keydown', (e) => {
+        // Avoid key-repeat flooding by letting the server aggregate
+        sendKey(e.keyCode, 1);
+        e.preventDefault();
+      });
+      document.addEventListener('keyup', (e) => {
+        sendKey(e.keyCode, 0);
+        e.preventDefault();
+      });
+
+      // Heartbeat to keep the session alive for disconnection tracking
+      setInterval(ping, 5000);
+      ping();
+
+      // Best-effort notify server on unload
+      window.addEventListener('beforeunload', () => {
+        navigator.sendBeacon(`/disconnect?cid=${encodeURIComponent(cid)}`);
+      });
+    </script>
+  </body>
+</html>
