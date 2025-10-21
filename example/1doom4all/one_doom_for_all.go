@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"image"
 	"log"
 	"net/http"
@@ -228,9 +229,10 @@ func handleDisconnect(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	addr := flag.String("addr", ":8080", "Address to listen on for HTTP server")
+	flag.Parse()
 	frontend := &webDoomFrontend{}
 
-	addr := ":8080"
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /stream.mjpg", &streamer)
@@ -244,8 +246,8 @@ func main() {
 	mux.Handle("GET /", http.FileServer(http.Dir(root)))
 
 	go func() {
-		log.Printf("Starting HTTP server on %s", addr)
-		if err := http.ListenAndServe(addr, mux); err != nil {
+		log.Printf("Starting HTTP server on %s", *addr)
+		if err := http.ListenAndServe(*addr, mux); err != nil {
 			log.Fatalf("HTTP server error: %v", err)
 		}
 	}()
