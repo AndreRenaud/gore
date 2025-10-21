@@ -48,6 +48,14 @@ func SetVirtualFileSystem(a fs.FS) {
 	vfs = a
 }
 
+func EnableQuitting(enable bool) {
+	if enable {
+		show_endoom = 1
+	} else {
+		show_endoom = 0
+	}
+}
+
 type DoomFrontend interface {
 	DrawFrame(img *image.RGBA)
 	SetTitle(title string)
