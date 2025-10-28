@@ -85,9 +85,11 @@ You need the game data files (WAD) to run DOOM:
 Similar to `doomgeneric`, the actual input/output is provided externally. The following interface is required:
 ```go
 type DoomFrontend interface {
-	DrawFrame(img *image.RGBA)
-	SetTitle(title string)
-	GetEvent(event *DoomEvent) bool
+    DrawFrame(img *image.RGBA)
+    SetTitle(title string)
+    GetEvent(event *DoomEvent) bool
+    CacheSound(name string, data []byte)
+    PlaySound(name string, channel, vol, sep int)
 }
 ```
 
@@ -96,6 +98,10 @@ type DoomFrontend interface {
 | `DrawFrame()` | Render the frame to your display |
 | `SetTitle()` | Set the window title as appropriate to the given WAD |
 | `GetEvent()` | Report key presses/mouse movements |
+| `CacheSound()` | This will supply sound effect 8-bit 11025Hz mono audio samples |
+| `PlaySound()` | Play a given sound effect |
+
+Only `DrawFrame` and `GetEvent` are vital to implement to get a functioning game. The others can be left blank, and things will still basically function fine.
 
 ## 📜 LICENSE
 
