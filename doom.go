@@ -48,6 +48,14 @@ func SetVirtualFileSystem(a fs.FS) {
 	vfs = a
 }
 
+func EnableQuitting(enable bool) {
+	if enable {
+		show_endoom = 1
+	} else {
+		show_endoom = 0
+	}
+}
+
 type DoomFrontend interface {
 	DrawFrame(img *image.RGBA)
 	SetTitle(title string)
@@ -4150,13 +4158,15 @@ func netUpdate() {
 	// check time
 	nowtime = getAdjustedTime() / ticdup
 	newtics = nowtime - lasttime
-	lasttime = nowtime
 	if skiptics <= newtics {
 		newtics -= skiptics
 		skiptics = 0
 	} else {
 		skiptics -= newtics
 		newtics = 0
+	}
+	if newtics > 0 {
+		lasttime = nowtime
 	}
 	// build new ticcmds for console player
 	for i := int32(0); i < newtics; i++ {
@@ -8682,7 +8692,7 @@ func g_CheckDemoStatus() {
 		// Prevent recursive calls
 		timingdemo = 0
 		demoplayback = 0
-		i_Error("timed %d gametics in %d realtics (%f fps)", gametic, realtics, float64(fps))
+		i_Error("timed %d gametics in %d realtics (%f fps)", gametic, realtics, fps)
 	}
 	if demoplayback != 0 {
 		w_ReleaseLumpName(defdemoname)
@@ -17733,7 +17743,7 @@ func i_GetTicks() int32 {
 		// Just increment by 1 each frame
 		return int32(dg_fake_tics)
 	}
-	return int32(float64(time.Since(start_time).Milliseconds()))
+	return int32(time.Since(start_time).Milliseconds())
 }
 
 func i_GetTime() int32 {
@@ -17765,7 +17775,7 @@ func i_Sleep(ms uint32) {
 	if dg_run_full_speed {
 		dg_fake_tics++
 	} else {
-		time.Sleep(time.Duration(float64(ms)) * time.Millisecond)
+		time.Sleep(time.Duration(ms) * time.Millisecond)
 	}
 }
 
@@ -39859,7 +39869,7 @@ func wi_drawNum(x int32, y int32, n int32, digits int32) int32 {
 		return 0
 	}
 	// draw the new number
-	for ; digits >= 0; digits-- {
+	for ; digits > 0; digits-- {
 		x -= fontwidth
 		v_DrawPatch(x, y, num[n%int32(10)])
 		n /= 10
@@ -41460,7 +41470,7 @@ const INT_MAX19 = 2147483647
 var colors [256]color.RGBA
 
 func init() {
-	mouse_acceleration = float32(2)
+	mouse_acceleration = 2
 	mouse_threshold = 10
 }
 
