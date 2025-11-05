@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"image"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -11,13 +12,13 @@ import (
 	"sync"
 	"time"
 
-	_ "embed"
+	"embed"
 
 	"github.com/AndreRenaud/gore"
 )
 
-//go:embed index.html
-var indexHTML []byte
+//go:embed static/*
+var staticFiles embed.FS
 
 type keyEvent struct {
 	doomKey uint8
@@ -291,11 +292,12 @@ func main() {
 	mux.HandleFunc("POST /disconnect", handleDisconnect)
 	mux.HandleFunc("GET /players", handlePlayers)
 
-	// Serve embedded index.html
-	mux.Handle("GET /", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		w.Write(indexHTML)
-	}))
+	contentFS, err := fs.Sub(staticFiles, "static")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fileServer := http.FileServer(http.FS(contentFS))
+	mux.Handle("GET /", fileServer)
 
 	go func() {
 		if err := http.ListenAndServe(*addr, mux); err != nil {
