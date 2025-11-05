@@ -13,42 +13,53 @@ import (
 type MJPEGHandler struct {
 	mutex     sync.Mutex
 	listeners []chan []byte
+	// Store the last 3 frames to avoid allocations
+	buffer     [3]bytes.Buffer
+	nextBuffer int
 }
 
 // AddImage encodes the frame once and fan-outs to all listeners without re-encoding.
 func (h *MJPEGHandler) AddImage(img image.Image) (int, error) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-	// Don't bother doing anything if nobody is listening
+	// Shortcut - don't bother doing anything if nobody is listening
 	if len(h.listeners) == 0 {
 		return 0, nil
 	}
+	buf := &h.buffer[h.nextBuffer]
+	h.nextBuffer = (h.nextBuffer + 1) % len(h.buffer)
 
-	var buf bytes.Buffer
+	buf.Reset()
 	options := &jpeg.Options{Quality: 90}
-	if err := jpeg.Encode(&buf, img, options); err != nil {
+	if err := jpeg.Encode(buf, img, options); err != nil {
 		return 0, err
 	}
 
-	newListeners := make([]chan []byte, 0, len(h.listeners))
-	for _, c := range h.listeners {
+	deleted := 0
+	for i, c := range h.listeners {
 		// If the listener has not consumed the previous frame, drop it and close
-		if len(c) > 0 {
+		select {
+		case c <- buf.Bytes():
+			// frame sent successfully
+		default:
+			// listener is not keeping up, drop it
 			log.Printf("Listener is not ready to receive a new frame")
+			deleted++
+			h.listeners[i] = nil
 			close(c)
-			continue
 		}
-		c <- buf.Bytes()
-		newListeners = append(newListeners, c)
 	}
-	h.listeners = newListeners
-	return len(newListeners), nil
-}
-
-func (h *MJPEGHandler) HasClients() bool {
-	h.mutex.Lock()
-	defer h.mutex.Unlock()
-	return len(h.listeners) > 0
+	// Only rebuild the listeners slice if needed, to avoid lots of allocations
+	if deleted > 0 {
+		var newListeners []chan []byte
+		for _, c := range h.listeners {
+			if c != nil {
+				newListeners = append(newListeners, c)
+			}
+		}
+		h.listeners = newListeners
+	}
+	return len(h.listeners), nil
 }
 
 func (h *MJPEGHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
