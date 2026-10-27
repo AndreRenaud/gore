@@ -5,6 +5,7 @@
 // same checksums.
 //
 //	go run ./example/stepper -iwad doom1.wad -tics 700 -o frame.png
+//	go run ./example/stepper -iwad doom1.wad -players 3 -view 2
 package main
 
 import (
@@ -23,31 +24,49 @@ func main() {
 	iwad := flag.String("iwad", "doom1.wad", "IWAD to play")
 	tics := flag.Int("tics", 700, "number of tics to run (35 per second)")
 	out := flag.String("o", "", "write the final frame to this PNG file")
+	players := flag.Int("players", 1, "number of players (1-4); more than one plays a netgame")
+	view := flag.Int("view", 0, "player whose view is rendered")
 	flag.Parse()
 
 	// Start on E1M1, at skill 3 ("Hurt Me Plenty").
-	gore.StepInit(nil, []string{"-iwad", *iwad, "-warp", "1", "1", "-skill", "3"})
+	args := []string{"-iwad", *iwad, "-warp", "1", "1", "-skill", "3"}
+	if *players > 1 {
+		args = append(args, "-solo-net")
+	}
+	gore.StepInit(nil, args)
 
+	// Player 0 is in the game from the start; the others join on the first tic.
+	var join uint8
+	for p := 1; p < *players; p++ {
+		join |= 1 << p
+	}
 	sounds := 0
 	for i := range *tics {
-		cmd := gore.TicCmd{Forward: 25} // walk forward
-		if i%70 < 20 {
-			cmd.AngleTurn = 640 // turn left at walking speed
+		if *players == 1 {
+			gore.StepTic(script(i, 0))
+		} else {
+			t := gore.NetTic{Join: join}
+			for p := range *players {
+				t.Cmds[p] = script(i, p)
+			}
+			gore.StepNetTic(&t)
+			join = 0
+			gore.StepSetView(int32(*view))
 		}
-		// Fire once a second. A single shot of the pistol takes about half
-		// a second, and presses while it is firing are ignored.
-		if i%gore.TICRATE == 0 {
-			cmd.Buttons = gore.ButtonAttack
-		}
-		gore.StepTic(cmd)
 		sounds += len(gore.StepSoundEvents())
 		if (i+1)%gore.TICRATE == 0 {
-			s := gore.GetStats()
-			fmt.Printf("tic %4d: health %3d ammo %3d kills %d/%d checksum %08x\n",
-				s.Tic, s.Health, s.Ammo, s.Kills, s.TotalKills, s.Checksum)
+			for p := range *players {
+				if gore.PlayersInGame()&(1<<p) == 0 {
+					continue
+				}
+				s := gore.GetPlayerStats(int32(p))
+				fmt.Printf("tic %4d: player %d health %3d ammo %3d kills %d/%d checksum %08x\n",
+					s.Tic, p, s.Health, s.Ammo, s.Kills, s.TotalKills, s.Checksum)
+			}
 		}
 	}
 	fmt.Printf("%d sound events\n", sounds)
+	fmt.Printf("viewed player: %+v\n", gore.GetStats())
 
 	// A savegame restores the exact simulation state. Saving isn't possible
 	// in every state (e.g. while dead), so skip the check if need be.
@@ -75,6 +94,21 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+}
+
+// script returns player p's input for tic i. Players turn at different
+// speeds, so they split up.
+func script(i, p int) gore.TicCmd {
+	cmd := gore.TicCmd{Forward: 25} // walk forward
+	if i%70 < 20 {
+		cmd.AngleTurn = int16(640 * (p + 1)) // turn left; player 0 at walking speed
+	}
+	// Fire once a second. A single shot of the pistol takes about half a
+	// second, and presses while it is firing are ignored.
+	if i%gore.TICRATE == 0 {
+		cmd.Buttons = gore.ButtonAttack
+	}
+	return cmd
 }
 
 // writePNG writes a palette-indexed frame as a PNG.
