@@ -7639,7 +7639,9 @@ func g_Ticker() {
 				players[consoleplayer].Fmessage = fmt.Sprintf("%s is turbo!", player_names[i])
 				turbodetected[i] = 0
 			}
-			if netgame != 0 && netdemo == 0 && gametic%ticdup == 0 {
+			// Step mode hosts check consistency with Checksum instead,
+			// and their ticcmds don't carry a consistancy byte.
+			if netgame != 0 && netdemo == 0 && gametic%ticdup == 0 && !dg_step_mode {
 				if gametic > BACKUPTICS && int32(consistancy[i][buf]) != int32(cmd.Fconsistancy) {
 					i_Error("consistency failure (%d should be %d)", int32(cmd.Fconsistancy), int32(consistancy[i][buf]))
 				}
@@ -7753,26 +7755,33 @@ func g_CheckSpot(playernum int32, mthing *mapthing_t) boolean {
 	var mo *mobj_t
 	var ss *subsector_t
 	var x, xa, y, ya, v2 fixed_t
-	if players[playernum].Fmo == nil {
-		// first spawn of level, before corpses
-		for i := int32(0); i < playernum; i++ {
-			if players[i].Fmo.Fx == int32(mthing.Fx)<<FRACBITS && players[i].Fmo.Fy == int32(mthing.Fy)<<FRACBITS {
-				return 0
-			}
-		}
-		return 1
-	}
 	x = int32(mthing.Fx) << FRACBITS
 	y = int32(mthing.Fy) << FRACBITS
-	if p_CheckPosition(players[playernum].Fmo, x, y) == 0 {
-		return 0
+	if players[playernum].Fmo == nil {
+		if !dg_step_mode || leveltime == 0 {
+			// first spawn of level, before corpses
+			for i := int32(0); i < playernum; i++ {
+				if players[i].Fmo != nil && players[i].Fmo.Fx == x && players[i].Fmo.Fy == y {
+					return 0
+				}
+			}
+			return 1
+		}
+		// A player joining a step mode game mid-level (see stepJoin).
+		if stepCheckSpot(playernum, mthing) == 0 {
+			return 0
+		}
+	} else {
+		if p_CheckPosition(players[playernum].Fmo, x, y) == 0 {
+			return 0
+		}
+		// flush an old corpse if needed
+		if bodyqueslot >= BODYQUESIZE {
+			p_RemoveMobj(bodyque[bodyqueslot%BODYQUESIZE])
+		}
+		bodyque[bodyqueslot%BODYQUESIZE] = players[playernum].Fmo
+		bodyqueslot++
 	}
-	// flush an old corpse if needed
-	if bodyqueslot >= BODYQUESIZE {
-		p_RemoveMobj(bodyque[bodyqueslot%BODYQUESIZE])
-	}
-	bodyque[bodyqueslot%BODYQUESIZE] = players[playernum].Fmo
-	bodyqueslot++
 	// spawn a teleport fog
 	ss = r_PointInSubsector(x, y)
 	// The code in the released source looks like this:
@@ -7866,8 +7875,11 @@ func g_DoReborn(playernum int32) {
 		gameaction = ga_loadlevel
 	} else {
 		// respawn at the start
-		// first dissasociate the corpse
-		players[playernum].Fmo.Fplayer = nil
+		// first dissasociate the corpse (a player joining a step mode
+		// game has none)
+		if players[playernum].Fmo != nil {
+			players[playernum].Fmo.Fplayer = nil
+		}
 		// spawn at random spot if in death match
 		if deathmatch != 0 {
 			g_DeathMatchSpawnPlayer(playernum)
