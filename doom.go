@@ -122,18 +122,6 @@ func gostring_bytes(s []byte) string {
 	return string(s[:end])
 }
 
-func gostring(s uintptr) string {
-	if s == 0 {
-		return ""
-	}
-
-	p := s
-	for *(*byte)(unsafe.Pointer(p)) != 0 {
-		p++
-	}
-	return string(unsafe.Slice((*byte)(unsafe.Pointer(s)), p-s))
-}
-
 func gostring_n(s uintptr, n int) string {
 	if s == 0 || n <= 0 {
 		return ""
@@ -17653,8 +17641,7 @@ func i_Error(errStr string, args ...any) {
 		// TODO: Expose error message somehow?
 	}
 	// abort();
-	for 1 != 0 {
-	}
+	panic(fmt.Sprintf(errStr, args...))
 }
 
 //
@@ -28112,8 +28099,22 @@ func saveg_write_pad() {
 
 // Pointers
 
-func saveg_readp() uintptr {
-	return uintptr(int64(saveg_read32()))
+// saveg_readp_skip skips over a pointer in the savegame.
+//
+// Vanilla DOOM saves structs field by field, pointers included, so the
+// savegame holds raw (32-bit) addresses from the process that saved it. They
+// are meaningless to any other process. C DOOM reads them into the structs
+// anyway, but never dereferences them: after loading, p_UnArchivePlayers and
+// p_UnArchiveThinkers overwrite every one of them before the game runs.
+//
+// In Go they must never become live pointers, even briefly. If the garbage
+// collector found one that happened to point at a free slot in the heap, the
+// runtime would abort the program ("found pointer to free object").
+//
+// So unlike saveg_readp in the C source, this returns nothing: it only moves
+// past the 4 bytes saveg_writep wrote, and callers set the field to nil.
+func saveg_readp_skip() {
+	saveg_read32()
 }
 
 func saveg_writep(p uintptr) {
@@ -28162,7 +28163,7 @@ func saveg_write_mapthing_t(str *mapthing_t) {
 
 func saveg_read_actionf_t(str *thinker_func_t) {
 	// actionf_p1 acp1;
-	str = (*thinker_func_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
 }
 
 func saveg_write_actionf_t(str *thinker_func_t) {
@@ -28182,9 +28183,11 @@ func saveg_write_actionf_t(str *thinker_func_t) {
 
 func saveg_read_thinker_t(str *thinker_t) {
 	// struct thinker_t* prev;
-	str.Fprev = (*thinker_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Fprev = nil
 	// struct thinker_t* next;
-	str.Fnext = (*thinker_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Fnext = nil
 	// think_t function;
 
 	saveg_read_actionf_t(&str.Ffunction)
@@ -28214,9 +28217,11 @@ func saveg_read_mobj_t(str *mobj_t) {
 	// fixed_t z;
 	str.Fz = saveg_read32()
 	// struct mobj_t* snext;
-	str.Fsnext = (*mobj_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Fsnext = nil
 	// struct mobj_t* sprev;
-	str.Fsprev = (*mobj_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Fsprev = nil
 	// angle_t angle;
 	str.Fangle = uint32(saveg_read32())
 	// spritenum_t sprite;
@@ -28224,11 +28229,14 @@ func saveg_read_mobj_t(str *mobj_t) {
 	// int frame;
 	str.Fframe = saveg_read32()
 	// struct mobj_t* bnext;
-	str.Fbnext = (*mobj_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Fbnext = nil
 	// struct mobj_t* bprev;
-	str.Fbprev = (*mobj_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Fbprev = nil
 	// struct subsector_t* subsector;
-	str.Fsubsector = (*subsector_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Fsubsector = nil
 	// fixed_t floorz;
 	str.Ffloorz = saveg_read32()
 	// fixed_t ceilingz;
@@ -28248,7 +28256,8 @@ func saveg_read_mobj_t(str *mobj_t) {
 	// mobjtype_t type;
 	str.Ftype1 = saveg_read32()
 	// mobjinfo_t* info;
-	str.Finfo = (*mobjinfo_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Finfo = nil
 	// int tics;
 	str.Ftics = saveg_read32()
 	// state_t* state;
@@ -28262,7 +28271,8 @@ func saveg_read_mobj_t(str *mobj_t) {
 	// int movecount;
 	str.Fmovecount = saveg_read32()
 	// struct mobj_t* target;
-	str.Ftarget = (*mobj_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Ftarget = nil
 	// int reactiontime;
 	str.Freactiontime = saveg_read32()
 	// int threshold;
@@ -28280,7 +28290,8 @@ func saveg_read_mobj_t(str *mobj_t) {
 	// mapthing_t spawnpoint;
 	saveg_read_mapthing_t(&str.Fspawnpoint)
 	// struct mobj_t* tracer;
-	str.Ftracer = (*mobj_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Ftracer = nil
 }
 
 func saveg_write_mobj_t(str *mobj_t) {
@@ -28438,7 +28449,8 @@ func saveg_write_pspdef_t(str *pspdef_t) {
 
 func saveg_read_player_t(str *player_t) {
 	// mobj_t* mo;
-	str.Fmo = (*mobj_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Fmo = nil
 	// playerstate_t playerstate;
 	str.Fplayerstate = saveg_read32()
 	// ticcmd_t cmd;
@@ -28501,13 +28513,15 @@ func saveg_read_player_t(str *player_t) {
 	// int secretcount;
 	str.Fsecretcount = saveg_read32()
 	// char* message;
-	str.Fmessage = gostring(saveg_readp())
+	saveg_readp_skip()
+	str.Fmessage = ""
 	// int damagecount;
 	str.Fdamagecount = saveg_read32()
 	// int bonuscount;
 	str.Fbonuscount = saveg_read32()
 	// mobj_t* attacker;
-	str.Fattacker = (*mobj_t)(unsafe.Pointer(saveg_readp()))
+	saveg_readp_skip()
+	str.Fattacker = nil
 	// int extralight;
 	str.Fextralight = saveg_read32()
 	// int fixedcolormap;
@@ -29218,7 +29232,7 @@ func p_ArchiveSpecials() {
 		if th.Ffunction == nil {
 			var i int32
 			for i = 0; i < MAXCEILINGS; i++ {
-				if &activeceilings[i].Fthinker == th {
+				if activeceilings[i] != nil && &activeceilings[i].Fthinker == th {
 					break
 				}
 			}
@@ -43167,7 +43181,17 @@ var saveStringEnter int32
 //	Refresh/render internal state variables (global).
 //
 
-var save_stream *os.File
+// save_stream is the stream savegames are read from and written to. It is an
+// *os.File when saving or loading a game, but anything that behaves like one
+// will do, such as an in-memory buffer.
+var save_stream saveStream
+
+type saveStream interface {
+	io.Reader
+	io.Writer
+	io.Seeker
+	Close() error
+}
 
 var savegame_error boolean
 
