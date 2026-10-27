@@ -73,12 +73,41 @@ go run ./example/ebitengine
 ```
 The window should pop up to run Doom
 
+#### Step API (headless, deterministic)
+```bash
+go run ./example/stepper -iwad doom1.wad -o frame.png
+```
+Runs a few hundred tics of scripted input with no clock and no window, then
+writes the last frame to `frame.png`. See [Step API](#-step-api) below.
+
 ### Getting WAD Files
 You need the game data files (WAD) to run DOOM:
 - **Shareware**: Download `doom1.wad` (free)
 - **Retail**: Use your legally owned copy of DOOM.WAD or doom2.wad
 - **Ultimate DOOM**: doom.wad from Ultimate DOOM
 - **Final DOOM**: tnt.wad or plutonia.wad
+
+## 👣 STEP API
+
+`Run` is driven by the wall clock and by keyboard events. To embed the
+engine somewhere that has to be deterministic (lockstep netcode, replays,
+rollback, tests), drive it one tic at a time instead:
+
+```go
+gore.StepInit(nil, []string{"-iwad", "doom1.wad", "-warp", "1", "1"})
+for {
+    gore.StepTic(gore.TicCmd{Forward: 25, Buttons: gore.ButtonAttack})
+    gore.StepRender()           // optional; never affects the simulation
+    frame := gore.FrameBuffer() // 320x200 palette indices, see gore.Palette()
+    sounds := gore.StepSoundEvents()
+    ...
+}
+```
+
+Game time comes from the number of tics run, so the same WAD, arguments
+and ticcmds always produce the same game. `Checksum` hashes the simulation
+state to check that, and `SaveGameBytes`/`LoadGameBytes` save and restore it
+in memory.
 
 ## 🔧 PLATFORM IMPLEMENTATION
 

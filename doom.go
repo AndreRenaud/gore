@@ -4622,7 +4622,7 @@ func d_Display() {
 		borderdrawcount = 3
 	}
 	// save the current screen if about to wipe
-	if gamestate != wipegamestate {
+	if gamestate != wipegamestate && !dg_step_mode {
 		wipe = 1
 		wipe_StartScreen(0, 0, SCREENWIDTH, SCREENHEIGHT)
 	} else {
@@ -4820,7 +4820,11 @@ func d_DoomLoop() {
 		g_BeginRecording()
 	}
 	main_loop_started = 1
-	tryRunTics()
+	// In step mode the host runs every tic, starting with the first, so
+	// don't run one here from keyboard input.
+	if !dg_step_mode {
+		tryRunTics()
+	}
 	i_SetWindowTitle(gamedescription)
 	i_GraphicsCheckCommandLine()
 	i_SetGrabMouseCallback(d_GrabMouseCallback)
@@ -4832,7 +4836,6 @@ func d_DoomLoop() {
 	if testcontrols != 0 {
 		wipegamestate = gamestate
 	}
-	doomgeneric_Tick()
 }
 
 // C documentation
@@ -17726,6 +17729,10 @@ var basetime uint32 = 0
 var last_tick int32 = 0
 
 func i_GetTicks() int32 {
+	if dg_step_mode {
+		// Game time is purely logical: derived from the number of tics run.
+		return gametic * 1000 / TICRATE
+	}
 	if dg_run_full_speed {
 		// Just increment by 1 each frame
 		return int32(dg_fake_tics)
