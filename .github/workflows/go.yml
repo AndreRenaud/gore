@@ -42,7 +42,7 @@ jobs:
         ./run_tests.sh
     - name: deadcode
       run: |
-        DEAD=$(deadcode ./example/webserver)
+        DEAD=$(deadcode ./example/webserver ./example/stepper)
         if [ -n "$DEAD" ]; then
           echo "deadcode found the following unused code:"
           echo "$DEAD"
@@ -53,6 +53,7 @@ jobs:
         go build -o webserver ./example/webserver
         go build -o ebitengine ./example/ebitengine
         go build -o termdoom ./example/termdoom
+        go build -o stepper ./example/stepper
     - name: Save the test movie outputs
       uses: actions/upload-artifact@v4
       with:
