@@ -109,20 +109,11 @@ func StepInit(fe DoomFrontend, args []string) {
 }
 
 // StepTic runs exactly one game tic, with cmd as the console player's input.
+// In a multiplayer game, any other players stand still; use StepNetTic.
 func StepTic(cmd TicCmd) {
-	var cmds [NET_MAXPLAYERS]ticcmd_t
-	var ingame [NET_MAXPLAYERS]boolean
-	cmds[consoleplayer] = ticcmd_t{
-		Fforwardmove: cmd.Forward,
-		Fsidemove:    cmd.Side,
-		Fangleturn:   cmd.AngleTurn,
-		Fbuttons:     cmd.Buttons,
-	}
-	ingame[consoleplayer] = 1
-	stepSoundTic = gametic + 1
-	runTic(cmds[:], ingame[:])
-	gametic++
-	stepUpdateSounds()
+	var t NetTic
+	t.Cmds[consoleplayer] = cmd
+	StepNetTic(&t)
 }
 
 // StepRender draws the current game state into the frame buffer. It only
@@ -130,7 +121,11 @@ func StepTic(cmd TicCmd) {
 // as rarely as it likes without affecting determinism.
 func StepRender() {
 	if gamestate == gs_LEVEL && players[displayplayer].Fmo == nil {
-		return // nobody to look through (see stepFixView); keep the last frame
+		// Nobody in the game has a body to look through (see stepFixView),
+		// e.g. because everyone has left. Draw a black frame (palette
+		// entry 0 is black).
+		clear(I_VideoBuffer)
+		return
 	}
 	d_Display()
 }
@@ -161,8 +156,8 @@ func GetStats() Stats {
 
 // GetPlayerStats returns a snapshot of the current game state, from player
 // p's point of view.
-func GetPlayerStats(p32 int32) Stats {
-	p := &players[p32]
+func GetPlayerStats(player int32) Stats {
+	p := &players[player]
 	s := Stats{
 		Tic:          gametic,
 		LevelTime:    leveltime,
@@ -329,7 +324,10 @@ func LoadGameBytes(data []byte) error {
 		return errors.New("gore: truncated savegame")
 	}
 	gameaction = ga_nothing
-	stepFixView() // the console player may not be in the saved game
+	// The savegame sets which players are in the game. The player we were
+	// looking through may not be one of them (say, player 0 had left the
+	// game that was saved), so point the view at someone who is.
+	stepFixView()
 	return nil
 }
 

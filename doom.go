@@ -7755,33 +7755,30 @@ func g_CheckSpot(playernum int32, mthing *mapthing_t) boolean {
 	var mo *mobj_t
 	var ss *subsector_t
 	var x, xa, y, ya, v2 fixed_t
+	if players[playernum].Fmo == nil {
+		if dg_step_mode && leveltime != 0 {
+			// A player joining a step mode game mid-level (see stepJoin).
+			return stepCheckSpot(playernum, mthing)
+		}
+		// first spawn of level, before corpses
+		for i := int32(0); i < playernum; i++ {
+			if players[i].Fmo != nil && players[i].Fmo.Fx == int32(mthing.Fx)<<FRACBITS && players[i].Fmo.Fy == int32(mthing.Fy)<<FRACBITS {
+				return 0
+			}
+		}
+		return 1
+	}
 	x = int32(mthing.Fx) << FRACBITS
 	y = int32(mthing.Fy) << FRACBITS
-	if players[playernum].Fmo == nil {
-		if !dg_step_mode || leveltime == 0 {
-			// first spawn of level, before corpses
-			for i := int32(0); i < playernum; i++ {
-				if players[i].Fmo != nil && players[i].Fmo.Fx == x && players[i].Fmo.Fy == y {
-					return 0
-				}
-			}
-			return 1
-		}
-		// A player joining a step mode game mid-level (see stepJoin).
-		if stepCheckSpot(playernum, mthing) == 0 {
-			return 0
-		}
-	} else {
-		if p_CheckPosition(players[playernum].Fmo, x, y) == 0 {
-			return 0
-		}
-		// flush an old corpse if needed
-		if bodyqueslot >= BODYQUESIZE {
-			p_RemoveMobj(bodyque[bodyqueslot%BODYQUESIZE])
-		}
-		bodyque[bodyqueslot%BODYQUESIZE] = players[playernum].Fmo
-		bodyqueslot++
+	if p_CheckPosition(players[playernum].Fmo, x, y) == 0 {
+		return 0
 	}
+	// flush an old corpse if needed
+	if bodyqueslot >= BODYQUESIZE {
+		p_RemoveMobj(bodyque[bodyqueslot%BODYQUESIZE])
+	}
+	bodyque[bodyqueslot%BODYQUESIZE] = players[playernum].Fmo
+	bodyqueslot++
 	// spawn a teleport fog
 	ss = r_PointInSubsector(x, y)
 	// The code in the released source looks like this:
@@ -38675,6 +38672,11 @@ func s_StartSound(origin *degenmobj_t, sfx_id int32) {
 		if volume > snd_SfxVolume {
 			volume = snd_SfxVolume
 		}
+	}
+	// Nobody can hear a positional sound if the console player has no
+	// body, which happens in step mode when everyone has left the game.
+	if origin != nil && players[consoleplayer].Fmo == nil {
+		return
 	}
 	// Check to see if it is audible,
 	//  and if not, modify the params

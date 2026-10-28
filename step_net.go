@@ -26,7 +26,7 @@ type NetTic struct {
 	Leave, Join uint8
 }
 
-// stepView is the player the host wants to see.
+// stepView is the player the host wants to see (see StepSetView).
 var stepView int32
 
 // StepNetTic runs exactly one game tic of a multiplayer game.
@@ -37,46 +37,56 @@ func StepNetTic(t *NetTic) {
 			stepLeave(p)
 		}
 	}
+	var spawning []int32 // players who joined mid-level, and spawn during this tic
 	for p := range int32(MAXPLAYERS) {
-		if t.Join&(1<<p) != 0 {
-			stepJoin(p)
+		if t.Join&(1<<p) != 0 && stepJoin(p) {
+			spawning = append(spawning, p)
 		}
 	}
-	stepFixView()
+	stepFixView() // the console player may have just left
+	if PlayersInGame() == 0 {
+		// Like vanilla (see tryRunTics), don't run tics with nobody in the
+		// game: the world waits for someone to join. (Monsters would also
+		// look for a target forever, in p_LookForPlayers.)
+		return
+	}
+
 	var cmds [NET_MAXPLAYERS]ticcmd_t
-	var ingame [NET_MAXPLAYERS]boolean
 	for p := range MAXPLAYERS {
-		if playeringame[p] == 0 {
-			continue
-		}
 		c := t.Cmds[p]
 		cmds[p] = ticcmd_t{Fforwardmove: c.Forward, Fsidemove: c.Side, Fangleturn: c.AngleTurn, Fbuttons: c.Buttons}
-		ingame[p] = 1
 	}
-	runTic(cmds[:], ingame[:])
+	// Players come and go through Join and Leave, so runTic's check for
+	// players who have quit never applies: everyone in the game is playing.
+	runTic(cmds[:], playeringame[:])
 	gametic++
+
+	for _, p := range spawning {
+		stepTeleportFog(players[p].Fmo)
+	}
 	stepFixView() // a joining player now has a body to look through
 	stepUpdateSounds()
 }
 
-// stepJoin puts a player in the game. In a level they spawn on the next
-// tic, the way a dead netgame player respawns (see g_DoReborn); otherwise
-// they spawn when the next level starts.
-func stepJoin(p int32) {
+// stepJoin puts player p in the game. In a level they spawn during the next
+// tic, the way a dead netgame player respawns (see g_DoReborn), and stepJoin
+// returns true. Otherwise they spawn when the next level starts.
+func stepJoin(p int32) bool {
 	if playeringame[p] != 0 {
-		return
+		return false
 	}
 	stepClearSlot(p)
 	playeringame[p] = 1
-	if gamestate == gs_LEVEL {
-		players[p].Fplayerstate = Pst_REBORN
-	} else {
-		players[p].Fplayerstate = Pst_DEAD // g_DoLoadLevel turns this into a reborn
-	}
 	players[consoleplayer].Fmessage = fmt.Sprintf("%sjoined the game", player_names[p])
+	if gamestate != gs_LEVEL {
+		players[p].Fplayerstate = Pst_DEAD // g_DoLoadLevel turns this into a reborn
+		return false
+	}
+	players[p].Fplayerstate = Pst_REBORN
+	return true
 }
 
-// stepLeave takes a player out of the game. A living marine teleports out;
+// stepLeave takes player p out of the game. A living marine teleports out;
 // a corpse stays where it fell.
 func stepLeave(p int32) {
 	if playeringame[p] == 0 {
@@ -85,9 +95,10 @@ func stepLeave(p int32) {
 	if mo := players[p].Fmo; mo != nil {
 		mo.Fplayer = nil
 		if gamestate == gs_LEVEL && players[p].Fplayerstate == Pst_LIVE {
-			fog := p_SpawnMobj(mo.Fx, mo.Fy, mo.Ffloorz, mt_TFOG)
-			s_StartSound(&fog.degenmobj_t, int32(sfx_telept))
-			// Monsters chasing this marine look for someone else.
+			stepTeleportFog(mo)
+			// p_RemoveMobj doesn't clear other mobjs' pointers to mo.
+			// Monsters chasing it give up on targets that aren't
+			// shootable, and look for someone else.
 			mo.Fflags &^= mf_SHOOTABLE | mf_SOLID
 			p_RemoveMobj(mo)
 		}
@@ -106,9 +117,16 @@ func stepClearSlot(p int32) {
 	}
 }
 
-// stepCheckSpot is g_CheckSpot for a player who joins mid-level. They have
-// no body, not even a corpse, to test the spot with, so test it with a
-// stand-in that has a marine's size.
+// stepTeleportFog spawns teleport fog, and its sound, where a marine joining
+// or leaving the game appears or disappears.
+func stepTeleportFog(mo *mobj_t) {
+	fog := p_SpawnMobj(mo.Fx, mo.Fy, mo.Ffloorz, mt_TFOG)
+	s_StartSound(&fog.degenmobj_t, int32(sfx_telept))
+}
+
+// stepCheckSpot reports whether a player joining mid-level can spawn at
+// mthing. It is g_CheckSpot's test, but the player has no body (not even a
+// corpse) to test the spot with, so it uses a stand-in the size of a marine.
 func stepCheckSpot(playernum int32, mthing *mapthing_t) boolean {
 	if mthing.Ftype1 == 0 {
 		return 0 // the map has no such start
@@ -116,15 +134,15 @@ func stepCheckSpot(playernum int32, mthing *mapthing_t) boolean {
 	x := int32(mthing.Fx) << FRACBITS
 	y := int32(mthing.Fy) << FRACBITS
 	info := &mobjinfo[mt_PLAYER]
-	probe := &mobj_t{
+	standIn := &mobj_t{
 		Finfo:   info,
 		Fradius: info.Fradius,
 		Fheight: info.Fheight,
 		Fflags:  mf_SOLID | mf_SHOOTABLE, // not mf_PICKUP: a stand-in can't pick things up
 		Fplayer: &players[playernum],
 	}
-	probe.Fx, probe.Fy = x, y
-	return p_CheckPosition(probe, x, y)
+	standIn.Fx, standIn.Fy = x, y
+	return p_CheckPosition(standIn, x, y)
 }
 
 // StepSetView chooses whose eyes and status bar StepRender draws, and
@@ -138,28 +156,37 @@ func StepSetView(p int32) {
 	stepFixView()
 }
 
-// stepFixView points consoleplayer and displayplayer at the requested
-// player, or, until they have a body, at someone who does: the sound code
-// dereferences the console player's body.
+// stepFixView points the view (consoleplayer and displayplayer) at stepView.
+// The renderer, status bar and sound code all expect the console player to
+// have a body. So until stepView has one, the view stays where it is, or
+// moves to the first player who has one.
 func stepFixView() {
-	hasBody := func(p int32) bool {
-		return p >= 0 && p < MAXPLAYERS && playeringame[p] != 0 && players[p].Fmo != nil
-	}
-	want := stepView
-	if !hasBody(want) {
-		want = consoleplayer
-		for p := int32(0); !hasBody(want) && p < MAXPLAYERS; p++ {
-			want = p
+	switch {
+	case stepHasBody(stepView):
+		stepSetConsolePlayer(stepView)
+	case stepHasBody(consoleplayer):
+		// Keep looking through the current player for now.
+	default:
+		for p := range int32(MAXPLAYERS) {
+			if stepHasBody(p) {
+				stepSetConsolePlayer(p)
+				return
+			}
 		}
-		if !hasBody(want) {
-			return // nobody has a body yet
-		}
 	}
-	if want == consoleplayer && want == displayplayer {
+}
+
+func stepHasBody(p int32) bool {
+	return p >= 0 && p < MAXPLAYERS && playeringame[p] != 0 && players[p].Fmo != nil
+}
+
+func stepSetConsolePlayer(p int32) {
+	if p == consoleplayer && p == displayplayer {
 		return
 	}
-	consoleplayer, displayplayer = want, want
+	consoleplayer, displayplayer = p, p
 	if gamestate == gs_LEVEL {
+		// Show the new player's status bar and messages.
 		st_Start()
 		hu_Start()
 	}

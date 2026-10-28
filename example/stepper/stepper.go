@@ -25,7 +25,7 @@ func main() {
 	tics := flag.Int("tics", 700, "number of tics to run (35 per second)")
 	out := flag.String("o", "", "write the final frame to this PNG file")
 	players := flag.Int("players", 1, "number of players (1-4); more than one plays a netgame")
-	view := flag.Int("view", 0, "player whose view is rendered")
+	view := flag.Int("view", 0, "player whose view is rendered (players are numbered from 0)")
 	flag.Parse()
 
 	// Start on E1M1, at skill 3 ("Hurt Me Plenty").
@@ -34,29 +34,32 @@ func main() {
 		args = append(args, "-solo-net")
 	}
 	gore.StepInit(nil, args)
+	// The view switches to this player once they have spawned.
+	gore.StepSetView(int32(*view))
 
-	// Player 0 is in the game from the start; the others join on the first tic.
-	var join uint8
-	for p := 1; p < *players; p++ {
-		join |= 1 << p
-	}
 	sounds := 0
 	for i := range *tics {
 		if *players == 1 {
 			gore.StepTic(script(i, 0))
 		} else {
-			t := gore.NetTic{Join: join}
+			t := gore.NetTic{}
+			if i == 0 {
+				// Player 0 is in the game from the start; the others join
+				// on the first tic.
+				for p := 1; p < *players; p++ {
+					t.Join |= 1 << p
+				}
+			}
 			for p := range *players {
 				t.Cmds[p] = script(i, p)
 			}
 			gore.StepNetTic(&t)
-			join = 0
-			gore.StepSetView(int32(*view))
 		}
 		sounds += len(gore.StepSoundEvents())
 		if (i+1)%gore.TICRATE == 0 {
 			for p := range *players {
-				if gore.PlayersInGame()&(1<<p) == 0 {
+				playerMask := uint8(1 << p)
+				if gore.PlayersInGame()&playerMask == 0 {
 					continue
 				}
 				s := gore.GetPlayerStats(int32(p))
