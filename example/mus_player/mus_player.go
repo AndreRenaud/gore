@@ -1,10 +1,9 @@
 // Package main is a simple MUS music player. It plays a MUS track from inside
-// a WAD file, or a separate MUS file, through the system audio output. The
-// instruments always come from the WAD's GENMIDI lump.
+// a WAD file through the system audio output, using the instruments from the
+// WAD's GENMIDI lump.
 //
 //	mus_player -wad doom1.wad -track e1m1
 //	mus_player -wad doom1.wad              # Lists the tracks in the WAD
-//	mus_player -wad doom1.wad -mus song.mus
 //
 // While playing, the left/right arrows seek 5 seconds, up/down seek 30
 // seconds, space pauses, 'r' restarts and 'q' quits.
@@ -249,7 +248,6 @@ func play(name string, synth *gore.MusSynth, sampleRate int, loop bool) error {
 func main() {
 	wadFile := flag.String("wad", "", "Path to a WAD file to play music & take instruments from")
 	track := flag.String("track", "", "Name of the music track within the WAD (eg: e1m1 or D_E1M1). Lists the tracks if not supplied")
-	musFile := flag.String("mus", "", "Path to a separate MUS file to play, instead of a track from the WAD")
 	rawOutput := flag.String("raw", "", "Save raw audio (signed 16-bit stereo) instead of playing it")
 	frequency := flag.Int("freq", 44100, "Sample frequency")
 	loop := flag.Bool("loop", false, "Loop the song forever")
@@ -266,29 +264,19 @@ func main() {
 		log.Fatalf("Cannot read %s: %s", *wadFile, err)
 	}
 
-	var data []byte
-	var name string
-	switch {
-	case *musFile != "":
-		data, err = os.ReadFile(*musFile)
-		if err != nil {
-			log.Fatalf("Cannot read %s: %s", *musFile, err)
-		}
-		name = *musFile
-	case *track != "":
-		lump := findTrack(lumps, *track)
-		if lump == nil {
-			fmt.Printf("Track %q not found in %s\n", *track, *wadFile)
-			listTracks(lumps)
-			os.Exit(1)
-		}
-		data, name = lump.Data, lump.Name
-	default:
+	if *track == "" {
 		listTracks(lumps)
 		return
 	}
+	lump := findTrack(lumps, *track)
+	if lump == nil {
+		fmt.Printf("Track %q not found in %s\n", *track, *wadFile)
+		listTracks(lumps)
+		os.Exit(1)
+	}
+	name := lump.Name
 
-	m, err := gore.NewMusMusic(data)
+	m, err := gore.NewMusMusic(lump.Data)
 	if err != nil {
 		log.Fatalf("Cannot parse MUS track %s: %s", name, err)
 	}
