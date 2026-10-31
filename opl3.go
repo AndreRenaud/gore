@@ -17,10 +17,10 @@ import "math"
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 //
-// Only the features used by Doom's DMX music driver are included: 2-operator
-// voices in OPL2 or OPL3 mode, with left/right output. 4-operator voices,
-// rhythm mode and the extra OPL3 outputs are not emulated. For those
-// register writes, the output is identical to the original.
+// Only the features used by Doom's DMX music driver are included: the 9
+// 2-operator voices of OPL2 mode. The OPL3 extensions, 4-operator voices and
+// rhythm mode are not emulated. For those register writes, the output is
+// identical to the original.
 
 const (
 	opl3WriteBufSize  = 1024
@@ -62,15 +62,6 @@ var opl3EgIncStep = [4][4]uint8{
 	{1, 1, 1, 0},
 }
 
-// Register offset to slot number
-var opl3ADSlot = [0x20]int8{
-	0, 1, 2, 3, 4, 5, -1, -1, 6, 7, 8, 9, 10, 11, -1, -1,
-	12, 13, 14, 15, 16, 17, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-}
-
-// First slot of each channel; the second is 3 slots later
-var opl3ChSlot = [18]uint8{0, 1, 2, 6, 7, 8, 12, 13, 14, 18, 19, 20, 24, 25, 26, 30, 31, 32}
-
 type opl3Slot struct {
 	chip       *opl3Chip
 	channel    *opl3Channel
@@ -101,31 +92,28 @@ type opl3Slot struct {
 }
 
 type opl3Channel struct {
-	slots       [2]*opl3Slot
-	fNum        uint16
-	block       uint8
-	fb          uint8
-	con         uint8
-	ksv         uint8
-	left, right bool
+	slots [2]*opl3Slot
+	fNum  uint16
+	block uint8
+	fb    uint8
+	con   uint8
+	ksv   uint8
 }
 
 type opl3WriteBuf struct {
-	time uint64
-	reg  uint16
-	data uint8
+	time      uint64
+	reg, data uint8
+	pending   bool
 }
 
 type opl3Chip struct {
-	channel    [18]opl3Channel
-	slot       [36]opl3Slot
+	channel    [9]opl3Channel
+	slot       [18]opl3Slot
 	timer      uint16
 	egTimer    uint64
-	egTimerrem uint8
 	egState    uint8
 	egAdd      uint8
 	egTimerLo  uint8
-	newm       uint8
 	nts        uint8
 	vibpos     uint8
 	tremolo    uint8
@@ -157,7 +145,7 @@ func opl3LogSin(phase uint16) uint16 {
 	return opl3LogSinROM[phase&0xff]
 }
 
-// opl3Waveform calculates the output of one of the 8 OPL3 waveforms
+// opl3Waveform calculates the output of one of the 4 OPL2 waveforms
 func opl3Waveform(wf uint8, phase uint16, envelope uint16) int16 {
 	var out uint16
 	neg := false
@@ -180,23 +168,6 @@ func opl3Waveform(wf uint8, phase uint16, envelope uint16) int16 {
 		} else {
 			out = opl3LogSinROM[phase&0xff]
 		}
-	case 4, 5: // Alternating sine, camel sine
-		neg = wf == 4 && phase&0x300 == 0x100
-		if phase&0x200 != 0 {
-			out = 0x1000
-		} else if phase&0x80 != 0 {
-			out = opl3LogSinROM[((phase^0xff)<<1)&0xff]
-		} else {
-			out = opl3LogSinROM[(phase<<1)&0xff]
-		}
-	case 6: // Square
-		neg = phase&0x200 != 0
-	case 7: // Logarithmic sawtooth
-		if phase&0x200 != 0 {
-			neg = true
-			phase = (phase & 0x1ff) ^ 0x1ff
-		}
-		out = phase << 3
 	}
 	v := opl3EnvelopeCalcExp(uint32(out) + uint32(envelope)<<3)
 	if neg {
@@ -343,12 +314,10 @@ func (channel *opl3Channel) output() int32 {
 	return int32(out)
 }
 
-func (chip *opl3Chip) mix(right bool) int32 {
+func (chip *opl3Chip) mix() int32 {
 	total := int32(0)
 	for i := range chip.channel {
-		if c := &chip.channel[i]; (right && c.right) || (!right && c.left) {
-			total += c.output()
-		}
+		total += chip.channel[i].output()
 	}
 	return total
 }
@@ -357,9 +326,9 @@ func opl3ClipSample(sample int32) int16 {
 	return int16(max(-32768, min(32767, sample)))
 }
 
-// generate produces one stereo sample at the chip's native rate. Some FM
-// channels are output one sample later on the left side than the right,
-// which is emulated by the order slots are processed and mixed.
+// generate produces one stereo sample at the chip's native rate. Channels
+// 6-8 are output one sample later on the left side than the right, which is
+// emulated by the order slots are processed and mixed.
 func (chip *opl3Chip) generate(buf *[2]int16) {
 	process := func(slots []opl3Slot) {
 		for i := range slots {
@@ -368,12 +337,10 @@ func (chip *opl3Chip) generate(buf *[2]int16) {
 	}
 	buf[1] = opl3ClipSample(chip.mixbuff[1])
 	process(chip.slot[:15])
-	chip.mixbuff[0] = chip.mix(false)
-	process(chip.slot[15:18])
+	chip.mixbuff[0] = chip.mix()
+	process(chip.slot[15:])
 	buf[0] = opl3ClipSample(chip.mixbuff[0])
-	process(chip.slot[18:33])
-	chip.mixbuff[1] = chip.mix(true)
-	process(chip.slot[33:])
+	chip.mixbuff[1] = chip.mix()
 
 	if chip.timer&0x3f == 0x3f {
 		chip.tremolopos = (chip.tremolopos + 1) % 210
@@ -400,23 +367,18 @@ func (chip *opl3Chip) generate(buf *[2]int16) {
 		}
 		chip.egTimerLo = uint8(chip.egTimer & 0x3)
 	}
-	if chip.egTimerrem != 0 || chip.egState != 0 {
-		if chip.egTimer == 0xfffffffff {
-			chip.egTimer = 0
-			chip.egTimerrem = 1
-		} else {
-			chip.egTimer++
-			chip.egTimerrem = 0
-		}
+	// The real timer is 36 bits, but only the bottom 13 are used
+	if chip.egState != 0 {
+		chip.egTimer++
 	}
 	chip.egState ^= 1
 
 	for {
 		wb := &chip.writebuf[chip.writebufCur]
-		if wb.time > chip.writebufSamplecnt || wb.reg&0x200 == 0 {
+		if wb.time > chip.writebufSamplecnt || !wb.pending {
 			break
 		}
-		wb.reg &= 0x1ff
+		wb.pending = false
 		chip.writeReg(wb.reg, wb.data)
 		chip.writebufCur = (chip.writebufCur + 1) % opl3WriteBufSize
 	}
@@ -442,7 +404,8 @@ func (chip *opl3Chip) reset(sampleRate int) {
 	for i := range chip.channel {
 		channel := &chip.channel[i]
 		for j := range channel.slots {
-			slot := &chip.slot[int(opl3ChSlot[i])+j*3]
+			// Channels' slots are in groups of 3, with the second slot 3 after the first
+			slot := &chip.slot[i/3*6+i%3+j*3]
 			slot.chip = chip
 			slot.channel = channel
 			slot.egRout = 0x1ff
@@ -452,27 +415,22 @@ func (chip *opl3Chip) reset(sampleRate int) {
 		}
 		channel.slots[0].mod = &channel.slots[0].fbmod
 		channel.slots[1].mod = &channel.slots[0].out
-		channel.left = true
-		channel.right = true
 	}
 	chip.rateratio = int32((sampleRate << opl3RsmFrac) / opl3NativeRate)
 }
 
-func (chip *opl3Chip) writeReg(reg uint16, v uint8) {
-	high := int(reg>>8) & 0x01
-	regm := uint8(reg)
+func (chip *opl3Chip) writeReg(reg uint8, v uint8) {
 	switch {
-	case reg == 0x105:
-		chip.newm = v & 0x01
 	case reg == 0x08:
 		chip.nts = (v >> 6) & 0x01
-	case (regm >= 0x20 && regm < 0xa0) || regm >= 0xe0:
-		s := opl3ADSlot[regm&0x1f]
-		if s < 0 {
+	case (reg >= 0x20 && reg < 0xa0) || reg >= 0xe0:
+		// Slot registers are in groups of 6, 8 registers apart
+		offset := reg & 0x1f
+		if offset%8 >= 6 || offset >= 0x18 {
 			return
 		}
-		slot := &chip.slot[18*high+int(s)]
-		switch regm & 0xe0 {
+		slot := &chip.slot[offset/8*6+offset%8]
+		switch reg & 0xe0 {
 		case 0x20:
 			slot.trem = v&0x80 != 0
 			slot.vib = (v >> 6) & 0x01
@@ -493,14 +451,11 @@ func (chip *opl3Chip) writeReg(reg uint16, v uint8) {
 			}
 			slot.rr = v & 0x0f
 		case 0xe0:
-			slot.wf = v & 0x07
-			if chip.newm == 0 {
-				slot.wf &= 0x03
-			}
+			slot.wf = v & 0x03
 		}
-	case regm&0x0f < 9 && regm != 0xbd:
-		channel := &chip.channel[9*high+int(regm&0x0f)]
-		switch regm & 0xf0 {
+	case reg&0x0f < 9:
+		channel := &chip.channel[reg&0x0f]
+		switch reg & 0xf0 {
 		case 0xa0:
 			channel.fNum = (channel.fNum & 0x300) | uint16(v)
 			channel.updateFrequency(chip.nts)
@@ -518,8 +473,6 @@ func (chip *opl3Chip) writeReg(reg uint16, v uint8) {
 			} else {
 				channel.slots[1].mod = &chip.zeromod
 			}
-			channel.left = chip.newm == 0 || v&0x10 != 0
-			channel.right = chip.newm == 0 || v&0x20 != 0
 		}
 	}
 }
@@ -527,16 +480,17 @@ func (chip *opl3Chip) writeReg(reg uint16, v uint8) {
 // writeRegBuffered queues a register write, spacing writes out in time the
 // way the real chip requires. This matters when a key off is immediately
 // followed by a key on, which would otherwise not re-trigger the envelope.
-func (chip *opl3Chip) writeRegBuffered(reg uint16, v uint8) {
+func (chip *opl3Chip) writeRegBuffered(reg uint8, v uint8) {
 	last := chip.writebufLast
 	wb := &chip.writebuf[last]
-	if wb.reg&0x200 != 0 {
-		chip.writeReg(wb.reg&0x1ff, wb.data)
+	if wb.pending {
+		chip.writeReg(wb.reg, wb.data)
 		chip.writebufCur = (last + 1) % opl3WriteBufSize
 		chip.writebufSamplecnt = wb.time
 	}
-	wb.reg = reg | 0x200
+	wb.reg = reg
 	wb.data = v
+	wb.pending = true
 	wb.time = max(chip.writebufLasttime+opl3WriteBufDelay, chip.writebufSamplecnt)
 	chip.writebufLasttime = wb.time
 	chip.writebufLast = (last + 1) % opl3WriteBufSize

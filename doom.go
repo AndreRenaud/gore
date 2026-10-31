@@ -4408,7 +4408,6 @@ type musicinfo_t struct {
 	Fname    string
 	Flumpnum int32
 	Fdata    []byte
-	Fhandle  *MusMusic
 }
 
 type snddevice_t = int32
@@ -17479,22 +17478,15 @@ func i_ResumeSong() {
 	}
 }
 
-func i_RegisterSong(data []byte) *MusMusic {
+func i_PlaySong(data []byte, looping boolean) {
 	if music_genmidi == nil {
-		return nil
-	}
-	music, err := NewMusMusic(data)
-	if err != nil {
-		log.Printf("Cannot load music: %s", err)
-	}
-	return music
-}
-
-func i_PlaySong(music *MusMusic, looping boolean) {
-	if music == nil {
 		return
 	}
-	synth, err := NewMusSynth(music, music_genmidi, MusicSampleRate)
+	music, err := NewMusMusic(data)
+	var synth *MusSynth
+	if err == nil {
+		synth, err = NewMusSynth(music, music_genmidi, MusicSampleRate)
+	}
 	if err != nil {
 		log.Printf("Cannot play music: %s", err)
 		return
@@ -38790,8 +38782,7 @@ func s_ChangeMusic(musicnum int32, looping int32) {
 		music.Flumpnum = w_GetNumForName(bp)
 	}
 	music.Fdata = w_CacheLumpNumBytes(music.Flumpnum)
-	music.Fhandle = i_RegisterSong(music.Fdata)
-	i_PlaySong(music.Fhandle, uint32(looping))
+	i_PlaySong(music.Fdata, uint32(looping))
 	mus_playing = music
 }
 
@@ -38802,7 +38793,6 @@ func s_StopMusic() {
 		}
 		i_StopSong()
 		w_ReleaseLumpNum(mus_playing.Flumpnum)
-		mus_playing.Fhandle = nil
 		mus_playing.Fdata = nil
 		mus_playing = nil
 	}

@@ -12,11 +12,8 @@ import (
 // MusMusic represents the content of a MUS file.
 // See https://doomwiki.org/wiki/MUS & https://moddingwiki.shikadi.net/wiki/MUS_Format
 type MusMusic struct {
-	PrimaryChannels   uint16
-	SecondaryChannels uint16
-	Instruments       []uint16
-	Events            []MusEvent // These are guaranteed to be in order of time
-	Ticks             uint32     // Total length of the song, in ticks
+	Events []MusEvent // These are guaranteed to be in order of time
+	Ticks  uint32     // Total length of the song, in ticks
 }
 
 type MusEventType byte
@@ -27,18 +24,18 @@ type MusEvent struct {
 	Channel    byte
 	Note       byte
 	Controller byte
-	Value      int // Contents depends on the event type
+	Value      int // The note volume, pitch bend or controller value, depending on the event type
 }
 
 const (
-	MusEventRelease      MusEventType = 0
-	MusEventPlay         MusEventType = 1
-	MusEventPitchBend    MusEventType = 2
-	MusEventSystem       MusEventType = 3
-	MusEventController   MusEventType = 4
-	MusEventEndOfMeasure MusEventType = 5
-	MusEventFinish       MusEventType = 6
-	MusEventUnused       MusEventType = 7
+	MusEventRelease MusEventType = iota
+	MusEventPlay
+	MusEventPitchBend
+	MusEventSystem
+	MusEventController
+	MusEventEndOfMeasure
+	MusEventFinish
+	MusEventUnused
 )
 
 // MUS controller numbers, used by MusEventController & MusEventSystem.
@@ -46,7 +43,6 @@ const (
 const (
 	MusControllerInstrument = 0
 	MusControllerVolume     = 3
-	MusControllerPan        = 4
 	MusSystemAllNotesOff    = 11
 )
 
@@ -74,15 +70,8 @@ func NewMusMusic(data []byte) (*MusMusic, error) {
 	m := &MusMusic{}
 	songLength := int(binary.LittleEndian.Uint16(data[4:6]))
 	songOff := int(binary.LittleEndian.Uint16(data[6:8]))
-	m.PrimaryChannels = binary.LittleEndian.Uint16(data[8:10])
-	m.SecondaryChannels = binary.LittleEndian.Uint16(data[10:12])
-	numInstruments := int(binary.LittleEndian.Uint16(data[12:14]))
-
-	if len(data) < 16+numInstruments*2 || songOff > len(data) {
+	if songOff > len(data) {
 		return nil, ErrInvalidMusFile
-	}
-	for i := range numInstruments {
-		m.Instruments = append(m.Instruments, binary.LittleEndian.Uint16(data[16+i*2:]))
 	}
 
 	// Some tools write an incorrect song length, so be lenient and just
@@ -92,6 +81,11 @@ func NewMusMusic(data []byte) (*MusMusic, error) {
 		song = song[:songLength]
 	}
 
+	// Notes without a volume use the previous one played on their channel
+	velocity := [16]int{}
+	for i := range velocity {
+		velocity[i] = 127
+	}
 	var err error
 	pos := 0
 	read := func() byte {
@@ -116,10 +110,10 @@ func NewMusMusic(data []byte) (*MusMusic, error) {
 		case MusEventPlay:
 			b := read()
 			e.Note = b & 0x7f
-			e.Value = -1 // Continue with previous volume
 			if b&0x80 != 0 {
-				e.Value = min(int(read()), 127)
+				velocity[e.Channel] = min(int(read()), 127)
 			}
+			e.Value = velocity[e.Channel]
 		case MusEventPitchBend:
 			e.Value = int(read())
 		case MusEventSystem:
@@ -163,11 +157,6 @@ func (m *MusMusic) Duration() time.Duration {
 	return time.Duration(m.Ticks) * time.Second / MusTicksPerSecond
 }
 
-// Time returns when this event occurs, relative to the start of the song
-func (e MusEvent) Time() time.Duration {
-	return time.Duration(e.Tick) * time.Second / MusTicksPerSecond
-}
-
 const (
 	musBytesPerFrame = 4 // 16-bit stereo
 	musMaxFrames     = 256
@@ -189,11 +178,10 @@ type MusSynth struct {
 	paused     bool
 	opl        *oplDriver
 
-	frame    int64   // current position in the song, in sample frames
-	next     int     // index of the next event to process
-	finished bool    // reached the end of the song, and not looping
-	tail     int64   // frames rendered since the song finished
-	velocity [16]int // volume of the last note played on each channel
+	frame    int64 // current position in the song, in sample frames
+	next     int   // index of the next event to process
+	finished bool  // reached the end of the song, and not looping
+	tail     int64 // frames rendered since the song finished
 }
 
 // NewMusSynth creates a synthesizer for the given song, producing samples
@@ -239,15 +227,6 @@ func (s *MusSynth) SetPaused(paused bool) {
 		s.opl.pause()
 	}
 	s.paused = paused
-}
-
-// SetOPL3 switches between emulating an OPL2 (9 voices, mono, the default)
-// and an OPL3 (18 voices, stereo), as DMX did with DMXOPTION=-opl3
-func (s *MusSynth) SetOPL3(opl3 bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.opl.opl3 = opl3
-	s.seekFrame(s.frame)
 }
 
 // Duration returns the length of the song
@@ -308,7 +287,7 @@ func (s *MusSynth) seekFrame(frame int64) {
 	s.opl.reset()
 	s.restart()
 	for s.next < len(s.music.Events) && s.tickToFrame(s.music.Events[s.next].Tick) < frame {
-		s.handleEvent(&s.music.Events[s.next], false)
+		s.opl.event(&s.music.Events[s.next], false)
 		s.next++
 	}
 	s.frame = frame
@@ -321,16 +300,6 @@ func (s *MusSynth) restart() {
 	s.opl.initChannels()
 	s.frame = 0
 	s.next = 0
-	for i := range s.velocity {
-		s.velocity[i] = 127
-	}
-}
-
-func (s *MusSynth) handleEvent(e *MusEvent, live bool) {
-	if e.Type == MusEventPlay && e.Value >= 0 {
-		s.velocity[e.Channel] = e.Value
-	}
-	s.opl.event(e, s.velocity[e.Channel], live)
 }
 
 // Read implements io.Reader, producing signed 16-bit little-endian stereo samples
@@ -352,7 +321,7 @@ func (s *MusSynth) Read(p []byte) (int, error) {
 	for done < frames {
 		if !s.finished {
 			for s.next < len(s.music.Events) && s.tickToFrame(s.music.Events[s.next].Tick) <= s.frame {
-				s.handleEvent(&s.music.Events[s.next], true)
+				s.opl.event(&s.music.Events[s.next], true)
 				s.next++
 			}
 			if s.next >= len(s.music.Events) && s.frame >= end {
@@ -365,7 +334,7 @@ func (s *MusSynth) Read(p []byte) (int, error) {
 				s.finished = true
 			}
 		}
-		if s.finished && (!s.opl.active() || s.tail >= maxTail) {
+		if s.finished && (s.opl.chip.silent() || s.tail >= maxTail) {
 			break
 		}
 

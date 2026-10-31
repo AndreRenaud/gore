@@ -21,25 +21,21 @@ import (
 )
 
 const (
-	genmidiHeader        = "#OPL_II#"
-	genmidiNumInstrs     = 128
-	genmidiNumPerc       = 47
-	genmidiFlagFixed     = 0x0001 // fixed pitch
-	genmidiFlag2Voice    = 0x0004 // double voice (OPL3)
-	oplNumVoices         = 9
-	oplNumOperators      = 21
-	oplRegWaveformEnable = 0x01
-	oplRegTimerCtrl      = 0x04
-	oplRegFMMode         = 0x08
-	oplRegNew            = 0x105
-	oplRegsTremolo       = 0x20
-	oplRegsLevel         = 0x40
-	oplRegsAttack        = 0x60
-	oplRegsSustain       = 0x80
-	oplRegsWaveform      = 0xe0
-	oplRegsFreq1         = 0xa0
-	oplRegsFreq2         = 0xb0
-	oplRegsFeedback      = 0xc0
+	genmidiHeader     = "#OPL_II#"
+	genmidiNumInstrs  = 128
+	genmidiNumPerc    = 47
+	genmidiFlagFixed  = 0x0001 // fixed pitch
+	genmidiFlag2Voice = 0x0004 // double voice
+	oplNumVoices      = 9
+	oplNumOperators   = 21
+	oplRegsTremolo    = 0x20
+	oplRegsLevel      = 0x40
+	oplRegsAttack     = 0x60
+	oplRegsSustain    = 0x80
+	oplRegsWaveform   = 0xe0
+	oplRegsFreq1      = 0xa0
+	oplRegsFreq2      = 0xb0
+	oplRegsFeedback   = 0xc0
 )
 
 var ErrInvalidGENMIDI = errors.New("invalid GENMIDI lump")
@@ -70,14 +66,12 @@ type oplChannel struct {
 	instrument *genmidiInstr
 	volume     int // Volume in use, limited by the music volume
 	volumeBase int // Volume requested by the song
-	pan        int
 	bend       int
 }
 
 type oplVoice struct {
 	index    int // Index of this voice
 	op1, op2 int // The operators used by this voice
-	array    int // Register array (0x100 for the second half of an OPL3)
 
 	instr      *genmidiInstr // Currently-loaded instrument data
 	instrVoice int           // Which voice of a double voice instrument
@@ -89,7 +83,6 @@ type oplVoice struct {
 	noteVolume int         // The volume of the note being played on this channel
 	carVolume  int         // The current volume (register value) that has been set for this channel
 	modVolume  int
-	regPan     int
 }
 
 // The OPL frequency value for each 1/32 of a semitone, starting from A#4 in
@@ -105,17 +98,11 @@ var oplFrequencyCurve = func() (curve [668]uint16) {
 	return
 }()
 
-var oplVoiceOperators = [2][oplNumVoices]int{
-	{0x00, 0x01, 0x02, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12},
-	{0x03, 0x04, 0x05, 0x0b, 0x0c, 0x0d, 0x13, 0x14, 0x15},
-}
-
 type oplDriver struct {
 	chip       opl3Chip
 	sampleRate int
-	opl3       bool
 	instrs     []genmidiInstr
-	voices     [oplNumVoices * 2]oplVoice
+	voices     [oplNumVoices]oplVoice
 	free       []*oplVoice
 	alloced    []*oplVoice
 	channels   [16]oplChannel
@@ -141,54 +128,38 @@ func newOPLDriver(genmidi []byte, sampleRate int) (*oplDriver, error) {
 }
 
 func (d *oplDriver) write(reg, value int) {
-	d.chip.writeRegBuffered(uint16(reg), uint8(value))
+	d.chip.writeRegBuffered(uint8(reg), uint8(value))
 }
 
 // reset initializes the chip and frees all voices
 func (d *oplDriver) reset() {
 	d.chip.reset(d.sampleRate)
 
-	initArray := func(array int) {
-		for r := oplRegsLevel; r <= oplRegsLevel+oplNumOperators; r++ {
-			d.write(r|array, 0x3f)
-		}
-		// These write to registers that actually don't exist, but this is what Doom does ...
-		for r := oplRegsAttack; r <= oplRegsWaveform+oplNumOperators; r++ {
-			d.write(r|array, 0)
-		}
-		for r := 1; r < oplRegsLevel; r++ {
-			d.write(r|array, 0)
-		}
+	for r := oplRegsLevel; r <= oplRegsLevel+oplNumOperators; r++ {
+		d.write(r, 0x3f)
 	}
-	initArray(0)
+	// These write to registers that actually don't exist, but this is what Doom does ...
+	for r := oplRegsAttack; r <= oplRegsWaveform+oplNumOperators; r++ {
+		d.write(r, 0)
+	}
+	for r := 1; r < oplRegsLevel; r++ {
+		d.write(r, 0)
+	}
 	// Reset both timers and enable interrupts
-	d.write(oplRegTimerCtrl, 0x60)
-	d.write(oplRegTimerCtrl, 0x80)
+	d.write(0x04, 0x60)
+	d.write(0x04, 0x80)
 	// "Allow FM chips to control the waveform of each operator"
-	d.write(oplRegWaveformEnable, 0x20)
-	if d.opl3 {
-		d.write(oplRegNew, 0x01)
-		initArray(0x100)
-	}
+	d.write(0x01, 0x20)
 	// Keyboard split point on (?)
-	d.write(oplRegFMMode, 0x40)
-	if d.opl3 {
-		d.write(oplRegNew, 0x01)
-	}
+	d.write(0x08, 0x40)
 
-	numVoices := oplNumVoices
-	if d.opl3 {
-		numVoices *= 2
-	}
 	d.free = d.free[:0]
 	d.alloced = d.alloced[:0]
-	for i := range numVoices {
-		d.voices[i] = oplVoice{
-			index: i % oplNumVoices,
-			op1:   oplVoiceOperators[0][i%oplNumVoices],
-			op2:   oplVoiceOperators[1][i%oplNumVoices],
-			array: (i / oplNumVoices) << 8,
-		}
+	for i := range d.voices {
+		// Each voice's operators are in groups of 3, 8 registers apart,
+		// with the second operator 3 registers after the first
+		op1 := i/3*8 + i%3
+		d.voices[i] = oplVoice{index: i, op1: op1, op2: op1 + 3}
 		d.free = append(d.free, &d.voices[i])
 	}
 }
@@ -202,7 +173,6 @@ func (d *oplDriver) initChannels() {
 			instrument: &d.instrs[0],
 			volume:     min(d.musicVolume, 100),
 			volumeBase: 100,
-			pan:        0x30,
 		}
 	}
 }
@@ -278,11 +248,11 @@ func (d *oplDriver) setVoiceInstrument(voice *oplVoice, instr *genmidiInstr, ins
 	// is set in setVoiceVolume (below). If we are not using
 	// modulating mode, we must set both to minimum volume.
 	modulating := data.Feedback&0x01 == 0
-	voice.carVolume = d.loadOperatorData(voice.op2|voice.array, &data.Carrier, true)
-	voice.modVolume = d.loadOperatorData(voice.op1|voice.array, &data.Modulator, !modulating)
+	voice.carVolume = d.loadOperatorData(voice.op2, &data.Carrier, true)
+	voice.modVolume = d.loadOperatorData(voice.op1, &data.Modulator, !modulating)
 
 	// Set feedback register that control the connection between the two operators
-	d.write((oplRegsFeedback+voice.index)|voice.array, int(data.Feedback)|voice.regPan)
+	d.write(oplRegsFeedback+voice.index, int(data.Feedback))
 }
 
 func (d *oplDriver) setVoiceVolume(voice *oplVoice, volume int) {
@@ -299,7 +269,7 @@ func (d *oplDriver) setVoiceVolume(voice *oplVoice, volume int) {
 		return
 	}
 	voice.carVolume = carVolume | (voice.carVolume & 0xc0)
-	d.write((oplRegsLevel+voice.op2)|voice.array, voice.carVolume)
+	d.write(oplRegsLevel+voice.op2, voice.carVolume)
 
 	// If we are using non-modulated feedback mode, we must set the
 	// volume for both voices.
@@ -307,24 +277,29 @@ func (d *oplDriver) setVoiceVolume(voice *oplVoice, volume int) {
 		modVolume := max(int(data.Modulator.Level), carVolume) | (voice.modVolume & 0xc0)
 		if modVolume != voice.modVolume {
 			voice.modVolume = modVolume
-			d.write((oplRegsLevel+voice.op1)|voice.array, modVolume|int(data.Modulator.Scale&0xc0))
+			d.write(oplRegsLevel+voice.op1, modVolume|int(data.Modulator.Scale&0xc0))
 		}
 	}
 }
 
 func (d *oplDriver) voiceKeyOff(voice *oplVoice) {
-	d.write((oplRegsFreq2+voice.index)|voice.array, voice.freq>>8)
+	d.write(oplRegsFreq2+voice.index, voice.freq>>8)
+}
+
+// releaseVoices releases all the allocated voices that match
+func (d *oplDriver) releaseVoices(match func(*oplVoice) bool) {
+	for i := 0; i < len(d.alloced); i++ {
+		if match(d.alloced[i]) {
+			d.releaseVoice(i)
+			i--
+		}
+	}
 }
 
 func (d *oplDriver) keyOff(channel *oplChannel, key int) {
 	// Turn off voices being used to play this key.
 	// If it is a double voice instrument there will be two.
-	for i := 0; i < len(d.alloced); i++ {
-		if d.alloced[i].channel == channel && d.alloced[i].key == key {
-			d.releaseVoice(i)
-			i--
-		}
-	}
+	d.releaseVoices(func(v *oplVoice) bool { return v.channel == channel && v.key == key })
 }
 
 // replaceExistingVoice discards an existing voice to make room for a new
@@ -378,8 +353,8 @@ func (d *oplDriver) frequencyForVoice(voice *oplVoice) int {
 
 func (d *oplDriver) updateVoiceFrequency(voice *oplVoice) {
 	if freq := d.frequencyForVoice(voice); voice.freq != freq {
-		d.write((oplRegsFreq1+voice.index)|voice.array, freq&0xff)
-		d.write((oplRegsFreq2+voice.index)|voice.array, freq>>8|0x20)
+		d.write(oplRegsFreq1+voice.index, freq&0xff)
+		d.write(oplRegsFreq2+voice.index, freq>>8|0x20)
 		voice.freq = freq
 	}
 }
@@ -400,7 +375,6 @@ func (d *oplDriver) voiceKeyOn(channel *oplChannel, instr *genmidiInstr, instrVo
 	if instr.Flags&genmidiFlagFixed != 0 {
 		voice.note = int(instr.FixedNote)
 	}
-	voice.regPan = channel.pan
 
 	d.setVoiceInstrument(voice, instr, instrVoice)
 	d.setVoiceVolume(voice, volume)
@@ -456,39 +430,8 @@ func (d *oplDriver) setChannelVolume(channel *oplChannel, volume int, clipStart 
 	}
 }
 
-func (d *oplDriver) setChannelPan(channel *oplChannel, pan int) {
-	if !d.opl3 {
-		return
-	}
-	// The DMX library has the stereo channels backwards, maybe because
-	// Paul Radek had a Soundblaster card with the channels reversed, or
-	// perhaps it was just a bug in the OPL3 support that was never
-	// finished. We preserve this bug.
-	regPan := 0x30
-	if pan >= 96 {
-		regPan = 0x10
-	} else if pan <= 48 {
-		regPan = 0x20
-	}
-	if channel.pan == regPan {
-		return
-	}
-	channel.pan = regPan
-	for i := range d.voices {
-		if voice := &d.voices[i]; voice.channel == channel {
-			voice.regPan = regPan
-			d.write((oplRegsFeedback+voice.index)|voice.array, int(voice.instr.Voices[voice.instrVoice].Feedback)|regPan)
-		}
-	}
-}
-
 func (d *oplDriver) allNotesOff(channel *oplChannel) {
-	for i := 0; i < len(d.alloced); i++ {
-		if d.alloced[i].channel == channel {
-			d.releaseVoice(i)
-			i--
-		}
-	}
+	d.releaseVoices(func(v *oplVoice) bool { return v.channel == channel })
 }
 
 func (d *oplDriver) pitchBend(channel *oplChannel, bend int) {
@@ -508,15 +451,14 @@ func (d *oplDriver) pitchBend(channel *oplChannel, bend int) {
 	d.alloced = append(others, updated...)
 }
 
-// event processes a MUS event. velocity is the note volume to use for
-// MusEventPlay. When live is false the song is being fast-forwarded, so
-// only channel state is updated and no notes are played.
-func (d *oplDriver) event(e *MusEvent, velocity int, live bool) {
+// event processes a MUS event. When live is false the song is being
+// fast-forwarded, so only channel state is updated and no notes are played.
+func (d *oplDriver) event(e *MusEvent, live bool) {
 	channel := &d.channels[e.Channel]
 	switch e.Type {
 	case MusEventPlay:
 		if live {
-			d.keyOn(channel, int(e.Note), velocity)
+			d.keyOn(channel, int(e.Note), e.Value)
 		}
 	case MusEventRelease:
 		d.keyOff(channel, int(e.Note))
@@ -529,8 +471,6 @@ func (d *oplDriver) event(e *MusEvent, velocity int, live bool) {
 			channel.instrument = &d.instrs[e.Value]
 		case MusControllerVolume:
 			d.setChannelVolume(channel, e.Value, true)
-		case MusControllerPan:
-			d.setChannelPan(channel, e.Value)
 		}
 	case MusEventSystem:
 		if e.Controller == MusSystemAllNotesOff {
@@ -552,11 +492,6 @@ func (d *oplDriver) pause() {
 			d.voiceKeyOff(voice)
 		}
 	}
-}
-
-// active reports whether any notes are still sounding
-func (d *oplDriver) active() bool {
-	return len(d.alloced) > 0 || !d.chip.silent()
 }
 
 // render produces frames of signed 16-bit little-endian stereo samples

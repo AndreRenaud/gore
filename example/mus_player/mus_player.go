@@ -15,7 +15,6 @@ package main
 
 import (
 	"encoding/binary"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -102,19 +101,8 @@ func formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%d:%02d", int(d.Minutes()), int(d.Seconds())%60)
 }
 
-type key int
-
-const (
-	keyLeft key = iota
-	keyRight
-	keyUp
-	keyDown
-	keyPause
-	keyRestart
-	keyQuit
-)
-
-func readKeys(r io.Reader, keys chan<- key) {
+// readKeys sends each key pressed, with arrow keys as their escape sequences
+func readKeys(r io.Reader, keys chan<- string) {
 	buf := make([]byte, 32)
 	for {
 		n, err := r.Read(buf)
@@ -122,30 +110,22 @@ func readKeys(r io.Reader, keys chan<- key) {
 			return
 		}
 		for i := 0; i < n; i++ {
+			key := buf[i : i+1]
 			if buf[i] == 0x1b && i+2 < n && buf[i+1] == '[' {
-				switch buf[i+2] {
-				case 'A':
-					keys <- keyUp
-				case 'B':
-					keys <- keyDown
-				case 'C':
-					keys <- keyRight
-				case 'D':
-					keys <- keyLeft
-				}
+				key = buf[i : i+3]
 				i += 2
-				continue
 			}
-			switch buf[i] {
-			case ' ':
-				keys <- keyPause
-			case 'r', 'R':
-				keys <- keyRestart
-			case 'q', 'Q', 3: // 3 = Ctrl-C, which raw mode no longer turns into a signal
-				keys <- keyQuit
-			}
+			keys <- string(key)
 		}
 	}
+}
+
+// How far the arrow keys seek
+var seekKeys = map[string]time.Duration{
+	"\x1b[D": -5 * time.Second,
+	"\x1b[C": 5 * time.Second,
+	"\x1b[B": -30 * time.Second,
+	"\x1b[A": 30 * time.Second,
 }
 
 func play(name string, synth *gore.MusSynth, sampleRate int, loop bool) error {
@@ -178,7 +158,7 @@ func play(name string, synth *gore.MusSynth, sampleRate int, loop bool) error {
 		return err
 	}
 
-	keys := make(chan key)
+	keys := make(chan string)
 	interactive := term.IsTerminal(int(os.Stdin.Fd()))
 	if interactive {
 		oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
@@ -197,25 +177,20 @@ func play(name string, synth *gore.MusSynth, sampleRate int, loop bool) error {
 		select {
 		case k := <-keys:
 			var err error
+			if delta, ok := seekKeys[k]; ok {
+				err = seek(position() + delta)
+			}
 			switch k {
-			case keyLeft:
-				err = seek(position() - 5*time.Second)
-			case keyRight:
-				err = seek(position() + 5*time.Second)
-			case keyDown:
-				err = seek(position() - 30*time.Second)
-			case keyUp:
-				err = seek(position() + 30*time.Second)
-			case keyRestart:
+			case "r", "R":
 				err = seek(0)
-			case keyPause:
+			case " ":
 				paused = !paused
 				if paused {
 					player.Pause()
 				} else {
 					player.Play()
 				}
-			case keyQuit:
+			case "q", "Q", "\x03": // Ctrl-C, which raw mode no longer turns into a signal
 				fmt.Print("\r\n")
 				return nil
 			}
@@ -252,7 +227,6 @@ func main() {
 	frequency := flag.Int("freq", 44100, "Sample frequency")
 	loop := flag.Bool("loop", false, "Loop the song forever")
 	volume := flag.Int("volume", 127, "Music volume, 0-127")
-	opl3 := flag.Bool("opl3", false, "Emulate an OPL3 (18 voices, stereo) rather than an OPL2")
 	flag.Parse()
 
 	if *wadFile == "" {
@@ -286,7 +260,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Cannot create synthesizer: %s", err)
 	}
-	synth.SetOPL3(*opl3)
 	synth.SetVolume(*volume)
 
 	if *rawOutput != "" {
@@ -302,7 +275,7 @@ func main() {
 	}
 
 	synth.SetLoop(*loop)
-	if err := play(name, synth, *frequency, *loop); err != nil && !errors.Is(err, io.EOF) {
+	if err := play(name, synth, *frequency, *loop); err != nil {
 		log.Fatalf("Playback failed: %s", err)
 	}
 }
