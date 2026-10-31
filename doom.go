@@ -4622,7 +4622,7 @@ func d_Display() {
 		borderdrawcount = 3
 	}
 	// save the current screen if about to wipe
-	if gamestate != wipegamestate {
+	if gamestate != wipegamestate && !dg_step_mode {
 		wipe = 1
 		wipe_StartScreen(0, 0, SCREENWIDTH, SCREENHEIGHT)
 	} else {
@@ -4820,7 +4820,11 @@ func d_DoomLoop() {
 		g_BeginRecording()
 	}
 	main_loop_started = 1
-	tryRunTics()
+	// In step mode the host runs every tic, starting with the first, so
+	// don't run one here from keyboard input.
+	if !dg_step_mode {
+		tryRunTics()
+	}
 	i_SetWindowTitle(gamedescription)
 	i_GraphicsCheckCommandLine()
 	i_SetGrabMouseCallback(d_GrabMouseCallback)
@@ -4832,7 +4836,6 @@ func d_DoomLoop() {
 	if testcontrols != 0 {
 		wipegamestate = gamestate
 	}
-	doomgeneric_Tick()
 }
 
 // C documentation
@@ -7636,7 +7639,9 @@ func g_Ticker() {
 				players[consoleplayer].Fmessage = fmt.Sprintf("%s is turbo!", player_names[i])
 				turbodetected[i] = 0
 			}
-			if netgame != 0 && netdemo == 0 && gametic%ticdup == 0 {
+			// Step mode hosts check consistency with Checksum instead,
+			// and their ticcmds don't carry a consistancy byte.
+			if netgame != 0 && netdemo == 0 && gametic%ticdup == 0 && !dg_step_mode {
 				if gametic > BACKUPTICS && int32(consistancy[i][buf]) != int32(cmd.Fconsistancy) {
 					i_Error("consistency failure (%d should be %d)", int32(cmd.Fconsistancy), int32(consistancy[i][buf]))
 				}
@@ -7751,9 +7756,13 @@ func g_CheckSpot(playernum int32, mthing *mapthing_t) boolean {
 	var ss *subsector_t
 	var x, xa, y, ya, v2 fixed_t
 	if players[playernum].Fmo == nil {
+		if dg_step_mode && leveltime != 0 {
+			// A player joining a step mode game mid-level (see stepJoin).
+			return stepCheckSpot(playernum, mthing)
+		}
 		// first spawn of level, before corpses
 		for i := int32(0); i < playernum; i++ {
-			if players[i].Fmo.Fx == int32(mthing.Fx)<<FRACBITS && players[i].Fmo.Fy == int32(mthing.Fy)<<FRACBITS {
+			if players[i].Fmo != nil && players[i].Fmo.Fx == int32(mthing.Fx)<<FRACBITS && players[i].Fmo.Fy == int32(mthing.Fy)<<FRACBITS {
 				return 0
 			}
 		}
@@ -7863,8 +7872,11 @@ func g_DoReborn(playernum int32) {
 		gameaction = ga_loadlevel
 	} else {
 		// respawn at the start
-		// first dissasociate the corpse
-		players[playernum].Fmo.Fplayer = nil
+		// first dissasociate the corpse (a player joining a step mode
+		// game has none)
+		if players[playernum].Fmo != nil {
+			players[playernum].Fmo.Fplayer = nil
+		}
 		// spawn at random spot if in death match
 		if deathmatch != 0 {
 			g_DeathMatchSpawnPlayer(playernum)
@@ -17726,6 +17738,10 @@ var basetime uint32 = 0
 var last_tick int32 = 0
 
 func i_GetTicks() int32 {
+	if dg_step_mode {
+		// Game time is purely logical: derived from the number of tics run.
+		return gametic * 1000 / TICRATE
+	}
 	if dg_run_full_speed {
 		// Just increment by 1 each frame
 		return int32(dg_fake_tics)
@@ -38656,6 +38672,11 @@ func s_StartSound(origin *degenmobj_t, sfx_id int32) {
 		if volume > snd_SfxVolume {
 			volume = snd_SfxVolume
 		}
+	}
+	// Nobody can hear a positional sound if the console player has no
+	// body, which happens in step mode when everyone has left the game.
+	if origin != nil && players[consoleplayer].Fmo == nil {
+		return
 	}
 	// Check to see if it is audible,
 	//  and if not, modify the params
