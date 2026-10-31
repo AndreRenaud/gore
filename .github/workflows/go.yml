@@ -53,6 +53,7 @@ jobs:
         go build -o webserver ./example/webserver
         go build -o ebitengine ./example/ebitengine
         go build -o termdoom ./example/termdoom
+        go build -o mus_player ./example/mus_player
     - name: Save the test movie outputs
       uses: actions/upload-artifact@v4
       with:

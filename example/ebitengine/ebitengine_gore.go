@@ -2,6 +2,7 @@ package main
 
 import (
 	"image"
+	"io"
 	"log"
 	"os"
 	"sync"
@@ -17,10 +18,10 @@ const (
 	screenHeight = 480
 
 	// Audio constants
-	ebitengineAudioSampleRate = 44100 // Standard sample rate for Ebitengine
-	doomAudioSampleRate       = 11025 // DOOM's original sample rate
-	doomMaxVolume             = 127   // DOOM's maximum volume value
-	audioVolumeScale          = 0.5   // Scale factor to prevent clipping
+	ebitengineAudioSampleRate = gore.MusicSampleRate // 44100Hz, which the music stream uses
+	doomAudioSampleRate       = 11025                // DOOM's original sample rate
+	doomMaxVolume             = 127                  // DOOM's maximum volume value
+	audioVolumeScale          = 0.5                  // Scale factor to prevent clipping
 )
 
 type DoomGame struct {
@@ -33,6 +34,7 @@ type DoomGame struct {
 	terminating bool
 
 	soundCache map[string]*audio.Player
+	music      *audio.Player
 }
 
 func (g *DoomGame) Update() error {
@@ -213,6 +215,23 @@ func (g *DoomGame) PlaySound(name string, channel, volume, sep int) {
 
 	// Note: The player will be garbage collected when the sound finishes
 	// For a production implementation, you might want to track active players
+}
+
+func (g *DoomGame) PlayMusic(music io.Reader) {
+	if g.music != nil {
+		g.music.PauseAndStopReading()
+		g.music = nil
+	}
+	if music == nil {
+		return
+	}
+	player, err := g.audio.NewPlayer(music)
+	if err != nil {
+		log.Printf("Cannot play music: %s", err)
+		return
+	}
+	player.Play()
+	g.music = player
 }
 
 func main() {
