@@ -2,10 +2,9 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"io"
+	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/AndreRenaud/gore"
@@ -14,9 +13,6 @@ import (
 const (
 	keySpeed  = 0x80 + 0x36 // shift
 	keyStrafe = 0x80 + 0x38 // alt
-	keyF1     = 0x80 + 0x3b // F1-F10 are consecutive
-	keyF11    = 0x80 + 0x57
-	keyF12    = 0x80 + 0x58
 
 	// Report press/repeat/release events and every key (including
 	// modifiers) as an escape code.
@@ -30,15 +26,50 @@ const (
 	repeatGap        = 150 * time.Millisecond
 )
 
+var (
+	// CSI code[:alternates] ; modifiers[:event] [; text] u, or
+	// CSI 1 ; modifiers[:event] A-D for the arrows
+	kittyKeyRe = regexp.MustCompile(`^\x1b\[(\d*)[\d:]*(?:;\d*(?::(\d))?)?(?:;[\d:]*)?([uABCD])$`)
+	kittyKeys  = map[int]uint8{
+		27:    gore.KEY_ESCAPE,
+		13:    gore.KEY_ENTER,
+		9:     gore.KEY_TAB,
+		127:   gore.KEY_BACKSPACE3,
+		' ':   gore.KEY_USE1,
+		57441: keySpeed, // left/right shift
+		57447: keySpeed,
+		57442: gore.KEY_FIRE1, // left/right control
+		57448: gore.KEY_FIRE1,
+		57443: keyStrafe, // left/right alt
+		57449: keyStrafe,
+	}
+	arrowKeys = map[string]uint8{
+		"A": gore.KEY_UPARROW1,
+		"B": gore.KEY_DOWNARROW1,
+		"C": gore.KEY_RIGHTARROW1,
+		"D": gore.KEY_LEFTARROW1,
+	}
+
+	// Traditional terminal input has no modifier keys, so fire is remapped to ','
+	legacyKeys = map[string]uint8{
+		"\x1b[A": gore.KEY_UPARROW1,
+		"\x1b[B": gore.KEY_DOWNARROW1,
+		"\x1b[C": gore.KEY_RIGHTARROW1,
+		"\x1b[D": gore.KEY_LEFTARROW1,
+		" ":      gore.KEY_USE1,
+		"\r":     gore.KEY_ENTER,
+		"\x1b":   gore.KEY_ESCAPE,
+		"\t":     gore.KEY_TAB,
+		"\x7f":   gore.KEY_BACKSPACE3,
+		",":      gore.KEY_FIRE1,
+	}
+)
+
 // keyboard turns terminal input into Doom key events.
 type keyboard struct {
 	keys  <-chan byte
 	kitty bool                // terminal reports press and release via the kitty keyboard protocol
-	held  map[uint8]time.Time // raw mode: when each key is considered released
-}
-
-func newKeyboard(keys <-chan byte, kitty bool) *keyboard {
-	return &keyboard{keys: keys, kitty: kitty, held: make(map[uint8]time.Time)}
+	held  map[uint8]time.Time // otherwise, when each key is considered released
 }
 
 // GetEvent provides keydown/keyup events from stdin without unix/syscalls.
@@ -47,8 +78,7 @@ func (k *keyboard) GetEvent(ev *gore.DoomEvent) bool {
 	for key, release := range k.held {
 		if now.After(release) {
 			delete(k.held, key)
-			ev.Type = gore.Ev_keyup
-			ev.Key = key
+			ev.Type, ev.Key = gore.Ev_keyup, key
 			return true
 		}
 	}
@@ -68,16 +98,15 @@ func (k *keyboard) GetEvent(ev *gore.DoomEvent) bool {
 		seq := k.readSeq(b)
 
 		if k.kitty {
-			if key, typ, ok := kittyKey(seq); ok {
-				ev.Type = typ
-				ev.Key = key
+			if key, typ := kittyKey(seq); key != 0 {
+				ev.Type, ev.Key = typ, key
 				return true
 			}
 			continue
 		}
 
-		key, ok := legacyKey(seq)
-		if !ok {
+		key := legacyKey(seq)
+		if key == 0 {
 			continue
 		}
 		if _, down := k.held[key]; down {
@@ -86,178 +115,77 @@ func (k *keyboard) GetEvent(ev *gore.DoomEvent) bool {
 			continue
 		}
 		k.held[key] = now.Add(initialRepeatGap)
-		ev.Type = gore.Ev_keydown
-		ev.Key = key
+		ev.Type, ev.Key = gore.Ev_keydown, key
 		return true
 	}
 }
 
 // readSeq returns the complete escape sequence starting with b, or just b
 // if it does not start one.
-func (k *keyboard) readSeq(b byte) []byte {
+func (k *keyboard) readSeq(b byte) string {
 	seq := []byte{b}
-	if b != 0x1b {
-		return seq
-	}
-	// the rest of a sequence arrives together, so a short wait is enough
-	next := func() (byte, bool) {
+	for incomplete(seq) {
+		// the rest of a sequence arrives together, so a short wait is enough
 		select {
 		case c, ok := <-k.keys:
-			return c, ok
-		case <-time.After(5 * time.Millisecond):
-			return 0, false
-		}
-	}
-	c, ok := next()
-	if !ok {
-		return seq
-	}
-	seq = append(seq, c)
-	switch c {
-	case '[':
-		// CSI: parameters, ended by a byte in the range 0x40-0x7e
-		for {
-			c, ok := next()
 			if !ok {
-				return seq
+				return string(seq)
 			}
 			seq = append(seq, c)
-			if c >= 0x40 && c <= 0x7e {
-				return seq
-			}
-		}
-	case 'O':
-		// SS3: one more byte
-		if c, ok := next(); ok {
-			seq = append(seq, c)
+		case <-time.After(5 * time.Millisecond):
+			return string(seq)
 		}
 	}
-	return seq
+	return string(seq)
 }
 
-// kittyKey decodes a kitty keyboard protocol sequence, of the form
-// CSI code[:alternates] ; modifiers[:event] [; text] final
-func kittyKey(seq []byte) (uint8, gore.Evtype_t, bool) {
-	if len(seq) < 3 || !bytes.HasPrefix(seq, []byte("\x1b[")) {
-		return 0, 0, false
-	}
-	final := seq[len(seq)-1]
-	fields := strings.Split(string(seq[2:len(seq)-1]), ";")
-	code, _ := strconv.Atoi(strings.Split(fields[0], ":")[0])
-	event := 1
-	if len(fields) > 1 {
-		if mods := strings.Split(fields[1], ":"); len(mods) > 1 {
-			event, _ = strconv.Atoi(mods[1])
-		}
-	}
-
-	var key uint8
-	switch final {
-	case 'u':
-		key = kittyCodeKey(code)
-	case '~':
-		key = tildeKey(code)
-	default:
-		key = finalKey(final)
-	}
-	if key == 0 {
-		return 0, 0, false
-	}
-	switch event {
-	case 1:
-		return key, gore.Ev_keydown, true
-	case 3:
-		return key, gore.Ev_keyup, true
-	}
-	// Doom does its own auto-repeat, so ignore the terminal's
-	return 0, 0, false
-}
-
-func kittyCodeKey(code int) uint8 {
-	switch code {
-	case 27:
-		return gore.KEY_ESCAPE
-	case 13:
-		return gore.KEY_ENTER
-	case 9:
-		return gore.KEY_TAB
-	case 127:
-		return gore.KEY_BACKSPACE3
-	case ' ':
-		return gore.KEY_USE1
-	case 57441, 57447: // left/right shift
-		return keySpeed
-	case 57442, 57448: // left/right control
-		return gore.KEY_FIRE1
-	case 57443, 57449: // left/right alt
-		return keyStrafe
-	}
-	return printableKey(code)
-}
-
-// tildeKey maps the number of a CSI number ~ sequence to a function key.
-func tildeKey(n int) uint8 {
-	switch n {
-	case 11, 12, 13, 14:
-		return keyF1 + uint8(n-11)
-	case 15:
-		return keyF1 + 4
-	case 17, 18, 19, 20, 21:
-		return keyF1 + 5 + uint8(n-17)
-	case 23:
-		return keyF11
-	case 24:
-		return keyF12
-	}
-	return 0
-}
-
-// finalKey maps the final byte of a CSI or SS3 sequence for arrows and F1-F4.
-func finalKey(final byte) uint8 {
-	switch final {
-	case 'A':
-		return gore.KEY_UPARROW1
-	case 'B':
-		return gore.KEY_DOWNARROW1
-	case 'C':
-		return gore.KEY_RIGHTARROW1
-	case 'D':
-		return gore.KEY_LEFTARROW1
-	case 'P', 'Q', 'R', 'S':
-		return keyF1 + final - 'P'
-	}
-	return 0
-}
-
-// legacyKey maps traditional terminal input, which has no modifier keys of
-// its own, so fire is remapped to ','.
-func legacyKey(seq []byte) (uint8, bool) {
-	switch s := string(seq); {
-	case s == " ":
-		return gore.KEY_USE1, true
-	case s == "\r" || s == "\n":
-		return gore.KEY_ENTER, true
-	case s == "\x1b":
-		return gore.KEY_ESCAPE, true
-	case s == "\t":
-		return gore.KEY_TAB, true
-	case s == "\x7f" || s == "\b":
-		return gore.KEY_BACKSPACE3, true
-	case s == ",":
-		return gore.KEY_FIRE1, true
+// incomplete reports whether seq is the start of an unfinished escape sequence.
+func incomplete(seq []byte) bool {
+	switch {
+	case seq[0] != 0x1b:
+		return false
 	case len(seq) == 1:
-		key := printableKey(int(seq[0]))
-		return key, key != 0
-	case len(seq) >= 3 && (seq[1] == '[' || seq[1] == 'O'):
-		final := seq[len(seq)-1]
-		key := finalKey(final)
-		if final == '~' {
-			n, _ := strconv.Atoi(strings.Split(string(seq[2:len(seq)-1]), ";")[0])
-			key = tildeKey(n)
-		}
-		return key, key != 0
+		return true
+	case seq[1] != '[': // alt+key
+		return false
+	case len(seq) == 2:
+		return true
 	}
-	return 0, false
+	// a CSI sequence ends with a byte in the range 0x40-0x7e
+	last := seq[len(seq)-1]
+	return last < 0x40 || last > 0x7e
+}
+
+// kittyKey decodes a kitty keyboard protocol sequence, returning 0 for keys
+// Doom doesn't use.
+func kittyKey(seq string) (uint8, gore.Evtype_t) {
+	m := kittyKeyRe.FindStringSubmatch(seq)
+	if m == nil || m[2] == "2" {
+		// Doom does its own auto-repeat, so ignore the terminal's
+		return 0, 0
+	}
+	key := arrowKeys[m[3]]
+	if m[3] == "u" {
+		code, _ := strconv.Atoi(m[1])
+		key = kittyKeys[code]
+		if key == 0 {
+			key = printableKey(code)
+		}
+	}
+	if m[2] == "3" {
+		return key, gore.Ev_keyup
+	}
+	return key, gore.Ev_keydown
+}
+
+func legacyKey(seq string) uint8 {
+	if key, ok := legacyKeys[seq]; ok {
+		return key
+	}
+	if len(seq) == 1 {
+		return printableKey(int(seq[0]))
+	}
+	return 0
 }
 
 // printableKey maps printable ASCII to its lower case Doom key, so menus and
