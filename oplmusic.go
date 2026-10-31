@@ -68,7 +68,8 @@ type genmidiInstr struct {
 type oplChannel struct {
 	num        int // The MUS channel number, which is also its priority
 	instrument *genmidiInstr
-	volume     int
+	volume     int // Volume in use, limited by the music volume
+	volumeBase int // Volume requested by the song
 	pan        int
 	bend       int
 }
@@ -118,6 +119,9 @@ type oplDriver struct {
 	free       []*oplVoice
 	alloced    []*oplVoice
 	channels   [16]oplChannel
+
+	musicVolume      int // 0-127
+	startMusicVolume int // The music volume when the song started
 }
 
 func newOPLDriver(genmidi []byte, sampleRate int) (*oplDriver, error) {
@@ -125,8 +129,9 @@ func newOPLDriver(genmidi []byte, sampleRate int) (*oplDriver, error) {
 		return nil, ErrInvalidGENMIDI
 	}
 	d := &oplDriver{
-		sampleRate: sampleRate,
-		instrs:     make([]genmidiInstr, genmidiNumInstrs+genmidiNumPerc),
+		sampleRate:  sampleRate,
+		instrs:      make([]genmidiInstr, genmidiNumInstrs+genmidiNumPerc),
+		musicVolume: 127,
 	}
 	r := bytes.NewReader(genmidi[len(genmidiHeader):])
 	if err := binary.Read(r, binary.LittleEndian, d.instrs); err != nil {
@@ -188,9 +193,34 @@ func (d *oplDriver) reset() {
 	}
 }
 
+// initChannels is called when the song starts, or restarts when looping
 func (d *oplDriver) initChannels() {
+	d.startMusicVolume = d.musicVolume
 	for i := range d.channels {
-		d.channels[i] = oplChannel{num: i, instrument: &d.instrs[0], volume: 100, pan: 0x30}
+		d.channels[i] = oplChannel{
+			num:        i,
+			instrument: &d.instrs[0],
+			volume:     min(d.musicVolume, 100),
+			volumeBase: 100,
+			pan:        0x30,
+		}
+	}
+}
+
+// setMusicVolume sets the overall music volume (0-127), which limits the
+// volume of every channel
+func (d *oplDriver) setMusicVolume(volume int) {
+	if volume == d.musicVolume {
+		return
+	}
+	d.musicVolume = volume
+	for i := range d.channels {
+		channel := &d.channels[i]
+		if channel.num == MusPercussionChannel {
+			d.setChannelVolume(channel, volume, false)
+		} else {
+			d.setChannelVolume(channel, channel.volumeBase, false)
+		}
 	}
 }
 
@@ -409,7 +439,15 @@ func (d *oplDriver) keyOn(channel *oplChannel, key, volume int) {
 	}
 }
 
-func (d *oplDriver) setChannelVolume(channel *oplChannel, volume int) {
+// setChannelVolume sets a channel's volume, limited by the music volume. When
+// the song changes a channel's volume, DMX also limits it to the music volume
+// the song started with (clipStart).
+func (d *oplDriver) setChannelVolume(channel *oplChannel, volume int, clipStart bool) {
+	channel.volumeBase = volume
+	volume = min(volume, d.musicVolume)
+	if clipStart {
+		volume = min(volume, d.startMusicVolume)
+	}
 	channel.volume = volume
 	for i := range d.voices {
 		if d.voices[i].channel == channel {
@@ -490,7 +528,7 @@ func (d *oplDriver) event(e *MusEvent, velocity int, live bool) {
 		case MusControllerInstrument:
 			channel.instrument = &d.instrs[e.Value]
 		case MusControllerVolume:
-			d.setChannelVolume(channel, e.Value)
+			d.setChannelVolume(channel, e.Value, true)
 		case MusControllerPan:
 			d.setChannelPan(channel, e.Value)
 		}
@@ -507,22 +545,27 @@ func (d *oplDriver) releaseAll() {
 	}
 }
 
+// pause turns off all main instrument voices (not percussion). This is what Vanilla does.
+func (d *oplDriver) pause() {
+	for _, voice := range d.alloced {
+		if voice.channel.num != MusPercussionChannel {
+			d.voiceKeyOff(voice)
+		}
+	}
+}
+
 // active reports whether any notes are still sounding
 func (d *oplDriver) active() bool {
 	return len(d.alloced) > 0 || !d.chip.silent()
 }
 
-// render produces frames of signed 16-bit little-endian stereo samples, scaled by gain
-func (d *oplDriver) render(out []byte, frames int, gain float64) {
+// render produces frames of signed 16-bit little-endian stereo samples
+func (d *oplDriver) render(out []byte, frames int) {
 	var buf [2]int16
 	for i := range frames {
 		d.chip.generateResampled(&buf)
-		for c, v := range buf {
-			if gain != 1 {
-				v = int16(max(-32768, min(32767, float64(v)*gain)))
-			}
-			binary.LittleEndian.PutUint16(out[i*4+c*2:], uint16(v))
-		}
+		binary.LittleEndian.PutUint16(out[i*4:], uint16(buf[0]))
+		binary.LittleEndian.PutUint16(out[i*4+2:], uint16(buf[1]))
 	}
 }
 

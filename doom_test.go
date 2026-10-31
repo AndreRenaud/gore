@@ -117,6 +117,9 @@ func (d *doomTestHeadless) CacheSound(name string, data []byte) {
 func (d *doomTestHeadless) PlaySound(name string, channel, vol, sep int) {
 }
 
+func (d *doomTestHeadless) PlayMusic(music io.Reader) {
+}
+
 func (d *doomTestHeadless) GetScreen() *image.RGBA {
 	d.lock.Lock()
 	defer d.lock.Unlock()

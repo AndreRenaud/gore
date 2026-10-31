@@ -63,7 +63,16 @@ type DoomFrontend interface {
 
 	CacheSound(name string, data []byte)
 	PlaySound(name string, channel, volume, sep int)
+
+	// PlayMusic starts playing a stream of music, replacing any that is
+	// already playing. The stream is signed 16-bit little-endian stereo at
+	// MusicSampleRate. Pausing, volume and looping are handled within the
+	// stream. A nil stream means the music should stop.
+	PlayMusic(music io.Reader)
 }
+
+// MusicSampleRate is the sample rate of the stream passed to DoomFrontend.PlayMusic
+const MusicSampleRate = 44100
 
 var dg_frontend DoomFrontend
 var dg_run_full_speed bool = false // If true, don't ever sleep, and just tick up once-per-frame
@@ -4399,7 +4408,7 @@ type musicinfo_t struct {
 	Fname    string
 	Flumpnum int32
 	Fdata    []byte
-	Fhandle  uintptr
+	Fhandle  *MusMusic
 }
 
 type snddevice_t = int32
@@ -4421,22 +4430,6 @@ type sound_module_t struct {
 	FStopSound         func(channel int32)
 	FSoundIsPlaying    func(channel int32) boolean
 	FCacheSounds       func([]sfxinfo_t) boolean
-}
-
-type music_module_t struct {
-	Fsound_devices     uintptr
-	Fnum_sound_devices int32
-	FInit              func()
-	FShutdown          func()
-	FSetMusicVolume    func(volume int32)
-	FPauseMusic        func()
-	FResumeMusic       func()
-	FRegisterSong      func(data []byte) uintptr
-	FUnRegisterSong    func(handle uintptr)
-	FPlaySong          func(handle uintptr, looping boolean) (r boolean)
-	FStopSong          func()
-	FMusicIsPlaying    uintptr
-	FPoll              func()
 }
 
 const mus_None = 0
@@ -5644,7 +5637,6 @@ func d_DoomMain() {
 	fprintf_ccgo(os.Stdout, "I_Init: Setting up machine state.\n")
 	i_CheckIsScreensaver()
 	i_InitSound(1)
-	i_InitMusic()
 	// Initial netgame startup. Connect to server etc.
 	d_ConnectNetGame()
 	// get skill / episode / map from parms
@@ -17279,7 +17271,13 @@ func init() {
 // Low-level sound and music modules we are using
 
 var sound_module *sound_module_t
-var music_module *music_module_t
+
+// Music is synthesized with the OPL instruments from the GENMIDI lump,
+// and streamed to the frontend
+
+var music_genmidi []byte // nil if music is disabled
+var music_playing *MusSynth
+var music_volume int32 = 127
 
 func init() {
 	snd_musicdevice = SNDDEVICE_SB
@@ -17331,9 +17329,12 @@ func initSfxModule(use_sfx_prefix boolean) {
 	}
 }
 
-// Initialize music according to snd_musicdevice.
+// Initialize music, loading the OPL instruments
 
 func initMusicModule() {
+	if lump := w_CheckNumForName("GENMIDI"); lump >= 0 {
+		music_genmidi = w_CacheLumpNumBytes(lump)
+	}
 }
 
 //
@@ -17364,12 +17365,6 @@ func i_InitSound(use_sfx_prefix boolean) {
 	nomusic = booluint32(m_CheckParm("-nomusic") > 0)
 	// Initialize the sound and music subsystems.
 	if nosound == 0 && screensaver_mode == 0 {
-		// This is kind of a hack. If native MIDI is enabled, set up
-		// the TIMIDITY_CFG environment variable here before SDL_mixer
-		// is opened.
-		if nomusic == 0 && (snd_musicdevice == SNDDEVICE_GENMIDI || snd_musicdevice == SNDDEVICE_GUS) {
-			//I_InitTimidityConfig();
-		}
 		if nosfx == 0 {
 			initSfxModule(use_sfx_prefix)
 		}
@@ -17382,9 +17377,6 @@ func i_InitSound(use_sfx_prefix boolean) {
 func i_ShutdownSound() {
 	if sound_module != nil {
 		sound_module.FShutdown()
-	}
-	if music_module != nil {
-		music_module.FShutdown()
 	}
 }
 
@@ -17399,9 +17391,6 @@ func i_GetSfxLumpNum(sfxinfo *sfxinfo_t) int32 {
 func i_UpdateSound() {
 	if sound_module != nil {
 		sound_module.FUpdate()
-	}
-	if music_module != nil && music_module.FPoll != nil {
-		music_module.FPoll()
 	}
 }
 
@@ -17466,55 +17455,60 @@ func i_PrecacheSounds(sounds []sfxinfo_t) {
 	}
 }
 
-func i_InitMusic() {
-	if music_module != nil {
-		music_module.FInit()
-	}
-}
-
 func i_ShutdownMusic() {
+	i_StopSong()
 }
 
+// Set music volume (0 - 127)
 func i_SetMusicVolume(volume int32) {
-	if music_module != nil {
-		music_module.FSetMusicVolume(volume)
+	music_volume = volume
+	if music_playing != nil {
+		music_playing.SetVolume(int(volume))
 	}
 }
 
 func i_PauseSong() {
-	if music_module != nil {
-		music_module.FPauseMusic()
+	if music_playing != nil {
+		music_playing.SetPaused(true)
 	}
 }
 
 func i_ResumeSong() {
-	if music_module != nil {
-		music_module.FResumeMusic()
+	if music_playing != nil {
+		music_playing.SetPaused(false)
 	}
 }
 
-func i_RegisterSong(data []byte) uintptr {
-	if music_module != nil {
-		music_module.FRegisterSong(data)
+func i_RegisterSong(data []byte) *MusMusic {
+	if music_genmidi == nil {
+		return nil
 	}
-	return 0
+	music, err := NewMusMusic(data)
+	if err != nil {
+		log.Printf("Cannot load music: %s", err)
+	}
+	return music
 }
 
-func i_UnRegisterSong(handle uintptr) {
-	if music_module != nil {
-		music_module.FUnRegisterSong(handle)
+func i_PlaySong(music *MusMusic, looping boolean) {
+	if music == nil {
+		return
 	}
-}
-
-func i_PlaySong(handle uintptr, looping boolean) {
-	if music_module != nil {
-		music_module.FPlaySong(handle, looping)
+	synth, err := NewMusSynth(music, music_genmidi, MusicSampleRate)
+	if err != nil {
+		log.Printf("Cannot play music: %s", err)
+		return
 	}
+	synth.SetLoop(looping != 0)
+	synth.SetVolume(int(music_volume))
+	music_playing = synth
+	dg_frontend.PlayMusic(synth)
 }
 
 func i_StopSong() {
-	if music_module != nil {
-		music_module.FStopSong()
+	if music_playing != nil {
+		dg_frontend.PlayMusic(nil)
+		music_playing = nil
 	}
 }
 
@@ -38774,7 +38768,6 @@ func s_StartMusic(m_id int32) {
 }
 
 func s_ChangeMusic(musicnum int32, looping int32) {
-	var handle uintptr
 	var music *musicinfo_t
 	// The Doom IWAD file has two versions of the intro music: d_intro
 	// and d_introa.  The latter is used for OPL playback.
@@ -38797,9 +38790,8 @@ func s_ChangeMusic(musicnum int32, looping int32) {
 		music.Flumpnum = w_GetNumForName(bp)
 	}
 	music.Fdata = w_CacheLumpNumBytes(music.Flumpnum)
-	handle = i_RegisterSong(music.Fdata)
-	music.Fhandle = handle
-	i_PlaySong(handle, uint32(looping))
+	music.Fhandle = i_RegisterSong(music.Fdata)
+	i_PlaySong(music.Fhandle, uint32(looping))
 	mus_playing = music
 }
 
@@ -38809,8 +38801,8 @@ func s_StopMusic() {
 			i_ResumeSong()
 		}
 		i_StopSong()
-		i_UnRegisterSong(mus_playing.Fhandle)
 		w_ReleaseLumpNum(mus_playing.Flumpnum)
+		mus_playing.Fhandle = nil
 		mus_playing.Fdata = nil
 		mus_playing = nil
 	}

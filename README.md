@@ -90,6 +90,7 @@ type DoomFrontend interface {
     GetEvent(event *DoomEvent) bool
     CacheSound(name string, data []byte)
     PlaySound(name string, channel, vol, sep int)
+    PlayMusic(music io.Reader)
 }
 ```
 
@@ -100,6 +101,7 @@ type DoomFrontend interface {
 | `GetEvent()` | Report key presses/mouse movements |
 | `CacheSound()` | This will supply sound effect 8-bit 11025Hz mono audio samples |
 | `PlaySound()` | Play a given sound effect |
+| `PlayMusic()` | Play a music stream of 16-bit stereo audio at `MusicSampleRate` (44100Hz), replacing any current music. `nil` stops the music |
 
 Only `DrawFrame` and `GetEvent` are vital to implement to get a functioning game. The others can be left blank, and things will still basically function fine.
 

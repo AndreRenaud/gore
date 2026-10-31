@@ -253,7 +253,7 @@ func main() {
 	rawOutput := flag.String("raw", "", "Save raw audio (signed 16-bit stereo) instead of playing it")
 	frequency := flag.Int("freq", 44100, "Sample frequency")
 	loop := flag.Bool("loop", false, "Loop the song forever")
-	volume := flag.Float64("volume", 1, "Playback volume")
+	volume := flag.Int("volume", 127, "Music volume, 0-127")
 	opl3 := flag.Bool("opl3", false, "Emulate an OPL3 (18 voices, stereo) rather than an OPL2")
 	flag.Parse()
 

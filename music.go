@@ -186,7 +186,7 @@ type MusSynth struct {
 	music      *MusMusic
 	sampleRate int
 	loop       bool
-	volume     float64
+	paused     bool
 	opl        *oplDriver
 
 	frame    int64   // current position in the song, in sample frames
@@ -203,7 +203,7 @@ func NewMusSynth(m *MusMusic, genmidi []byte, sampleRate int) (*MusSynth, error)
 	if err != nil {
 		return nil, err
 	}
-	s := &MusSynth{music: m, sampleRate: sampleRate, volume: 1, opl: opl}
+	s := &MusSynth{music: m, sampleRate: sampleRate, opl: opl}
 	s.seekFrame(0)
 	return s, nil
 }
@@ -218,11 +218,27 @@ func (s *MusSynth) SetLoop(loop bool) {
 	}
 }
 
-// SetVolume sets the output volume, 1 being the default
-func (s *MusSynth) SetVolume(volume float64) {
+// SetVolume sets the music volume, from 0 to 127 (the default). As with DMX,
+// this limits the volume of each channel, rather than scaling the output.
+func (s *MusSynth) SetVolume(volume int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.volume = max(volume, 0)
+	s.opl.setMusicVolume(max(0, min(127, volume)))
+	if s.frame == 0 && s.next == 0 {
+		// The song hasn't started yet, so start it at this volume
+		s.seekFrame(0)
+	}
+}
+
+// SetPaused pauses or resumes the song. As with DMX, pausing releases the
+// notes being held, apart from percussion, and they're left to fade out.
+func (s *MusSynth) SetPaused(paused bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if paused && !s.paused {
+		s.opl.pause()
+	}
+	s.paused = paused
 }
 
 // SetOPL3 switches between emulating an OPL2 (9 voices, mono, the default)
@@ -326,6 +342,10 @@ func (s *MusSynth) Read(p []byte) (int, error) {
 	if frames == 0 {
 		return 0, io.ErrShortBuffer
 	}
+	if s.paused {
+		s.opl.render(p, frames)
+		return frames * musBytesPerFrame, nil
+	}
 	end := s.tickToFrame(s.music.Ticks)
 	maxTail := int64(s.sampleRate) * int64(musMaxTail) / int64(time.Second)
 	done := 0
@@ -357,7 +377,7 @@ func (s *MusSynth) Read(p []byte) (int, error) {
 			}
 			chunk = int(max(1, min(int64(chunk), target-s.frame)))
 		}
-		s.opl.render(p[done*musBytesPerFrame:], chunk, s.volume)
+		s.opl.render(p[done*musBytesPerFrame:], chunk)
 		done += chunk
 		if s.finished {
 			s.tail += int64(chunk)

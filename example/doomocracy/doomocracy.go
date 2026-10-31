@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"image"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -211,6 +212,7 @@ func (w *webDoomFrontend) GetEvent(event *gore.DoomEvent) bool {
 func (w *webDoomFrontend) SetTitle(title string)                        {}
 func (w *webDoomFrontend) CacheSound(name string, data []byte)          {}
 func (w *webDoomFrontend) PlaySound(name string, channel, vol, sep int) {}
+func (w *webDoomFrontend) PlayMusic(music io.Reader)                    {}
 
 func getClientID(r *http.Request) string {
 	cid := r.URL.Query().Get("cid")
