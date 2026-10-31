@@ -61,6 +61,14 @@ go run ./example/termdoom -iwad doom1.wad
 
 <video width="640" src="https://github.com/user-attachments/assets/c461e38f-5948-4485-bf84-7b6982580a4e"></video>
 
+#### Kitty/Sixel graphics
+This example renders the Doom output as real graphics in the terminal, using the [kitty graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) when available (kitty, Ghostty, WezTerm, iTerm2 etc...), and falling back to sixel (xterm, foot, Windows Terminal, VS Code with `terminal.integrated.enableImages` etc...). The image is scaled to fill the terminal while keeping its aspect ratio.
+
+If the terminal supports the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) then real key press/release events are used, so keys can be held and modifiers work (ctrl to fire, shift to run, alt to strafe). Otherwise keys are released once the terminal stops auto-repeating them, and `fire` is remapped to `,`.
+```bash
+go run ./example/termgfx -iwad doom1.wad
+```
+
 #### Web based
 ```bash
 go run ./example/webserver
