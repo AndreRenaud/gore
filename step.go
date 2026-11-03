@@ -17,6 +17,7 @@ package gore
 
 import (
 	"errors"
+	"fmt"
 	"hash/fnv"
 	"image"
 	"io"
@@ -252,50 +253,47 @@ func SaveGameBytes() ([]byte, error) {
 	m := &memStream{}
 	save_stream = m
 	defer func() { save_stream = nil }()
-	savegame_error = 0
-	p_WriteSaveGameHeader("gore")
-	p_ArchivePlayers()
-	p_ArchiveWorld()
-	p_ArchiveThinkers()
-	p_ArchiveSpecials()
-	p_WriteSaveGameEOF()
-	saveg_write32(prndindex)
-	saveg_write32(rndindex)
-	saveg_write32(gametic)
-	if savegame_error != 0 {
-		return nil, errors.New("gore: error writing savegame")
+	if err := g_WriteSaveGame("gore", writeStepModeSaveTrailer); err != nil {
+		return nil, fmt.Errorf("gore: %w", err)
 	}
 	return m.buf, nil
 }
 
 // LoadGameBytes restores a savegame produced by SaveGameBytes. It should be
-// called on a freshly initialised engine.
+// called on a freshly initialised engine. If it returns an error the engine
+// may be left partly restored, and should be re-initialised or loaded again
+// before use.
 func LoadGameBytes(data []byte) error {
-	m := &memStream{buf: data}
-	save_stream = m
+	save_stream = &memStream{buf: data}
 	defer func() { save_stream = nil }()
-	savegame_error = 0
-	if p_ReadSaveGameHeader() == 0 {
-		return errors.New("gore: bad savegame header")
+	if err := g_ReadSaveGame(readStepModeSaveTrailer); err != nil {
+		return fmt.Errorf("gore: %w", err)
 	}
-	savedleveltime := leveltime
-	g_InitNew(gameskill, gameepisode, gamemap)
-	leveltime = savedleveltime
-	p_UnArchivePlayers()
-	p_UnArchiveWorld()
-	p_UnArchiveThinkers()
-	p_UnArchiveSpecials()
-	if p_ReadSaveGameEOF() == 0 {
-		return errors.New("gore: bad savegame")
-	}
+	return nil
+}
+
+// writeStepModeSaveTrailer and readStepModeSaveTrailer handle state that step
+// mode needs but vanilla savegames don't store. Step mode promises that the
+// same ticcmds always produce the same game, including after a load, so it
+// also needs:
+//
+//   - prndindex and rndindex, the positions in the gameplay and
+//     non-gameplay random number tables. Without them a loaded game rolls
+//     different random numbers from the one that was saved.
+//   - gametic, the tic counter that step mode derives game time from.
+//
+// SaveGameBytes writes these as an extra 12-byte trailer after the vanilla
+// savegame's end-of-file marker, and LoadGameBytes reads them back.
+func writeStepModeSaveTrailer() {
+	saveg_write32(prndindex)
+	saveg_write32(rndindex)
+	saveg_write32(gametic)
+}
+
+func readStepModeSaveTrailer() {
 	prndindex = saveg_read32()
 	rndindex = saveg_read32()
 	gametic = saveg_read32()
-	if savegame_error != 0 {
-		return errors.New("gore: truncated savegame")
-	}
-	gameaction = ga_nothing
-	return nil
 }
 
 // memStream is an in-memory saveStream.

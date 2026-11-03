@@ -2,6 +2,7 @@ package gore
 
 import (
 	"crypto/sha1"
+	"errors"
 	"fmt"
 	"hash"
 	"image"
@@ -8150,7 +8151,6 @@ func g_LoadGame(name string) {
 }
 
 func g_DoLoadGame() {
-	var savedleveltime int32
 	var err error
 	gameaction = ga_nothing
 	save_stream, err = os.Open(savename)
@@ -8159,12 +8159,40 @@ func g_DoLoadGame() {
 		return
 	}
 	defer save_stream.Close()
+	// Only errBadSaveEOF is fatal, matching vanilla. The other errors are
+	// swallowed:
+	//   - errBadSaveHeader: the header is checked before any game state is
+	//     changed, so vanilla doesn't load the save and the current game
+	//     carries on.
+	//   - errSaveGameIO: can't happen here. With no readExtra, a failed read
+	//     always comes before the end-of-file marker. That makes the marker
+	//     read fail too, so we get errBadSaveEOF instead.
+	if err := g_ReadSaveGame(nil); err == errBadSaveEOF {
+		i_Error("Bad savegame")
+	}
+}
+
+var (
+	errBadSaveHeader = errors.New("bad savegame header")
+	errBadSaveEOF    = errors.New("bad savegame")
+	// errSaveGameIO is a generic IO error, returned when savegame_error is set
+	// after reading or writing a savegame.
+	errSaveGameIO = errors.New("savegame IO error")
+)
+
+// g_ReadSaveGame restores the game from save_stream, which the caller opens
+// and closes. If readExtra is non-nil it is called after the vanilla
+// end-of-file marker, to read any data appended by g_WriteSaveGame's
+// writeExtra.
+//
+// A bad header is reported before any game state is changed.
+func g_ReadSaveGame(readExtra func()) error {
+	gameaction = ga_nothing
 	savegame_error = 0
 	if p_ReadSaveGameHeader() == 0 {
-		save_stream.Close()
-		return
+		return errBadSaveHeader
 	}
-	savedleveltime = leveltime
+	savedleveltime := leveltime
 	// load a base level
 	g_InitNew(gameskill, gameepisode, gamemap)
 	leveltime = savedleveltime
@@ -8174,13 +8202,20 @@ func g_DoLoadGame() {
 	p_UnArchiveThinkers()
 	p_UnArchiveSpecials()
 	if p_ReadSaveGameEOF() == 0 {
-		i_Error("Bad savegame")
+		return errBadSaveEOF
+	}
+	if readExtra != nil {
+		readExtra()
+	}
+	if savegame_error != 0 {
+		return errSaveGameIO
 	}
 	if setsizeneeded != 0 {
 		r_ExecuteSetViewSize()
 	}
 	// draw the pattern into the back screen
 	r_FillBackScreen()
+	return nil
 }
 
 // C documentation
@@ -8218,13 +8253,7 @@ func g_DoSaveGame() {
 			i_Error("Failed to open either '%s' or '%s' to write savegame.", temp_savegame_file, recovery_savegame_file)
 		}
 	}
-	savegame_error = 0
-	p_WriteSaveGameHeader(savedescription)
-	p_ArchivePlayers()
-	p_ArchiveWorld()
-	p_ArchiveThinkers()
-	p_ArchiveSpecials()
-	p_WriteSaveGameEOF()
+	g_WriteSaveGame(savedescription, nil)
 	// Enforce the same savegame size limit as in Vanilla Doom,
 	// except if the vanilla_savegame_limit setting is turned off.
 	pos, err := save_stream.Seek(0, io.SeekCurrent)
@@ -8248,6 +8277,26 @@ func g_DoSaveGame() {
 	players[consoleplayer].Fmessage = "game saved."
 	// draw the pattern into the back screen
 	r_FillBackScreen()
+}
+
+// g_WriteSaveGame writes the game to save_stream, which the caller opens and
+// closes. If writeExtra is non-nil it is called after the vanilla end-of-file
+// marker, to append data that vanilla savegames don't have.
+func g_WriteSaveGame(description string, writeExtra func()) error {
+	savegame_error = 0
+	p_WriteSaveGameHeader(description)
+	p_ArchivePlayers()
+	p_ArchiveWorld()
+	p_ArchiveThinkers()
+	p_ArchiveSpecials()
+	p_WriteSaveGameEOF()
+	if writeExtra != nil {
+		writeExtra()
+	}
+	if savegame_error != 0 {
+		return errSaveGameIO
+	}
+	return nil
 }
 
 func g_DeferedInitNew(skill skill_t, episode int32, map1 int32) {
