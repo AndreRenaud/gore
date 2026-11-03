@@ -53,8 +53,7 @@ type TicCmd struct {
 	Buttons   uint8 `json:"b,omitempty"` // Button* bits
 }
 
-// Stats is a snapshot of interesting game state, cheap to compute every tic.
-// See GetStats.
+// Stats is a snapshot of interesting game state. See GetStats.
 type Stats struct {
 	Tic          int32  `json:"tic"`
 	LevelTime    int32  `json:"levelTime"`
@@ -151,6 +150,9 @@ func Palette() []byte {
 }
 
 // GetStats returns a snapshot of the current game state.
+//
+// Most fields are simple reads, but Stats.Checksum requires walking every
+// live map object.
 func GetStats() Stats {
 	p := &players[consoleplayer]
 	s := Stats{
@@ -194,6 +196,10 @@ func GetStats() Stats {
 // object's position, momentum, angle, health and state. Two engines that have
 // consumed the same ticcmds from the same starting point return the same
 // value; if they don't, they have desynced.
+//
+// Cost is O(n) in the number of live map objects, since it walks the thinker
+// list. Hashing every object is deliberate: a cheaper checksum that skipped
+// some of them would miss desyncs.
 func Checksum() uint32 {
 	h := fnv.New32a()
 	var buf [4]byte
