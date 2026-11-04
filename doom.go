@@ -2,6 +2,7 @@ package gore
 
 import (
 	"crypto/sha1"
+	"errors"
 	"fmt"
 	"hash"
 	"image"
@@ -4614,7 +4615,7 @@ func d_Display() {
 		borderdrawcount = 3
 	}
 	// save the current screen if about to wipe
-	if gamestate != wipegamestate {
+	if gamestate != wipegamestate && !dg_step_mode {
 		wipe = 1
 		wipe_StartScreen(0, 0, SCREENWIDTH, SCREENHEIGHT)
 	} else {
@@ -4812,7 +4813,11 @@ func d_DoomLoop() {
 		g_BeginRecording()
 	}
 	main_loop_started = 1
-	tryRunTics()
+	// In step mode the host runs every tic, starting with the first, so
+	// don't run one here from keyboard input.
+	if !dg_step_mode {
+		tryRunTics()
+	}
 	i_SetWindowTitle(gamedescription)
 	i_GraphicsCheckCommandLine()
 	i_SetGrabMouseCallback(d_GrabMouseCallback)
@@ -4824,7 +4829,6 @@ func d_DoomLoop() {
 	if testcontrols != 0 {
 		wipegamestate = gamestate
 	}
-	doomgeneric_Tick()
 }
 
 // C documentation
@@ -7627,7 +7631,9 @@ func g_Ticker() {
 				players[consoleplayer].Fmessage = fmt.Sprintf("%s is turbo!", player_names[i])
 				turbodetected[i] = 0
 			}
-			if netgame != 0 && netdemo == 0 && gametic%ticdup == 0 {
+			// Step mode hosts check consistency with Checksum instead,
+			// and their ticcmds don't carry a consistancy byte.
+			if netgame != 0 && netdemo == 0 && gametic%ticdup == 0 && !dg_step_mode {
 				if gametic > BACKUPTICS && int32(consistancy[i][buf]) != int32(cmd.Fconsistancy) {
 					i_Error("consistency failure (%d should be %d)", int32(cmd.Fconsistancy), int32(consistancy[i][buf]))
 				}
@@ -7742,9 +7748,13 @@ func g_CheckSpot(playernum int32, mthing *mapthing_t) boolean {
 	var ss *subsector_t
 	var x, xa, y, ya, v2 fixed_t
 	if players[playernum].Fmo == nil {
+		if dg_step_mode && leveltime != 0 {
+			// A player joining a step mode game mid-level (see stepJoin).
+			return stepCheckSpot(playernum, mthing)
+		}
 		// first spawn of level, before corpses
 		for i := int32(0); i < playernum; i++ {
-			if players[i].Fmo.Fx == int32(mthing.Fx)<<FRACBITS && players[i].Fmo.Fy == int32(mthing.Fy)<<FRACBITS {
+			if players[i].Fmo != nil && players[i].Fmo.Fx == int32(mthing.Fx)<<FRACBITS && players[i].Fmo.Fy == int32(mthing.Fy)<<FRACBITS {
 				return 0
 			}
 		}
@@ -7854,8 +7864,11 @@ func g_DoReborn(playernum int32) {
 		gameaction = ga_loadlevel
 	} else {
 		// respawn at the start
-		// first dissasociate the corpse
-		players[playernum].Fmo.Fplayer = nil
+		// first dissasociate the corpse (a player joining a step mode
+		// game has none)
+		if players[playernum].Fmo != nil {
+			players[playernum].Fmo.Fplayer = nil
+		}
 		// spawn at random spot if in death match
 		if deathmatch != 0 {
 			g_DeathMatchSpawnPlayer(playernum)
@@ -8138,7 +8151,6 @@ func g_LoadGame(name string) {
 }
 
 func g_DoLoadGame() {
-	var savedleveltime int32
 	var err error
 	gameaction = ga_nothing
 	save_stream, err = os.Open(savename)
@@ -8147,12 +8159,40 @@ func g_DoLoadGame() {
 		return
 	}
 	defer save_stream.Close()
+	// Only errBadSaveEOF is fatal, matching vanilla. The other errors are
+	// swallowed:
+	//   - errBadSaveHeader: the header is checked before any game state is
+	//     changed, so vanilla doesn't load the save and the current game
+	//     carries on.
+	//   - errSaveGameIO: can't happen here. With no readExtra, a failed read
+	//     always comes before the end-of-file marker. That makes the marker
+	//     read fail too, so we get errBadSaveEOF instead.
+	if err := g_ReadSaveGame(nil); err == errBadSaveEOF {
+		i_Error("Bad savegame")
+	}
+}
+
+var (
+	errBadSaveHeader = errors.New("bad savegame header")
+	errBadSaveEOF    = errors.New("bad savegame")
+	// errSaveGameIO is a generic IO error, returned when savegame_error is set
+	// after reading or writing a savegame.
+	errSaveGameIO = errors.New("savegame IO error")
+)
+
+// g_ReadSaveGame restores the game from save_stream, which the caller opens
+// and closes. If readExtra is non-nil it is called after the vanilla
+// end-of-file marker, to read any data appended by g_WriteSaveGame's
+// writeExtra.
+//
+// A bad header is reported before any game state is changed.
+func g_ReadSaveGame(readExtra func()) error {
+	gameaction = ga_nothing
 	savegame_error = 0
 	if p_ReadSaveGameHeader() == 0 {
-		save_stream.Close()
-		return
+		return errBadSaveHeader
 	}
-	savedleveltime = leveltime
+	savedleveltime := leveltime
 	// load a base level
 	g_InitNew(gameskill, gameepisode, gamemap)
 	leveltime = savedleveltime
@@ -8162,13 +8202,20 @@ func g_DoLoadGame() {
 	p_UnArchiveThinkers()
 	p_UnArchiveSpecials()
 	if p_ReadSaveGameEOF() == 0 {
-		i_Error("Bad savegame")
+		return errBadSaveEOF
+	}
+	if readExtra != nil {
+		readExtra()
+	}
+	if savegame_error != 0 {
+		return errSaveGameIO
 	}
 	if setsizeneeded != 0 {
 		r_ExecuteSetViewSize()
 	}
 	// draw the pattern into the back screen
 	r_FillBackScreen()
+	return nil
 }
 
 // C documentation
@@ -8206,13 +8253,7 @@ func g_DoSaveGame() {
 			i_Error("Failed to open either '%s' or '%s' to write savegame.", temp_savegame_file, recovery_savegame_file)
 		}
 	}
-	savegame_error = 0
-	p_WriteSaveGameHeader(savedescription)
-	p_ArchivePlayers()
-	p_ArchiveWorld()
-	p_ArchiveThinkers()
-	p_ArchiveSpecials()
-	p_WriteSaveGameEOF()
+	g_WriteSaveGame(savedescription, nil)
 	// Enforce the same savegame size limit as in Vanilla Doom,
 	// except if the vanilla_savegame_limit setting is turned off.
 	pos, err := save_stream.Seek(0, io.SeekCurrent)
@@ -8236,6 +8277,26 @@ func g_DoSaveGame() {
 	players[consoleplayer].Fmessage = "game saved."
 	// draw the pattern into the back screen
 	r_FillBackScreen()
+}
+
+// g_WriteSaveGame writes the game to save_stream, which the caller opens and
+// closes. If writeExtra is non-nil it is called after the vanilla end-of-file
+// marker, to append data that vanilla savegames don't have.
+func g_WriteSaveGame(description string, writeExtra func()) error {
+	savegame_error = 0
+	p_WriteSaveGameHeader(description)
+	p_ArchivePlayers()
+	p_ArchiveWorld()
+	p_ArchiveThinkers()
+	p_ArchiveSpecials()
+	p_WriteSaveGameEOF()
+	if writeExtra != nil {
+		writeExtra()
+	}
+	if savegame_error != 0 {
+		return errSaveGameIO
+	}
+	return nil
 }
 
 func g_DeferedInitNew(skill skill_t, episode int32, map1 int32) {
@@ -17712,6 +17773,10 @@ var basetime uint32 = 0
 var last_tick int32 = 0
 
 func i_GetTicks() int32 {
+	if dg_step_mode {
+		// Game time is purely logical: derived from the number of tics run.
+		return gametic * 1000 / TICRATE
+	}
 	if dg_run_full_speed {
 		// Just increment by 1 each frame
 		return int32(dg_fake_tics)
@@ -38642,6 +38707,11 @@ func s_StartSound(origin *degenmobj_t, sfx_id int32) {
 		if volume > snd_SfxVolume {
 			volume = snd_SfxVolume
 		}
+	}
+	// Nobody can hear a positional sound if the console player has no
+	// body, which happens in step mode when everyone has left the game.
+	if origin != nil && players[consoleplayer].Fmo == nil {
+		return
 	}
 	// Check to see if it is audible,
 	//  and if not, modify the params
