@@ -105,29 +105,28 @@ func StepInit(fe DoomFrontend, args []string) {
 	singletics = 1
 	sound_module = &stepSoundModule // see step_sound.go
 	doomgeneric_Create(append([]string{"doom"}, args...))
+	stepView = consoleplayer
 }
 
 // StepTic runs exactly one game tic, with cmd as the console player's input.
+// In a multiplayer game, any other players stand still; use StepNetTic.
 func StepTic(cmd TicCmd) {
-	var cmds [NET_MAXPLAYERS]ticcmd_t
-	var ingame [NET_MAXPLAYERS]boolean
-	cmds[consoleplayer] = ticcmd_t{
-		Fforwardmove: cmd.Forward,
-		Fsidemove:    cmd.Side,
-		Fangleturn:   cmd.AngleTurn,
-		Fbuttons:     cmd.Buttons,
-	}
-	ingame[consoleplayer] = 1
-	stepSoundTic = gametic + 1
-	runTic(cmds[:], ingame[:])
-	gametic++
-	stepUpdateSounds()
+	var t NetTic
+	t.Cmds[consoleplayer] = cmd
+	StepNetTic(&t)
 }
 
 // StepRender draws the current game state into the frame buffer. It only
 // touches renderer state, never game state, so a host can render as often or
 // as rarely as it likes without affecting determinism.
 func StepRender() {
+	if gamestate == gs_LEVEL && players[displayplayer].Fmo == nil {
+		// Nobody in the game has a body to look through (see stepFixView),
+		// e.g. because everyone has left. Draw a black frame (palette
+		// entry 0 is black).
+		clear(I_VideoBuffer)
+		return
+	}
 	d_Display()
 }
 
@@ -149,12 +148,19 @@ func Palette() []byte {
 	return pal
 }
 
-// GetStats returns a snapshot of the current game state.
+// GetStats returns a snapshot of the current game state, from the console
+// player's point of view.
 //
 // Most fields are simple reads, but Stats.Checksum requires walking every
 // live map object.
 func GetStats() Stats {
-	p := &players[consoleplayer]
+	return GetPlayerStats(consoleplayer)
+}
+
+// GetPlayerStats returns a snapshot of the current game state, from player
+// p's point of view.
+func GetPlayerStats(player int32) Stats {
+	p := &players[player]
 	s := Stats{
 		Tic:          gametic,
 		LevelTime:    leveltime,
@@ -232,20 +238,43 @@ func Checksum() uint32 {
 			put(mo.Fflags)
 		}
 	}
-	p := &players[consoleplayer]
-	put(p.Fhealth)
-	put(p.Farmorpoints)
-	for _, a := range p.Fammo {
-		put(a)
+	// Every player in the game, not just the console player: in a
+	// multiplayer game each node has a different console player.
+	if netgame != 0 {
+		put(int32(PlayersInGame()))
 	}
-	put(int32(p.Freadyweapon))
+	for i := range players {
+		if playeringame[i] == 0 {
+			continue
+		}
+		p := &players[i]
+		put(p.Fhealth)
+		put(p.Farmorpoints)
+		for _, a := range p.Fammo {
+			put(a)
+		}
+		put(int32(p.Freadyweapon))
+	}
 	return h.Sum32()
 }
 
 // CanSave reports whether the game is in a state that SaveGameBytes can
-// capture: in a level, with the player alive.
+// capture: in a level, with the player alive. In a netgame dead players are
+// fine (they respawn when they press use), but everyone in the game must
+// have spawned.
 func CanSave() bool {
-	return gamestate == gs_LEVEL && players[consoleplayer].Fplayerstate != Pst_DEAD && gameaction == ga_nothing
+	if gamestate != gs_LEVEL || gameaction != ga_nothing {
+		return false
+	}
+	if netgame == 0 {
+		return players[consoleplayer].Fplayerstate != Pst_DEAD
+	}
+	for i := range players {
+		if playeringame[i] != 0 && (players[i].Fmo == nil || players[i].Fplayerstate == Pst_REBORN) {
+			return false
+		}
+	}
+	return true
 }
 
 // SaveGameBytes serialises the current level into a vanilla-format savegame,
@@ -275,6 +304,10 @@ func LoadGameBytes(data []byte) error {
 	if err := g_ReadSaveGame(readStepModeSaveTrailer); err != nil {
 		return fmt.Errorf("gore: %w", err)
 	}
+	// The savegame sets which players are in the game. The player we were
+	// looking through may not be one of them (say, player 0 had left the
+	// game that was saved), so point the view at someone who is.
+	stepFixView()
 	return nil
 }
 

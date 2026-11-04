@@ -109,6 +109,11 @@ and ticcmds always produce the same game. `Checksum` hashes the simulation
 state to check that, and `SaveGameBytes`/`LoadGameBytes` save and restore it
 in memory.
 
+For multiplayer, start with `-solo-net` (and optionally `-deathmatch`) and
+call `StepNetTic` with every player's ticcmd, as each node in a lockstep game
+would. Players can join and leave between tics, and `StepSetView` picks whose
+view is rendered without affecting the simulation.
+
 ## 🔧 PLATFORM IMPLEMENTATION
 
 Similar to `doomgeneric`, the actual input/output is provided externally. The following interface is required:
