@@ -87,6 +87,7 @@ func (nullFrontend) SetTitle(title string)                           {}
 func (nullFrontend) GetEvent(event *DoomEvent) bool                  { return false }
 func (nullFrontend) CacheSound(name string, data []byte)             {}
 func (nullFrontend) PlaySound(name string, channel, volume, sep int) {}
+func (nullFrontend) PlayMusic(music io.Reader)                       {}
 
 // StepInit initialises the engine for stepping. args are regular DOOM command
 // line arguments, e.g. {"-iwad", "doom1.wad", "-warp", "1", "1", "-skill", "3"}.

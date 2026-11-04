@@ -2,6 +2,7 @@ package main
 
 import (
 	"image"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -104,6 +105,9 @@ func (w *webDoomFrontend) CacheSound(name string, data []byte) {
 }
 
 func (w *webDoomFrontend) PlaySound(name string, channel, vol, sep int) {
+}
+
+func (w *webDoomFrontend) PlayMusic(music io.Reader) {
 }
 
 func main() {

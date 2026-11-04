@@ -55,6 +55,9 @@ func (t *termDoom) CacheSound(name string, data []byte) {
 func (t *termDoom) PlaySound(name string, channel, vol, sep int) {
 }
 
+func (t *termDoom) PlayMusic(music io.Reader) {
+}
+
 // GetEvent provides keydown/keyup events from stdin without unix/syscalls.
 func (t *termDoom) GetEvent(ev *gore.DoomEvent) bool {
 	// emit pending key-up after a short delay

@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/binary"
 	"image"
+	"io"
 	"log"
 	"os"
 	"runtime"
+	"slices"
 	"sync"
 
 	"github.com/AndreRenaud/gore"
@@ -14,12 +17,34 @@ import (
 const (
 	screenWidth  = 640
 	screenHeight = 480
+
+	audioChunkFrames = 512                      // Frames mixed at a time (~12ms)
+	audioQueueBytes  = audioChunkFrames * 4 * 3 // Keep ~35ms of audio queued, so sound effects are prompt
+	maxSounds        = 16                       // Sound effects that can play at once
 )
+
+// sound is a cached sound effect, as 8-bit unsigned mono samples
+type sound struct {
+	samples []byte
+	rate    int
+}
+
+type playingSound struct {
+	sound       *sound
+	pos         uint64 // Position in the samples, as 16.16 fixed point
+	left, right int32  // Volume of each side, 0-254
+}
 
 type DoomGame struct {
 	window   *sdl.Window
 	renderer *sdl.Renderer
 	texture  *sdl.Texture
+
+	audioLock sync.Mutex
+	audio     sdl.AudioDeviceID // 0 if audio isn't available
+	music     io.Reader
+	sounds    map[string]*sound
+	playing   []*playingSound
 
 	events      []gore.DoomEvent
 	lock        sync.Mutex
@@ -32,7 +57,7 @@ type DoomGame struct {
 }
 
 func NewDoomGame() (*DoomGame, error) {
-	if err := sdl.Init(sdl.INIT_VIDEO); err != nil {
+	if err := sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO); err != nil {
 		return nil, err
 	}
 
@@ -55,17 +80,87 @@ func NewDoomGame() (*DoomGame, error) {
 		return nil, err
 	}
 
-	return &DoomGame{
+	g := &DoomGame{
 		window:       window,
 		renderer:     renderer,
 		texture:      texture,
 		running:      true,
 		frameChannel: make(chan *image.RGBA, 1),
 		titleChannel: make(chan string, 1),
-	}, nil
+		sounds:       map[string]*sound{},
+	}
+
+	spec := sdl.AudioSpec{Freq: gore.MusicSampleRate, Format: sdl.AUDIO_S16LSB, Channels: 2, Samples: audioChunkFrames}
+	if g.audio, err = sdl.OpenAudioDevice("", false, &spec, nil, 0); err != nil {
+		log.Printf("No audio available: %s", err)
+	} else {
+		sdl.PauseAudioDevice(g.audio, false)
+		go g.mixAudio()
+	}
+	return g, nil
+}
+
+// mixAudio keeps the SDL audio queue topped up with the music & sound effects
+func (g *DoomGame) mixAudio() {
+	buf := make([]byte, audioChunkFrames*4)
+	mix := make([]int32, audioChunkFrames*2)
+	for {
+		g.audioLock.Lock()
+		if g.audio == 0 {
+			g.audioLock.Unlock()
+			return
+		}
+		if sdl.GetQueuedAudioSize(g.audio) >= audioQueueBytes {
+			g.audioLock.Unlock()
+			sdl.Delay(5)
+			continue
+		}
+
+		clear(mix)
+		if g.music != nil {
+			n, err := io.ReadFull(g.music, buf)
+			for i := range n / 2 {
+				mix[i] = int32(int16(binary.LittleEndian.Uint16(buf[i*2:])))
+			}
+			if err != nil {
+				g.music = nil // Reached the end of the song
+			}
+		}
+		g.mixSounds(mix)
+		for i, v := range mix {
+			binary.LittleEndian.PutUint16(buf[i*2:], uint16(int16(max(-32768, min(32767, v)))))
+		}
+		sdl.QueueAudio(g.audio, buf)
+		g.audioLock.Unlock()
+	}
+}
+
+// mixSounds adds the playing sound effects to mix, resampling them to the
+// output rate (as DOOM did, without interpolation)
+func (g *DoomGame) mixSounds(mix []int32) {
+	g.playing = slices.DeleteFunc(g.playing, func(p *playingSound) bool {
+		step := uint64(p.sound.rate) << 16 / gore.MusicSampleRate
+		for i := 0; i < len(mix); i += 2 {
+			pos := int(p.pos >> 16)
+			if pos >= len(p.sound.samples) {
+				return true // Finished
+			}
+			sample := (int32(p.sound.samples[pos]) - 128) << 8
+			mix[i] += sample * p.left / 255
+			mix[i+1] += sample * p.right / 255
+			p.pos += step
+		}
+		return false
+	})
 }
 
 func (g *DoomGame) Close() {
+	g.audioLock.Lock()
+	if g.audio != 0 {
+		sdl.CloseAudioDevice(g.audio)
+		g.audio = 0
+	}
+	g.audioLock.Unlock()
 	if g.texture != nil {
 		g.texture.Destroy()
 	}
@@ -206,10 +301,48 @@ func (g *DoomGame) SetTitle(title string) {
 	}
 }
 
+// CacheSound stores a sound effect, from a DMX format lump: a header with
+// the sample rate & length, then 8-bit unsigned mono samples
 func (g *DoomGame) CacheSound(name string, data []byte) {
+	if len(data) < 8 || binary.LittleEndian.Uint16(data) != 3 {
+		return
+	}
+	rate := int(binary.LittleEndian.Uint16(data[2:]))
+	length := int(binary.LittleEndian.Uint32(data[4:]))
+	// DMX skips the 16 bytes of padding at either end of the samples
+	if rate == 0 || length <= 32 || length > len(data)-8 {
+		return
+	}
+	g.audioLock.Lock()
+	defer g.audioLock.Unlock()
+	g.sounds[name] = &sound{samples: data[8+16 : 8+length-16], rate: rate}
 }
 
+// PlaySound starts a sound effect. Sounds are mixed independently, rather
+// than per channel, as the engine doesn't know when a sound has finished
+// and so reuses channels while their sounds are still playing.
 func (g *DoomGame) PlaySound(name string, channel, vol, sep int) {
+	g.audioLock.Lock()
+	defer g.audioLock.Unlock()
+	s := g.sounds[name]
+	if s == nil {
+		return
+	}
+	if len(g.playing) >= maxSounds {
+		g.playing = g.playing[1:] // Drop the oldest
+	}
+	// sep is 0 (left) to 254 (right), and vol is 0-127
+	g.playing = append(g.playing, &playingSound{
+		sound: s,
+		left:  int32((254 - sep) * vol / 127),
+		right: int32(sep * vol / 127),
+	})
+}
+
+func (g *DoomGame) PlayMusic(music io.Reader) {
+	g.audioLock.Lock()
+	defer g.audioLock.Unlock()
+	g.music = music
 }
 
 func (g *DoomGame) drawFrameOnMainThread(frame *image.RGBA) {
