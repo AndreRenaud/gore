@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"io"
 	"os"
 	"regexp"
 	"strconv"
@@ -84,6 +85,7 @@ func (g *graphicsDoom) CacheSound(name string, data []byte) {
 
 func (g *graphicsDoom) PlaySound(name string, channel, vol, sep int) {
 }
+func (g *graphicsDoom) PlayMusic(mus io.Reader) {}
 
 var (
 	kittyKeyboardRe = regexp.MustCompile(`\x1b\[\?\d+u`)
