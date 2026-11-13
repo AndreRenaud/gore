@@ -81,6 +81,12 @@ go run ./example/ebitengine
 ```
 The window should pop up to run Doom
 
+#### raylib
+```bash
+go run ./example/raylib
+```
+The window should pop up to run Doom
+
 #### Step API (headless, deterministic)
 ```bash
 go run ./example/stepper -iwad doom1.wad -o frame.png
