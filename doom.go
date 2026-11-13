@@ -9377,10 +9377,10 @@ func hu_Responder(ev *event_t) boolean {
 	for i := range MAXPLAYERS {
 		numplayers = int32(uint32(numplayers) + playeringame[i])
 	}
-	if ev.Fdata1 == 0x80+0x36 {
+	if ev.Fdata1 == KEY_RSHIFT {
 		return 0
 	} else {
-		if ev.Fdata1 == 0x80+0x38 {
+		if ev.Fdata1 == KEY_RALT {
 			altdown = booluint32(ev.Ftype1 == Ev_keydown)
 			return 0
 		}
@@ -18855,6 +18855,34 @@ const KEY_STRAFE_L1 = 160
 const KEY_STRAFE_R1 = 161
 const KEY_USE1 = 162
 
+// Key codes for keys that have no ASCII equivalent; these are the PC
+// scancode + 0x80, as defined in doomkeys.h.
+const (
+	KEY_RSHIFT   = 0x80 + 0x36
+	KEY_RALT     = 0x80 + 0x38
+	KEY_CAPSLOCK = 0x80 + 0x3a
+	KEY_F1       = 0x80 + 0x3b
+	KEY_F2       = 0x80 + 0x3c
+	KEY_F3       = 0x80 + 0x3d
+	KEY_F4       = 0x80 + 0x3e
+	KEY_F5       = 0x80 + 0x3f
+	KEY_F6       = 0x80 + 0x40
+	KEY_F7       = 0x80 + 0x41
+	KEY_F8       = 0x80 + 0x42
+	KEY_F9       = 0x80 + 0x43
+	KEY_F10      = 0x80 + 0x44
+	KEY_NUMLOCK  = 0x80 + 0x45
+	KEY_SCRLCK   = 0x80 + 0x46
+	KEY_HOME     = 0x80 + 0x47
+	KEY_PGUP     = 0x80 + 0x49
+	KEY_END      = 0x80 + 0x4f
+	KEY_PGDN     = 0x80 + 0x51
+	KEY_INS      = 0x80 + 0x52
+	KEY_DEL      = 0x80 + 0x53
+	KEY_F11      = 0x80 + 0x57
+	KEY_F12      = 0x80 + 0x58
+)
+
 func init() {
 	key_right = int32(KEY_RIGHTARROW1)
 	key_left = int32(KEY_LEFTARROW1)
@@ -18864,14 +18892,14 @@ func init() {
 	key_straferight = int32(KEY_STRAFE_R1)
 	key_fire = int32(KEY_FIRE1)
 	key_use = int32(KEY_USE1)
-	key_strafe = 0x80 + 0x38
-	key_speed = 0x80 + 0x36
-	key_flyup = 0x80 + 0x49
-	key_flydown = 0x80 + 0x52
-	key_flycenter = 0x80 + 0x47
-	key_lookup = 0x80 + 0x51
-	key_lookdown = 0x80 + 0x53
-	key_lookcenter = 0x80 + 0x4f
+	key_strafe = KEY_RALT
+	key_speed = KEY_RSHIFT
+	key_flyup = KEY_PGUP
+	key_flydown = KEY_INS
+	key_flycenter = KEY_HOME
+	key_lookup = KEY_PGDN
+	key_lookdown = KEY_DEL
+	key_lookcenter = KEY_END
 	key_invleft = '['
 	key_invright = ']'
 	key_useartifact = KEY_ENTER
@@ -18889,8 +18917,8 @@ func init() {
 	key_mission = 'w'
 	key_invpop = 'z'
 	key_invkey = 'k'
-	key_invhome = 0x80 + 0x47
-	key_invend = 0x80 + 0x4f
+	key_invhome = KEY_HOME
+	key_invend = KEY_END
 	key_invuse = KEY_ENTER
 	key_invdrop = int32(KEY_BACKSPACE3)
 	mousebstrafe = 1
@@ -18905,7 +18933,7 @@ func init() {
 	key_message_refresh = KEY_ENTER
 	key_pause = int32(KEY_PAUSE1)
 	key_demo_quit = 'q'
-	key_spy = 0x80 + 0x58
+	key_spy = KEY_F12
 	key_multi_msg = 't'
 	key_weapon1 = '1'
 	key_weapon2 = '2'
@@ -18936,17 +18964,17 @@ func init() {
 	key_menu_forward = KEY_ENTER
 	key_menu_confirm = 'y'
 	key_menu_abort = 'n'
-	key_menu_help = 0x80 + 0x3b
-	key_menu_save = 0x80 + 0x3c
-	key_menu_load = 0x80 + 0x3d
-	key_menu_volume = 0x80 + 0x3e
-	key_menu_detail = 0x80 + 0x3f
-	key_menu_qsave = 0x80 + 0x40
-	key_menu_endgame = 0x80 + 0x41
-	key_menu_messages = 0x80 + 0x42
-	key_menu_qload = 0x80 + 0x43
-	key_menu_quit = 0x80 + 0x44
-	key_menu_gamma = 0x80 + 0x57
+	key_menu_help = KEY_F1
+	key_menu_save = KEY_F2
+	key_menu_load = KEY_F3
+	key_menu_volume = KEY_F4
+	key_menu_detail = KEY_F5
+	key_menu_qsave = KEY_F6
+	key_menu_endgame = KEY_F7
+	key_menu_messages = KEY_F8
+	key_menu_qload = KEY_F9
+	key_menu_quit = KEY_F10
+	key_menu_gamma = KEY_F11
 	key_menu_incscreen = int32(KEY_EQUALS1)
 	key_menu_decscreen = int32(KEY_MINUS1)
 	joybstrafe = 1
@@ -20214,7 +20242,7 @@ func m_WriteText(x int32, y int32, string1 string) {
 // jumping in the menus. Preserve this behavior for accuracy.
 
 func isNullKey(key int32) boolean {
-	return booluint32(key == int32(KEY_PAUSE1) || key == 0x80+0x3a || key == 0x80+0x46 || key == 0x80+0x45)
+	return booluint32(key == int32(KEY_PAUSE1) || key == KEY_CAPSLOCK || key == KEY_SCRLCK || key == KEY_NUMLOCK)
 }
 
 //
@@ -41452,7 +41480,7 @@ func updateShiftStatus(pressed int32, key uint8) {
 	} else {
 		change = -1
 	}
-	if key == 0x80+0x36 {
+	if key == KEY_RSHIFT {
 		shiftdown += change
 	}
 }

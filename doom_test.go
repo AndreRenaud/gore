@@ -394,7 +394,7 @@ func TestDoomRandom(t *testing.T) {
 			KEY_RIGHTARROW1, KEY_FIRE1, KEY_USE1,
 		}
 		// Press shift to run
-		game.InsertKeyChange(0x80+0x36, true)
+		game.InsertKeyChange(KEY_RSHIFT, true)
 		// Do some random movement
 		count := 5000
 		for i := range count {

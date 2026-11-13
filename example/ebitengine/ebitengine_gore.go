@@ -47,7 +47,7 @@ func (g *DoomGame) Update() error {
 		ebiten.KeyRight:     gore.KEY_RIGHTARROW1,
 		ebiten.KeyEnter:     gore.KEY_ENTER,
 		ebiten.KeyControl:   gore.KEY_FIRE1,
-		ebiten.KeyShift:     0x80 + 0x36,
+		ebiten.KeyShift:     gore.KEY_RSHIFT,
 		ebiten.KeyBackspace: gore.KEY_BACKSPACE3,
 		ebiten.KeyY:         'y',
 		ebiten.KeyN:         'n',

@@ -11,9 +11,6 @@ import (
 )
 
 const (
-	keySpeed  = 0x80 + 0x36 // shift
-	keyStrafe = 0x80 + 0x38 // alt
-
 	// Report press/repeat/release events and every key (including
 	// modifiers) as an escape code.
 	// See https://sw.kovidgoyal.net/kitty/keyboard-protocol/
@@ -36,12 +33,12 @@ var (
 		9:     gore.KEY_TAB,
 		127:   gore.KEY_BACKSPACE3,
 		' ':   gore.KEY_USE1,
-		57441: keySpeed, // left/right shift
-		57447: keySpeed,
+		57441: gore.KEY_RSHIFT, // left/right shift
+		57447: gore.KEY_RSHIFT,
 		57442: gore.KEY_FIRE1, // left/right control
 		57448: gore.KEY_FIRE1,
-		57443: keyStrafe, // left/right alt
-		57449: keyStrafe,
+		57443: gore.KEY_RALT, // left/right alt
+		57449: gore.KEY_RALT,
 	}
 	arrowKeys = map[string]uint8{
 		"A": gore.KEY_UPARROW1,

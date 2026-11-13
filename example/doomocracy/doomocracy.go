@@ -61,9 +61,9 @@ func mapBrowserKeyToDoom(key int) uint8 {
 	case 32: // Space
 		return gore.KEY_USE1
 	case 16: // Shift - run (key_speed)
-		return uint8(0x80 + 0x36)
+		return gore.KEY_RSHIFT
 	case 18: // Alt - strafe modifier (key_strafe)
-		return uint8(0x80 + 0x38)
+		return gore.KEY_RALT
 	case 13: // Enter
 		return gore.KEY_ENTER
 	case 27: // Escape

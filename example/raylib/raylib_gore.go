@@ -19,15 +19,6 @@ const (
 	doomCenterSep = 127 // DOOM's stereo separation for the center
 )
 
-// Doom key codes not exported by gore
-const (
-	keyRShift = 0x80 + 0x36
-	keyRAlt   = 0x80 + 0x38
-	keyF1     = 0x80 + 0x3b
-	keyF11    = 0x80 + 0x57
-	keyF12    = 0x80 + 0x58
-)
-
 var keyMap = map[int32]uint8{
 	rl.KeyUp:           gore.KEY_UPARROW1,
 	rl.KeyDown:         gore.KEY_DOWNARROW1,
@@ -41,17 +32,17 @@ var keyMap = map[int32]uint8{
 	rl.KeySpace:        gore.KEY_USE1,
 	rl.KeyLeftControl:  gore.KEY_FIRE1,
 	rl.KeyRightControl: gore.KEY_FIRE1,
-	rl.KeyLeftShift:    keyRShift,
-	rl.KeyRightShift:   keyRShift,
-	rl.KeyLeftAlt:      keyRAlt,
-	rl.KeyRightAlt:     keyRAlt,
+	rl.KeyLeftShift:    gore.KEY_RSHIFT,
+	rl.KeyRightShift:   gore.KEY_RSHIFT,
+	rl.KeyLeftAlt:      gore.KEY_RALT,
+	rl.KeyRightAlt:     gore.KEY_RALT,
 	rl.KeyMinus:        gore.KEY_MINUS1,
 	rl.KeyEqual:        gore.KEY_EQUALS1,
 	rl.KeyComma:        ',',
 	rl.KeyPeriod:       '.',
 	rl.KeyPause:        gore.KEY_PAUSE1,
-	rl.KeyF11:          keyF11,
-	rl.KeyF12:          keyF12,
+	rl.KeyF11:          gore.KEY_F11,
+	rl.KeyF12:          gore.KEY_F12,
 }
 
 func init() {
@@ -62,7 +53,7 @@ func init() {
 		keyMap[k] = uint8('0' + k - rl.KeyZero)
 	}
 	for k := int32(rl.KeyF1); k <= rl.KeyF10; k++ {
-		keyMap[k] = uint8(keyF1 + k - rl.KeyF1)
+		keyMap[k] = uint8(gore.KEY_F1 + k - rl.KeyF1)
 	}
 }
 
