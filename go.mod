@@ -9,7 +9,7 @@ require (
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6
 	github.com/veandco/go-sdl2 v0.4.40
-	golang.org/x/term v0.47.0
+	golang.org/x/term v0.48.0
 )
 
 require (
@@ -19,5 +19,5 @@ require (
 	github.com/jfreymuth/pulse v0.1.3 // indirect
 	github.com/jupiterrider/ffi v0.8.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
 )
