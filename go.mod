@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/ebitengine/oto/v3 v3.5.1
-	github.com/gen2brain/raylib-go/raylib v0.62.2
+	github.com/gen2brain/raylib-go/raylib v0.63.0
 	github.com/hajimehoshi/ebiten/v2 v2.10.6
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6
